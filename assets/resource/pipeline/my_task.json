@@ -1,241 +1,387 @@
 {
   "$__mpe_config_my_task": {
     "$__mpe_code": {
-      "filePath": "D:\\Codes\\Python\\SSAL\\assets\\resource\\pipeline\\my_task.json",
-      "filename": "my_task",
-      "lastSyncTime": 1766488525331,
       "prefix": "",
       "savedViewport": {
-        "x": 139.3820399699248,
-        "y": 181.32358223953926,
-        "zoom": 0.7323839806342022
+        "x": 213.62131413064708,
+        "y": -419.4643392962565,
+        "zoom": 0.6964404506369004
       },
+      "filename": "my_task",
       "version": "v0.12.0"
     }
   },
   "关闭公告": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "close.png"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
     "$__mpe_code": {
       "position": {
         "x": 300,
         "y": 29
       }
-    },
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "recognition": {
-      "param": {
-        "template": [
-          "close.png"
-        ]
-      },
-      "type": "TemplateMatch"
     }
   },
   "关闭每日签到": {
-    "$__mpe_code": {
-      "position": {
-        "x": 1500,
-        "y": 568
-      }
-    },
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
     "recognition": {
+      "type": "TemplateMatch",
       "param": {
         "template": [
           "close_1.png"
         ]
-      },
-      "type": "TemplateMatch"
-    }
-  },
-  "关闭活动": {
-    "$__mpe_code": {
-      "position": {
-        "x": 1200,
-        "y": 690
       }
     },
     "action": {
-      "param": {},
-      "type": "Click"
+      "type": "Click",
+      "param": {}
     },
+    "$__mpe_code": {
+      "position": {
+        "x": 1200,
+        "y": 566
+      }
+    }
+  },
+  "关闭活动": {
     "recognition": {
+      "type": "TemplateMatch",
       "param": {
         "template": [
           "close_2.png"
         ]
-      },
-      "type": "TemplateMatch"
+      }
     },
-    "repeat": 2
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "repeat": 2,
+    "$__mpe_code": {
+      "position": {
+        "x": 1200,
+        "y": 820
+      }
+    }
   },
   "点击任意区域进入游戏": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": "点击任意区域进入游戏"
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {
+        "contact": 0
+      }
+    },
+    "timeout": 10000,
     "$__mpe_code": {
       "position": {
         "x": 300,
-        "y": 223
+        "y": 222
       }
-    },
-    "action": {
-      "param": {
-        "contact": 0
-      },
-      "type": "Click"
-    },
-    "recognition": {
-      "param": {
-        "expected": "点击任意区域进入游戏"
-      },
-      "type": "OCR"
-    },
-    "timeout": 10000
+    }
   },
   "点击空白处继续": {
-    "$__mpe_code": {
-      "position": {
-        "x": 900,
-        "y": 507
-      }
-    },
-    "action": {
-      "param": {
-        "contact": 0
-      },
-      "type": "Click"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "关闭每日签到"
-      },
-      {
-        "jump_back": true,
-        "name": "关闭活动"
-      }
-    ],
     "recognition": {
+      "type": "OCR",
       "param": {
         "expected": [
           "点击空白处继续"
         ]
-      },
-      "type": "OCR"
-    },
-    "repeat": 2,
-    "timeout": 2000
-  },
-  "爬塔": {
-    "$__mpe_code": {
-      "position": {
-        "x": 0,
-        "y": 252
       }
     },
     "action": {
-      "param": {},
-      "type": "Click"
+      "type": "Click",
+      "param": {
+        "contact": 0
+      }
     },
+    "repeat": 2,
+    "timeout": 2000,
+    "$__mpe_code": {
+      "position": {
+        "x": 900,
+        "y": 505
+      }
+    },
+    "next": [
+      {
+        "name": "关闭每日签到",
+        "jump_back": true
+      },
+      {
+        "name": "关闭活动",
+        "jump_back": true
+      }
+    ]
+  },
+  "爬塔": {
     "recognition": {
+      "type": "OCR",
       "param": {
         "expected": "爬塔"
-      },
-      "type": "OCR"
+      }
     },
-    "timeout": 1000
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "timeout": 1000,
+    "$__mpe_code": {
+      "position": {
+        "x": 0,
+        "y": 1112
+      }
+    }
   },
   "登录": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": "登录"
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "timeout": 10000,
     "$__mpe_code": {
       "position": {
         "x": 0,
         "y": 0
       }
     },
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
     "next": [
       {
-        "jump_back": true,
-        "name": "关闭公告"
+        "name": "关闭公告",
+        "jump_back": true
       },
       {
-        "jump_back": true,
-        "name": "点击任意区域进入游戏"
+        "name": "点击任意区域进入游戏",
+        "jump_back": true
       },
       {
-        "jump_back": true,
-        "name": "签到"
+        "name": "签到",
+        "jump_back": true
       }
-    ],
-    "recognition": {
-      "param": {
-        "expected": "登录"
-      },
-      "type": "OCR"
-    },
-    "timeout": 10000
+    ]
   },
   "签到": {
-    "$__mpe_code": {
-      "position": {
-        "x": 300,
-        "y": 507
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": "可领取"
       }
     },
     "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "点击空白处继续"
-      },
-      {
-        "jump_back": true,
-        "name": "获得道具"
-      }
-    ],
-    "recognition": {
-      "param": {
-        "expected": "可领取"
-      },
-      "type": "OCR"
+      "type": "Click",
+      "param": {}
     },
     "repeat": 3,
     "repeat_delay": 1000,
-    "timeout": 1000
-  },
-  "获得道具": {
+    "timeout": 1000,
     "$__mpe_code": {
       "position": {
-        "x": 600,
-        "y": 675
+        "x": 300,
+        "y": 505
       }
     },
-    "action": {
-      "param": {
-        "contact": 0
-      },
-      "type": "Click"
-    },
     "next": [
-      "点击空白处继续"
-    ],
+      {
+        "name": "点击空白处继续",
+        "jump_back": true
+      },
+      {
+        "name": "获得道具",
+        "jump_back": true
+      }
+    ]
+  },
+  "获得道具": {
     "recognition": {
+      "type": "OCR",
       "param": {
         "expected": [
           "获得道具"
         ]
-      },
-      "type": "OCR"
+      }
     },
-    "timeout": 2000
+    "action": {
+      "type": "Click",
+      "param": {
+        "contact": 0
+      }
+    },
+    "timeout": 2000,
+    "$__mpe_code": {
+      "position": {
+        "x": 600,
+        "y": 673
+      }
+    },
+    "next": [
+      "点击空白处继续"
+    ]
+  },
+  "打开任务": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "任务"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "$__mpe_code": {
+      "position": {
+        "x": 0,
+        "y": 869
+      }
+    },
+    "next": [
+      {
+        "name": "一键领取",
+        "jump_back": true
+      },
+      {
+        "name": "打开每周事务",
+        "jump_back": true
+      }
+    ]
+  },
+  "一键领取": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "一键领取"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "$__mpe_code": {
+      "position": {
+        "x": 1200,
+        "y": 1097
+      }
+    }
+  },
+  "$__mpe_anchor_返回主页_my_task": {
+    "$__mpe_code": {
+      "position": {
+        "x": 1205,
+        "y": 1340
+      }
+    }
+  },
+  "打开等级奖励": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "等级奖励"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "$__mpe_code": {
+      "position": {
+        "x": 900,
+        "y": 1204
+      }
+    },
+    "next": [
+      {
+        "name": "一键领取",
+        "jump_back": true
+      },
+      {
+        "name": "返回主页",
+        "anchor": true
+      }
+    ]
+  },
+  "打开魔王养成": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "魔王养成"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "$__mpe_code": {
+      "position": {
+        "x": 600,
+        "y": 1310
+      }
+    },
+    "next": [
+      {
+        "name": "一键领取",
+        "jump_back": true
+      },
+      {
+        "name": "打开等级奖励",
+        "jump_back": true
+      }
+    ]
+  },
+  "打开每周事务": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "每周事务"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {}
+    },
+    "$__mpe_code": {
+      "position": {
+        "x": 300,
+        "y": 1097
+      }
+    },
+    "next": [
+      {
+        "name": "一键领取",
+        "jump_back": true
+      },
+      {
+        "name": "打开魔王养成",
+        "jump_back": true
+      }
+    ]
   }
 }

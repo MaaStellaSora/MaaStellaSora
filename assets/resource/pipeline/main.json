@@ -3,12 +3,12 @@
     "$__mpe_code": {
       "filePath": "D:\\Codes\\Python\\StellaSora-Auto-Helper\\assets\\resource\\pipeline\\main.json",
       "filename": "新建Pipeline3",
-      "lastSyncTime": 1766545839863,
+      "lastSyncTime": 1766546070998,
       "prefix": "",
       "savedViewport": {
-        "x": 87.57466272052318,
-        "y": -572.4255034265648,
-        "zoom": 1.1486983549970373
+        "x": 10.273547387200551,
+        "y": 143.24370637209609,
+        "zoom": 0.6597539553864484
       },
       "version": "v0.12.0"
     }
@@ -140,9 +140,6 @@
     "focus": {
       "Node.Recognition.Starting": "正在关闭心链"
     },
-    "on_error": [
-      "默契提升"
-    ],
     "pre_delay": 1000,
     "recognition": {
       "param": {
@@ -1008,6 +1005,7 @@
     "focus": {
       "Node.Recognition.Starting": "正在关闭弹窗"
     },
+    "pre_wait_freezes": 1000,
     "recognition": {
       "param": {
         "expected": [

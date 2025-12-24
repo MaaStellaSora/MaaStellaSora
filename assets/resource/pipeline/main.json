@@ -683,7 +683,14 @@
       "Node.Recognition.Starting": "正在尝试点击一键领取"
     },
     "next": [
-      "领取任务额外奖励"
+      {
+        "jump_back": true,
+        "name": "点击空白处继续"
+      },
+      {
+        "jump_back": true,
+        "name": "领取任务额外奖励"
+      }
     ],
     "recognition": {
       "param": {

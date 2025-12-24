@@ -118,13 +118,13 @@
     "option": {
         "作战关卡": {
             "type": "select",
-            "label": "$选择活动关卡",
+            "label": "选择活动关卡",
             "description": "选择要快速战斗的活动关卡",
             "default_case": "1.雪愿夜的奇境冒险I",
             "cases": [
                 {
                     "name": "1.雪愿夜的奇境冒险I",
-                    "label": "$1.雪愿夜的奇境冒险I",
+                    "label": "1.雪愿夜的奇境冒险I",
                     "description": "12-23更新 活动普通第一关",
                     "pipeline_override": {
                         "选择活动关卡": {
@@ -141,7 +141,7 @@
                 },
                 {
                     "name": "2.雪愿夜的奇境冒险II",
-                    "label": "$2.雪愿夜的奇境冒险II",
+                    "label": "2.雪愿夜的奇境冒险II",
                     "description": "12-23更新 活动普通第二关",
                     "pipeline_override": {
                         "选择活动关卡": {
@@ -158,7 +158,7 @@
                 },
                 {
                     "name": "3.雪愿夜的奇境冒险III",
-                    "label": "$3.雪愿夜的奇境冒险III",
+                    "label": "3.雪愿夜的奇境冒险III",
                     "description": "12-23更新 活动普通第三关",
                     "pipeline_override": {
                         "选择活动关卡": {
@@ -175,7 +175,7 @@
                 },
                 {
                     "name": "4.出逃的礼物车I",
-                    "label": "$4.出逃的礼物车I",
+                    "label": "4.出逃的礼物车I",
                     "description": "12-23更新 活动普通第四关",
                     "pipeline_override": {
                         "选择活动关卡": {
@@ -192,7 +192,7 @@
                 },
                 {
                     "name": "5.雪愿夜的奇境冒险IV",
-                    "label": "$5.雪愿夜的奇境冒险IV",
+                    "label": "5.雪愿夜的奇境冒险IV",
                     "description": "12-23更新 活动普通第五关",
                     "pipeline_override": {
                         "选择活动关卡": {
@@ -209,7 +209,7 @@
                 },
                 {
                     "name": "6.雪愿夜的奇境冒险V",
-                    "label": "$6.雪愿夜的奇境冒险V",
+                    "label": "6.雪愿夜的奇境冒险V",
                     "description": "12-23更新 活动普通第六关",
                     "pipeline_override": {
                         "选择活动关卡": {
@@ -226,7 +226,7 @@
                 },
                 {
                     "name": "7.雪愿夜的奇境冒险VI",
-                    "label": "$7.雪愿夜的奇境冒险VI",
+                    "label": "7.雪愿夜的奇境冒险VI",
                     "description": "12-23更新 活动普通第七关",
                     "pipeline_override": {
                         "选择活动关卡": {
@@ -243,7 +243,7 @@
                 },
                 {
                     "name": "8.雪夜颂歌与怪诞暖炉I",
-                    "label": "$8.雪夜颂歌与怪诞暖炉I",
+                    "label": "8.雪夜颂歌与怪诞暖炉I",
                     "description": "12-23更新 活动普通第八关",
                     "pipeline_override": {
                         "选择活动关卡": {

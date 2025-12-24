@@ -246,11 +246,11 @@
     ],
     "recognition": {
       "param": {
-        "expected": [
-          "委托"
+        "template": [
+          "entrust.png"
         ]
       },
-      "type": "OCR"
+      "type": "TemplateMatch"
     }
   },
   "开启快速战斗": {

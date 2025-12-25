@@ -1,6 +1,6 @@
 [remote.github]
-owner = "MaaXYZ"
-repo = "MaaPracticeBoilerplate"
+owner = "SodaCodeSave"
+repo = "StellaSora-Auto-Helper"
 #自用时换成自己的仓库owner和repo
 #注意，本地git user需与github一致才能实现成功@
 [changelog]
@@ -58,6 +58,7 @@ body = """
     {%- endif %}
 {%- endfor -%}
 {%- endif %}
+**[已有 Mirror酱 CDK？前往 Mirror 酱高速下载](https://mirrorchyan.com/zh/projects?rid=SSAH&os=windows&arch=x64&channel=stable)**
 """
 
 # 尾部

@@ -132,7 +132,6 @@
       },
       "type": "TemplateMatch"
     },
-    "repeat": 4,
     "timeout": 3000
   },
   "关闭每日签到": {
@@ -324,11 +323,9 @@
       "Node.Recognition.Starting": "正在打开心链"
     },
     "next": [
-      {
-        "jump_back": true,
-        "name": "点击邮寄"
-      }
+      "点击邮寄"
     ],
+    "post_wait_freezes": 2000,
     "recognition": {
       "param": {
         "expected": [
@@ -525,7 +522,6 @@
     "next": [
       "选择礼物"
     ],
-    "pre_wait_freezes": 1000,
     "recognition": {
       "param": {
         "expected": [
@@ -662,14 +658,7 @@
       "Node.Recognition.Starting": "正在赠送礼物"
     },
     "next": [
-      {
-        "jump_back": true,
-        "name": "默契提升"
-      },
-      {
-        "jump_back": true,
-        "name": "关闭心链"
-      }
+      "默契提升"
     ],
     "recognition": {
       "param": {
@@ -733,6 +722,7 @@
       "type": "Click"
     },
     "focus": {
+      "Node.Recognition.Failed": "没有找到礼物图标 可能是没有礼物 将跳过",
       "Node.Recognition.Starting": "正在选择礼物"
     },
     "next": [
@@ -873,6 +863,9 @@
     "focus": {
       "Node.Recognition.Starting": "正在关闭弹窗"
     },
+    "next": [
+      "关闭心链"
+    ],
     "pre_wait_freezes": 1000,
     "recognition": {
       "param": {
@@ -881,7 +874,6 @@
         ]
       },
       "type": "OCR"
-    },
-    "timeout": 5000
+    }
   }
 }

@@ -5,10 +5,7 @@
       "type": "Click"
     },
     "next": [
-      {
-        "jump_back": true,
-        "name": "主页"
-      }
+      "主页"
     ],
     "recognition": {
       "param": {
@@ -174,10 +171,7 @@
       "type": "Click"
     },
     "next": [
-      {
-        "jump_back": true,
-        "name": "主页"
-      }
+      "主页"
     ],
     "recognition": {
       "param": {

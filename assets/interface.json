@@ -64,7 +64,6 @@
         {
             "name": "台服",
             "path": [
-                "{PROJECT_DIR}/resource/cn",
                 "{PROJECT_DIR}/resource/tw"
             ]
         }

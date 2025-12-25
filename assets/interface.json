@@ -11,7 +11,7 @@
     "welcome": "首次使用！欢迎使用 StellaSora Auto Helper",
     // 填写项目地址和版本号可实现自动更新功能
     "github": "https://github.com/SodaCodeSave/StellaSora-Auto-Helper",
-    "version": "0.4.2",
+    "version": "0.4.3",
     "custom_title": "StellaSora Auto Helper",
     "mirrorchyan_rid": "SSAH",
     "mirrorchyan_multiplatform": true,

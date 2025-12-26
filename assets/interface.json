@@ -596,8 +596,7 @@
                     "label": "作业",
                     "description": "作业字典，格式为{\"优先级\": [\"卡牌名称\"]}",
                     "default": "{\"3\": [\"卡牌\"]}",
-                    "pipeline_type": "string",
-                    "verify": "^\\d+$"
+                    "pipeline_type": "string"
                 }
             ],
             "pipeline_override": {

@@ -54,7 +54,7 @@ class TowerRecongition(CustomRecognition):
                     {
                         "OCR": {
                             "recognition": "OCR",
-                            "expected": [target],
+                            "expected": target,
                             "action": "DoNothing",
                         }
                     },
@@ -77,11 +77,12 @@ class TowerRecongition(CustomRecognition):
             {
                 "OCR": {
                     "recognition": "TemplateMatch",
-                    "expected": ["recommend_card.png"],
+                    "template": ["recommend_card.png"],
                     "action": "DoNothing",
                 }
             },
         )
+        box = reco_detail.best_result.box
         return CustomRecognition.AnalyzeResult(
             box=(box.x, box.y, box.width, box.height),
             detail=f"use recommend card",

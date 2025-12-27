@@ -193,6 +193,8 @@ def create_venv():
     if agent_req.exists():
         subprocess.run([str(pip_path), "install", "-r", str(agent_req)], check=True)
 
+    return python_path
+
 
 def install_agent():
     shutil.copytree(

@@ -22,8 +22,28 @@
             "type": "Click"
         },
         "focus": {
-            "Node.Recognition.Starting": "正在点击委托"
+            "Node.Recognition.Starting": "正在前往委托"
         },
+        "next": [
+            "委托_异常处理"
+        ],
+        "recognition": {
+            "param": {
+                "template": [
+                    "entrust.png"
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "委托_异常处理": {
+        "action": {
+            "param": {},
+            "type": "DoNothing"
+        },
+        "on_error": [
+            "通用_返回主页"
+        ],
         "next": [
             {
                 "jump_back": true,
@@ -36,12 +56,8 @@
             "委托_再次派遣"
         ],
         "recognition": {
-            "param": {
-                "template": [
-                    "entrust.png"
-                ]
-            },
-            "type": "TemplateMatch"
+            "param": {},
+            "type": "DirectHit"
         }
     },
     "委托_跳过 ": {

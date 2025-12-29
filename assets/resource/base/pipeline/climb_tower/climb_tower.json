@@ -270,14 +270,11 @@
     },
     "星塔_节点_选择buff_推荐": {
         "recognition": {
+            "type": "Custom",
             "param": {
-                "template": [
-                    "ClimbTower/爬塔_buff推荐图标1__146_389_43_44__96_339_143_144.png"
-                ],
-                "green_mask": true,
-                "threshold": 0.6
-            },
-            "type": "TemplateMatch"
+                "custom_recognition": "auto_tower",
+                "custom_recognition_param": "{}"
+            }
         },
         "next": [
             "星塔_节点_选择buff_拿走"

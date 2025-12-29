@@ -1,0 +1,515 @@
+{
+    "邀约_入口": {
+        "focus": {
+            "Node.Recognition.Starting": "执行邀约"
+        },
+        "next": [
+            "心链_打开心链",
+            {
+                "jump_back": true,
+                "name": "通用_返回主页"
+            }
+        ]
+    },
+    "邀约_前往邀约": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Recognition.Starting": "邀约_前往邀约"
+        },
+        "next": [
+            "邀约_主界面"
+        ],
+        "recognition": {
+            "param": {
+                "expected": [
+                    "邀约"
+                ],
+                "roi": [
+                    72,
+                    612,
+                    388,
+                    79
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "邀约_主界面": {
+        "focus": {
+            "Node.Recognition.Starting": "邀约_主界面"
+        },
+        "next": [
+            "邀约_总循环"
+        ],
+        "recognition": {
+            "param": {
+                "expected": [
+                    "邀约"
+                ],
+                "roi": [
+                    82,
+                    128,
+                    65,
+                    38
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "邀约_总循环": {
+        "next": [
+            "邀约_达上限",
+            {
+                "jump_back": true,
+                "name": "邀约_点击空白"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_默契提升"
+            },
+            {
+                "jump_back": true,
+                "name": "未邀约"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_1号"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_2号"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_3号"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_4号"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_5号"
+            },
+        ]
+    },
+    "邀约_1号": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "希娅"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            },
+            "type": "OCR"
+        },
+        "max_hit": 2
+    },
+    "邀约_2号": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "雾语"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            },
+            "type": "OCR"
+        },
+        "max_hit": 2
+    },
+    "邀约_3号": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "苍兰"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            },
+            "type": "OCR"
+        },
+        "max_hit": 2
+    },
+    "邀约_4号": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "冬香"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            },
+            "type": "OCR"
+        },
+        "max_hit": 2
+    },
+    "邀约_5号": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "夏花"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            },
+            "type": "OCR"
+        },
+        "max_hit": 2
+    },
+    "未邀约": {
+        "focus": {
+            "Node.Recognition.Starting": "未邀约"
+        },
+        "next": [
+            "邀约流程"
+        ],
+        "recognition": {
+            "param": {
+                "template": [
+                    "Invite/邀约按钮.png"
+                ],
+                "roi": [
+                    833,
+                    629,
+                    128,
+                    40
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "邀约流程": {
+        "next": [
+            "邀约_点击空白",
+            {
+                "jump_back": true,
+                "name": "开始邀约"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_地点"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_跳过"
+            },
+            {
+                "jump_back": true,
+                "name": "邀约_送礼"
+            }
+        ]
+    },
+    "邀约_点击空白": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "点击空白",
+                    "处继续"
+                ],
+                "roi": [
+                    471,
+                    486,
+                    335,
+                    216
+                ]
+            },
+            "type": "OCR"
+        },
+    },
+    "邀约_默契提升": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "默契",
+                    "提升"
+                ],
+                "roi": [
+                    789,
+                    200,
+                    268,
+                    81
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "开始邀约": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Recognition.Starting": "开始邀约"
+        },
+        "next": [],
+        "recognition": {
+            "param": {
+                "template": [
+                    "Invite/邀约按钮.png"
+                ],
+                "roi": [
+                    833,
+                    629,
+                    128,
+                    40
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "邀约_地点": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Recognition.Starting": "邀约_地点"
+        },
+        "next": [],
+        "recognition": {
+            "param": {
+                "expected": [
+                    "选择"
+                ],
+                "roi": [
+                    1071,
+                    200,
+                    122,
+                    398
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "邀约_跳过": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Recognition.Starting": "正在跳过邀约"
+        },
+        "next": [],
+        "recognition": {
+            "param": {
+                "template": [
+                    "Invite/邀约跳过.png"
+                ],
+                "roi": [
+                    1152,
+                    39,
+                    76,
+                    73
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "邀约_送礼": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Recognition.Starting": "正在送礼"
+        },
+        "next": [
+            "邀约_送礼流程"
+        ],
+        "recognition": {
+            "param": {
+                "expected": [
+                    "送出礼物"
+                ],
+                "roi": [
+                    751,
+                    476,
+                    458,
+                    154
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "邀约_送礼流程": {
+        "focus": {
+            "Node.Recognition.Failed": "没有找到礼物图标 可能是没有礼物 将跳过",
+            "Node.Recognition.Starting": "正在选择礼物"
+        },
+        "next": [
+            "邀约_选择礼物成功",
+            {
+                "jump_back": true,
+                "name": "邀约_选择礼物"
+            }
+        ],
+        "on_error": [
+            "邀约_还是算了"
+        ]
+    },
+    "邀约_选择礼物": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "template": [
+                    "Invite/邀约_喜好图标.png"
+                ],
+                "roi": [
+                    750,
+                    239,
+                    460,
+                    194
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "邀约_选择礼物成功": {
+        "next": [
+            "邀约_送出礼物"
+        ],
+        "recognition": {
+            "param": {
+                "expected": [
+                    "1"
+                ],
+                "roi": [
+                    1131,
+                    584,
+                    16,
+                    24
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "邀约_送出礼物": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Recognition.Starting": "邀约_送出礼物"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "送出礼物"
+                ],
+                "roi": [
+                    1041,
+                    613,
+                    133,
+                    41
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "邀约_还是算了": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Recognition.Starting": "还是算了"
+        },
+        "next": [],
+        "recognition": {
+            "param": {
+                "expected": [
+                    "还是算了"
+                ],
+                "roi": [
+                    795,
+                    606,
+                    151,
+                    58
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "邀约_达上限": {
+        "focus": {
+            "Node.Recognition.Starting": "邀约_达上限"
+        },
+        "next": [
+            "心链_关闭心链",
+            {
+                "jump_back": true,
+                "name": "邀约_默契提升"
+            }
+        ],
+        "recognition": {
+            "param": {
+                "expected": [
+                    "5.5"
+                ],
+                "roi": [
+                    1021,
+                    640,
+                    156,
+                    46
+                ]
+            },
+            "type": "OCR"
+        }
+    }
+}

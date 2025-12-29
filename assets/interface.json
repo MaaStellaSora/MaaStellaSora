@@ -68,6 +68,21 @@
             "description": "自动打开心链页面，并且为心链顶置旅人赠送礼物"
         },
         {
+            "name": "邀约",
+            "entry": "邀约_入口",
+            "description": "自动邀约",
+            "pipeline_override": {
+                "心链_打开心链": {
+                    "next": [
+                        "邀约_前往邀约"
+                    ]
+                }
+            },
+            "option": [
+                "邀约旅人"
+            ]
+        },
+        {
             "name": "活动快速战斗",
             "entry": "活动_打开活动",
             "description": "自动打开活动页面，并且对活动第一关进行快速战斗",
@@ -780,6 +795,108 @@
                             "custom_recognition": "auto_tower",
                             "custom_recognition_param": "{作业}"
                         }
+                    }
+                }
+            }
+        },
+        "邀约旅人": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "1号",
+                    "pipeline_type": "string",
+                    "default": "希娅",
+                    "pattern_msg": "请输入旅人名字，如希娅",
+                    "description": "请输入旅人名字，如希娅"
+                },
+                {
+                    "name": "2号",
+                    "pipeline_type": "string",
+                    "default": "千都世",
+                    "pattern_msg": "请输入旅人名字，如希娅",
+                    "description": "请输入旅人名字，如希娅"
+                },
+                {
+                    "name": "3号",
+                    "pipeline_type": "string",
+                    "default": "雾语",
+                    "pattern_msg": "请输入旅人名字，如希娅",
+                    "description": "请输入旅人名字，如希娅"
+                },
+                {
+                    "name": "4号",
+                    "pipeline_type": "string",
+                    "default": "赤霞",
+                    "pattern_msg": "请输入旅人名字，如希娅",
+                    "description": "请输入旅人名字，如希娅"
+                },
+                {
+                    "name": "5号",
+                    "pipeline_type": "string",
+                    "default": "冬香",
+                    "pattern_msg": "请输入旅人名字，如希娅",
+                    "description": "请输入旅人名字，如希娅"
+                },
+            ],
+            "pipeline_override": {
+                "邀约_1号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{1号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Starting": "尝试邀约_{1号}"
+                    }
+                },
+                "邀约_2号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{2号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Starting": "尝试邀约_{2号}"
+                    }
+                },
+                "邀约_3号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{3号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Starting": "尝试邀约_{3号}"
+                    }
+                },
+                "邀约_4号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{4号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Starting": "尝试邀约_{4号}"
+                    }
+                },
+                "邀约_5号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{5号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Starting": "尝试邀约_{5号}"
                     }
                 }
             }

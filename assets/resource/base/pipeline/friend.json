@@ -1,84 +1,100 @@
 {
-    "好友_一键获取": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "focus": {
-            "Node.Recognition.Failed": "没有找到一键获取按钮",
-            "Node.Recognition.Starting": "正在尝试点击一键获取"
-        },
-        "next": [
-            "通用_返回主页"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "键获取"
-                ]
-            },
-            "type": "OCR"
-        }
+  "好友_一键获取": {
+    "action": {
+      "param": {},
+      "type": "Click"
     },
-    "好友_一键赠送": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "focus": {
-            "Node.Recognition.Failed": "没有找到一键赠送按钮",
-            "Node.Recognition.Starting": "正在尝试点击一键赠送"
-        },
-        "next": [
-            "好友_一键获取"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "键赠送"
-                ]
-            },
-            "type": "OCR"
-        }
+    "focus": {
+      "Node.Recognition.Failed": "没有找到一键获取按钮",
+      "Node.Recognition.Starting": "正在尝试点击一键获取"
     },
-    "好友_前往好友页": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "focus": {
-            "Node.Recognition.Starting": "正在前往好友页"
-        },
-        "next": [
-            "好友_好友列表"
-        ],
-        "recognition": {
-            "param": {
-                "template": [
-                    "friends.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        }
-    },
-    "好友_好友列表": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "focus": {
-            "Node.Recognition.Starting": "正在前往好友列表"
-        },
-        "next": [
-            "好友_一键赠送"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "好友列表"
-                ]
-            },
-            "type": "OCR"
-        }
+    "next": [
+      "通用_返回主页"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "键获取"
+        ]
+      },
+      "type": "OCR"
     }
+  },
+  "好友_一键赠送": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Recognition.Failed": "没有找到一键赠送按钮",
+      "Node.Recognition.Starting": "正在尝试点击一键赠送"
+    },
+    "next": [
+      "好友_一键获取"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "键赠送"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "好友_入口": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "next": [
+      "好友_前往好友页",
+      "通用_返回主页"
+    ],
+    "post_delay": 0,
+    "pre_delay": 0,
+    "recognition": {
+      "param": {},
+      "type": "DirectHit"
+    }
+  },
+  "好友_前往好友页": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Recognition.Starting": "正在前往好友页"
+    },
+    "next": [
+      "好友_好友列表"
+    ],
+    "recognition": {
+      "param": {
+        "template": [
+          "friends.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "好友_好友列表": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Recognition.Starting": "正在前往好友列表"
+    },
+    "next": [
+      "好友_一键赠送"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "好友列表"
+        ]
+      },
+      "type": "OCR"
+    }
+  }
 }

@@ -1,80 +1,80 @@
 {
-    "委托_再次派遣": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "next": [
-            "通用_返回主页"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "再次派遣"
-                ]
-            },
-            "type": "OCR"
-        }
+  "委托_入口": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
     },
-    "委托_前往委托": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "focus": {
-            "Node.Recognition.Starting": "正在前往委托"
-        },
-        "next": [
-            "委托_异常处理"
-        ],
-        "recognition": {
-            "param": {
-                "template": [
-                    "entrust.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        }
-    },
-    "委托_异常处理": {
-        "action": {
-            "param": {},
-            "type": "DoNothing"
-        },
-        "on_error": [
-            "通用_返回主页"
-        ],
-        "next": [
-            {
-                "jump_back": true,
-                "name": "通用_一键领取"
-            },
-            {
-                "jump_back": true,
-                "name": "委托_跳过 "
-            },
-            "委托_再次派遣"
-        ],
-        "recognition": {
-            "param": {},
-            "type": "DirectHit"
-        }
-    },
-    "委托_跳过 ": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "next": [
-            "通用_点击空白处继续"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "跳过"
-                ]
-            },
-            "type": "OCR"
-        }
+    "next": [
+      "委托_前往委托",
+      "通用_返回主页"
+    ],
+    "post_delay": 0,
+    "pre_delay": 0,
+    "recognition": {
+      "param": {},
+      "type": "DirectHit"
     }
+  },
+  "委托_再次派遣": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "通用_返回主页"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "再次派遣"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "委托_前往委托": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Recognition.Starting": "正在前往委托"
+    },
+    "next": [
+      {
+        "jump_back": true,
+        "name": "委托_跳过 "
+      },
+      {
+        "jump_back": true,
+        "name": "通用_一键领取"
+      },
+      "委托_再次派遣"
+    ],
+    "recognition": {
+      "param": {
+        "template": [
+          "entrust.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "委托_跳过 ": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "通用_点击空白处继续"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "跳过"
+        ]
+      },
+      "type": "OCR"
+    }
+  }
 }

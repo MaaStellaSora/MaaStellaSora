@@ -42,6 +42,20 @@ class UToolCalcRepeat(CustomAction):
         if value < 1:
             value = 1
 
+        if value <= 1:
+            # No extra runs needed: skip the "add times" click and go on.
+            context.override_pipeline(
+                {
+                    "活动_添加战斗次数": {
+                        "recognition": {"type": "DirectHit", "param": {}},
+                        "action": {"type": "DoNothing", "param": {}},
+                        "next": ["活动_确认", "活动_开始战斗"],
+                    }
+                }
+            )
+            print("utool_calc_repeat: input=1, skip add times")
+            return True
+
         repeat = value - 1
         context.override_pipeline({"活动_添加战斗次数": {"repeat": repeat}})
         print(f"utool_calc_repeat: input={value}, repeat={repeat}")

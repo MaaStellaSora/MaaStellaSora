@@ -1,0 +1,20 @@
+{
+  "委托_再次派遣": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "再受注"
+        ]
+      }
+    }
+  },
+  "委托_跳过": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "SKIP"
+        ]
+      }
+    }
+  }
+}

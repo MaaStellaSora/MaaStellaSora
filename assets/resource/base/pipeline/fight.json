@@ -88,7 +88,6 @@
       "param": {},
       "type": "Click"
     },
-    "post_wait_freezes": 500,
     "focus": {
       "Node.Recognition.Starting": "开始识别悬赏试炼按钮",
       "Node.Recognition.Succeeded": "成功识别悬赏试炼按钮",
@@ -147,6 +146,7 @@
       "Node.Action.Succeeded": "成功点击基础试炼按钮",
       "Node.Action.Failed": "点击基础试炼按钮失败"
     },
+    "post_delay": 1500,
     "next": [
       "战斗_试炼出发"
     ],
@@ -173,6 +173,9 @@
       "Node.Action.Succeeded": "试炼子菜单操作执行成功",
       "Node.Action.Failed": "试炼子菜单操作执行失败"
     },
+    "next": [
+      "[JumpBack]战斗_试炼出发"
+    ],
     "recognition": {
       "param": {
         "expected": [

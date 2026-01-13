@@ -1102,10 +1102,10 @@ class ShopAction(CustomAction):
                 available_grids.append(grid_index)
                 continue
             grid_main_result = context.run_recognition(
-                "星塔_节点_商店_购物_格子_音符_agent",
+                "星塔_节点_商店_购物_格子_判断_音符_agent",
                 img,
                 pipeline_override={
-                    "星塔_节点_商店_购物_格子_音符_agent": {
+                    "星塔_节点_商店_购物_格子_判断_音符_agent": {
                         "recognition": {
                             "param": {
                                 "roi": roi,

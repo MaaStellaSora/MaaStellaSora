@@ -250,6 +250,22 @@
             "type": "OCR"
         }
     },
+    "星塔_节点_商店_购物_格子_判断_音符_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "之音"
+                ],
+                "roi": [
+                    339,
+                    215,
+                    612,
+                    353
+                ]
+            },
+            "type": "OCR"
+        }
+    },
     "星塔_节点_商店_购物_格子_音符_激活_agent": {
         "recognition": {
             "param": {

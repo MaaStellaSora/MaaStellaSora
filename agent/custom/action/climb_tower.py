@@ -1098,7 +1098,7 @@ class ShopAction(CustomAction):
         for grid_index, roi in grid_rois.items():
             print(f"正在识别格子 {grid_index}")
 
-            if grid_index > 5:
+            if grid_index < 5:
                 available_grids.append(grid_index)
                 continue
             grid_main_result = context.run_recognition(

@@ -149,7 +149,7 @@
             ]
         },
         {
-            "name": "爬塔_agent",
+            "name": "新版爬塔（测试版）",
             "entry": "星塔_入口",
             "repeatable": true,
             "repeat_count": 1,
@@ -311,140 +311,132 @@
             "type": "select",
             "label": "选择活动关卡",
             "description": "选择要快速战斗的活动关卡",
-            "default_case": "1.雪愿夜的奇境冒险I",
+            "default_case": "深入温室的调查I",
             "cases": [
                 {
-                    "name": "1.雪愿夜的奇境冒险I",
-                    "label": "1.雪愿夜的奇境冒险I",
-                    "description": "12-23更新 活动普通第一关",
+                    "name": "深入温室的调查I",
+                    "label": "深入温室的调查I",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_1.png"
+                                    "expected": [
+                                        "深入温室的调查I"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }
                 },
                 {
-                    "name": "2.雪愿夜的奇境冒险II",
-                    "label": "2.雪愿夜的奇境冒险II",
-                    "description": "12-23更新 活动普通第二关",
+                    "name": "深入温室的调查II",
+                    "label": "深入温室的调查II",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_2.png"
+                                    "expected": [
+                                        "深入温室的调查II"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }
                 },
                 {
-                    "name": "3.雪愿夜的奇境冒险III",
-                    "label": "3.雪愿夜的奇境冒险III",
-                    "description": "12-23更新 活动普通第三关",
+                    "name": "深入温室的调查III",
+                    "label": "深入温室的调查III",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_3.png"
+                                    "expected": [
+                                        "深入温室的调查III"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }
                 },
                 {
-                    "name": "4.出逃的礼物车I",
-                    "label": "4.出逃的礼物车I",
-                    "description": "12-23更新 活动普通第四关",
+                    "name": "秘密的果实I",
+                    "label": "秘密的果实I",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_4.png"
+                                    "expected": [
+                                        "秘密的果实I"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }
                 },
                 {
-                    "name": "5.雪愿夜的奇境冒险IV",
-                    "label": "5.雪愿夜的奇境冒险IV",
-                    "description": "12-23更新 活动普通第五关",
+                    "name": "秘密的果实II",
+                    "label": "秘密的果实II",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_5.png"
+                                    "expected": [
+                                        "秘密的果实II"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }
                 },
                 {
-                    "name": "6.雪愿夜的奇境冒险V",
-                    "label": "6.雪愿夜的奇境冒险V",
-                    "description": "12-23更新 活动普通第六关",
+                    "name": "秘密的果实III",
+                    "label": "秘密的果实III",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_6.png"
+                                    "expected": [
+                                        "秘密的果实III"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }
                 },
                 {
-                    "name": "7.雪愿夜的奇境冒险VI",
-                    "label": "7.雪愿夜的奇境冒险VI",
-                    "description": "12-23更新 活动普通第七关",
+                    "name": "秘密的果实IV",
+                    "label": "秘密的果实IV",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_7.png"
+                                    "expected": [
+                                        "秘密的果实IV"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }
                 },
                 {
-                    "name": "8.雪夜颂歌与怪诞暖炉I",
-                    "label": "8.雪夜颂歌与怪诞暖炉I",
-                    "description": "12-23更新 活动普通第八关",
+                    "name": "致命魔术I",
+                    "label": "致命魔术I",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
-                                    "template": [
-                                        "activity_fight_8.png"
+                                    "expected": [
+                                        "致命魔术I"
                                     ]
                                 },
-                                "type": "TemplateMatch"
+                                "type": "OCR"
                             }
                         }
                     }

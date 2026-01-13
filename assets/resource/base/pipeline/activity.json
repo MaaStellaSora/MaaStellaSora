@@ -144,11 +144,11 @@
     ],
     "recognition": {
       "param": {
-        "template": [
-          "activity_fight_1.png"
+        "expected": [
+          "深入温室的调查I"
         ]
       },
-      "type": "TemplateMatch"
+      "type": "OCR"
     }
   }
 }

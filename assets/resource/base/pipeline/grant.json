@@ -86,7 +86,7 @@
         "recognition": {
             "param": {
                 "expected": [
-                    "等级"
+                    "提升"
                 ]
             },
             "type": "OCR"

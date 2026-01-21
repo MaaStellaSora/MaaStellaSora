@@ -150,6 +150,10 @@
       {
         "jump_back": true,
         "name": "月卡_领取"
+      },
+      {
+        "jump_back": true,
+        "name": "登录_点击任意区域进入游戏"
       }
     ]
   },

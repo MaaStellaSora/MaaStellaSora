@@ -19,10 +19,13 @@
         /* ================= 全局变量与重置 ================= */
         :root {
             --primary-color: #007AFF;
-            --primary-hover: #0056b3;
-            --bg-color: #f8f9fa;
+            --primary-hover: #0066d6;
+            --bg-color: #f5f7fa;
             --text-main: #1d1d1f;
-            --grid-line: rgba(0, 122, 255, 0.1);
+            --text-secondary: #86868b;
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 30px 60px rgba(0, 0, 0, 0.12);
             --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
@@ -30,6 +33,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
@@ -40,46 +44,49 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            line-height: 1.5;
         }
 
         /* ================= 右上角 GitHub 悬浮按钮 ================= */
         .github-stats-btn {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 24px;
+            right: 24px;
             z-index: 1000;
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: 24px;
             border: 1px solid rgba(0, 0, 0, 0.05);
             text-decoration: none;
             color: #24292e;
             font-weight: 600;
             font-size: 0.9rem;
             transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             cursor: pointer;
         }
 
         .github-stats-btn:hover {
             background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
 
         .star-num {
-            background: #e1e4e8;
+            background: #f0f2f5;
             padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.85em;
+            border-radius: 12px;
+            font-size: 0.8em;
             color: #24292e;
             min-width: 24px;
             text-align: center;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
         }
 
         /* ================= 动态背景 Canvas ================= */
@@ -90,95 +97,100 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at 50% 50%, #ffffff, #eef2f5);
+            background: radial-gradient(circle at 50% 0%, #ffffff, #f0f4f8 80%);
         }
 
         /* ================= 主要内容区域 ================= */
         main {
             flex: 1;
             width: 100%;
-            padding: 80px 5% 50px;
+            padding: 120px 5% 100px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             z-index: 2;
         }
 
+        /* Hero 容器 */
         .hero-container {
             max-width: 1200px;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 50px;
+            gap: 60px;
+            margin-bottom: 80px;
+            /* 为下方的预览图留出空间 */
         }
 
         /* 左侧文本区域 */
         .hero-content {
             flex: 1;
             opacity: 0;
-            transform: translateY(30px);
-            animation: slideUpFade 0.8s forwards 0.3s;
+            transform: translateY(20px);
+            animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.2s;
         }
 
         .hero-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            background: rgba(0, 122, 255, 0.1);
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            background: rgba(0, 122, 255, 0.08);
             color: var(--primary-color);
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 25px;
-            border: 1px solid rgba(0, 122, 255, 0.2);
-            font-variant-numeric: tabular-nums;
+            margin-bottom: 24px;
+            border: 1px solid rgba(0, 122, 255, 0.15);
+            letter-spacing: 0.5px;
         }
 
-        /* 标题容器 */
         .title-wrapper {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
-        /* 标题样式统一 */
         .main-title {
-            font-size: 3.5rem;
-            font-weight: 700;
-            line-height: 1.1;
-            letter-spacing: -1px;
+            font-size: 3.8rem;
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -1.5px;
             margin: 0;
+            letter-spacing: -0.02em;
         }
 
         .title-en {
             color: var(--text-main);
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .title-cn {
-            color: var(--primary-color);
+            background: linear-gradient(135deg, #007AFF 0%, #00C6FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             display: block;
-            margin-top: 4px;
         }
 
         .description {
-            font-size: 1.2rem;
-            color: #666;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
             margin-bottom: 40px;
-            max-width: 500px;
-            line-height: 1.5;
+            max-width: 520px;
+            line-height: 1.6;
+            font-weight: 400;
         }
 
-        /* 按钮组 */
         .btn-group {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
         }
 
         .btn {
-            padding: 14px 32px;
-            border-radius: 12px;
+            padding: 16px 36px;
+            border-radius: 16px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
@@ -193,42 +205,45 @@
         }
 
         .btn i {
-            margin-right: 8px;
+            margin-right: 10px;
+            font-size: 1.1em;
         }
 
-        /* 主下载按钮 */
+        /* 主下载按钮优化 */
         .btn-primary {
-            background-color: #24292e;
+            background-color: #1d1d1f;
             color: white;
-            box-shadow: 0 4px 15px rgba(36, 41, 46, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
         }
 
         .btn-primary:hover {
             background-color: #000;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
         }
 
         .btn:disabled {
-            opacity: 0.7;
-            cursor: wait;
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
         }
 
-        /* Mirror 按钮 */
+        /* Mirror 按钮优化 */
         .btn-outline {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.5);
             color: var(--text-main);
-            border: 2px solid #e0e0e0;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 2px solid rgba(0, 0, 0, 0.08);
         }
 
         .btn-outline:hover {
+            background-color: white;
             border-color: var(--primary-color);
             color: var(--primary-color);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         }
 
-        /* 右侧角色区域 */
+        /* 右侧 Logo 区域 */
         .hero-image {
             flex: 1;
             display: flex;
@@ -236,20 +251,20 @@
             position: relative;
             z-index: 2;
             opacity: 0;
-            animation: fadeIn 1s forwards 0.6s;
+            animation: fadeIn 1s ease-out forwards 0.5s;
         }
 
         .character-wrapper {
             position: relative;
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
             animation: float 6s ease-in-out infinite;
         }
 
         .character-img {
             width: 100%;
             height: auto;
-            filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.15));
+            filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.15));
             object-fit: contain;
         }
 
@@ -258,31 +273,60 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%;
-            height: 80%;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 122, 255, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.06) 0%, rgba(255, 255, 255, 0) 70%);
             z-index: -1;
             pointer-events: none;
         }
 
-        /* Toast 提示框 */
+        /* ================= 软件预览区域 (新增) ================= */
+        .preview-section {
+            width: 100%;
+            max-width: 1100px;
+            opacity: 0;
+            animation: slideUpFade 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.8s;
+            /* 延迟出现 */
+        }
+
+        .preview-container {
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            /* 避免图片加载时的闪烁，给个背景色 */
+            background-color: #f0f0f0;
+        }
+
+        /* ================= Toast 提示框 ================= */
         .toast {
             position: fixed;
             bottom: 30px;
             left: 50%;
-            transform: translateX(-50%) translateY(50px);
-            background: rgba(0, 0, 0, 0.8);
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 12px 24px;
+            padding: 14px 28px;
             border-radius: 50px;
             font-size: 0.95rem;
             z-index: 2000;
             opacity: 0;
-            transition: all 0.4s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
             gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
         }
 
         .toast.show {
@@ -297,7 +341,7 @@
             }
 
             50% {
-                transform: translateY(-20px) rotate(1deg);
+                transform: translateY(-15px) rotate(1deg);
             }
 
             100% {
@@ -314,7 +358,7 @@
         @keyframes slideUpFade {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(40px);
             }
 
             to {
@@ -324,7 +368,7 @@
         }
 
         /* ================= 响应式调整 ================= */
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
             .hero-container {
                 flex-direction: column-reverse;
                 text-align: center;
@@ -332,9 +376,25 @@
             }
 
             .hero-content {
+                align-items: center;
+            }
+
+            .hero-image {
+                justify-content: center;
+                width: 70%;
+            }
+
+            .title-wrapper {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding-top: 100px;
+                padding-bottom: 60px;
             }
 
             .main-title {
@@ -342,26 +402,22 @@
             }
 
             .description {
-                max-width: 100%;
-            }
-
-            .btn-group {
-                justify-content: center;
-            }
-
-            .hero-image {
-                justify-content: center;
-                width: 80%;
+                font-size: 1.1rem;
             }
 
             .github-stats-btn {
-                top: 10px;
-                right: 10px;
+                top: 16px;
+                right: 16px;
                 padding: 6px 12px;
+                font-size: 0.8rem;
             }
 
             .github-stats-btn span:not(.star-num) {
                 display: none;
+            }
+
+            .preview-section {
+                margin-top: 20px;
             }
         }
     </style>
@@ -379,9 +435,9 @@
     <canvas id="bg-canvas"></canvas>
 
     <main>
+        <!-- Hero 区域 -->
         <div class="hero-container">
             <div class="hero-content">
-                <!-- 版本号将通过 JS 设置这里的内容 -->
                 <span class="hero-badge" id="versionBadge">Loading...</span>
 
                 <div class="title-wrapper">
@@ -407,10 +463,22 @@
             <div class="hero-image">
                 <div class="character-wrapper">
                     <div class="decoration-circle"></div>
+                    <!-- 这里的 logo.png 请确保路径正确 -->
                     <img src="logo.png" alt="MaaStellaSora Logo" class="character-img">
                 </div>
             </div>
         </div>
+
+        <!-- 软件预览区域 (新增) -->
+        <div class="preview-section">
+            <div class="preview-container">
+                <!-- 请替换 src 为您的软件截图路径，例如 preview.png -->
+                <!-- 如果没有图片，这里显示一个占位符 -->
+                <img src="preview.png" alt="MaaStellaSora Preview" class="preview-img"
+                    onerror="this.style.display='none'">
+            </div>
+        </div>
+
     </main>
 
     <div class="toast" id="toast">
@@ -420,7 +488,6 @@
 
     <script>
         // ================= 配置与状态 =================
-        // GitHub Actions 会自动修改这一行的版本号
         const DEFAULT_VERSION = 'v0.7.7-fix-1';
         let currentVersion = DEFAULT_VERSION;
 
@@ -430,7 +497,6 @@
 
         // ================= 1. 初始化 UI (使用固定版本) =================
         function initUI() {
-            // 直接使用代码中的版本号，不进行 API 获取
             document.getElementById('versionBadge').textContent = currentVersion;
             updateGithubButton();
         }
@@ -525,7 +591,7 @@
             toast.classList.add('show');
 
             if (type === 'warning') toast.style.background = 'rgba(255, 167, 38, 0.9)';
-            else toast.style.background = 'rgba(0,0,0,0.8)';
+            else toast.style.background = 'rgba(0,0,0,0.85)';
 
             setTimeout(() => {
                 toast.classList.remove('show');
@@ -585,7 +651,7 @@
 
         function animate() {
             ctx.clearRect(0, 0, width, height);
-            ctx.strokeStyle = 'rgba(0, 122, 255, 0.08)';
+            ctx.strokeStyle = 'rgba(0, 122, 255, 0.06)'; /* 降低网格线透明度，使其更精致 */
             ctx.lineWidth = 1;
             offset = (offset + gridSpeed) % gridSpacing;
 
@@ -619,7 +685,6 @@
         initParticles();
         animate();
 
-        // 页面加载时初始化
         initUI();
         fetchRepoStats();
 

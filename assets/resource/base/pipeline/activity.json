@@ -5,7 +5,7 @@
       "type": "DoNothing"
     },
     "next": [
-      "活动_打开活动",
+      "活动_判断是否在主页",
       {
         "jump_back": true,
         "name": "通用_返回主页"
@@ -15,6 +15,23 @@
       "param": {},
       "type": "DirectHit"
     }
+  },
+  "活动_判断是否在主页": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "next": [
+      "活动_打开活动"
+    ]
   },
   "活动_开启快速战斗": {
     "action": {

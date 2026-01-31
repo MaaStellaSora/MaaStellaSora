@@ -5,7 +5,7 @@
       "type": "DoNothing"
     },
     "next": [
-      "心链_打开心链",
+      "心链_判断是否在主页",
       {
         "jump_back": true,
         "name": "通用_返回主页"
@@ -17,6 +17,23 @@
       "param": {},
       "type": "DirectHit"
     }
+  },
+  "心链_判断是否在主页": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "next": [
+      "心链_打开心链"
+    ]
   },
   "心链_打开心链": {
     "action": {

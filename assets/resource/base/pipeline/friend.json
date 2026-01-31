@@ -1,4 +1,21 @@
 {
+  "好友_判断是否在主页": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "next": [
+      "好友_前往好友页"
+    ]
+  },
   "好友_一键获取": {
     "action": {
       "param": {},
@@ -52,7 +69,7 @@
       "type": "DoNothing"
     },
     "next": [
-      "好友_前往好友页",
+      "好友_判断是否在主页",
       {
         "jump_back": true,
         "name": "通用_返回主页"

@@ -5,11 +5,28 @@
       "type": "DoNothing"
     },
     "next": [
-      "任务_领取任务",
+      "任务_判断是否在主页",
       {
         "jump_back": true,
         "name": "通用_返回主页"
       }
+    ]
+  },
+  "任务_判断是否在主页": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "next": [
+      "任务_领取任务"
     ]
   },
   "任务_一键领取": {

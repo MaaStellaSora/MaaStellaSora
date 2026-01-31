@@ -5,11 +5,28 @@
             "type": "DoNothing"
         },
         "next": [
-            "基金_打开基金",
+            "基金_判断是否在主页",
             {
                 "jump_back": true,
                 "name": "通用_返回主页"
             }
+        ]
+    },
+    "基金_判断是否在主页": {
+        "action": {
+            "param": {},
+            "type": "DoNothing"
+        },
+        "recognition": {
+            "param": {
+                "template": [
+                  "menu.png"
+                ]
+            },
+            "type": "TemplateMatch"
+        },
+        "next": [
+          "基金_打开基金"
         ]
     },
     "基金_打开基金": {

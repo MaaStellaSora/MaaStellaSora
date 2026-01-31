@@ -5,7 +5,7 @@
       "type": "DoNothing"
     },
     "next": [
-      "委托_前往委托",
+      "委托_判断是否在主页",
       {
         "jump_back": true,
         "name": "通用_返回主页"
@@ -17,6 +17,23 @@
       "param": {},
       "type": "DirectHit"
     }
+  },
+  "委托_判断是否在主页": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "next": [
+      "委托_前往委托"
+    ]
   },
   "委托_再次派遣": {
     "action": {

@@ -316,18 +316,18 @@
             "type": "select",
             "label": "选择活动关卡",
             "description": "选择要快速战斗的活动关卡",
-            "default_case": "深入温室的调查I",
+            "default_case": "新岁开门阵I",
             "cases": [
                 {
-                    "name": "深入温室的调查I",
-                    "label": "深入温室的调查I",
+                    "name": "新岁开门阵I",
+                    "label": "新岁开门阵I",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "深入温室的调查I",
-                                        "深入溫室的調查I",
+                                        "新岁开门阵I",
+                                        "新歲開門陣I",
                                         "開門の陣I"
                                     ]
                                 },
@@ -337,15 +337,15 @@
                     }
                 },
                 {
-                    "name": "深入温室的调查II",
-                    "label": "深入温室的调查II",
+                    "name": "新岁开门阵II",
+                    "label": "新岁开门阵II",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "深入温室的调查Ⅱ",
-                                        "深入溫室的調查Ⅱ",
+                                        "新岁开门阵Ⅱ",
+                                        "新歲開門陣Ⅱ",
                                         "開門の陣Ⅱ"
                                     ]
                                 },
@@ -355,15 +355,15 @@
                     }
                 },
                 {
-                    "name": "深入温室的调查III",
-                    "label": "深入温室的调查III",
+                    "name": "新岁开门阵III",
+                    "label": "新岁开门阵III",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "深入温室的调查Ⅲ",
-                                        "深入溫室的調查Ⅲ",
+                                        "新岁开门阵Ⅲ",
+                                        "新歲開門陣Ⅲ",
                                         "開門の陣Ⅲ"
                                     ]
                                 },
@@ -373,15 +373,15 @@
                     }
                 },
                 {
-                    "name": "秘密的果实I",
-                    "label": "秘密的果实I",
+                    "name": "汪旺巡逻队I",
+                    "label": "汪旺巡逻队I",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "秘密的果实I",
-                                        "秘密的果實I",
+                                        "汪旺巡逻队I",
+                                        "汪旺巡邏隊I",
                                         "巡回隊I"
                                     ]
                                 },
@@ -391,15 +391,15 @@
                     }
                 },
                 {
-                    "name": "秘密的果实II",
-                    "label": "秘密的果实II",
+                    "name": "守岁保卫战I",
+                    "label": "守岁保卫战I",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "秘密的果实Ⅱ",
-                                        "秘密的果實Ⅱ",
+                                        "守岁保卫战I",
+                                        "守歲保衛戰I",
                                         "蒼梧城攻防戦I"
                                     ]
                                 },
@@ -409,15 +409,15 @@
                     }
                 },
                 {
-                    "name": "秘密的果实III",
-                    "label": "秘密的果实III",
+                    "name": "守岁保卫战II",
+                    "label": "守岁保卫战II",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "秘密的果实Ⅲ",
-                                        "秘密的果實Ⅲ",
+                                        "守岁保卫战Ⅱ",
+                                        "守歲保衛戰Ⅱ",
                                         "蒼梧城攻防戦Ⅱ"
                                     ]
                                 },
@@ -427,15 +427,15 @@
                     }
                 },
                 {
-                    "name": "秘密的果实IV",
-                    "label": "秘密的果实IV",
+                    "name": "汪旺巡逻队II",
+                    "label": "汪旺巡逻队II",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "秘密的果实Ⅳ",
-                                        "秘密的果實Ⅳ",
+                                        "汪旺巡逻队Ⅱ",
+                                        "汪旺巡邏隊Ⅱ",
                                         "巡回隊Ⅱ"
                                     ]
                                 },
@@ -445,15 +445,15 @@
                     }
                 },
                 {
-                    "name": "致命魔术I",
-                    "label": "致命魔术I",
+                    "name": "福到闹团圆I",
+                    "label": "福到闹团圆I",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "致命魔术I",
-                                        "致命魔術I",
+                                        "福到闹团圆I",
+                                        "福到鬧團圓I",
                                         "笑門来福大乱闘I"
                                     ]
                                 },
@@ -1082,7 +1082,7 @@
                 }
             }
         },
-        "活动战斗消耗所有干劲":{
+        "活动战斗消耗所有干劲": {
             "type": "switch",
             "label": "消耗所有干劲",
             "description": "开启此项后，将无视输入的次数，将直接消耗所有干劲",
@@ -1106,7 +1106,7 @@
                 }
             ]
         },
-        "悬赏试炼消耗所有干劲":{
+        "悬赏试炼消耗所有干劲": {
             "type": "switch",
             "label": "消耗所有干劲",
             "description": "开启此项后，将无视输入的次数，直接消耗所有干劲",

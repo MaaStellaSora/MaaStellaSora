@@ -121,10 +121,6 @@
       },
       {
         "jump_back": true,
-        "name": "通用_返回主页按钮"
-      },
-      {
-        "jump_back": true,
         "name": "通用_返回按钮"
       },
       {

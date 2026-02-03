@@ -345,10 +345,10 @@
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "新岁开门阵Ⅱ",
-                                        "新歲開門陣Ⅱ",
-                                        "New Year's Opening Ⅱ",
-                                        "開門の陣Ⅱ"
+                                        "新岁开门阵II",
+                                        "新歲開門陣II",
+                                        "New Year's Opening II",
+                                        "開門の陣II"
                                     ]
                                 },
                                 "type": "OCR"
@@ -364,9 +364,9 @@
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "新岁开门阵Ⅲ",
-                                        "新歲開門陣Ⅲ",
-                                        "New Year's Opening Ⅲ",
+                                        "新岁开门阵III",
+                                        "新歲開門陣III",
+                                        "New Year's Opening III",
                                         "開門の陣Ⅲ"
                                     ]
                                 },
@@ -421,10 +421,10 @@
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "守岁保卫战Ⅱ",
-                                        "守歲保衛戰Ⅱ",
-                                        "Evelong Defense Ⅱ",
-                                        "蒼梧城攻防戦Ⅱ"
+                                        "守岁保卫战II",
+                                        "守歲保衛戰II",
+                                        "Evelong Defense II",
+                                        "蒼梧城攻防戦II"
                                     ]
                                 },
                                 "type": "OCR"
@@ -440,10 +440,10 @@
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "汪旺巡逻队Ⅱ",
-                                        "汪旺巡邏隊Ⅱ",
-                                        "Dog Patrol Squad Ⅱ",
-                                        "巡回隊Ⅱ"
+                                        "汪旺巡逻队II",
+                                        "汪旺巡邏隊II",
+                                        "Dog Patrol Squad II",
+                                        "巡回隊II"
                                     ]
                                 },
                                 "type": "OCR"

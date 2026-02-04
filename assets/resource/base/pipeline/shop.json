@@ -26,7 +26,16 @@
             "type": "TemplateMatch"
         },
         "next": [
-          "采购_前往采购"
+          "采购_开始采购"
+        ]
+    },
+    "采购_开始采购": {
+        "action": {
+            "param": {"custom_action": "DailyGiftAction"},
+            "type": "Custom"
+        },
+        "next": [
+          "通用_返回主页"
         ]
     },
     "采购_判断是否已领取": {
@@ -55,9 +64,6 @@
             "param": {},
             "type": "Click"
         },
-        "anchor": [
-            "前往采购"
-        ],
         "focus": {
             "Node.Action.Starting": "正在前往采购"
         },
@@ -72,7 +78,30 @@
                 ]
             },
             "type": "TemplateMatch"
-        }
+        },
+        "timeout": 2000
+    },
+    "采购_前往商城": {
+        "action": {
+            "param": {},
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Action.Starting": "正在前往商城"
+        },
+        "next": [
+            "采购_领取每日赠礼",
+            "采购_判断是否已领取"
+        ],
+        "recognition": {
+            "param": {
+                "template": [
+                    "shop/shop.png"
+                ]
+            },
+            "type": "TemplateMatch"
+        },
+        "timeout": 2000
     },
     "采购_领取每日赠礼": {
         "action": {

@@ -7,24 +7,5 @@
                 ]
             }
         }
-    },
-    "采购_领取每日赠礼": {
-        "action": {
-            "param": {
-                "target_offset": [
-                    40,
-                    -25,
-                    0,
-                    0
-                ]
-            }
-        },
-        "recognition": {
-            "param": {
-                "expected": [
-                    "デイリ"
-                ]
-            }
-        }
     }
 }

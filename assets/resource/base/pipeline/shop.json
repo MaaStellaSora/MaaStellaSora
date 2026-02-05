@@ -120,12 +120,13 @@
         ],
         "recognition": {
             "param": {
-                "expected": [
-                    "每日赠礼"
+                "template": [
+                    "shop/daily_gift.png"
                 ]
             },
-            "type": "OCR"
+            "type": "TemplateMatch"
         },
+        "pre_delay": 1000, // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
         "timeout": 2000
     }
 }

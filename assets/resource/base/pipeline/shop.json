@@ -121,7 +121,8 @@
         "recognition": {
             "param": {
                 "template": [
-                    "shop/daily_gift.png"
+                    "shop/daily_gift_1.png",
+                    "shop/daily_gift_2.png"
                 ]
             },
             "type": "TemplateMatch"

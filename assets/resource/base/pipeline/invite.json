@@ -233,11 +233,17 @@
     }
   },
   "邀约_总循环": {
-    "focus": {
-      "Node.Recognition.Failed": "邀约_总循环错误,确保设置五个不一样的旅人"
+    "action": {
+      "param": {
+        "custom_action": "InviteAuto"
+      },
+      "type": "Custom"
     },
+    "next": ["通用_返回主页"]
+  },
+  "邀约_回到邀约界面": {
     "next": [
-      "邀约_达上限",
+      "邀约_主界面",
       {
         "jump_back": true,
         "name": "邀约_点击空白"
@@ -245,33 +251,10 @@
       {
         "jump_back": true,
         "name": "邀约_默契提升"
-      },
-      {
-        "jump_back": true,
-        "name": "未邀约"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_1号"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_2号"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_3号"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_4号"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_5号"
       }
     ],
-    "timeout": 3000
+    "pre_wait_freezes": 1000,
+    "time_out": 60000
   },
   "邀约_点击确认按钮": {
     "action": {
@@ -338,32 +321,6 @@
         ]
       },
       "type": "TemplateMatch"
-    }
-  },
-  "邀约_达上限": {
-    "focus": {
-      "Node.Recognition.Succeeded": "邀约_达上限"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "邀约_默契提升"
-      },
-      "通用_返回主页"
-    ],
-    "recognition": {
-      "param": {
-        "expected": [
-          "5.5"
-        ],
-        "roi": [
-          1021,
-          640,
-          156,
-          46
-        ]
-      },
-      "type": "OCR"
     }
   },
   "邀约_还是算了": {

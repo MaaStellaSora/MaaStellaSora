@@ -42,6 +42,23 @@
       }
     }
   },
+  "邀约_送礼流程": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "デート",
+          "ギフト"
+        ],
+        "roi": [
+          767,
+          123,
+          210,
+          45
+        ]
+      },
+      "type": "OCR"
+    }
+  },
   "邀约_还是算了": {
     "recognition": {
       "param": {
@@ -82,10 +99,6 @@
     }
   },
   "邀约_默契提升": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
     "recognition": {
       "param": {
         "expected": [

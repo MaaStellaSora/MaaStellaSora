@@ -31,7 +31,9 @@
     },
     "采购_开始采购": {
         "action": {
-            "param": {"custom_action": "DailyGiftAction"},
+            "param": {
+                "custom_action": "DailyGiftAction"
+            },
             "type": "Custom"
         },
         "next": [

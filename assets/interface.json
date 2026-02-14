@@ -85,13 +85,6 @@
             "name": "邀约",
             "entry": "邀约_入口",
             "description": "自动邀约",
-            "pipeline_override": {
-                "心链_打开心链": {
-                    "next": [
-                        "邀约_前往邀约"
-                    ]
-                }
-            },
             "option": [
                 "邀约旅人"
             ]

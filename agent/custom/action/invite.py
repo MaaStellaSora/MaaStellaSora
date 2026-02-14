@@ -104,14 +104,15 @@ class InviteAuto(CustomAction):
         # 比较文本相似程度，如果相似程度高，则点击，并返回True，否则返回False
         for result in results:
             # 使用difflib库计算文本相似度
-            similarity = difflib.SequenceMatcher(None, result['text'], formatted_name).ratio()
+            formatted_result = result['text'].translate(translate_table)
+            similarity = difflib.SequenceMatcher(None, formatted_result, formatted_name).ratio()
 
             if similarity >= similarity_limit:
-                self.logger.debug(f"识别成功！预期: {formatted_name}, 识别结果: {result['text']}, 相似度: {similarity:.2f}")
+                self.logger.debug(f"识别成功！预期: {formatted_name}, 识别结果: {formatted_result}, 相似度: {similarity:.2f}")
                 context.tasker.controller.post_click(result['x'], result['y']).wait()
                 self.logger.debug(f"点击坐标{result['x']},{result['y']}完成")
                 return True
-            self.logger.debug(f"识别失败！预期: {formatted_name}, 识别结果: {result['text']}, 相似度: {similarity:.2f}")
+            self.logger.debug(f"识别失败！预期: {formatted_name}, 识别结果: {formatted_result}, 相似度: {similarity:.2f}")
         return False
 
     @staticmethod

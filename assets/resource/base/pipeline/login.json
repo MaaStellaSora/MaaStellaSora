@@ -1,5 +1,5 @@
 {
-    "登录_第一次进入主页": {
+    "登录_初次进入主页": {
         "action": {
             "param": {},
             "type": "DoNothing"
@@ -12,32 +12,34 @@
             },
             "type": "TemplateMatch"
         },
-      "next": [
-        "通用_返回主页"
-      ],
+        "next": [
+            "登录_二次确认进入主页",
+            {
+                "jump_back": true,
+                "name": "登录_点击关闭按钮"
+            },
+            {
+                "jump_back": true,
+                "name": "登录_点击文字"
+            },
+            {
+              "jump_back": true,
+              "name": "通用_点击空白处继续"
+            }
+        ],
         "post_delay": 2000
     },
-    "登录_关闭公告": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
+    "登录_二次确认进入主页": {
         "recognition": {
             "param": {
                 "template": [
-                    "close.png"
-                ],
-                "roi": [
-                  950,
-                  0,
-                  330,
-                  720
+                  "menu.png"
                 ]
             },
             "type": "TemplateMatch"
         }
     },
-    "登录_关闭每日签到": {
+    "登录_点击关闭按钮": {
         "action": {
             "param": {},
             "type": "Click"
@@ -45,28 +47,13 @@
         "recognition": {
             "param": {
                 "template": [
-                    "close_variant_1.png"
+                    "close.png", // 公告
+                    "close_variant_1.png", // 每日签到
+                    "close_variant_2.png" // 活动
                 ]
             },
             "type": "TemplateMatch"
-        },
-        "timeout": 1000
-    },
-    "登录_关闭活动": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "template": [
-                    "close_variant_2.png"
-                ],
-                "threshold": 0.8
-            },
-            "type": "TemplateMatch"
-        },
-        "timeout": 1000
+        }
     },
     "登录_点击任意区域进入游戏": {
         "action": {
@@ -84,7 +71,22 @@
             },
             "type": "OCR"
         },
-        "timeout": 10000
+        "next": [
+            "登录_初次进入主页",
+            {
+                "jump_back": true,
+                "name": "登录_点击关闭按钮"
+            },
+            {
+                "jump_back": true,
+                "name": "登录_点击文字"
+            },
+            {
+              "jump_back": true,
+              "name": "通用_点击空白处继续"
+            }
+        ],
+        "timeout": 30000
     },
     "登录_登录": {
         "action": {
@@ -92,55 +94,17 @@
             "type": "DoNothing"
         },
         "next": [
-            "登录_第一次进入主页",
+            "登录_点击任意区域进入游戏",
             {
                 "jump_back": true,
                 "name": "登录_登录悠星账号"
             },
             {
                 "jump_back": true,
-                "name": "登录_关闭公告"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_点击任意区域进入游戏"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_签到"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_签到_2"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_关闭每日签到"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_关闭活动"
-            },
-            {
-                "jump_back": true,
-                "name": "通用_点击空白处继续"
-            },
-            {
-                "jump_back": true,
                 "name": "登录_确认下载资源"
             }
-            // {
-            //     "jump_back": true,
-            //     "name": "通用_加载等待"
-            // }
         ],
-        "timeout": 30000,
-        "post_delay": 0,
-        "pre_delay": 0,
-        "recognition": {
-            "param": {},
-            "type": "DirectHit"
-        }
+        "timeout": 30000
     },
     "登录_登录悠星账号": {
         "action": {
@@ -161,37 +125,21 @@
         },
         "timeout": 10000
     },
-    "登录_签到": {
+    "登录_点击文字": {
         "action": {
             "param": {},
             "type": "Click"
         },
         "recognition": {
             "param": {
-                "expected": "可领取"
-            },
-            "type": "OCR"
-        },
-        "repeat": 3,
-        "repeat_delay": 1000,
-        "timeout": 1000
-    },
-    "登录_签到_2": {
-        "action": {
-            "param": {
-                "contact": 0
-            },
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
                 "expected": [
-                    "获得道具"
+                  "可领取", // 活动签到时获得道具
+                  "获得道具", // 活动签到时获得道具
+                  "点击任意区域进入游戏" // 登录界面
                 ]
             },
             "type": "OCR"
-        },
-        "timeout": 2000
+        }
     },
     "登录_确认下载资源": {
         "action": {
@@ -205,6 +153,38 @@
                 ]
             },
             "type": "TemplateMatch"
+        },
+        "next": [
+            "登录_下载完成_图片",
+            "登录_下载完成_文字",
+            {
+              "jump_back": true,
+              "name": "登录_等待下载"
+            }
+        ]
+    },
+    "登录_等待下载": {
+        "post_delay": 2000
+    },
+    "登录_下载完成_图片": {
+        "recognition": {
+            "param": {
+                "template": [
+                  "login.png",
+                  "login_2.png"
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "登录_下载完成_文字": {
+        "recognition": {
+            "param": {
+                "expected": [
+                  "点击任意区域进入游戏"
+                ]
+            },
+          "type": "OCR"
         }
     }
 }

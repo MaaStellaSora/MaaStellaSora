@@ -6,18 +6,23 @@
             }
         }
     },
-    "登录_签到": {
-        "recognition": {
-            "param": {
-                "expected": "受取可能"
-            }
-        }
-    },
-    "登录_签到_2": {
+    "登录_点击文字": {
         "recognition": {
             "param": {
                 "expected": [
-                    "獲得", "アイテム"
+                  "受取可能",
+                  "獲得",
+                  "アイテム",
+                  "TAP TO START"
+                ]
+            }
+        }
+    },
+    "登录_下载完成_文字": {
+        "recognition": {
+            "param": {
+                "expected": [
+                  "TAP TO START"
                 ]
             }
         }

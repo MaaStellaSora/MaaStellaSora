@@ -27,7 +27,7 @@ class InviteAuto(CustomAction):
         """
 
         # 开启debug模式
-        logger.debug_mode()
+        # logger.debug_mode()
 
         # 邀约对象的任务列表
         invite_nodes = ["邀约_1号", "邀约_2号", "邀约_3号", "邀约_4号", "邀约_5号"]

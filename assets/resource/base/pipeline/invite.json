@@ -388,7 +388,11 @@
       "type": "OCR"
     },
     "next": [
-      "邀约_已回到邀约界面"
+      "邀约_已回到邀约界面",
+      {
+        "jump_back": true,
+        "name": "邀约_默契提升"
+      }
     ],
     "post_wait_freezes": 1000
   },
@@ -492,9 +496,19 @@
         ],
         "template": [
           "Invite/邀约_喜好图标.png"
-        ]
+        ],
+        "order_by": "Vertical"
       },
-      "type": "TemplateMatch"
+      "type": "TemplateMatch",
+      "post_wait_freezes": {
+        "time": 200,
+        "target": [
+          905,
+          160,
+          297,
+          44
+        ]
+      }
     }
   },
   "邀约_选择礼物成功": {
@@ -576,6 +590,60 @@
         ]
       },
       "type": "OCR"
+    }
+  },
+  "邀约_向下滑动": {
+    "action": {
+      "param": {
+        "begin": [
+          270,
+          706
+        ],
+        "end": [
+          270,
+          224
+        ],
+        "duration": 800,
+        "end_hold": 500
+      },
+      "type": "Swipe"
+    },
+    "post_wait_freezes": 500
+  },
+  "邀约_向上滑动": {
+    "action": {
+      "param": {
+        "begin": [
+          270,
+          224
+        ],
+        "end": [
+          270,
+          706
+        ],
+        "duration": 800,
+        "end_hold": 500
+      },
+      "type": "Swipe"
+    },
+    "post_wait_freezes": 500
+  },
+  "邀约_已滑动到底部": {
+    "recognition": {
+      "param": {
+        "template": "invite_scroll_down_template",
+        "threshold": 0.99
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "邀约_已滑动到顶部": {
+    "recognition": {
+      "param": {
+        "template": "invite_scroll_up_template",
+        "threshold": 0.99
+      },
+      "type": "TemplateMatch"
     }
   }
 }

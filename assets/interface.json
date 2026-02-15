@@ -84,9 +84,14 @@
         {
             "name": "邀约",
             "entry": "邀约_入口",
-            "description": "自动邀约",
+            "description": "自动邀约<br>由于选项过多，可能需要下拉菜单才能看到其他选项",
             "option": [
-                "邀约旅人"
+                "邀约旅人",
+                "邀约旅人_1号_送礼",
+                "邀约旅人_2号_送礼",
+                "邀约旅人_3号_送礼",
+                "邀约旅人_4号_送礼",
+                "邀约旅人_5号_送礼"
             ]
         },
         {
@@ -956,31 +961,31 @@
                     "name": "1号",
                     "pipeline_type": "string",
                     "default": "希娅",
-                    "description": "请输入旅人名字，如希娅"
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
                 },
                 {
                     "name": "2号",
                     "pipeline_type": "string",
                     "default": "",
-                    "description": "请输入旅人名字，如希娅"
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
                 },
                 {
                     "name": "3号",
                     "pipeline_type": "string",
                     "default": "",
-                    "description": "请输入旅人名字，如希娅"
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
                 },
                 {
                     "name": "4号",
                     "pipeline_type": "string",
                     "default": "",
-                    "description": "请输入旅人名字，如希娅"
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
                 },
                 {
                     "name": "5号",
                     "pipeline_type": "string",
                     "default": "",
-                    "description": "请输入旅人名字，如希娅"
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
                 }
             ],
             "pipeline_override": {
@@ -1045,6 +1050,196 @@
                     }
                 }
             }
+        },
+        "邀约旅人_1号_送礼": {
+            "type": "select",
+            "label": "1号送礼类型",
+            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "不限",
+            "cases": [
+                {
+                    "label": "不限",
+                    "pipeline_override": {
+                        "邀约_1号": {
+                            "attach": {
+                                "gift": "all"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "最爱",
+                    "pipeline_override": {
+                        "邀约_1号": {
+                            "attach": {
+                                "gift": "favorite"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "不送",
+                    "pipeline_override": {
+                        "邀约_1号": {
+                            "attach": {
+                                "gift": "no"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "邀约旅人_2号_送礼": {
+            "type": "select",
+            "label": "2号送礼类型",
+            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "不限",
+            "cases": [
+                {
+                    "label": "不限",
+                    "pipeline_override": {
+                        "邀约_2号": {
+                            "attach": {
+                                "gift": "all"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "最爱",
+                    "pipeline_override": {
+                        "邀约_2号": {
+                            "attach": {
+                                "gift": "favorite"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "不送",
+                    "pipeline_override": {
+                        "邀约_2号": {
+                            "attach": {
+                                "gift": "no"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "邀约旅人_3号_送礼": {
+            "type": "select",
+            "label": "3号送礼类型",
+            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "不限",
+            "cases": [
+                {
+                    "label": "不限",
+                    "pipeline_override": {
+                        "邀约_3号": {
+                            "attach": {
+                                "gift": "all"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "最爱",
+                    "pipeline_override": {
+                        "邀约_3号": {
+                            "attach": {
+                                "gift": "favorite"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "不送",
+                    "pipeline_override": {
+                        "邀约_3号": {
+                            "attach": {
+                                "gift": "no"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "邀约旅人_4号_送礼": {
+            "type": "select",
+            "label": "4号送礼类型",
+            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "不限",
+            "cases": [
+                {
+                    "label": "不限",
+                    "pipeline_override": {
+                        "邀约_4号": {
+                            "attach": {
+                                "gift": "all"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "最爱",
+                    "pipeline_override": {
+                        "邀约_4号": {
+                            "attach": {
+                                "gift": "favorite"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "不送",
+                    "pipeline_override": {
+                        "邀约_4号": {
+                            "attach": {
+                                "gift": "no"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "邀约旅人_5号_送礼": {
+            "type": "select",
+            "label": "5号送礼类型",
+            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "不限",
+            "cases": [
+                {
+                    "label": "不限",
+                    "pipeline_override": {
+                        "邀约_5号": {
+                            "attach": {
+                                "gift": "all"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "最爱",
+                    "pipeline_override": {
+                        "邀约_5号": {
+                            "attach": {
+                                "gift": "favorite"
+                            }
+                        }
+                    }
+                },
+                {
+                    "label": "不送",
+                    "pipeline_override": {
+                        "邀约_5号": {
+                            "attach": {
+                                "gift": "no"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         "选择悬赏试炼难度": {
             "type": "input",

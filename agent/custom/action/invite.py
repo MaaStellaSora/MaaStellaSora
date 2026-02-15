@@ -18,12 +18,6 @@ class InviteAuto(CustomAction):
     ) -> bool:
         """
             邀约功能总控制节点
-            仅使用agent进行遍历与判断
-            使用pipeline执行邀约流程
-
-            TODO:
-                实现拖曳选择角色（用context.override_image跟context.run_recognition_direct去做识别）
-                个别送礼选项：笑脸，不限，不送
         """
 
         # 开启debug模式
@@ -33,37 +27,66 @@ class InviteAuto(CustomAction):
         invite_nodes = ["邀约_1号", "邀约_2号", "邀约_3号", "邀约_4号", "邀约_5号"]
 
         for node in invite_nodes:
-            self.logger.debug(f"开始分析节点'{node}'")
-            # 获取邀约对象信息，并去掉前后的空格
-            trekker_name = context.get_node_data(node)
-            try:
-                trekker_name = trekker_name['recognition']['param']['expected'][0]
-                trekker_name = trekker_name.strip()
-            except Exception:
-                self.logger.warning(f"提取节点'{node}'的文本过程中出现问题，跳过")
-
-            # 判断邀约对象是否为空，为空则跳过
-            if trekker_name == "":
+            trekker_name, choose_gift = self._get_trekker_info(context, node)
+            if not trekker_name:
                 self.logger.debug(f"节点'{node}'的邀约对象为空，跳过")
                 continue
 
-            # while True
+            # 标记是否需要手动重置位置
+            need_reset = True
             # 执行邀约流程
-            # 如果成功识别并点击邀约对象，则开始邀约
-            if self._select_trekker(context, trekker_name):
-                context.run_task("未邀约") # 这里可以根据送礼选项进行pipeline_override，或者在选项里改也行
-                # break
+            while not context.tasker.stopping:
+                if self._click_trekker(context, trekker_name):
+                    # 成功点击邀约对象后，按照choose_gift情况修改送礼流程，然后尝试执行邀约
+                    self._change_choose_gift_pipeline(context, choose_gift)
+                    res = context.run_task("未邀约")
 
-            # 如果识别失败，则向下滚动，如果滚动后发现是底部，则break
+                    # 只有当结果存在且状态为 succeeded 时，才认为邀约成功。成功时不需要手动重置位置
+                    if res and res.status.succeeded:
+                        need_reset = False
 
+                    break # 无论任务结果如何，只要点到了人，就停止向下翻页
 
-            # 检测任务中止的情况，防止卡死，检测成功时返回False
+                # 没找到则滑向下一页，若已到底部则放弃寻找
+                if self._scroll_to_next_page(context):
+                    break
+
+            # 兜底处理：如果需要手动重置位置，则滚动到顶部
+            if need_reset:
+                self._scroll_to_top(context)
+
+            # 检测任务中止的情况，防止卡死，检测成功时结束函数
             if context.tasker.stopping:
                 return False
         # 返回True，执行后续的“通用_返回主页”节点
         return True
 
-    def _select_trekker(
+    def _get_trekker_info(self, context: Context, node) -> tuple[str, str]:
+        """
+            获取邀约对象名字及送礼选项
+
+            Args:
+                context: maa.context.Context
+                node: string，需要提取内容的节点名称
+
+            Returns:
+                str: 邀约对象名字
+                str: 送礼选项
+        """
+        trekker_info = context.get_node_data(node)
+
+        try:
+            trekker_name = trekker_info['recognition']['param']['expected'][0]
+            trekker_name = trekker_name.strip()
+            choose_gift = trekker_info['attach']['gift']
+        except (TypeError, KeyError, IndexError, AttributeError) as e:
+            self.logger.warning(f"提取节点'{node}'的文本过程中出现问题: {e}")
+            trekker_name = ""
+            choose_gift = ""
+
+        return trekker_name, choose_gift
+
+    def _click_trekker(
             self,
             context: Context,
             trekker_name: str
@@ -79,11 +102,10 @@ class InviteAuto(CustomAction):
                 bool: 选择到目标对象时返回True，未能选择到目标对象时返回False
         """
         # 参数
-        threshold = 0.84
+        threshold = 0.84 # 由于pipeline的only_rec有bug，所以只能在这里设置阈值
         similarity_limit = 0.8 # 文本相似度阈值
 
         # 处理旅人名字的文本问题，把全角括号都换成半角括号，把空格都取消
-        self.logger.debug(f"将文字'{trekker_name}'统一格式化")
         translate_table = str.maketrans({
             '（': '(',
             '）': ')',
@@ -93,7 +115,6 @@ class InviteAuto(CustomAction):
         formatted_name = trekker_name.translate(translate_table)
 
         # 识别对象
-        self.logger.debug(f"已格式化为'{formatted_name}'，开始识别")
         image = context.tasker.controller.post_screencap().wait().get()
         reco_detail = context.run_recognition("邀约_左方识别邀约对象", image)
 
@@ -169,13 +190,116 @@ class InviteAuto(CustomAction):
         # 返回前可以清理掉辅助字段，只保留要的三个键
         return [{'text': i['text'], 'x': i['x'], 'y': i['y']} for i in merged_list]
 
-@AgentServer.custom_action("InviteAutoo")
-class InviteAutoo(CustomAction):
-    def run(
-            self,
-            context: Context,
-            argv: CustomAction.RunArg,
-    ) -> bool:
-        context.tasker.controller.post_swipe(1,2,3,4,5)
+    def _scroll_to_next_page(self, context: Context, image=None):
+        """
+            向下滑动到下一页
 
+            Args:
+                context: maa.context.Context
+
+            Returns:
+                bool: 已滑到底部或无法判断是否划到底部时，返回True；未滑到底部时，返回False
+        """
+        if not image:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        if not context.override_image("invite_scroll_down_template", image):
+            self.logger.error("截图错误，将无法判断是否滑动到底部")
+            return True
+
+        context.run_task("邀约_向下滑动")
+
+        image = context.tasker.controller.post_screencap().wait().get()
+        reco_result = context.run_recognition("邀约_已滑动到底部", image)
+        if reco_result and len(reco_result.all_results) > 0:
+            self.logger.debug(f"向下滑动识别分数：{reco_result.all_results[0].score}")
+        if reco_result and reco_result.hit:
+            self.logger.debug(f"已滑动到底部")
+            return True
+        else:
+            self.logger.debug(f"未滑动到底部")
+            return False
+
+    def _scroll_to_top(self, context: Context):
+        """
+            向上滑动到顶部
+
+            Args:
+                context: maa.context.Context
+
+            Returns:
+                bool:
+                    已滑到顶部时，返回True；
+                    未滑到顶部，无法判断是否滑到顶部，又或者任务被中止时，返回False
+        """
+        image = context.tasker.controller.post_screencap().wait().get()
+        while True:
+            if not context.override_image("invite_scroll_up_template", image):
+                self.logger.error("截图错误，将无法判断是否滑动到顶部")
+                return False
+
+            context.run_task("邀约_向上滑动")
+
+            image = context.tasker.controller.post_screencap().wait().get()
+            reco_result = context.run_recognition("邀约_已滑动到顶部", image)
+            if reco_result and len(reco_result.all_results) > 0:
+                self.logger.debug(f"向上滑动识别分数：{reco_result.all_results[0].score}")
+            if reco_result and reco_result.hit:
+                self.logger.debug(f"已滑动到顶部")
+                return True
+
+            # 检测任务中止的情况，防止卡死，检测成功时返回False
+            if context.tasker.stopping:
+                return False
+
+    def _change_choose_gift_pipeline(self, context: Context, choose_gift: str):
+        """
+            根据choose_gift修改送礼流程
+
+            Args:
+                context: maa.context.Context
+                choose_gift: 送礼选项，只有"all"、"favorite"、"no"三种
+
+            Returns:
+                bool: 是否成功修改送礼流程
+        """
+        if choose_gift == "all":
+            context.override_pipeline({
+                "邀约_选择礼物":{
+                    "recognition":{
+                        "param":{
+                            "template":[
+                                "Invite/邀约_喜好图标.png",
+                                "Invite/邀约_喜好图标2.png",
+                                "Invite/邀约_喜好图标3.png"
+                            ]
+                        }
+                    }
+                }
+            })
+            context.override_next("邀约_送礼流程", [
+                "邀约_选择礼物成功",
+                "[JumpBack]邀约_选择礼物"
+            ])
+        elif choose_gift == "favorite":
+            context.override_pipeline({
+                "邀约_选择礼物":{
+                    "recognition":{
+                        "param":{
+                            "template":[
+                                "Invite/邀约_喜好图标.png"
+                            ]
+                        }
+                    }
+                }
+            })
+            context.override_next("邀约_送礼流程", [
+                "邀约_选择礼物成功",
+                "[JumpBack]邀约_选择礼物"
+            ])
+        elif choose_gift == "no":
+            context.override_next("邀约_送礼流程",["邀约_还是算了"])
+        else:
+            self.logger.error(f"未知的送礼选项：{choose_gift}")
+            return False
         return True

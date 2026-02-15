@@ -551,9 +551,35 @@
       "type": "OCR"
     }
   },
+  "邀约_达上限": {
+    "focus": {
+      "Node.Recognition.Succeeded": "邀约_达上限"
+    },
+    "next": [
+      "通用_返回主页"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "5/5"
+        ],
+        "roi": [
+          1021,
+          640,
+          156,
+          46
+        ],
+        "replace": [
+          ["\\.", "/"]
+        ]
+      },
+      "type": "OCR"
+    }
+  },
   "邀约流程": {
     "next": [
       "邀约_送礼流程",
+      "邀约_达上限",
       {
         "jump_back": true,
         "name": "开始邀约"

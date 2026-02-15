@@ -1054,11 +1054,11 @@
         "邀约旅人_1号_送礼": {
             "type": "select",
             "label": "1号送礼类型",
-            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
-            "default_case": "不限",
+            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "所有",
             "cases": [
                 {
-                    "label": "不限",
+                    "label": "所有",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -1092,11 +1092,11 @@
         "邀约旅人_2号_送礼": {
             "type": "select",
             "label": "2号送礼类型",
-            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
-            "default_case": "不限",
+            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "所有",
             "cases": [
                 {
-                    "label": "不限",
+                    "label": "所有",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -1130,11 +1130,11 @@
         "邀约旅人_3号_送礼": {
             "type": "select",
             "label": "3号送礼类型",
-            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
-            "default_case": "不限",
+            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "所有",
             "cases": [
                 {
-                    "label": "不限",
+                    "label": "所有",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -1168,11 +1168,11 @@
         "邀约旅人_4号_送礼": {
             "type": "select",
             "label": "4号送礼类型",
-            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
-            "default_case": "不限",
+            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "所有",
             "cases": [
                 {
-                    "label": "不限",
+                    "label": "所有",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -1206,11 +1206,11 @@
         "邀约旅人_5号_送礼": {
             "type": "select",
             "label": "5号送礼类型",
-            "description": "如选择不限，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
-            "default_case": "不限",
+            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "default_case": "所有",
             "cases": [
                 {
-                    "label": "不限",
+                    "label": "所有",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {

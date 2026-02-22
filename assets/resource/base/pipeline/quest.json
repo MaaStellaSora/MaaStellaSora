@@ -101,7 +101,7 @@
       },
       "type": "TemplateMatch"
     },
-    "post_wait_freezes": 1000,
+    "post_wait_freezes": 1500,
     "timeout": 5000
   },
   "委托_跳过": {

@@ -497,8 +497,23 @@
             repo: 'MaaStellaSora/MaaStellaSora',
         };
 
-        // ================= 1. 初始化 UI (使用固定版本) =================
-        function initUI() {
+        // ================= 1. 获取最新 Release 版本 =================
+        async function fetchLatestVersion() {
+            try {
+                const response = await fetch(`https://api.github.com/repos/${CONFIG.repo}/releases/latest`);
+                if (!response.ok) throw new Error('Failed to fetch latest release');
+
+                const data = await response.json();
+                currentVersion = data.tag_name;
+                console.log(`Latest version: ${currentVersion}`);
+            } catch (error) {
+                console.warn('Failed to fetch latest version, using default:', error);
+            }
+        }
+
+        // ================= 2. 初始化 UI =================
+        async function initUI() {
+            await fetchLatestVersion();
             document.getElementById('versionBadge').textContent = currentVersion;
             updateGithubButton();
         }

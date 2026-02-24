@@ -89,7 +89,8 @@
         ]
       },
       "type": "TemplateMatch"
-    }
+    },
+    "post_wait_freezes": 100
   },
   "活动_添加战斗次数": {
     "action": {

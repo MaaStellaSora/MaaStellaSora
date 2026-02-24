@@ -314,20 +314,17 @@
             "type": "select",
             "label": "选择活动关卡",
             "description": "选择要快速战斗的活动关卡",
-            "default_case": "新岁开门阵I",
+            "default_case": "1-1",
             "cases": [
                 {
-                    "name": "新岁开门阵I",
-                    "label": "新岁开门阵I",
+                    "name": "1-1",
+                    "label": "1-1",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "新岁开门阵I",
-                                        "新歲開門陣I",
-										"New Year's Opening I",
-                                        "開門の陣I"
+                                        "1-1"
                                     ]
                                 },
                                 "type": "OCR"
@@ -336,17 +333,14 @@
                     }
                 },
                 {
-                    "name": "新岁开门阵II",
-                    "label": "新岁开门阵II",
+                    "name": "1-2",
+                    "label": "1-2",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "新岁开门阵II",
-                                        "新歲開門陣II",
-                                        "New Year's Opening II",
-                                        "開門の陣II"
+                                        "1-2"
                                     ]
                                 },
                                 "type": "OCR"
@@ -355,17 +349,14 @@
                     }
                 },
                 {
-                    "name": "新岁开门阵III",
-                    "label": "新岁开门阵III",
+                    "name": "1-3",
+                    "label": "1-3",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "新岁开门阵III",
-                                        "新歲開門陣III",
-                                        "New Year's Opening III",
-                                        "開門の陣III"
+                                        "1-3"
                                     ]
                                 },
                                 "type": "OCR"
@@ -374,17 +365,14 @@
                     }
                 },
                 {
-                    "name": "汪旺巡逻队I",
-                    "label": "汪旺巡逻队I",
+                    "name": "1-4",
+                    "label": "1-4",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "汪旺巡逻队I",
-                                        "汪旺巡邏隊I",
-                                        "Dog Patrol Squad I",
-                                        "巡回隊I"
+                                        "1-4"
                                     ]
                                 },
                                 "type": "OCR"
@@ -393,17 +381,14 @@
                     }
                 },
                 {
-                    "name": "守岁保卫战I",
-                    "label": "守岁保卫战I",
+                    "name": "1-5",
+                    "label": "1-5",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "守岁保卫战I",
-                                        "守歲保衛戰I",
-                                        "Evelong Defense I",
-                                        "蒼梧城攻防戦I"
+                                        "1-5"
                                     ]
                                 },
                                 "type": "OCR"
@@ -412,17 +397,14 @@
                     }
                 },
                 {
-                    "name": "守岁保卫战II",
-                    "label": "守岁保卫战II",
+                    "name": "1-6",
+                    "label": "1-6",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "守岁保卫战II",
-                                        "守歲保衛戰II",
-                                        "Evelong Defense II",
-                                        "蒼梧城攻防戦II"
+                                        "1-6"
                                     ]
                                 },
                                 "type": "OCR"
@@ -431,17 +413,14 @@
                     }
                 },
                 {
-                    "name": "汪旺巡逻队II",
-                    "label": "汪旺巡逻队II",
+                    "name": "1-7",
+                    "label": "1-7",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "汪旺巡逻队II",
-                                        "汪旺巡邏隊II",
-                                        "Dog Patrol Squad II",
-                                        "巡回隊II"
+                                        "1-7"
                                     ]
                                 },
                                 "type": "OCR"
@@ -450,17 +429,14 @@
                     }
                 },
                 {
-                    "name": "福到闹团圆I",
-                    "label": "福到闹团圆I",
+                    "name": "1-8",
+                    "label": "1-8",
                     "pipeline_override": {
                         "活动_选择活动关卡": {
                             "recognition": {
                                 "param": {
                                     "expected": [
-                                        "福到闹团圆I",
-                                        "福到鬧團圓I",
-                                        "Blessings Abound I",
-                                        "笑門来福大乱闘I"
+                                        "1-8"
                                     ]
                                 },
                                 "type": "OCR"

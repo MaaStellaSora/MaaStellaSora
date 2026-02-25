@@ -5,8 +5,8 @@ import json
 import time
 
 
-@AgentServer.custom_action("shop_action")
-class ShopAction(CustomAction):
+@AgentServer.custom_action("shop_action_old")
+class ShopActionOld(CustomAction):
     """商店动作器"""
 
     # 格子坐标配置常量
@@ -36,6 +36,49 @@ class ShopAction(CustomAction):
         self._shop_processed = False  # 商店流程已处理标志位
         self._strengthen_processed = False  # 强化流程已处理标志位
         self._last_recognition_results = {}  # 保存识别结果，避免重复识别
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        """执行商店动作"""
+
+        # 这里的custom_action_param也是直接从interface.json的custom_action里面直接赋值的，没从reco_detail里面获取
+        # 这样的话识别那边完全是没有意义的，可以删除
+        config = argv.custom_action_param
+        print(f"商店动作器参数: {config}")
+
+        try:
+            # 重置标志位
+            self._shop_processed = False
+            self._strengthen_processed = False
+            print("重置标志位: _shop_processed=False, _strengthen_processed=False")
+
+            # 如果 config 是字符串，尝试解析为 JSON 对象
+            '''
+                这个config跟识别那边一模一样，参数都是
+                "type": "complete_shop_flow",
+                "shop_type": "regular" or "final"
+            '''
+            if isinstance(config, str):
+                shop_config = json.loads(config)
+            else:
+                shop_config = config
+            action_type = shop_config.get("type", "click_grid")
+
+            # 完整商店流程处理
+            # 既然锁死action_type只能是complete_shop_flow，那么click_grid就没意义了
+            if action_type == "complete_shop_flow":
+                return self._complete_shop_flow(context, argv, shop_config)
+
+            # 默认返回失败
+            print(f"Unknown action type: {action_type}")
+            return CustomAction.RunResult(success=False)
+
+        except Exception as e:
+            print(f"商店动作器错误: {e}")
+            return CustomAction.RunResult(success=False)
 
     def _success_result(self) -> CustomAction.RunResult:
         """返回成功结果的辅助方法"""
@@ -115,41 +158,6 @@ class ShopAction(CustomAction):
             print(failure_msg)
             return self._failure_result()
 
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> CustomAction.RunResult:
-        """执行商店动作"""
-
-        config = argv.custom_action_param
-        print(f"商店动作器参数: {config}")
-
-        try:
-            # 重置标志位
-            self._shop_processed = False
-            self._strengthen_processed = False
-            print("重置标志位: _shop_processed=False, _strengthen_processed=False")
-
-            # 如果 config 是字符串，尝试解析为 JSON 对象
-            if isinstance(config, str):
-                shop_config = json.loads(config)
-            else:
-                shop_config = config
-            action_type = shop_config.get("type", "click_grid")
-
-            # 完整商店流程处理
-            if action_type == "complete_shop_flow":
-                return self._complete_shop_flow(context, argv, shop_config)
-
-            # 默认返回失败
-            print(f"Unknown action type: {action_type}")
-            return CustomAction.RunResult(success=False)
-
-        except Exception as e:
-            print(f"商店动作器错误: {e}")
-            return CustomAction.RunResult(success=False)
-
     def _process_grid(self, context, argv, shop_config):
         """处理商店格子（点击、检查售罄/货币不足）"""
         grid_index = shop_config.get("grid_index", 1)
@@ -190,11 +198,17 @@ class ShopAction(CustomAction):
         # 检查是否进入了物品详情界面，并返回物品类型
         return self._get_item_type(context, img)
 
-    def _is_item_detail(self, context, img):
-        """检查是否进入了物品详情界面
+    def _is_item_detail(self, context, img) -> bool:
+        """
+            主要使用节点“星塔_节点_商店_购物_格子主界面_agent”
+            通过识别“购买”二字，检查是否进入了物品详情界面
 
-        Returns:
-            bool: 是否为物品详情界面
+            Args:
+                context(Context): maa.Context对象
+                img(np.ndarray): 截图，shape为(height, width, channels)，dtype为uint8
+
+            Returns:
+                bool: 是否为物品详情界面
         """
         print("检查是否进入了物品详情界面")
 
@@ -382,11 +396,20 @@ class ShopAction(CustomAction):
         )
 
     def _complete_shop_flow(self, context, argv, shop_config):
-        """完整商店流程处理"""
+        """
+            完整商店流程处理
+            Args:
+                context(Context): maa.Context对象
+                argv(CustomAction.AnalyzeArg): pipeline传递的参数
+                shop_config(dict): json.load(argv.custom_action_param)，包含shop_type。（意义跟argv重复了）
+
+            Returns:
+                CustomAction.Result: 处理结果，成功时返回成功结果，失败时返回失败结果
+        """
         print("正在进行完整商店流程处理")
 
         try:
-            # 获取商店类型
+            # 获取商店类型，只有两种，regular跟final，取不到就默认regular
             shop_type = shop_config.get("shop_type", "regular")
             print(f"商店类型: {shop_type}")
 
@@ -434,6 +457,7 @@ class ShopAction(CustomAction):
                 # 根据不同状态执行不同操作
                 if current_state in ["shop_shopping"]:
                     # 处理商店购物状态
+                    # 就是一个在商店层没有进入购买页面的处理，忽略
                     continue_flag = self._handle_shop_shopping_state(context, img)
                     if not continue_flag:
                         break
@@ -441,6 +465,7 @@ class ShopAction(CustomAction):
 
                 elif current_state == "blank_close":
                     # 处理空白处关闭状态
+                    # 已处理
                     continue_flag = self._handle_blank_close_state(context, img)
                     if not continue_flag:
                         break
@@ -448,6 +473,7 @@ class ShopAction(CustomAction):
 
                 elif current_state == "item_main":
                     # 处理物品主界面状态
+                    # 等待打开物品主界面时处理
                     continue_flag = self._handle_item_main_state(
                         context, argv, shop_config
                     )
@@ -959,7 +985,33 @@ class ShopAction(CustomAction):
             return CustomAction.RunResult(success=False)
 
     def _get_shop_state(self, context, img):
-        """获取商店当前状态"""
+        """
+            获取商店当前状态
+
+            Args:
+                context(Context): maa.Context对象
+                img(np.ndarray): 截图，shape为(height, width, channels)，dtype为uint8
+
+            Returns:
+                str: 当前状态，返回值可能为以下之一：
+                    如果识别到buff选择的推荐图片（大拇指），返回"buff_main"
+                    如果识别到“购买”2字，说明处于物品详情界面，返回"item_main"
+                    如果识别到“点击空白处关闭”文字，返回"blank_close"
+                    如果识别到“爬塔_商店主界面”的图片，检查_shop_processed变量
+                        如果变量为True，返回"shop_main_processed"
+                        如果变量为False，返回"shop_main"
+                    如果识别到“商店购物”文字，且_shop_processed变量为False，返回"shop_shopping"
+                    如果识别到“200”或以上的文字，且_shop_processed变量为False，返回"end_strengthen"
+                    如果识别到“没有足够的”文字，且_shop_processed变量为True，返回"not_enough_money_set_strengthen_processed"
+                    如果识别到“免费”或“60”到“199”的文字，且_shop_processed与_strengthen_processed变量为True，返回"strengthen_process"
+                    如果识别到“上楼”文字，返回"shop_next_floor"
+                    如果识别到“离开星塔”文字，返回"final_shop_leave"
+                    如果识别到“确认”文字，返回"leave_tower"
+                    其他情况，返回"shop_flow_complete"
+
+            Object Attributes:
+                _last_recognition_results(dict): 更新识别结果，用于调试
+        """
         print("识别商店当前状态")
 
         # 清空上一次的识别结果
@@ -1119,3 +1171,64 @@ class ShopAction(CustomAction):
                 available_grids.append(grid_index)
 
         return available_grids
+
+@AgentServer.custom_action("shop_action")
+class ShopAction(CustomAction):
+
+    GRID_ROIS = {
+        1: [638, 159, 114, 133],
+        2: [791, 157, 114, 133],
+        3: [941, 157, 114, 133],
+        4: [1094, 162, 114, 133],
+        5: [641, 359, 114, 133],
+        6: [791, 361, 114, 133],
+        7: [943, 360, 114, 133],
+        8: [1093, 361, 114, 133],
+    }
+
+    def run(
+            self,
+            context: Context,
+            argv: CustomAction.RunArg,
+    ) -> bool:
+        # 先检查是中途的商店还是最终商店
+
+        # 然后进入商店购物的页面
+
+        # 开始第一轮购买
+        while True:
+            # 开始8个格子的循环
+            for grid in self.GRID_ROIS:
+                # 检查当前金币
+                pass
+                # 检查格子内容与价格
+
+                # 判断是否购买
+
+                # 执行购买操作
+
+            # 循环完毕后，根据是中途商店还是最终商店，决定是否刷新物品继续新一轮的购买
+            break
+
+        # 退回商店层主界面
+
+        return True
+
+@AgentServer.custom_action("enhance_action")
+class EnhanceAction(CustomAction):
+    def run(
+            self,
+            context: Context,
+            argv: CustomAction.RunArg,
+    ) -> bool:
+        # 开始循环
+        while True:
+            # 检查当前金币
+            break
+            # 检查当前强化需要金币
+
+            # 判断是否强化
+
+            #执行强化操作，或退出循环
+
+        return True

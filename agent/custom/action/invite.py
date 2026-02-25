@@ -33,7 +33,7 @@ class InviteAuto(CustomAction):
                 continue
 
             # 标记是否需要手动重置位置
-            need_reset = True
+            need_reset = False
             # 执行邀约流程
             while not context.tasker.stopping:
                 if self._click_trekker(context, trekker_name):
@@ -41,17 +41,20 @@ class InviteAuto(CustomAction):
                     self._change_choose_gift_pipeline(context, choose_gift)
                     res = context.run_task("未邀约")
 
-                    # 只有当结果存在且状态为 succeeded 时，才认为邀约成功。成功时不需要手动重置位置
+                    # 成功识别到邀约按钮时，不需要手动重置位置
                     if res and res.status.succeeded:
                         need_reset = False
 
                     break # 无论任务结果如何，只要点到了人，就停止向下翻页
 
                 # 没找到则滑向下一页，若已到底部则放弃寻找
-                if self._scroll_to_next_page(context):
+                is_bottom = self._scroll_to_next_page(context)
+                if is_bottom:
                     break
+                else:
+                    need_reset = True
 
-            # 兜底处理：如果需要手动重置位置，则滚动到顶部
+            # 邀约流程完成后，如果需要手动重置位置，则滚动到顶部
             if need_reset:
                 self._scroll_to_top(context)
 
@@ -102,7 +105,6 @@ class InviteAuto(CustomAction):
                 bool: 选择到目标对象时返回True，未能选择到目标对象时返回False
         """
         # 参数
-        threshold = 0.84 # 由于pipeline的only_rec有bug，所以只能在这里设置阈值
         similarity_limit = 0.8 # 文本相似度阈值
 
         # 处理旅人名字的文本问题，把全角括号都换成半角括号，把空格都取消
@@ -119,7 +121,7 @@ class InviteAuto(CustomAction):
         reco_detail = context.run_recognition("邀约_左方识别邀约对象", image)
 
         # 整理识别结果
-        results = self._get_refined_merge(reco_detail.all_results, threshold)
+        results = self._get_refined_merge(reco_detail.all_results)
         self.logger.debug(f"识别出{len(results)}个结果，开始比较")
 
         # 比较文本相似程度，如果相似程度高，则点击，并返回True，否则返回False
@@ -137,7 +139,7 @@ class InviteAuto(CustomAction):
         return False
 
     @staticmethod
-    def _get_refined_merge(results, threshold, y_tolerance = 30, x_tolerance = 50):
+    def _get_refined_merge(results, threshold = 0.7, y_tolerance = 30, x_tolerance = 50):
         """
             处理OCR识别结果，将符合条件的文本块进行合并，并计算最终的点击位置。
 
@@ -155,8 +157,10 @@ class InviteAuto(CustomAction):
         if not results:
             return []
 
-        # 过滤掉低于识别阈值的结果
-        results = [r for r in results if r.score >= threshold]
+        # 过滤掉低于识别阈值的结果，或以P开头的乱码结果
+        results = [r for r in results if r.score >= threshold
+                   and not (r.text.startswith('P') and not r.text.isascii())
+                   and r.text != 'P' and r.text != 'PI']
         # 按 Y 坐标排序，确保从上往下处理
         results.sort(key=lambda r: r.box[1])
 

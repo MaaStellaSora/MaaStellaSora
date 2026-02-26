@@ -400,6 +400,45 @@
         },
         "action": {
             "type": "Click"
+        },
+        "next": [
+            "星塔_节点_商店_进入购物界面",
+            "星塔_节点_商店_点击商店购物_agent"
+        ]
+    },
+    "星塔_节点_商店_进入购物界面": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
+                ],
+                "roi": [
+                    210,
+                    168,
+                    550,
+                    468
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "星塔_节点_商店_检查当前金币_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "roi": [
+                    1130,
+                    0,
+                    150,
+                    60
+                ],
+                "replace": [
+                    [",", ""]
+                ]
+            },
+            "type": "OCR"
         }
     }
 }

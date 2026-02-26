@@ -1192,15 +1192,17 @@ class ShopAction(CustomAction):
             argv: CustomAction.RunArg,
     ) -> bool:
         # 先检查是中途的商店还是最终商店
-
+        shop_type = self._check_shop_type(context)
         # 然后进入商店购物的页面
-
+        context.run_task("星塔_节点_商店_点击商店购物_agent")
         # 开始第一轮购买
         while True:
             # 开始8个格子的循环
             for grid in self.GRID_ROIS:
-                # 检查当前金币
-                pass
+                image = context.tasker.controller.post_screencap().wait().get()
+                # 读取当前金币
+                current_coin = self._get_current_coin(context, image)
+
                 # 检查格子内容与价格
 
                 # 判断是否购买
@@ -1208,11 +1210,84 @@ class ShopAction(CustomAction):
                 # 执行购买操作
 
             # 循环完毕后，根据是中途商店还是最终商店，决定是否刷新物品继续新一轮的购买
-            break
+            if shop_type == "regular":
+                break
+            else:
+                context.run_task("星塔_节点_商店_点击刷新_agent")
+
+            # 检查是否中断任务
+            if context.tasker.stopping:
+                return False
 
         # 退回商店层主界面
 
+
+
         return True
+
+    @staticmethod
+    def _check_shop_type(context, image = None):
+        """
+            检查商店类型
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图，默认为None
+
+            Returns:
+                str: 商店类型，中途商店为regular，最终商店为final，如果没有结果为空值
+        """
+        if not image:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        for _ in range(3): # 最多尝试3次
+            reco_detail = context.run_recognition("星塔_节点_商店_离开商店_agent", image)
+            if reco_detail and reco_detail.hit:
+                return "regular"
+
+            reco_detail = context.run_recognition("星塔_节点_商店_离开星塔_agent", image)
+            if reco_detail and reco_detail.hit:
+                return "final"
+
+            # 失败时，等待1秒后重试
+            time.sleep(1)
+            image = context.tasker.controller.post_screencap().wait().get()
+
+            # 检查是否中断任务
+            if context.tasker.stopping:
+                return ""
+
+        return ""
+
+    @staticmethod
+    def _get_current_coin(context, image = None):
+        """
+            检查当前金币
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图
+
+            Returns:
+                int: 当前金币数量
+        """
+        if not image:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        for _ in range(3): # 最多尝试3次
+            reco_detail = context.run_recognition("星塔_节点_商店_检查当前金币_agent", image)
+            if reco_detail and reco_detail.hit:
+                return int(reco_detail.best_result.text)
+
+            # 失败时，等待1秒后重试
+            time.sleep(1)
+            image = context.tasker.controller.post_screencap().wait().get()
+
+            # 检查是否中断任务
+            if context.tasker.stopping:
+                return 0
+
+        return 0
 
 @AgentServer.custom_action("enhance_action")
 class EnhanceAction(CustomAction):

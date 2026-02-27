@@ -422,7 +422,7 @@
             "type": "TemplateMatch"
         }
     },
-    "星塔_节点_商店_检查当前金币_agent": {
+    "星塔_节点_商店_识别当前金币_agent": {
         "recognition": {
             "param": {
                 "expected": [
@@ -439,6 +439,33 @@
                 ]
             },
             "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品名称与价格_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    ".+"
+                ],
+                "roi": [
+                    645,
+                    250,
+                    110,
+                    25
+                ],
+                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品名称与价格_滤色器_agent": {
+        "recognition": {
+            "param": {
+                "method": 4, // (39, 67, 121)
+                "lower": [30, 60, 120],
+                "upper": [50, 80, 140]
+            },
+            "type": "ColorMatch"
         }
     }
 }

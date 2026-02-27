@@ -1175,15 +1175,134 @@ class ShopActionOld(CustomAction):
 @AgentServer.custom_action("shop_action")
 class ShopAction(CustomAction):
 
-    GRID_ROIS = {
-        1: [638, 159, 114, 133],
-        2: [791, 157, 114, 133],
-        3: [941, 157, 114, 133],
-        4: [1094, 162, 114, 133],
-        5: [641, 359, 114, 133],
-        6: [791, 361, 114, 133],
-        7: [943, 360, 114, 133],
-        8: [1093, 361, 114, 133],
+    GRID_ROIS = [
+        {
+            "item_roi": [625, 130, 150, 190],
+            "price_roi": [645, 250, 110, 25],
+            "name_roi": [645, 275, 110, 25],
+        },
+        {
+            "item_roi": [775, 130, 150, 190],
+            "price_roi": [795, 250, 110, 25],
+            "name_roi": [795, 275, 110, 25],
+        },
+        {
+            "item_roi": [925, 130, 150, 190],
+            "price_roi": [945, 250, 110, 25],
+            "name_roi": [945, 275, 110, 25],
+        },
+        {
+            "item_roi": [1075, 130, 150, 190],
+            "price_roi": [1095, 250, 110, 25],
+            "name_roi": [1095, 275, 110, 25],
+        },
+        {
+            "item_roi": [625, 330, 150, 190],
+            "price_roi": [665, 450, 110, 25],
+            "name_roi": [665, 475, 110, 25],
+        },
+        {
+            "item_roi": [775, 330, 150, 190],
+            "price_roi": [815, 450, 110, 25],
+            "name_roi": [815, 475, 110, 25],
+        },
+        {
+            "item_roi": [925, 330, 150, 190],
+            "price_roi": [945, 450, 110, 25],
+            "name_roi": [945, 475, 110, 25],
+        },
+        {
+            "item_roi": [1075, 330, 150, 190],
+            "price_roi": [1115, 450, 110, 25],
+            "name_roi": [1115, 475, 110, 25],
+        },
+    ]
+    
+    ITEM_TYPES= {
+        "potential_drink": {
+            "cn": ["潜能特饮"],
+            "tw": ["潛能特飲"],
+            "en": ["Potential Drink"],
+            "jp": ["素質メザメール", "素質"]
+        },
+        "melody_of_aqua": {
+            "cn": ["水之音"],
+            "tw": ["水之音"],
+            "en": ["Melody of Water"],
+            "jp": ["水の音符"]
+        },
+        "melody_of_ignis": {
+            "cn": ["火之音"],
+            "tw": ["火之音"],
+            "en": ["Melody of Ignis"],
+            "jp": ["火の音符"]
+        },
+        "melody_of_terra": {
+            "cn": ["土之音"],
+            "tw": ["土之音"],
+            "en": ["Melody of Terra"],
+            "jp": ["土の音符"]
+        },
+        "melody_of_ventus": {
+            "cn": ["风之音"],
+            "tw": ["風之音"],
+            "en": ["Melody of Ventus"],
+            "jp": ["風の音符"]
+        },
+        "melody_of_lux": {
+            "cn": ["光之音"],
+            "tw": ["光之音"],
+            "en": ["Melody of Lux"],
+            "jp": ["光の音符"]
+        },
+        "melody_of_umbra": {
+            "cn": ["暗之音"],
+            "tw": ["暗之音"],
+            "en": ["Melody of Umbra"],
+            "jp": ["闇の音符"]
+        },
+        "melody_of_focus": {
+            "cn": ["专注之音"],
+            "tw": ["專注之音"],
+            "en": ["Melody of Focus"],
+            "jp": ["集中の音符"]
+        },
+        "melody_of_skill": {
+            "cn": ["技巧之音"],
+            "tw": ["技巧之音"],
+            "en": ["Melody of Skill"],
+            "jp": ["器用の音符"]
+        },
+        "melody_of_ultimate": {
+            "cn": ["绝招之音"],
+            "tw": ["絕招之音"],
+            "en": ["Melody of Ultimate"],
+            "jp": ["必殺の音符"]
+        },
+        "melody_of_pummel": {
+            "cn": ["强攻之音"],
+            "tw": ["強攻之音"],
+            "en": ["Melody of Pummel"],
+            "jp": ["強撃の音符"]
+        },
+        "melody_of_luck": {
+            "cn": ["幸运之音"],
+            "tw": ["幸運之音"],
+            "en": ["Melody of Luck"],
+            "jp": ["幸運の音符"]
+        },
+        "melody_of_burst": {
+            "cn": ["暴发之音"],
+            "tw": ["爆發之音"],
+            "en": ["Melody of Burst"],
+            "jp": ["爆発の音符"]
+        },
+        "melody_of_stamina": {
+            "cn": ["体力之音"],
+            "tw": ["體力之音"],
+            "en": ["Melody of Stamina"],
+            "jp": ["体力の音符"]
+        }
     }
 
     def run(
@@ -1197,6 +1316,9 @@ class ShopAction(CustomAction):
         context.run_task("星塔_节点_商店_点击商店购物_agent")
         # 开始第一轮购买
         while True:
+            # 读取8个格子的信息
+            grids_infos = self._get_grids_infos(context)
+
             # 开始8个格子的循环
             for grid in self.GRID_ROIS:
                 image = context.tasker.controller.post_screencap().wait().get()
@@ -1275,7 +1397,7 @@ class ShopAction(CustomAction):
             image = context.tasker.controller.post_screencap().wait().get()
 
         for _ in range(3): # 最多尝试3次
-            reco_detail = context.run_recognition("星塔_节点_商店_检查当前金币_agent", image)
+            reco_detail = context.run_recognition("星塔_节点_商店_识别当前金币_agent", image)
             if reco_detail and reco_detail.hit:
                 return int(reco_detail.best_result.text)
 
@@ -1288,6 +1410,11 @@ class ShopAction(CustomAction):
                 return 0
 
         return 0
+
+    def _get_grids_infos(self, context, grid_rois = None):
+        if not grid_rois:
+            grid_rois = self.GRID_ROIS
+        return 1
 
 @AgentServer.custom_action("enhance_action")
 class EnhanceAction(CustomAction):

@@ -59,22 +59,6 @@
             "type": "OCR"
         }
     },
-    "星塔_节点_商店_主界面_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
-                ],
-                "roi": [
-                    210,
-                    168,
-                    550,
-                    468
-                ]
-            },
-            "type": "TemplateMatch"
-        }
-    },
     "星塔_节点_商店_购物_格子主界面_agent": {
         "recognition": {
             "param": {
@@ -334,23 +318,6 @@
             "type": "OCR"
         }
     },
-    "星塔_节点_商店_强化_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "免费",
-                    "(^|[^0-9])([6-9][0-9]|1[0-9]{2})([^0-9]|$)"
-                ],
-                "roi": [
-                    347,
-                    357,
-                    435,
-                    93
-                ]
-            },
-            "type": "OCR"
-        }
-    },
     "星塔_节点_商店_结束强化_agent": {
         "recognition": {
             "param": {
@@ -413,6 +380,105 @@
                 ]
             },
             "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_点击商店购物_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "商店购物"
+                ],
+                "roi": [
+                    395,
+                    243,
+                    338,
+                    98
+                ],
+                "post_wait_freezes": 100
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_节点_商店_进入购物界面",
+            "星塔_节点_商店_点击商店购物_agent"
+        ]
+    },
+    "星塔_节点_商店_进入购物界面": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
+                ],
+                "roi": [
+                    210,
+                    168,
+                    550,
+                    468
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "星塔_节点_商店_识别当前金币_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [
+                    [",", ""]
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品名称_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "^(.*?)(?:[x×]\\d+)?$"
+                ],
+                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent",
+                "order_by": "Vertical"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品价格_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent",
+                "order_by": "Vertical"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品数量_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "[x×](\\d+)"
+                ],
+                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent",
+                "order_by": "Vertical"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品名称与价格_滤色器_agent": {
+        "recognition": {
+            "param": {
+                "method": 4, // (39, 67, 121)
+                "lower": [30, 60, 120],
+                "upper": [50, 80, 140]
+            },
+            "type": "ColorMatch"
         }
     }
 }

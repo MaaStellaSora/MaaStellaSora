@@ -5,8 +5,8 @@ import json
 import time
 
 
-@AgentServer.custom_action("shop_action")
-class ShopAction(CustomAction):
+@AgentServer.custom_action("shop_action_old")
+class ShopActionOld(CustomAction):
     """商店动作器"""
 
     # 格子坐标配置常量
@@ -36,6 +36,49 @@ class ShopAction(CustomAction):
         self._shop_processed = False  # 商店流程已处理标志位
         self._strengthen_processed = False  # 强化流程已处理标志位
         self._last_recognition_results = {}  # 保存识别结果，避免重复识别
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        """执行商店动作"""
+
+        # 这里的custom_action_param也是直接从interface.json的custom_action里面直接赋值的，没从reco_detail里面获取
+        # 这样的话识别那边完全是没有意义的，可以删除
+        config = argv.custom_action_param
+        print(f"商店动作器参数: {config}")
+
+        try:
+            # 重置标志位
+            self._shop_processed = False
+            self._strengthen_processed = False
+            print("重置标志位: _shop_processed=False, _strengthen_processed=False")
+
+            # 如果 config 是字符串，尝试解析为 JSON 对象
+            '''
+                这个config跟识别那边一模一样，参数都是
+                "type": "complete_shop_flow",
+                "shop_type": "regular" or "final"
+            '''
+            if isinstance(config, str):
+                shop_config = json.loads(config)
+            else:
+                shop_config = config
+            action_type = shop_config.get("type", "click_grid")
+
+            # 完整商店流程处理
+            # 既然锁死action_type只能是complete_shop_flow，那么click_grid就没意义了
+            if action_type == "complete_shop_flow":
+                return self._complete_shop_flow(context, argv, shop_config)
+
+            # 默认返回失败
+            print(f"Unknown action type: {action_type}")
+            return CustomAction.RunResult(success=False)
+
+        except Exception as e:
+            print(f"商店动作器错误: {e}")
+            return CustomAction.RunResult(success=False)
 
     def _success_result(self) -> CustomAction.RunResult:
         """返回成功结果的辅助方法"""
@@ -115,41 +158,6 @@ class ShopAction(CustomAction):
             print(failure_msg)
             return self._failure_result()
 
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> CustomAction.RunResult:
-        """执行商店动作"""
-
-        config = argv.custom_action_param
-        print(f"商店动作器参数: {config}")
-
-        try:
-            # 重置标志位
-            self._shop_processed = False
-            self._strengthen_processed = False
-            print("重置标志位: _shop_processed=False, _strengthen_processed=False")
-
-            # 如果 config 是字符串，尝试解析为 JSON 对象
-            if isinstance(config, str):
-                shop_config = json.loads(config)
-            else:
-                shop_config = config
-            action_type = shop_config.get("type", "click_grid")
-
-            # 完整商店流程处理
-            if action_type == "complete_shop_flow":
-                return self._complete_shop_flow(context, argv, shop_config)
-
-            # 默认返回失败
-            print(f"Unknown action type: {action_type}")
-            return CustomAction.RunResult(success=False)
-
-        except Exception as e:
-            print(f"商店动作器错误: {e}")
-            return CustomAction.RunResult(success=False)
-
     def _process_grid(self, context, argv, shop_config):
         """处理商店格子（点击、检查售罄/货币不足）"""
         grid_index = shop_config.get("grid_index", 1)
@@ -190,11 +198,17 @@ class ShopAction(CustomAction):
         # 检查是否进入了物品详情界面，并返回物品类型
         return self._get_item_type(context, img)
 
-    def _is_item_detail(self, context, img):
-        """检查是否进入了物品详情界面
+    def _is_item_detail(self, context, img) -> bool:
+        """
+            主要使用节点“星塔_节点_商店_购物_格子主界面_agent”
+            通过识别“购买”二字，检查是否进入了物品详情界面
 
-        Returns:
-            bool: 是否为物品详情界面
+            Args:
+                context(Context): maa.Context对象
+                img(np.ndarray): 截图，shape为(height, width, channels)，dtype为uint8
+
+            Returns:
+                bool: 是否为物品详情界面
         """
         print("检查是否进入了物品详情界面")
 
@@ -382,11 +396,20 @@ class ShopAction(CustomAction):
         )
 
     def _complete_shop_flow(self, context, argv, shop_config):
-        """完整商店流程处理"""
+        """
+            完整商店流程处理
+            Args:
+                context(Context): maa.Context对象
+                argv(CustomAction.AnalyzeArg): pipeline传递的参数
+                shop_config(dict): json.load(argv.custom_action_param)，包含shop_type。（意义跟argv重复了）
+
+            Returns:
+                CustomAction.Result: 处理结果，成功时返回成功结果，失败时返回失败结果
+        """
         print("正在进行完整商店流程处理")
 
         try:
-            # 获取商店类型
+            # 获取商店类型，只有两种，regular跟final，取不到就默认regular
             shop_type = shop_config.get("shop_type", "regular")
             print(f"商店类型: {shop_type}")
 
@@ -434,6 +457,7 @@ class ShopAction(CustomAction):
                 # 根据不同状态执行不同操作
                 if current_state in ["shop_shopping"]:
                     # 处理商店购物状态
+                    # 就是一个在商店层没有进入购买页面的处理，忽略
                     continue_flag = self._handle_shop_shopping_state(context, img)
                     if not continue_flag:
                         break
@@ -441,6 +465,7 @@ class ShopAction(CustomAction):
 
                 elif current_state == "blank_close":
                     # 处理空白处关闭状态
+                    # 已处理
                     continue_flag = self._handle_blank_close_state(context, img)
                     if not continue_flag:
                         break
@@ -448,6 +473,7 @@ class ShopAction(CustomAction):
 
                 elif current_state == "item_main":
                     # 处理物品主界面状态
+                    # 等待打开物品主界面时处理
                     continue_flag = self._handle_item_main_state(
                         context, argv, shop_config
                     )
@@ -959,7 +985,33 @@ class ShopAction(CustomAction):
             return CustomAction.RunResult(success=False)
 
     def _get_shop_state(self, context, img):
-        """获取商店当前状态"""
+        """
+            获取商店当前状态
+
+            Args:
+                context(Context): maa.Context对象
+                img(np.ndarray): 截图，shape为(height, width, channels)，dtype为uint8
+
+            Returns:
+                str: 当前状态，返回值可能为以下之一：
+                    如果识别到buff选择的推荐图片（大拇指），返回"buff_main"
+                    如果识别到“购买”2字，说明处于物品详情界面，返回"item_main"
+                    如果识别到“点击空白处关闭”文字，返回"blank_close"
+                    如果识别到“爬塔_商店主界面”的图片，检查_shop_processed变量
+                        如果变量为True，返回"shop_main_processed"
+                        如果变量为False，返回"shop_main"
+                    如果识别到“商店购物”文字，且_shop_processed变量为False，返回"shop_shopping"
+                    如果识别到“200”或以上的文字，且_shop_processed变量为False，返回"end_strengthen"
+                    如果识别到“没有足够的”文字，且_shop_processed变量为True，返回"not_enough_money_set_strengthen_processed"
+                    如果识别到“免费”或“60”到“199”的文字，且_shop_processed与_strengthen_processed变量为True，返回"strengthen_process"
+                    如果识别到“上楼”文字，返回"shop_next_floor"
+                    如果识别到“离开星塔”文字，返回"final_shop_leave"
+                    如果识别到“确认”文字，返回"leave_tower"
+                    其他情况，返回"shop_flow_complete"
+
+            Object Attributes:
+                _last_recognition_results(dict): 更新识别结果，用于调试
+        """
         print("识别商店当前状态")
 
         # 清空上一次的识别结果
@@ -1119,3 +1171,360 @@ class ShopAction(CustomAction):
                 available_grids.append(grid_index)
 
         return available_grids
+
+@AgentServer.custom_action("shop_action")
+class ShopAction(CustomAction):
+
+    GRID_ROIS = [
+        {
+            "item_roi": [625, 130, 150, 190],
+            "price_roi": [645, 250, 110, 25],
+            "name_roi": [645, 275, 110, 25],
+        },
+        {
+            "item_roi": [775, 130, 150, 190],
+            "price_roi": [795, 250, 110, 25],
+            "name_roi": [795, 275, 110, 25],
+        },
+        {
+            "item_roi": [925, 130, 150, 190],
+            "price_roi": [945, 250, 110, 25],
+            "name_roi": [945, 275, 110, 25],
+        },
+        {
+            "item_roi": [1075, 130, 150, 190],
+            "price_roi": [1095, 250, 110, 25],
+            "name_roi": [1095, 275, 110, 25],
+        },
+        {
+            "item_roi": [625, 330, 150, 190],
+            "price_roi": [645, 450, 110, 25],
+            "name_roi": [645, 475, 110, 25],
+        },
+        {
+            "item_roi": [775, 330, 150, 190],
+            "price_roi": [795, 450, 110, 25],
+            "name_roi": [795, 475, 110, 25],
+        },
+        {
+            "item_roi": [925, 330, 150, 190],
+            "price_roi": [945, 450, 110, 25],
+            "name_roi": [945, 475, 110, 25],
+        },
+        {
+            "item_roi": [1075, 330, 150, 190],
+            "price_roi": [1095, 450, 110, 25],
+            "name_roi": [1095, 475, 110, 25],
+        },
+    ]
+
+    ITEM_NAMES= {
+        "potential_drink": {
+            "cn": ["潜能特饮"],
+            "tw": ["潛能特飲"],
+            "en": ["Potential Drink"],
+            "jp": ["素質メザメール", "素質"]
+        },
+        "melody_of_aqua": {
+            "cn": ["水之音"],
+            "tw": ["水之音"],
+            "en": ["Melody of Water"],
+            "jp": ["水の音符"]
+        },
+        "melody_of_ignis": {
+            "cn": ["火之音"],
+            "tw": ["火之音"],
+            "en": ["Melody of Ignis"],
+            "jp": ["火の音符"]
+        },
+        "melody_of_terra": {
+            "cn": ["土之音"],
+            "tw": ["土之音"],
+            "en": ["Melody of Terra"],
+            "jp": ["土の音符"]
+        },
+        "melody_of_ventus": {
+            "cn": ["风之音"],
+            "tw": ["風之音"],
+            "en": ["Melody of Ventus"],
+            "jp": ["風の音符"]
+        },
+        "melody_of_lux": {
+            "cn": ["光之音"],
+            "tw": ["光之音"],
+            "en": ["Melody of Lux"],
+            "jp": ["光の音符"]
+        },
+        "melody_of_umbra": {
+            "cn": ["暗之音"],
+            "tw": ["暗之音"],
+            "en": ["Melody of Umbra"],
+            "jp": ["闇の音符"]
+        },
+        "melody_of_focus": {
+            "cn": ["专注之音"],
+            "tw": ["專注之音"],
+            "en": ["Melody of Focus"],
+            "jp": ["集中の音符"]
+        },
+        "melody_of_skill": {
+            "cn": ["技巧之音"],
+            "tw": ["技巧之音"],
+            "en": ["Melody of Skill"],
+            "jp": ["器用の音符"]
+        },
+        "melody_of_ultimate": {
+            "cn": ["绝招之音"],
+            "tw": ["絕招之音"],
+            "en": ["Melody of Ultimate"],
+            "jp": ["必殺の音符"]
+        },
+        "melody_of_pummel": {
+            "cn": ["强攻之音"],
+            "tw": ["強攻之音"],
+            "en": ["Melody of Pummel"],
+            "jp": ["強撃の音符"]
+        },
+        "melody_of_luck": {
+            "cn": ["幸运之音"],
+            "tw": ["幸運之音"],
+            "en": ["Melody of Luck"],
+            "jp": ["幸運の音符"]
+        },
+        "melody_of_burst": {
+            "cn": ["暴发之音"],
+            "tw": ["爆發之音"],
+            "en": ["Melody of Burst"],
+            "jp": ["爆発の音符"]
+        },
+        "melody_of_stamina": {
+            "cn": ["体力之音"],
+            "tw": ["體力之音"],
+            "en": ["Melody of Stamina"],
+            "jp": ["体力の音符"]
+        }
+    }
+
+    def run(
+            self,
+            context: Context,
+            argv: CustomAction.RunArg,
+    ) -> bool:
+        # 获取资源类型
+        param_str = argv.custom_action_param
+        param = json.loads(param_str)
+        lang_type = param.get("lang_type")
+
+        # 先检查是中途的商店还是最终商店
+        shop_type = self._check_shop_type(context)
+        # 然后进入商店购物的页面
+        context.run_task("星塔_节点_商店_点击商店购物_agent")
+        # 开始第一轮购买
+        while True:
+            # 读取8个格子的信息
+            grids_infos = self._get_grids_infos(context)
+
+            # 开始8个格子的循环
+            for grid in self.GRID_ROIS:
+                image = context.tasker.controller.post_screencap().wait().get()
+                # 读取当前金币
+                current_coin = self._get_current_coin(context, image)
+
+                # 检查格子内容与价格
+                item_info = self._get_grids_infos(context, lang_type)
+                # 判断是否购买
+
+                # 执行购买操作
+
+            # 循环完毕后，根据是中途商店还是最终商店，决定是否刷新物品继续新一轮的购买
+            if shop_type == "regular":
+                break
+            else:
+                context.run_task("星塔_节点_商店_点击刷新_agent")
+
+            # 检查是否中断任务
+            if context.tasker.stopping:
+                return False
+
+        # 退回商店层主界面
+
+
+
+        return True
+
+    @staticmethod
+    def _check_shop_type(context, image = None):
+        """
+            检查商店类型
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图，默认为None
+
+            Returns:
+                str: 商店类型，中途商店为regular，最终商店为final，如果没有结果为空值
+        """
+        if not image:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        for _ in range(3): # 最多尝试3次
+            reco_detail = context.run_recognition("星塔_节点_商店_离开商店_agent", image)
+            if reco_detail and reco_detail.hit:
+                return "regular"
+
+            reco_detail = context.run_recognition("星塔_节点_商店_离开星塔_agent", image)
+            if reco_detail and reco_detail.hit:
+                return "final"
+
+            # 失败时，等待1秒后重试
+            time.sleep(1)
+            image = context.tasker.controller.post_screencap().wait().get()
+
+            # 检查是否中断任务
+            if context.tasker.stopping:
+                return ""
+
+        return ""
+
+    @staticmethod
+    def _get_current_coin(context, image = None):
+        """
+            检查当前金币
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图
+
+            Returns:
+                int: 当前金币数量
+        """
+        if not image:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        for _ in range(3): # 最多尝试3次
+            reco_detail = context.run_recognition("星塔_节点_商店_识别当前金币_agent", image)
+            if reco_detail and reco_detail.hit:
+                return int(reco_detail.best_result.text)
+
+            # 失败时，等待1秒后重试
+            time.sleep(1)
+            image = context.tasker.controller.post_screencap().wait().get()
+
+            # 检查是否中断任务
+            if context.tasker.stopping:
+                return 0
+
+        return 0
+
+    def _get_grids_infos(self, context, lang_type, image = None,grid_rois = None):
+        """
+            获取每个格子的道具信息
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图，默认为None
+                grid_rois(list): 格子识别框范围，默认为None
+
+            Returns:
+                list: 每个格子的道具信息，每个元素为一个字典，包含item_type, item_price, item_name
+        """
+        # 获取参数
+        if not image:
+            image = context.tasker.controller.post_screencap().wait().get()
+        if not grid_rois:
+            grid_rois = self.GRID_ROIS
+        # 生成反向查找表
+        mapping = self.get_reverse_mapping(lang_type)
+        # 初始化结果列表
+        grids_infos = []
+
+        # 开始8个格子的循环
+        for grid in grid_rois:
+            # 读取识别框范围
+            # item_roi = grid["item_roi"]
+            price_roi = grid["price_roi"]
+            name_roi = grid["name_roi"]
+
+            # 初始化参数
+            item_quantity = 0
+            item_price = 0
+            item_name = ""
+
+            # 识别名字
+            reco_detail = context.run_recognition("星塔_节点_商店_识别物品名称_agent", image, {
+                "星塔_节点_商店_识别物品名称_agent": {
+                    "recognition": {
+                        "param": {
+                            "roi": name_roi
+                        }
+                    }
+                }
+            })
+            if reco_detail and reco_detail.hit:
+                for result in reco_detail.filtered_results:
+                    item_name += result.text
+            # 转换为内部通用名
+            item_name = mapping.get(item_name, "")
+
+            # 如果是音符，再去识别数量
+            if "melody" in item_name:
+                reco_detail = context.run_recognition("星塔_节点_商店_识别物品数量_agent", image, {
+                    "星塔_节点_商店_识别物品数量_agent": {
+                        "recognition": {
+                            "param": {
+                                "roi": name_roi
+                            }
+                        }
+                    }
+                })
+                if reco_detail and reco_detail.hit:
+                    item_quantity = reco_detail.best_result.text
+
+            # 识别价格
+            reco_detail = context.run_recognition("星塔_节点_商店_识别物品价格_agent", image, {
+                "星塔_节点_商店_识别物品价格_agent": {
+                    "recognition": {
+                        "param": {
+                            "roi": price_roi
+                        }
+                    }
+                }
+            })
+            if reco_detail and reco_detail.hit:
+                item_price = int(reco_detail.best_result.text)
+
+            grids_infos.append({"item_name": item_name, "item_quantity": item_quantity, "item_price": item_price})
+
+        return grids_infos
+
+    def get_reverse_mapping(self, lang_type):
+        """
+        根据语言类型生成反向查找表
+        """
+        reverse_map = {}
+        items_dict = self.ITEM_NAMES
+        for key, translations in items_dict.items():
+            # 获取对应语言的列表，如果不存在则返回空列表
+            names = translations.get(lang_type, [])
+            for name in names:
+                reverse_map[name] = key
+        return reverse_map
+
+@AgentServer.custom_action("enhance_action")
+class EnhanceAction(CustomAction):
+    def run(
+            self,
+            context: Context,
+            argv: CustomAction.RunArg,
+    ) -> bool:
+        # 开始循环
+        while True:
+            # 检查当前金币
+            break
+            # 检查当前强化需要金币
+
+            # 判断是否强化
+
+            #执行强化操作，或退出循环
+
+        return True

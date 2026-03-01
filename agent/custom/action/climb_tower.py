@@ -1198,13 +1198,13 @@ class ShopAction(CustomAction):
         },
         {
             "item_roi": [625, 330, 150, 190],
-            "price_roi": [665, 450, 110, 25],
-            "name_roi": [665, 475, 110, 25],
+            "price_roi": [645, 450, 110, 25],
+            "name_roi": [645, 475, 110, 25],
         },
         {
             "item_roi": [775, 330, 150, 190],
-            "price_roi": [815, 450, 110, 25],
-            "name_roi": [815, 475, 110, 25],
+            "price_roi": [795, 450, 110, 25],
+            "name_roi": [795, 475, 110, 25],
         },
         {
             "item_roi": [925, 330, 150, 190],
@@ -1213,12 +1213,12 @@ class ShopAction(CustomAction):
         },
         {
             "item_roi": [1075, 330, 150, 190],
-            "price_roi": [1115, 450, 110, 25],
-            "name_roi": [1115, 475, 110, 25],
+            "price_roi": [1095, 450, 110, 25],
+            "name_roi": [1095, 475, 110, 25],
         },
     ]
-    
-    ITEM_TYPES= {
+
+    ITEM_NAMES= {
         "potential_drink": {
             "cn": ["潜能特饮"],
             "tw": ["潛能特飲"],
@@ -1310,6 +1310,11 @@ class ShopAction(CustomAction):
             context: Context,
             argv: CustomAction.RunArg,
     ) -> bool:
+        # 获取资源类型
+        param_str = argv.custom_action_param
+        param = json.loads(param_str)
+        lang_type = param.get("lang_type")
+
         # 先检查是中途的商店还是最终商店
         shop_type = self._check_shop_type(context)
         # 然后进入商店购物的页面
@@ -1326,7 +1331,7 @@ class ShopAction(CustomAction):
                 current_coin = self._get_current_coin(context, image)
 
                 # 检查格子内容与价格
-
+                item_info = self._get_grids_infos(context, lang_type)
                 # 判断是否购买
 
                 # 执行购买操作
@@ -1411,10 +1416,99 @@ class ShopAction(CustomAction):
 
         return 0
 
-    def _get_grids_infos(self, context, grid_rois = None):
+    def _get_grids_infos(self, context, lang_type, image = None,grid_rois = None):
+        """
+            获取每个格子的道具信息
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图，默认为None
+                grid_rois(list): 格子识别框范围，默认为None
+
+            Returns:
+                list: 每个格子的道具信息，每个元素为一个字典，包含item_type, item_price, item_name
+        """
+        # 获取参数
+        if not image:
+            image = context.tasker.controller.post_screencap().wait().get()
         if not grid_rois:
             grid_rois = self.GRID_ROIS
-        return 1
+        # 生成反向查找表
+        mapping = self.get_reverse_mapping(lang_type)
+        # 初始化结果列表
+        grids_infos = []
+
+        # 开始8个格子的循环
+        for grid in grid_rois:
+            # 读取识别框范围
+            # item_roi = grid["item_roi"]
+            price_roi = grid["price_roi"]
+            name_roi = grid["name_roi"]
+
+            # 初始化参数
+            item_quantity = 0
+            item_price = 0
+            item_name = ""
+
+            # 识别名字
+            reco_detail = context.run_recognition("星塔_节点_商店_识别物品名称_agent", image, {
+                "星塔_节点_商店_识别物品名称_agent": {
+                    "recognition": {
+                        "param": {
+                            "roi": name_roi
+                        }
+                    }
+                }
+            })
+            if reco_detail and reco_detail.hit:
+                for result in reco_detail.filtered_results:
+                    item_name += result.text
+            # 转换为内部通用名
+            item_name = mapping.get(item_name, "")
+
+            # 如果是音符，再去识别数量
+            if "melody" in item_name:
+                reco_detail = context.run_recognition("星塔_节点_商店_识别物品数量_agent", image, {
+                    "星塔_节点_商店_识别物品数量_agent": {
+                        "recognition": {
+                            "param": {
+                                "roi": name_roi
+                            }
+                        }
+                    }
+                })
+                if reco_detail and reco_detail.hit:
+                    item_quantity = reco_detail.best_result.text
+
+            # 识别价格
+            reco_detail = context.run_recognition("星塔_节点_商店_识别物品价格_agent", image, {
+                "星塔_节点_商店_识别物品价格_agent": {
+                    "recognition": {
+                        "param": {
+                            "roi": price_roi
+                        }
+                    }
+                }
+            })
+            if reco_detail and reco_detail.hit:
+                item_price = int(reco_detail.best_result.text)
+
+            grids_infos.append({"item_name": item_name, "item_quantity": item_quantity, "item_price": item_price})
+
+        return grids_infos
+
+    def get_reverse_mapping(self, lang_type):
+        """
+        根据语言类型生成反向查找表
+        """
+        reverse_map = {}
+        items_dict = self.ITEM_NAMES
+        for key, translations in items_dict.items():
+            # 获取对应语言的列表，如果不存在则返回空列表
+            names = translations.get(lang_type, [])
+            for name in names:
+                reverse_map[name] = key
+        return reverse_map
 
 @AgentServer.custom_action("enhance_action")
 class EnhanceAction(CustomAction):

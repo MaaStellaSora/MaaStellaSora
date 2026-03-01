@@ -428,12 +428,6 @@
                 "expected": [
                     "\\d+"
                 ],
-                "roi": [
-                    1130,
-                    0,
-                    150,
-                    60
-                ],
                 "replace": [
                     [",", ""]
                 ]
@@ -441,19 +435,38 @@
             "type": "OCR"
         }
     },
-    "星塔_节点_商店_识别物品名称与价格_agent": {
+    "星塔_节点_商店_识别物品名称_agent": {
         "recognition": {
             "param": {
                 "expected": [
-                    ".+"
+                    "^(.*?)(?:[x×]\\d+)?$"
                 ],
-                "roi": [
-                    645,
-                    250,
-                    110,
-                    25
+                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent",
+                "order_by": "Vertical"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品价格_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
                 ],
-                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent"
+                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent",
+                "order_by": "Vertical"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别物品数量_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "[x×](\\d+)"
+                ],
+                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent",
+                "order_by": "Vertical"
             },
             "type": "OCR"
         }

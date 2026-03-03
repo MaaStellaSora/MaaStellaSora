@@ -58,13 +58,13 @@
                 "expected": [
                     ".+"
                 ],
-                "color_filter": "星塔_节点_商店_识别物品名称与价格_滤色器_agent",
+                "color_filter": "星塔_节点_商店_识别物品内容_滤色器_agent",
                 "order_by": "Vertical"
             },
             "type": "OCR"
         }
     },
-    "星塔_节点_商店_识别物品名称与价格_滤色器_agent": {
+    "星塔_节点_商店_识别物品内容_滤色器_agent": {
         "recognition": {
             "param": {
                 "method": 4, // (39, 67, 121)

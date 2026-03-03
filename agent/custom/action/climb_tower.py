@@ -1341,6 +1341,7 @@ class ShopAction(CustomAction):
             grids_infos = self._get_grids_info(context)
 
             # 按照策略决定购买内容
+            # TODO: 其他方案
             # 方案1：购买所有潜能特饮
             buy_list = [grid for grid in grids_infos if grid["item_name"] == "potential_drink"]
 
@@ -1371,7 +1372,7 @@ class ShopAction(CustomAction):
             if shop_type == "regular" or coin < 145:
                 break
             else:
-                context.run_task("星塔_节点_商店_点击刷新_agent")
+                context.run_task("星塔_节点_商店_点击刷新_agent") # TODO 识别刷新次数，完成pipeline
 
         # 退回商店层主界面
         context.run_task("星塔_节点_商店_返回商店层_agent")
@@ -1555,7 +1556,7 @@ class ShopAction(CustomAction):
             time.sleep(1)
             count += 1
 
-        # 两个方法都没办法识别完整，返回原值
+        # 两个方法都没办法识别完整，能返回多少是多少
         return item_name, item_quantity, item_price, discount_flag
 
     @staticmethod

@@ -381,45 +381,5 @@
             },
             "type": "OCR"
         }
-    },
-    "星塔_节点_商店_点击商店购物_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "商店购物"
-                ],
-                "roi": [
-                    395,
-                    243,
-                    338,
-                    98
-                ],
-                "post_wait_freezes": 100
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_节点_商店_进入购物界面",
-            "星塔_节点_商店_点击商店购物_agent"
-        ]
-    },
-    "星塔_节点_商店_进入购物界面": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
-                ],
-                "roi": [
-                    210,
-                    168,
-                    550,
-                    468
-                ]
-            },
-            "type": "TemplateMatch"
-        }
     }
 }

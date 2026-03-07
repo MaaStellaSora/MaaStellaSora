@@ -19,11 +19,11 @@
             "type": "Click"
         },
         "next": [
-            "星塔_节点_商店_进入购物界面",
+            "星塔_节点_商店_进入购物界面_agent",
             "星塔_节点_商店_点击商店购物_agent"
         ]
     },
-    "星塔_节点_商店_进入购物界面": {
+    "星塔_节点_商店_进入购物界面_agent": {
         "recognition": {
             "param": {
                 "template": [
@@ -39,7 +39,7 @@
             "type": "TemplateMatch"
         }
     },
-    "星塔_节点_商店_识别当前金币_agent": {
+    "星塔_通用_识别当前金币_agent": {
         "recognition": {
             "param": {
                 "expected": [
@@ -52,7 +52,7 @@
             "type": "OCR"
         }
     },
-    "星塔_节点_商店_识别物品内容_agent": {
+    "星塔_节点_商店_购物_识别物品内容_agent": {
         "recognition": {
             "param": {
                 "expected": [
@@ -64,7 +64,7 @@
             "type": "OCR"
         }
     },
-    "星塔_节点_商店_识别物品内容_滤色器_agent": {
+    "星塔_节点_商店_购物_识别物品内容_滤色器_agent": {
         "recognition": {
             "param": {
                 "method": 4, // (39, 67, 121)
@@ -74,15 +74,15 @@
             "type": "ColorMatch"
         }
     },
-    "星塔_节点_商店_购买道具_agent": {
+    "星塔_节点_商店_购物_购买道具_agent": {
         "action": {
             "type": "Click"
         },
         "next": [
-            "星塔_节点_商店_购买道具_确认购买_agent"
+            "星塔_节点_商店_购物_购买道具_确认购买_agent"
         ]
     },
-    "星塔_节点_商店_购买道具_确认购买_agent": {
+    "星塔_节点_商店_购物_购买道具_确认购买_agent": {
         "recognition": {
             "param": {
                 "expected": [
@@ -101,24 +101,39 @@
             "type": "Click"
         },
         "next": [
-            "星塔_节点_商店_进入购物界面",
+            "星塔_节点_商店_进入购物界面_agent",
             "[JumpBack]星塔_节点_选择潜能_agent",
             "[JumpBack]星塔_点击空白处关闭"
         ],
         "post_wait_freezes": 200
     },
-    "星塔_节点_商店_返回商店层_agent": {
+    "星塔_节点_商店_购物_识别可刷新次数_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "roi": [
+                    1090,
+                    610,
+                    100,
+                    50
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_点击刷新_agent": {
         "recognition": {
             "param": {
                 "template": [
-                    "ClimbTower_agent/星塔_商店_返回__50_17_37_38__0_0_137_105.png",
-                    "ClimbTower_agent/爬塔_背包返回__34_16_54_49__0_0_138_115.png"
+                    "ClimbTower_agent/爬塔_商店刷新按钮__1199_609_45_41__1149_559_131_141.png"
                 ],
                 "roi": [
-                    13,
-                    7,
-                    201,
-                    89
+                    1090,
+                    550,
+                    190,
+                    170
                 ]
             },
             "type": "TemplateMatch"
@@ -126,6 +141,61 @@
         "action": {
             "type": "Click"
         },
+        "post_wait_freezes": 100
+    },
+    "星塔_节点_商店_识别强化是否免费_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "免费",
+                ],
+                "roi": [
+                    347,
+                    357,
+                    435,
+                    93
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别强化所需金币_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+",
+                ],
+                "roi": [
+                    347,
+                    357,
+                    435,
+                    93
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_点击强化_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "强化",
+                ],
+                "roi": [
+                    347,
+                    357,
+                    435,
+                    93
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_节点_选择潜能_agent"
+        ],
         "post_wait_freezes": 100
     }
 }

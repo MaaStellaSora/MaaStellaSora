@@ -182,6 +182,47 @@
             }
         },
         "next": [
+            "[JumpBack]星塔_节点_商店_购物_返回商店层_agent",
+            "星塔_节点_回到商店层_agent"
+        ]
+    },
+    "星塔_节点_商店_购物_返回商店层_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/星塔_商店_返回__50_17_37_38__0_0_137_105.png",
+                    "ClimbTower_agent/爬塔_背包返回__34_16_54_49__0_0_138_115.png"
+                ],
+                "roi": [
+                    13,
+                    7,
+                    201,
+                    89
+                ]
+            },
+            "type": "TemplateMatch"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 100
+    },
+    "星塔_节点_回到商店层_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "商店购物"
+                ],
+                "roi": [
+                    395,
+                    243,
+                    338,
+                    98
+                ]
+            },
+            "type": "OCR"
+        },
+        "next": [
             "星塔_节点_商店_强化_agent"
         ]
     },

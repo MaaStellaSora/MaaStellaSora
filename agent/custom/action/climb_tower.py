@@ -149,7 +149,7 @@ class ShopAction(CustomAction):
     def __init__(self):
         super().__init__()
         self.lang_type = None
-        self.logger = logger.get_logger()
+        self.logger = logger.get_logger(__name__)
 
     def run(
             self,
@@ -621,7 +621,7 @@ class EnhanceAction(CustomAction):
 
     def __init__(self):
         super().__init__()
-        self.logger = logger.get_logger()
+        self.logger = logger.get_logger(__name__)
 
     def run(
             self,

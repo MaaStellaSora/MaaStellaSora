@@ -12,7 +12,7 @@ class ChoosePotentialRecognition(CustomRecognition):
 
     def __init__(self):
         super().__init__()
-        self.logger = logger.get_logger()
+        self.logger = logger.get_logger(__name__)
 
     def analyze(
             self,
@@ -27,7 +27,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 name(str): 潜能名称
                 level_span(int): 等级跨度，默认为1。例如2表示等级差2级以上时生效
                 max_level(int): 最大等级，默认为6。例如6表示5级以下时生效
-                condition(list): 其他复杂生效条件，如果列表内元素为list，那么表示and逻辑，如果列表内元素为dict，那么表示or逻辑
+                condition(list): 其他复杂生效条件，如果列表内元素为list，那么表示or逻辑，如果列表内元素为dict，那么表示and逻辑
                 例如：
                     condition: [
                         {"name": "a", "level": 2},
@@ -51,11 +51,12 @@ class ChoosePotentialRecognition(CustomRecognition):
                     c潜能等级为6以上时
                 生效
         """
-        # 读取配置：json作业，刷新次数
+        # 读取配置：json作业
         json_example = [
             {"name": "a", "level_span": 2, "max_level": 6},
             {"name": "b", "condition": {}},
         ]
+        # TODO： 读取刷新次数，配置也要加
         max_refresh_count = 5
         # 读取当前金币以及刷新需要金币，计算出还能刷新多少次（可选）
         current_coin = self._get_current_coin(context, argv.image)

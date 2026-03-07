@@ -15,9 +15,6 @@ from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
 from maa.toolkit import Toolkit
 
-# 导入自定义识别器和动作器
-from custom import ShopRecognition, ShopAction
-
 _FALLBACK_TEMPLATE = (
     "ClimbTower/爬塔_buff推荐图标1__146_389_43_44__96_339_143_144.png"
 )

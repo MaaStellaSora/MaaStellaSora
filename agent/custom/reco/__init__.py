@@ -1,5 +1,5 @@
-from .climb_tower import ShopRecognition
+from .climb_tower import ChoosePotentialRecognition
 
 __all__ = [
-    "ShopRecognition"
+    "ChoosePotentialRecognition"
 ]

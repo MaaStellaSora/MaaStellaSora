@@ -187,17 +187,10 @@ class ShopAction(CustomAction):
             # 方案3：优先根据打折力度凑1级附加技能，其次购买潜能特饮
             # 方案4：买到没钱
 
-            # 读取当前金币
-            coin = self._get_current_coin(context)
-            if coin:
-                coin = max(0, coin - reserve_coin)
-            else:
-                self.logger.error("无法读取金币，为保证爬塔质量，将中止任务")
-                context.tasker.post_stop()
-                return False
-
             # 执行购买操作
             for item in buy_list:
+                # 读取当前金币
+                coin = max(0, self._get_current_coin(context) - reserve_coin)
                 if coin >= item["price"]:
                     # 获取道具所属格子范围
                     buy_result = self._buy_item(context, item["price_roi"])
@@ -215,7 +208,7 @@ class ShopAction(CustomAction):
             else:
                 refresh_remaining = self._get_refresh_remaining(context)
                 if refresh_remaining > 0 and coin >= 145:
-                    context.run_task("星塔_节点_商店_购物_点击刷新_agent")
+                    context.run_task("星塔_通用_点击刷新_agent")
                 elif refresh_remaining == 0:
                     self.logger.info("刷新次数已用完，无法继续刷新")
                     break
@@ -271,7 +264,7 @@ class ShopAction(CustomAction):
                 max_try(int): 最大尝试次数
 
             Returns:
-                int | None: 当前金币数量，识别失败时返回None
+                int: 当前金币数量，识别失败时返回0
         """
         if not image:
             image = context.tasker.controller.post_screencap().wait().get()
@@ -288,9 +281,10 @@ class ShopAction(CustomAction):
 
             # 检查是否中断任务
             if context.tasker.stopping:
-                return None
+                return 0
 
-        return None
+        self.logger.error("无法读取当前金币数量，将当作0金币处理")
+        return 0
 
     def _get_grids_info(self, context):
         """
@@ -534,6 +528,7 @@ class ShopAction(CustomAction):
             Returns:
                 bool: 是否完美执行购买操作
         """
+        # TODO: 从商店进入潜能选择时，需要传递预留金币参数
         run_result = context.run_task("星塔_节点_商店_购物_购买道具_agent", {
             "星塔_节点_商店_购物_购买道具_agent": {
                 "action": {
@@ -655,7 +650,7 @@ class EnhanceAction(CustomAction):
                 max_try(int): 最大尝试次数
 
             Returns:
-                int | None: 当前金币数量，识别失败时返回None
+                int: 当前金币数量，识别失败时返回0
         """
         if not image:
             image = context.tasker.controller.post_screencap().wait().get()
@@ -672,9 +667,10 @@ class EnhanceAction(CustomAction):
 
             # 检查是否中断任务
             if context.tasker.stopping:
-                return None
+                return 0
 
-        return None
+        self.logger.error("无法读取当前金币数量，将当作0金币处理")
+        return 0
 
     def _get_enhancement_cost(self, context, image = None):
         """
@@ -684,7 +680,7 @@ class EnhanceAction(CustomAction):
                 context(Context): 上下文对象
 
             Returns:
-                int | None: 当前强化所需金币数量，识别失败时返回None
+                int: 当前强化所需金币数量，识别失败时返回65535
         """
         if not image:
             image = context.tasker.controller.post_screencap().wait().get()
@@ -708,9 +704,10 @@ class EnhanceAction(CustomAction):
 
             # 检查是否中断任务
             if context.tasker.stopping:
-                return None
+                return 65535
 
-        return None
+        self.logger.error("无法读取当前强化所需金币数量")
+        return 65535
 
     @staticmethod
     def _calculate_max_enhance_count(current_coin, current_enhancement_cost, max_cost):

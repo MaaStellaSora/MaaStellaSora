@@ -31,7 +31,12 @@
         },
         "next": [
             "星塔_节点_选择潜能_拿走_agent"
-        ]
+        ],
+        "attach": {
+            "owned_potentials": [],
+            "reserve_coin": 0
+        },
+        "post_wait_freeze": 100
     },
     "星塔_节点_选择潜能_拿走_agent": {
         "recognition": {

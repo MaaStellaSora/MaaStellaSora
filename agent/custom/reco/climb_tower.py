@@ -11,6 +11,8 @@ from utils import logger
 @AgentServer.custom_recognition("choose_potential_recognition")
 class ChoosePotentialRecognition(CustomRecognition):
 
+    MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
+
     POTENTIAL_ROIS = [
         {
             "core_potential": [190, 425, 210, 40],
@@ -194,107 +196,146 @@ class ChoosePotentialRecognition(CustomRecognition):
         self.logger.error("无法读取刷新花费")
         return 65535
 
-    def _get_attachments(self, context: Context) -> tuple[list[str], int]:
+    def _get_attachments(self, context: Context, node_name: str) -> dict:
+        """获取节点 attach 中的所有参数，缺失时返回安全默认值。
+
+        Args:
+            context: maa.context.Context
+            node_name: 当前节点名称，用于动态获取节点数据
+
+        Returns:
+            dict: 包含以下键的字典：
+                - max_refresh_count (int): 最大刷新次数，0 表示禁用
+                - reserve_coin (int): 预留金币，计算可用金币时需减去此值
+                - priority_list (list): 自定义优先级列表
+                - owned_potentials (dict): 已拥有潜能状态，按 trekker 分组
         """
-            获取attach中的潜能列表及预留金币
+        defaults = {
+            "max_refresh_count": 0,
+            "reserve_coin": 0,
+            "priority_list": [],
+            "owned_potentials": {},
+        }
+        node_data = context.get_node_data(node_name)
+        if not node_data:
+            self.logger.warning("get_node_data 返回 None，使用默认参数")
+            return defaults
 
-            Args:
-                context: maa.context.Context
+        attach = node_data.get("attach", {})
+        return {
+            "max_refresh_count": attach.get("max_refresh_count", 0),
+            "reserve_coin": attach.get("reserve_coin", 0),
+            "priority_list": attach.get("priority_list", []),
+            "owned_potentials": attach.get("owned_potentials", {}),
+        }
 
-            Returns:
-                list[str]: 潜能列表
-                int: 预留金币
+    @staticmethod
+    def _parse_level_text(texts: list[str]) -> tuple[int, int]:
+        """解析 OCR 返回的等级数字结果集。
+
+        pipeline OCR 使用 \\d+ 匹配并剔除语言关键词，可能返回：
+            ["1"]       -> old=0, new=1  （新获得，只有新等级）
+            ["4", "5"]  -> old=4, new=5
+            ["45"]      -> old=4, new=5  （两位数粘连）
+
+        Args:
+            texts: OCR all_results 中各结果的 text 列表
+
+        Returns:
+            tuple[int, int]: (old_level, new_level)，解析失败返回 (-1, -1)
         """
-        attachments = context.get_node_data("星塔_节点_选择潜能_agent")
+        numbers = []
+        for t in texts:
+            if len(t) == 2 and t.isdigit():
+                numbers.extend([int(t[0]), int(t[1])])
+            elif len(t) == 1 and t.isdigit():
+                numbers.append(int(t))
 
-        try:
-            potentials = attachments['attach']['potentials']
-            reserve_coin = attachments['attach']['reserve_coin']
-        except (TypeError, KeyError, IndexError, AttributeError) as e:
-            self.logger.warning(f"提取潜能列表及预留金币的过程中出现问题: {e}")
-            potentials = []
-            reserve_coin = 0
-            return potentials, reserve_coin
-
-        return potentials, reserve_coin
+        if len(numbers) == 1:
+            return 0, numbers[0]
+        if len(numbers) == 2:
+            return numbers[0], numbers[1]
+        return -1, -1
 
     def _get_available_potentials(self, context: Context, image=None) -> list[dict]:
-        """
-            获取当前待选潜能
+        """获取当前待选的三个潜能卡片信息。
 
-            Args:
-                context: maa.context.Context
-                image(nd.array): 截图
+        Args:
+            context: maa.context.Context
+            image: 截图，为 None 时自动截图
 
-            Returns:
-                list[dict]: 潜能列表，每个元素为{"name": str, "old_level": int, "new_level": int}
+        Returns:
+            list[dict]: 潜能列表，每个元素结构：
+                {
+                    "name": str,        # 潜能名称
+                    "old_level": int,   # 升级前等级，核心潜能为 0
+                    "new_level": int,   # 升级后等级，核心潜能为 0
+                    "is_core": bool,    # 是否为核心潜能
+                    "box": list,        # 卡片区域 [x, y, w, h]
+                }
         """
         if not image:
             image = context.tasker.controller.post_screencap().wait().get()
 
-        # 判断是否为核心潜能
-        core_potential = True
-        reco_detail = context.run_recognition("星塔_节点_选择潜能_识别核心潜能_agent", image)
-        if reco_detail and reco_detail.hit:
-            core_potential = False
+        reco_detail = context.run_recognition(
+            "星塔_节点_选择潜能_识别核心潜能_agent", image
+        )
+        is_core = not (reco_detail and reco_detail.hit)
 
         available_potentials = []
-        for i in range(len(self.POTENTIAL_ROIS)):
-            rois = self.POTENTIAL_ROIS[i]
-            if core_potential:
-                name_roi = rois["core_potential"]
-            else:
-                name_roi = rois["general_potential"]
+        for i, rois in enumerate(self.POTENTIAL_ROIS):
+            name_roi = rois["core_potential"] if is_core else rois["general_potential"]
 
-            # 识别潜能名称
-            reco_detail = context.run_recognition("星塔_节点_选择潜能_识别潜能名称_agent", image,{
-                "星塔_节点_选择潜能_识别潜能名称_agent": {
-                    "recognition": {
-                        "param": {
-                            "roi": name_roi
-                        }
+            reco_detail = context.run_recognition(
+                "星塔_节点_选择潜能_识别潜能名称_agent",
+                image,
+                {
+                    "星塔_节点_选择潜能_识别潜能名称_agent": {
+                        "recognition": {"param": {"roi": name_roi}}
                     }
-                }
-            })
+                },
+            )
             if reco_detail and reco_detail.hit:
                 potential_name = reco_detail.best_result.text
             else:
-                self.logger.error(f"无法识别第{i+1}个潜能的名称")
+                self.logger.error(f"无法识别第 {i + 1} 个潜能的名称")
                 potential_name = ""
 
-            # 识别潜能等级
-            if core_potential:
-                available_potentials.append({"name": potential_name, "old_level": 0, "new_level": 0})
-            else:
-                level_roi = rois["general_potential_level"]
-                reco_detail = context.run_recognition("星塔_节点_选择潜能_识别潜能名称_agent", image, {
-                    "星塔_节点_选择潜能_识别潜能名称_agent": {
-                        "recognition": {
-                            "param": {
-                                "roi": level_roi
-                            }
-                        }
-                    }
+            if is_core:
+                available_potentials.append({
+                    "name": potential_name,
+                    "old_level": 0,
+                    "new_level": 0,
+                    "is_core": True,
+                    "box": rois["general_potential"],
                 })
-                if reco_detail and reco_detail.hit:
-                    # TODO: 对等级数据进行解析
-                    potential_level = reco_detail.best_result.text
-                    if len(potential_level) == 1:
-                        old_level = 0
-                        new_level = int(potential_level)
-                    elif len(potential_level) == 2:
-                        old_level = int(potential_level[0])
-                        new_level = int(potential_level[1])
-                    else:
-                        self.logger.warning(f"无法解析第{i+1}个潜能的等级：{potential_level}")
-                        old_level = -1
-                        new_level = -1
-                else:
-                    self.logger.error(f"无法识别第{i+1}个潜能的等级")
-                    old_level = -1
-                    new_level = -1
+                continue
 
-                available_potentials.append({"name": potential_name, "old_level": old_level, "new_level": new_level})
+            reco_detail = context.run_recognition(
+                "星塔_节点_选择潜能_识别潜能等级_agent",
+                image,
+                {
+                    "星塔_节点_选择潜能_识别潜能等级_agent": {
+                        "recognition": {"param": {"roi": rois["general_potential_level"]}}
+                    }
+                },
+            )
+            if reco_detail and reco_detail.hit:
+                texts = [r.text for r in reco_detail.filtered_results]
+                old_level, new_level = self._parse_level_text(texts)
+                if old_level == -1:
+                    self.logger.warning(f"无法解析第 {i + 1} 个潜能的等级：{texts}")
+            else:
+                self.logger.error(f"无法识别第 {i + 1} 个潜能的等级")
+                old_level, new_level = -1, -1
+
+            available_potentials.append({
+                "name": potential_name,
+                "old_level": old_level,
+                "new_level": new_level,
+                "is_core": False,
+                "box": rois["general_potential"],
+            })
 
         return available_potentials
 

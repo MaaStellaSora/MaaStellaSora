@@ -616,7 +616,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             attach: 当前完整 attach 字典
             owned: 更新后的 owned_potentials
         """
-        new_attach = {**attach, "owned_potentials": owned}
+        new_attach = {"owned_potentials": owned}
         success = context.override_pipeline({node_name: {"attach": new_attach}})
         if not success:
             self.logger.error("保存当前拥有潜能失败，自定义潜能优先级可能无法正常工作")

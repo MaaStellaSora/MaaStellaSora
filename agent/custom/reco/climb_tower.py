@@ -98,7 +98,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             target_potential,
             target_trekker,
         )
-        self._save_state(context, node_name, attach, owned)
+        self._save_state(context, node_name, owned)
 
         return CustomRecognition.AnalyzeResult(box=target_box, detail={})
 

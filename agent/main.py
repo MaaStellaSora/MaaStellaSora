@@ -6,6 +6,10 @@ from maa.toolkit import Toolkit
 # 导入自定义的action和recognition，以注册到AgentServer
 import custom
 
+# 开启debug_mode
+# from utils import logger
+# logger.debug_mode()
+
 
 
 def main():

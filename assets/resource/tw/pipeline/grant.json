@@ -1,0 +1,47 @@
+{
+  "基金_核实是否处于营业目标": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "今日目標"
+        ]
+      }
+    }
+  },
+  "基金_营业目标全部领取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "全部領取"
+        ]
+      }
+    }
+  },
+  "基金_进入基金补贴": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "基金補貼"
+        ]
+      }
+    }
+  },
+  "基金_核实是否处于基金补贴": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "基礎補貼"
+        ]
+      }
+    }
+  },
+  "基金_基金补贴全部领取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "全部領取"
+        ]
+      }
+    }
+  }
+}

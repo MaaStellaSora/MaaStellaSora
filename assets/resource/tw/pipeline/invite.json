@@ -1,0 +1,110 @@
+{
+  "邀约_打开心链": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "心鏈"
+        ]
+      }
+    }
+  },
+  "邀约_前往邀约": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "邀約"
+        ]
+      }
+    }
+  },
+  "邀约_主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "邀約"
+        ]
+      }
+    }
+  },
+  "邀约_已回到邀约界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "邀約"
+        ]
+      }
+    }
+  },
+  "邀约_1号": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "希婭"
+        ]
+      }
+    }
+  },
+  "邀约_2号": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "霧語"
+        ]
+      }
+    }
+  },
+  "邀约_3号": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "蒼蘭"
+        ]
+      }
+    }
+  },
+  "邀约_地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選擇"
+        ]
+      }
+    }
+  },
+  "邀约_还是算了": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "還是算了"
+        ]
+      }
+    }
+  },
+  "邀约_送出礼物": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "送出禮物"
+        ]
+      }
+    }
+  },
+  "邀约_送礼": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "送出禮物"
+        ]
+      }
+    }
+  },
+  "邀约_送礼流程": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "贈禮"
+        ]
+      }
+    }
+  }
+}

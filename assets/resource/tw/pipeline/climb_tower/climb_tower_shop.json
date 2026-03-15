@@ -1,0 +1,177 @@
+{
+  "星塔_节点_商店_购物": {
+    "recognition": {
+      "param": {
+        "expected": ["商店購物"]
+      }
+    }
+  },
+  "星塔_节点_商店_回到商店层": {
+    "recognition": {
+      "param": {
+        "expected": ["商店購物"]
+      }
+    }
+  },
+  "星塔_节点_商店_下一层": {
+    "recognition": {
+      "param": {
+        "expected": ["上樓"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足1": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足2": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足3": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足4": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足5": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足6": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足7": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_货币不足8": {
+    "recognition": {
+      "param": {
+        "expected": ["沒有足夠的"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面1": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面2": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面3": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面4": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面5": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面6": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面7": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子主界面8": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子_优惠": {
+    "recognition": {
+      "param": {
+        "expected": ["優惠"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子_购买": {
+    "recognition": {
+      "param": {
+        "expected": ["購買"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子_buff": {
+    "recognition": {
+      "param": {
+        "expected": ["能夠獲得新潛能"]
+      }
+    }
+  },
+  "星塔_节点_商店_购物_格子_音符_激活": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "協奏",
+          "相關",
+          "技能"
+        ]
+      }
+    }
+  },
+  "星塔_节点_商店_强化": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "免費",
+          "(^|[^0-9])([6-9][0-9]|1[0-9]{2})([^0-9]|$)"
+        ]
+      }
+    }
+  }
+}

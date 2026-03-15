@@ -1,0 +1,292 @@
+{
+    "星塔_节点_商店_点击商店购物_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "商店购物"
+                ],
+                "roi": [
+                    395,
+                    243,
+                    338,
+                    98
+                ],
+                "post_wait_freezes": 100
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_节点_商店_进入购物界面_agent",
+            "星塔_节点_商店_点击商店购物_agent"
+        ]
+    },
+    "星塔_节点_商店_进入购物界面_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
+                ],
+                "roi": [
+                    210,
+                    168,
+                    550,
+                    468
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "星塔_通用_识别当前金币_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [
+                    [",", ""]
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_识别物品内容_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    ".+"
+                ],
+                "color_filter": "星塔_节点_商店_识别物品内容_滤色器_agent",
+                "order_by": "Vertical"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_识别物品内容_滤色器_agent": {
+        "recognition": {
+            "param": {
+                "method": 4, // (39, 67, 121)
+                "lower": [30, 60, 120],
+                "upper": [50, 80, 140]
+            },
+            "type": "ColorMatch"
+        }
+    },
+    "星塔_节点_商店_购物_购买道具_agent": {
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_节点_商店_购物_购买道具_确认购买_agent"
+        ]
+    },
+    "星塔_节点_商店_购物_购买道具_确认购买_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "购买"
+                ],
+                "roi": [
+                    602,
+                    493,
+                    98,
+                    52
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_节点_商店_进入购物界面_agent",
+            "[JumpBack]星塔_节点_选择潜能_agent",
+            "[JumpBack]星塔_点击空白处关闭"
+        ],
+        "post_wait_freezes": 200
+    },
+    "星塔_节点_商店_购物_识别可刷新次数_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "roi": [
+                    1090,
+                    610,
+                    100,
+                    50
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_通用_识别刷新花费_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "roi": [
+                    1165,
+                    560,
+                    105,
+                    50
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_通用_点击刷新_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_商店刷新按钮__1199_609_45_41__1149_559_131_141.png"
+                ],
+                "roi": [
+                    1090,
+                    550,
+                    190,
+                    170
+                ]
+            },
+            "type": "TemplateMatch"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 100
+    },
+    "星塔_节点_商店_识别强化是否免费_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "免费",
+                ],
+                "roi": [
+                    347,
+                    357,
+                    435,
+                    93
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_识别强化所需金币_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+",
+                ],
+                "roi": [
+                    347,
+                    357,
+                    435,
+                    93
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_点击强化_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "强化",
+                ],
+                "roi": [
+                    347,
+                    357,
+                    435,
+                    93
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_节点_选择潜能_agent"
+        ],
+        "post_wait_freezes": 100
+    },
+    "星塔_节点_选择潜能_识别刷新按钮_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_商店刷新按钮__1199_609_45_41__1149_559_131_141.png"
+                ],
+                "roi": [
+                    1090,
+                    550,
+                    190,
+                    170
+                ]
+            },
+            "type": "TemplateMatch"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 100
+    },
+    "星塔_节点_选择潜能_识别核心潜能_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_核心潜能.png"
+                ],
+                "roi": [
+                    235,
+                    345,
+                    800,
+                    75
+                ]
+            },
+            "type": "TemplateMatch"
+        }
+    },
+    "星塔_节点_选择潜能_识别潜能名称_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    ".+"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_选择潜能_识别潜能等级_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [
+                    ["等级", ""],
+                    ["等級", ""],
+                    ["level", ""],
+                    ["レベル", ""],
+                    ["▶", ""]
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_选择潜能_识别推荐图标_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_buff推荐图标1__146_389_43_44__96_339_143_144.png"
+                ],
+                "green_mask": true,
+                "threshold": 0.6
+            },
+            "type": "TemplateMatch"
+        }
+    }
+}

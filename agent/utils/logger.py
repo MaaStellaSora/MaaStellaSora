@@ -102,7 +102,7 @@ def _apply_debug_to_logger(logger: logging.Logger, log_file: str) -> None:
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
 
-        file_fmt = "%(asctime)s|%(levelname)s|%(message)s"
+        file_fmt = "%(asctime)s|%(name)s|%(levelname)s|%(message)s"
         file_formatter = logging.Formatter(file_fmt, datefmt="%Y-%m-%d %H:%M:%S")
         file_handler.setFormatter(file_formatter)
 

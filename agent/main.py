@@ -4,7 +4,7 @@ from maa.agent.agent_server import AgentServer
 from maa.toolkit import Toolkit
 
 # 导入自定义的action和recognition，以注册到AgentServer
-import custom
+import custom # noqa: F401
 
 # 开启debug_mode
 # from utils import logger

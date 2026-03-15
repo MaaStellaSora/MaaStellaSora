@@ -2,6 +2,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 import json
+import re
 import time
 import random
 from utils import logger
@@ -296,7 +297,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 },
             )
             if reco_detail and reco_detail.hit:
-                potential_name = reco_detail.best_result.text
+                potential_name = "".join(r.text for r in reco_detail.filtered_results)
             else:
                 self.logger.error(f"无法识别第 {i + 1} 个潜能的名称")
                 potential_name = ""
@@ -340,134 +341,157 @@ class ChoosePotentialRecognition(CustomRecognition):
         return available_potentials
 
     @staticmethod
-    def _parse_priority_raw_list(potential_priority_raw, owned_potentials) -> list[dict]:
+    def _parse_priority_raw_list(
+        potential_priority_raw: list[dict],
+        owned_potentials: dict,
+    ) -> list[dict]:
+        """对原始 priority_list 进行初筛，过滤掉 condition 当前不满足的规则。
+
+        排名使用原始 JSON 的 1-based 行号（index + 1），数值越小排名越高。
+        condition 不满足的条目直接跳过，其行号仍保留在原始位置，不影响其他条目的排名。
+
+        Args:
+            potential_priority_raw: 原始优先级列表，每个元素结构：
+                {
+                    "trekker": str,         # 可选，潜能归属角色名
+                    "potential": str|list,  # 必填，潜能名称或名称列表
+                    "level_span": int,      # 可选，默认 1，最小升级跨度
+                    "max_level": int,       # 可选，默认 MAX_POTENTIAL_LEVEL，旧等级上限（不含）
+                    "condition": list       # 可选，生效条件，元素为 dict 时 AND，为 list 时 OR
+                }
+            owned_potentials: 已拥有潜能状态，按 trekker 分组，结构：
+                {"花原": {"飞花乱坠": 1}, "unknown": {"盛大尾奏": 1}}
+
+        Returns:
+            list[dict]: 通过初筛的规则列表，每个元素结构：
+                {
+                    "trekker": str | None,  # 归属角色
+                    "names": list[str],     # 目标潜能名称列表
+                    "level_span": int,      # 最小升级跨度
+                    "max_level": int,       # 旧等级上限（不含）
+                    "priority": int         # 原始 JSON 的 1-based 行号，越小排名越高
+                }
         """
-            解析潜能优先级配置
+        owned_map: dict[str, int] = {}
+        for potentials in owned_potentials.values():
+            owned_map.update(potentials)
 
-            将 json 导入的原始配置转换为可快速索引的优先级列表。
-            优先级数值越大越优先，由 raw_list 的 index 从大到小映射（index=0 最高优先级）。
-            condition 不满足的条目直接跳过（视为无效，不加入结果）。
+        trekker_count_map: dict[str, int] = {
+            trekker: len(potentials)
+            for trekker, potentials in owned_potentials.items()
+            if trekker != "unknown"
+        }
 
-            Args:
-                potential_priority_raw: 配置中的潜能列表，每个元素结构：
-                    {
-                        "name": str | list,   # 潜能名称，list 时同优先级内按 level_span 降序选，相等随机
-                        "level_span": int,    # 可选，默认 1。new_level - old_level >= level_span 时该条生效
-                        "max_level": int,     # 可选，默认 6。old_level < max_level 时该条生效
-                        "condition": list     # 可选。列表元素为 dict 时表示 and；元素为 list 时表示 or（内层 and）
-                    }
-                owned_potentials: 当前已有的潜能列表，每个元素为{"name": str, "level": int}
+        def _check_single_condition(item: dict) -> bool:
+            """检查单个 condition 子项是否满足。"""
+            if "trekker_count" in item:
+                return trekker_count_map.get(item["trekker"], 0) >= item["trekker_count"]
+            current = owned_map.get(item["potential"], 0)
+            return (
+                current >= item.get("min_level", 0)
+                and current < item.get("max_level", ChoosePotentialRecognition.MAX_POTENTIAL_LEVEL + 1)
+            )
 
-            Returns:
-                list[dict]: 有效的优先级条目列表，每个元素结构：
-                    {
-                        "names": list[str],  # 该条目匹配的潜能名称（统一转为 list）
-                        "level_span": int,   # 等级跨度要求
-                        "max_level": int,    # 最大旧等级限制
-                        "priority": int      # 优先级数值，数值越大优先级越高
-                    }
-        """
-        # 将 owned_potentials 转为 {name: level} 字典，方便 condition 查询
-        owned_map = {p["name"]: p["level"] for p in owned_potentials}
+        def _check_condition(condition: list) -> bool:
+            """检查 condition 列表是否满足。
 
-        def _check_condition(condition):
-            """
-            检查 condition 是否满足。
-            condition 为 list：
-              - 元素为 dict → and 逻辑，所有 dict 都需满足
-              - 元素为 list → or 逻辑，内层列表的 dict 全部满足即该分支满足，任意分支满足则整体满足
+            元素全为 dict 时为 AND 逻辑；含 list 元素时为 OR 逻辑（内层为 AND）。
             """
             if not condition:
                 return True
-
-            # 判断是纯 and 结构（元素全为 dict）还是 or 结构（元素含 list）
             if all(isinstance(item, dict) for item in condition):
-                # and 逻辑：所有条件都需满足
-                return all(
-                    owned_map.get(item["name"], 0) >= item["level"]
-                    for item in condition
-                )
-            else:
-                # or 逻辑：任意一个 and 分支满足即可
-                for branch in condition:
-                    if isinstance(branch, list):
-                        if all(owned_map.get(item["name"], 0) >= item["level"] for item in branch):
-                            return True
-                    elif isinstance(branch, dict):
-                        if owned_map.get(branch["name"], 0) >= branch["level"]:
-                            return True
-                return False
+                return all(_check_single_condition(item) for item in condition)
+            for branch in condition:
+                if isinstance(branch, list):
+                    if all(_check_single_condition(item) for item in branch):
+                        return True
+                elif isinstance(branch, dict):
+                    if _check_single_condition(branch):
+                        return True
+            return False
 
         valid_entries = []
-        total = len(potential_priority_raw)
-
         for index, raw in enumerate(potential_priority_raw):
-            # 检查 condition，不满足则跳过
             condition = raw.get("condition", [])
-            # condition 为 dict（文档示例中有误用 {} 的情况）时，视为空条件直接通过
             if isinstance(condition, dict):
-                condition = list(condition.values()) if condition else []
+                condition = []
             if not _check_condition(condition):
                 continue
 
-            # 统一 name 为 list
-            names = raw["name"] if isinstance(raw["name"], list) else [raw["name"]]
-            level_span = raw.get("level_span", 1)
-            max_level = raw.get("max_level", 6)
-
-            # index 越小优先级越高，映射为数值：total - index
-            priority = total - index
+            potential = raw["potential"]
+            names = potential if isinstance(potential, list) else [potential]
 
             valid_entries.append({
+                "trekker": raw.get("trekker"),
                 "names": names,
-                "level_span": level_span,
-                "max_level": max_level,
-                "priority": priority,
+                "level_span": raw.get("level_span", 1),
+                "max_level": raw.get("max_level", ChoosePotentialRecognition.MAX_POTENTIAL_LEVEL),
+                "priority": index + 1,
             })
 
         return valid_entries
 
     @staticmethod
-    def _get_potential_priority(potential_priority_list, potential) -> int:
+    def _match_potential_name(ocr_name: str, rule_name: str) -> bool:
+        """比较 OCR 识别的潜能名称与规则中的潜能名称是否匹配。
+
+        OCR 可能产生前后漏字或噪声字符，因此先清洗两边字符串（去除非 Unicode
+        字母数字字符），再用双向 in 检查，覆盖前后漏字的情况。
+
+        中间漏字或错字无法处理，属于 OCR 识别质量问题。
+
+        Args:
+            ocr_name: OCR 识别到的潜能名称
+            rule_name: 优先级规则中定义的潜能名称
+
+        Returns:
+            bool: 两者匹配时返回 True
         """
-            获取潜能的优先级
+        cleaned_ocr = re.sub(r'[^\w]', '', ocr_name)
+        cleaned_rule = re.sub(r'[^\w]', '', rule_name)
+        return cleaned_ocr in cleaned_rule or cleaned_rule in cleaned_ocr
 
-            遍历 priority_list，找到所有名称匹配且满足 level_span / max_level 条件的条目，
-            返回其中优先级最高的值。
-            当多个同名潜能处于同一条目（name 为 list）且 level_span 相同时，
-            由调用方在拿到所有候选的优先级后随机决策；
-            本函数只负责返回该 potential 实际能得到的最高优先级分数。
+    @staticmethod
+    def _get_potential_priority(
+        potential_priority_list: list[dict],
+        potential: dict,
+    ) -> tuple[int, str | None]:
+        """获取单个待选潜能在规则列表中的最高排名及其 trekker 归属。
 
-            Args:
-                potential_priority_list: _parse_priority_raw_list 的返回值，
-                    每个元素为 {"names": list, "level_span": int, "max_level": int, "priority": int}
-                potential: 单个待选潜能，{"name": str, "old_level": int, "new_level": int}
+        遍历 priority_list，找到所有名称匹配且满足 level_span / max_level 条件的规则，
+        返回排名数值最小（即优先级最高）的规则对应的排名与 trekker。
 
-            Returns:
-                int: 优先级数值，数值越大优先级越高；匹配不到任何规则时返回 -1
+        Args:
+            potential_priority_list: _parse_priority_raw_list 的返回值，每个元素结构：
+                {"trekker": str|None, "names": list, "level_span": int,
+                 "max_level": int, "priority": int}
+            potential: 单个待选潜能，结构：
+                {"name": str, "old_level": int, "new_level": int, "is_core": bool, "box": list}
+
+        Returns:
+            tuple[int, str | None]: (priority, trekker)
+                priority 为匹配到的最小排名数值；无匹配时返回 -1
+                trekker 为对应规则的归属角色；无匹配时返回 None
         """
         name = potential["name"]
         old_level = potential["old_level"]
-        new_level = potential["new_level"]
-        level_span = new_level - old_level
+        level_span = potential["new_level"] - old_level
 
         best_priority = -1
+        best_trekker = None
 
         for entry in potential_priority_list:
-            # 名称不匹配则跳过
-            if name not in entry["names"]:
+            if not any(
+                ChoosePotentialRecognition._match_potential_name(name, n)
+                for n in entry["names"]
+            ):
                 continue
-
-            # max_level 条件：old_level < max_level 时生效
             if old_level >= entry["max_level"]:
                 continue
-
-            # level_span 条件：实际跨度 >= 要求跨度时生效
             if level_span < entry["level_span"]:
                 continue
-
-            # 取所有匹配条目中优先级最高的
-            if entry["priority"] > best_priority:
+            if best_priority == -1 or entry["priority"] < best_priority:
                 best_priority = entry["priority"]
+                best_trekker = entry["trekker"]
 
-        return best_priority
+        return best_priority, best_trekker

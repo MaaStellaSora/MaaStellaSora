@@ -603,7 +603,6 @@ class ChoosePotentialRecognition(CustomRecognition):
         self,
         context: Context,
         node_name: str,
-        attach: dict,
         owned: dict,
     ) -> None:
         """将更新后的 owned_potentials 写回节点 attach，通过 override_pipeline 持久化。
@@ -613,7 +612,6 @@ class ChoosePotentialRecognition(CustomRecognition):
         Args:
             context: maa.context.Context
             node_name: 当前节点名称
-            attach: 当前完整 attach 字典
             owned: 更新后的 owned_potentials
         """
         new_attach = {"owned_potentials": owned}

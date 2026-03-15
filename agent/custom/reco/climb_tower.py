@@ -520,11 +520,15 @@ class ChoosePotentialRecognition(CustomRecognition):
                 candidates.append((potential, priority, trekker))
 
         if not candidates:
-            self.logger.info("[潜能选择] 系统推荐")
+            self.logger.info("[潜能选择] 选择系统推荐")
             return None
 
         best_priority = min(p for _, p, _ in candidates)
         top = [(pot, trek) for pot, p, trek in candidates if p == best_priority]
+
+        best_span = max(pot["new_level"] - pot["old_level"] for pot, _ in top)
+        top = [(pot, trek) for pot, trek in top if pot["new_level"] - pot["old_level"] == best_span]
+
         selected_potential, selected_trekker = random.choice(top)
 
         self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")
@@ -566,8 +570,6 @@ class ChoosePotentialRecognition(CustomRecognition):
     ) -> dict:
         """将本次选中的潜能写入 owned_potentials 对应的 trekker 分组。
 
-        不直接修改传入的 owned 字典，返回更新后的新字典。
-
         Args:
             owned: 当前 owned_potentials 字典，按 trekker 分组
             potential: 本次选中的潜能（含 name, new_level）；为 None 时不更新
@@ -583,14 +585,13 @@ class ChoosePotentialRecognition(CustomRecognition):
         new_level = potential["new_level"]
 
         if new_level == -1:
-            self.logger.warning(f"潜能 {name} 等级解析失败，跳过写入 owned_potentials")
-            return owned
+            self.logger.warning(f"潜能 {name} 等级解析失败，将默认为1级")
+            new_level = 1
 
         group = trekker if trekker else "unknown"
         if not trekker:
-            self.logger.warning(
-                f"潜能 {name} 无 trekker 归属，写入 unknown 分组，"
-                "请在 priority_list 中补录该潜能的 trekker 字段"
+            self.logger.debug(
+                f"潜能 {name} 无所属旅人，将默认为unknown"
             )
 
         if group not in owned:
@@ -618,4 +619,4 @@ class ChoosePotentialRecognition(CustomRecognition):
         new_attach = {**attach, "owned_potentials": owned}
         success = context.override_pipeline({node_name: {"attach": new_attach}})
         if not success:
-            self.logger.error("写回 owned_potentials 失败，本次状态丢失")
+            self.logger.error("保存当前拥有潜能失败，自定义潜能优先级可能无法正常工作")

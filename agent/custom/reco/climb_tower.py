@@ -229,7 +229,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             ["45"]      -> old=4, new=5  （两位数粘连）
 
         Args:
-            texts: OCR all_results 中各结果的 text 列表
+            texts: OCR filtered_results 中各结果的 text 列表
 
         Returns:
             tuple[int, int]: (old_level, new_level)，解析失败返回 (-1, -1)
@@ -373,14 +373,17 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         def _check_single_condition(item: dict) -> bool:
             """检查单个 condition 子项是否满足。"""
-            if "trekker_count" in item:
-                return trekker_count_map.get(item["trekker"], 0) >= item["trekker_count"]
+            if "count_at_least" in item or "count_at_most" in item:
+                count = trekker_count_map.get(item["trekker"], 0)
+                if "count_at_least" in item and count < item["count_at_least"]:
+                    return False
+                if "count_at_most" in item and count > item["count_at_most"]:
+                    return False
+                return True
             current = owned_map.get(item["potential"], 0)
-            return (
-                item.get("min_level", 0)
-                <= current
-                < item.get("max_level", ChoosePotentialRecognition.MAX_POTENTIAL_LEVEL + 1)
-            )
+            min_ok = current >= item["level_at_least"] if "level_at_least" in item else True
+            max_ok = current <= item["level_at_most"] if "level_at_most" in item else True
+            return min_ok and max_ok
 
         def _check_condition(cond: list) -> bool:
             """检查 condition 列表是否满足。

@@ -95,7 +95,7 @@ JSON 是一种用文字表示数据的格式。本配置中你只需要了解两
 ]
 ```
 
-不填写 `trekker` 时，程序仍然正常运行，但该潜能被选中后会归入 `unknown` 分组，并在日志中输出警告，提示你补录。
+不填写 `trekker` 时，程序仍然正常运行，但该潜能被选中后会归入 `unknown` 分组，并在日志中输出 debug 信息。
 
 ---
 
@@ -195,15 +195,15 @@ JSON 是一种用文字表示数据的格式。本配置中你只需要了解两
     "trekker": "夏花",
     "potential": "螺旋风涡",
     "condition": [
-        {"potential": "风华永续", "min_level": 3}
+        {"potential": "风华永续", "level_at_least": 3}
     ]
 }
 ```
 
 condition 列表中的每一项都是一个条件，等级判断包含：
 - `potential`：已拥有的潜能名称
-- `min_level`：该潜能当前等级 **≥** 该值时条件成立
-- `max_level`：该潜能当前等级 **<** 该值时条件成立（可与 `min_level` 同时使用表达区间）
+- `level_at_least`：该潜能当前等级 **≥** 该值时条件成立（含）
+- `level_at_most`：该潜能当前等级 **≤** 该值时条件成立（含，可与 `level_at_least` 同时使用表达区间）
 
 **列表中多个条件默认是 AND 关系，即全部满足才生效。**
 
@@ -215,7 +215,7 @@ condition 列表中的每一项都是一个条件，等级判断包含：
         "trekker": "夏花",
         "potential": "螺旋风涡",
         "condition": [
-            {"potential": "风华永续", "min_level": 3}
+            {"potential": "风华永续", "level_at_least": 3}
         ]
     },
     {"trekker": "夏花", "potential": "风华永续"}
@@ -223,7 +223,7 @@ condition 列表中的每一项都是一个条件，等级判断包含：
 ```
 
 含义：
-- 如果我**已经有 3 级以上的风华永续**，优先选螺旋风涡。
+- 如果我**已经有 3 级或以上的风华永续**，优先选螺旋风涡。
 - 否则这条规则无效，回退到第二条：先把风华永续升上去。
 
 ### 示例：需要同时满足两个条件（AND）
@@ -234,8 +234,8 @@ condition 列表中的每一项都是一个条件，等级判断包含：
         "trekker": "夏花",
         "potential": "螺旋风涡",
         "condition": [
-            {"potential": "风华永续", "min_level": 3},
-            {"potential": "劲风利矢", "min_level": 2}
+            {"potential": "风华永续", "level_at_least": 3},
+            {"potential": "劲风利矢", "level_at_least": 2}
         ]
     }
 ]
@@ -252,7 +252,8 @@ condition 列表中的每一项都是一个条件，等级判断包含：
 | 字段 | 说明 |
 |------|------|
 | `trekker` | 要统计的角色名 |
-| `trekker_count` | 该角色已拥有潜能种数 **≥** 该值时条件成立 |
+| `count_at_least` | 该角色已拥有潜能种数 **≥** 该值时条件成立（含） |
+| `count_at_most` | 该角色已拥有潜能种数 **≤** 该值时条件成立（含） |
 
 > **注意**：归入 `unknown` 分组的潜能不参与此统计。建议为所有规则填写 `trekker` 字段以确保统计准确。
 
@@ -264,7 +265,7 @@ condition 列表中的每一项都是一个条件，等级判断包含：
         "trekker": "夏花",
         "potential": "螺旋风涡",
         "condition": [
-            {"trekker": "花原", "trekker_count": 8}
+            {"trekker": "花原", "count_at_least": 8}
         ]
     },
     {
@@ -290,15 +291,15 @@ condition 列表中的每一项都是一个条件，等级判断包含：
 ```json
 // AND 逻辑（默认）：condition 里直接放 dict
 "condition": [
-    {"potential": "风华永续", "min_level": 3},
-    {"potential": "劲风利矢", "min_level": 2}
+    {"potential": "风华永续", "level_at_least": 3},
+    {"potential": "劲风利矢", "level_at_least": 2}
 ]
 // 含义：风华永续 ≥ 3 AND 劲风利矢 ≥ 2
 
 // OR 逻辑：condition 里放内层 list
 "condition": [
-    [{"potential": "风华永续", "min_level": 3}],
-    [{"trekker": "花原", "trekker_count": 8}]
+    [{"potential": "风华永续", "level_at_least": 3}],
+    [{"trekker": "花原", "count_at_least": 8}]
 ]
 // 含义：风华永续 ≥ 3 OR 花原已有 8 种
 ```
@@ -311,8 +312,8 @@ condition 列表中的每一项都是一个条件，等级判断包含：
         "trekker": "夏花",
         "potential": "螺旋风涡",
         "condition": [
-            [{"potential": "风华永续", "min_level": 3}, {"potential": "劲风利矢", "min_level": 2}],
-            [{"trekker": "花原", "trekker_count": 8}]
+            [{"potential": "风华永续", "level_at_least": 3}, {"potential": "劲风利矢", "level_at_least": 2}],
+            [{"trekker": "花原", "count_at_least": 8}]
         ]
     }
 ]
@@ -351,21 +352,21 @@ condition 列表中的每一项都是一个条件，等级判断包含：
         "trekker": "夏花",
         "potential": "螺旋风涡",
         "condition": [
-            {"trekker": "花原", "trekker_count": 8}
+            {"trekker": "花原", "count_at_least": 8}
         ]
     },
     {
         "trekker": "夏花",
         "potential": ["风华永续", "劲风利矢"],
         "condition": [
-            {"trekker": "花原", "trekker_count": 8}
+            {"trekker": "花原", "count_at_least": 8}
         ]
     },
     {
         "trekker": "夏花",
         "potential": "花影旋风",
         "condition": [
-            {"trekker": "花原", "trekker_count": 8}
+            {"trekker": "花原", "count_at_least": 8}
         ]
     },
     {"trekker": "花原", "potential": "飞花乱坠",  "max_level": 1},
@@ -420,9 +421,9 @@ condition 里写的是**你已经拥有的潜能**（已升过的），不是你
 // ❌ 错误理解：以为 condition 是"我想同时选这两个"
 {
     "potential": "螺旋风涡",
-    "condition": [{"potential": "风华永续", "min_level": 1}]
+    "condition": [{"potential": "风华永续", "level_at_least": 1}]
 }
-// ✅ 正确理解：我已经有 1 级以上的风华永续，所以这时优先选螺旋风涡
+// ✅ 正确理解：我已经有 1 级或以上的风华永续，所以这时优先选螺旋风涡
 ```
 
 ---
@@ -431,10 +432,10 @@ condition 里写的是**你已经拥有的潜能**（已升过的），不是你
 
 ```json
 // ❌ 错误
-"condition": {"potential": "风华永续", "min_level": 2}
+"condition": {"potential": "风华永续", "level_at_least": 2}
 
 // ✅ 正确：condition 必须是列表
-"condition": [{"potential": "风华永续", "min_level": 2}]
+"condition": [{"potential": "风华永续", "level_at_least": 2}]
 ```
 
 ---
@@ -444,14 +445,14 @@ condition 里写的是**你已经拥有的潜能**（已升过的），不是你
 ```json
 // ❌ 这是 AND 逻辑（所有条件都要满足）
 "condition": [
-    {"potential": "风华永续", "min_level": 2},
-    {"trekker": "花原", "trekker_count": 8}
+    {"potential": "风华永续", "level_at_least": 2},
+    {"trekker": "花原", "count_at_least": 8}
 ]
 
 // ✅ 这才是 OR 逻辑（满足其中一个即可）
 "condition": [
-    [{"potential": "风华永续", "min_level": 2}],
-    [{"trekker": "花原", "trekker_count": 8}]
+    [{"potential": "风华永续", "level_at_least": 2}],
+    [{"trekker": "花原", "count_at_least": 8}]
 ]
 ```
 
@@ -469,8 +470,8 @@ OR 逻辑的标志是：condition 列表里放的是**内层列表**，而不是
 
 ### ⚠️ 建议为每条规则填写 trekker
 
-不填 `trekker` 时，被选中的潜能会进入 `unknown` 分组，不参与 `trekker_count` 统计。
-如果你的配置中使用了数量判断（`trekker_count`），漏填 `trekker` 会导致统计不准确。
+不填 `trekker` 时，被选中的潜能会进入 `unknown` 分组，不参与 `count_at_least` / `count_at_most` 统计。
+如果你的配置中使用了数量判断（`count_at_least` / `count_at_most`），漏填 `trekker` 会导致统计不准确。
 
 ---
 
@@ -493,15 +494,16 @@ OR 逻辑的标志是：condition 列表里放的是**内层列表**，而不是
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `potential` | 字符串 | 已拥有的潜能名称 |
-| `min_level` | 整数 | 当前等级 **≥** 该值时条件成立 |
-| `max_level` | 整数 | 当前等级 **<** 该值时条件成立 |
+| `level_at_least` | 整数 | 当前等级 **≥** 该值时条件成立（含） |
+| `level_at_most` | 整数 | 当前等级 **≤** 该值时条件成立（含） |
 
 **数量判断：**
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `trekker` | 字符串 | 要统计的角色名 |
-| `trekker_count` | 整数 | 该角色已拥有潜能种数 **≥** 该值时条件成立 |
+| `count_at_least` | 整数 | 该角色已拥有潜能种数 **≥** 该值时条件成立（含） |
+| `count_at_most` | 整数 | 该角色已拥有潜能种数 **≤** 该值时条件成立（含） |
 
 ---
 

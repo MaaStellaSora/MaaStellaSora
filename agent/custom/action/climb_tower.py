@@ -197,71 +197,56 @@ class ShopAction(CustomAction):
         self.logger = logger.get_logger(__name__)
 
     def run(
-            self,
-            context: Context,
-            argv: CustomAction.RunArg,
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
     ) -> bool:
+        """商店楼层自动购买主流程。
 
-        # 开启debug模式
-        # self.logger.debug_mode()
+        读取 attach 参数，判断商店类型，循环执行常规买单；
+        最终商店每轮额外执行补买潜能特饮，满足条件则刷新继续。
 
-        # 获取资源类型
-        param_str = argv.custom_action_param
-        param = json.loads(param_str)
-        self.lang_type = param.get("lang_type")
+        Args:
+            context: 任务上下文。
+            argv: 自定义动作参数。
 
-        # 先检查是中途的商店还是最终商店
+        Returns:
+            bool: 正常完成返回 True；购买异常中止返回 False。
+        """
+        params = self._get_params(context, argv.node_name)
+        self.lang_type = params["lang_type"]
+        reserve_coin = params["reserve_coin"]
+        priority = params["priority"]
+        drink_threshold = params["drink_discount_threshold"]
+        melody_threshold = params["melody_discount_threshold"]
+        target_melodies = params["element_melodies"] + params["stat_melodies"]
+
         shop_type = self._check_shop_type(context)
-
-        # 定义初始参数
-        # TODO: 通过强化参数预留金币
-        reserve_coin = 0
-
-        # 然后进入商店购物的页面
         context.run_task("星塔_节点_商店_点击商店购物_agent")
-        # 开始第一轮购买
+        min_price = self._calc_min_buyable_price(
+            priority, drink_threshold, melody_threshold, target_melodies
+        )
+
         while True:
-            # 读取8个格子的信息
-            grids_infos = self._get_grids_info(context)
+            grids_info = self._get_grids_info(context)
 
-            # 按照策略决定购买内容
-            # TODO: 其他方案
-            # 方案1：只买潜能特饮
-            buy_list = [grid for grid in grids_infos if grid["item_name"] == "potential_drink"]
-            # 方案2：优先购买潜能特饮，其次根据打折力度购买音符
-            # 方案3：优先根据打折力度凑1级附加技能，其次购买潜能特饮
-            # 方案4：买到没钱
+            if not self._execute_regular_buy(
+                context, grids_info, priority,
+                drink_threshold, melody_threshold, target_melodies, reserve_coin
+            ):
+                return False
 
-            # 执行购买操作
-            for item in buy_list:
-                # 读取当前金币
-                coin = max(0, self._get_current_coin(context) - reserve_coin)
-                if coin >= item["price"]:
-                    # 获取道具所属格子范围
-                    buy_result = self._buy_item(context, item["price_roi"])
-                    if buy_result:
-                        coin = coin - reserve_coin
-                    else:
-                        if not context.tasker.stopping:
-                            self.logger.error("购买操作出现问题，为保证爬塔质量，将中止任务")
-                            context.tasker.post_stop()
-                        return False
-
-            # 循环完毕后，根据是中途商店还是最终商店，决定是否刷新物品继续新一轮的购买
             if shop_type == "regular":
                 break
-            else:
-                refresh_remaining = self._get_refresh_remaining(context)
-                if refresh_remaining > 0 and coin >= 145:
-                    context.run_task("星塔_通用_点击刷新_agent")
-                elif refresh_remaining == 0:
-                    self.logger.info("刷新次数已用完，无法继续刷新")
-                    break
-                elif coin < 145:
-                    self.logger.info("可使用金币不足145，跳过刷新")
-                    break
 
-        # 退回商店层主界面
+            if not self._execute_drink_supplement_buy(context, grids_info, reserve_coin):
+                return False
+
+            if not self._should_refresh(context, reserve_coin, min_price):
+                break
+
+            context.run_task("星塔_通用_点击刷新_agent")
+
         context.run_task("星塔_节点_商店_购物_返回商店层_agent")
         return True
 
@@ -795,6 +780,62 @@ class ShopAction(CustomAction):
             time.sleep(1)
         self.logger.error("无法识别刷新费用，返回 65535")
         return 65535
+
+    def _execute_drink_supplement_buy(
+        self,
+        context: Context,
+        grids_info: list[dict],
+        reserve_coin: int,
+    ) -> bool:
+        """最终商店补买阶段：对所有未买的潜能特饮格子执行购买，不限折扣。
+
+        Args:
+            context: 任务上下文。
+            grids_info: 本轮格子信息（格子按价格升序排列）。
+            reserve_coin: 预留金币。
+
+        Returns:
+            bool: 操作正常完成返回 True；购买异常返回 False。
+        """
+        for grid in grids_info:
+            if grid["bought"]:
+                continue
+            if grid["item_name"] != "potential_drink":
+                continue
+            if not self._try_buy_grid(context, grid, reserve_coin):
+                return False
+        return True
+
+    def _should_refresh(
+        self,
+        context: Context,
+        reserve_coin: int,
+        min_buyable_price: float,
+    ) -> bool:
+        """判断当前是否满足刷新条件。
+
+        刷新条件：剩余刷新次数 > 0 且 可支配金币 ≥ 刷新费用 + min_buyable_price。
+
+        Args:
+            context: 任务上下文。
+            reserve_coin: 预留金币。
+            min_buyable_price: 预计算的最低理论买单价格。
+
+        Returns:
+            bool: 满足刷新条件返回 True。
+        """
+        refresh_remaining = self._get_refresh_remaining(context)
+        if refresh_remaining == 0:
+            self.logger.info("刷新次数已用完，停止刷新")
+            return False
+
+        refresh_cost = self._get_refresh_cost(context)
+        usable = max(0, _get_current_coin(context) - reserve_coin)
+        if usable >= refresh_cost + min_buyable_price:
+            return True
+
+        self.logger.info("可支配金币不足以刷新并购买，停止刷新")
+        return False
 
     def _get_reverse_mapping(self, lang_type):
         """

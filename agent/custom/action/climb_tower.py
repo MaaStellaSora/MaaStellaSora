@@ -45,6 +45,32 @@ def _get_current_coin(
     return 0
 
 
+def _calculate_max_enhance_count(
+    current_coin: int,
+    current_enhancement_cost: int,
+    max_cost: int,
+    enhance_step: int,
+) -> int:
+    """计算可强化次数。
+
+    Args:
+        current_coin: 当前金币数量。
+        current_enhancement_cost: 当前强化所需金币数量。
+        max_cost: 允许的单次强化金币上限。
+        enhance_step: 每次强化后费用递增的步长。
+
+    Returns:
+        int: 可强化次数。
+    """
+    count = 0
+    while (current_coin >= current_enhancement_cost
+           and current_enhancement_cost <= max_cost):
+        current_coin -= current_enhancement_cost
+        count += 1
+        current_enhancement_cost += enhance_step
+    return count
+
+
 @AgentServer.custom_action("shop_action")
 class ShopAction(CustomAction):
 
@@ -203,8 +229,8 @@ class ShopAction(CustomAction):
     ) -> bool:
         """商店楼层自动购买主流程。
 
-        读取 attach 参数，判断商店类型，循环执行常规买单；
-        最终商店每轮额外执行补买潜能特饮，满足条件则刷新继续。
+        读取 attach 参数，判断商店类型，循环执行常规购买；
+        最终商店每轮会额外购买剩余的潜能特饮，然后尝试刷新道具并开始新一轮购买。
 
         Args:
             context: 任务上下文。
@@ -253,16 +279,18 @@ class ShopAction(CustomAction):
     def _get_params(self, context: Context, node_name: str) -> dict:
         """从节点 attach 读取商店配置参数，缺失时返回安全默认值。
 
+        reserve_coin 由 EnhanceAction 节点的 max_cost 和 enhance_step 计算得出，
+        假设强化费用从 0 开始累加，计算出强化阶段的最大总消耗。
+
         Args:
             context: 任务上下文。
             node_name: 当前节点名称。
 
         Returns:
-            dict: 包含所有商店配置参数。
+            dict: 包含所有商店配置参数，其中 reserve_coin 为计算所得。
         """
         defaults = {
             "lang_type": "cn",
-            "reserve_coin": 0,
             "priority": ["drink", "melody"],
             "drink_discount_threshold": 1.0,
             "melody_discount_threshold": 1.0,
@@ -272,9 +300,23 @@ class ShopAction(CustomAction):
         node_data = context.get_node_data(node_name)
         if not node_data:
             self.logger.warning("get_node_data 返回 None，使用默认参数")
-            return defaults
+            return {**defaults, "reserve_coin": 0}
         attach = node_data.get("attach", {})
-        return {key: attach.get(key, default) for key, default in defaults.items()}
+        params = {key: attach.get(key, default) for key, default in defaults.items()}
+
+        enhance_node_data = context.get_node_data("星塔_节点_商店_强化_agent")
+        if not enhance_node_data:
+            self.logger.warning("无法读取强化节点数据，reserve_coin 将设为 0")
+            params["reserve_coin"] = 0
+            return params
+
+        enhance_attach = enhance_node_data.get("attach", {})
+        max_cost = enhance_attach.get("max_cost", 180)
+        enhance_step = enhance_attach.get("enhance_step", 60)
+        params["reserve_coin"] = _calculate_max_enhance_count(
+            0, 0, max_cost, enhance_step
+        )
+        return params
 
     def _calc_min_buyable_price(
         self,
@@ -885,7 +927,7 @@ class EnhanceAction(CustomAction):
         params = self._get_params(context, argv.node_name)
         current_coin = _get_current_coin(context)
         current_cost = self._get_enhancement_cost(context)
-        count = self._calculate_max_enhance_count(
+        count = _calculate_max_enhance_count(
             current_coin, current_cost, params["max_cost"], params["enhance_step"]
         )
         for _ in range(count):
@@ -943,29 +985,3 @@ class EnhanceAction(CustomAction):
 
         self.logger.error("无法读取当前强化所需金币数量")
         return 65535
-
-    @staticmethod
-    def _calculate_max_enhance_count(
-        current_coin: int,
-        current_enhancement_cost: int,
-        max_cost: int,
-        enhance_step: int,
-    ) -> int:
-        """计算可强化次数。
-
-        Args:
-            current_coin: 当前金币数量。
-            current_enhancement_cost: 当前强化所需金币数量。
-            max_cost: 允许的单次强化金币上限。
-            enhance_step: 每次强化后费用递增的步长。
-
-        Returns:
-            int: 可强化次数。
-        """
-        count = 0
-        while (current_coin >= current_enhancement_cost
-               and current_enhancement_cost <= max_cost):
-            current_coin -= current_enhancement_cost
-            count += 1
-            current_enhancement_cost += enhance_step
-        return count

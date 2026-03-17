@@ -1010,7 +1010,7 @@ class AscensionPreparation(CustomAction):
             argv: 自定义动作参数。
 
         Returns:
-            bool: 始终返回 True。
+            bool: 成功时返回 True，失败时返回 False。
         """
         node_data = context.get_node_data("星塔_循环用节点_agent")
         if not node_data:

@@ -230,6 +230,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             ["1"]       -> old=0, new=1  （新获得，只有新等级）
             ["4", "5"]  -> old=4, new=5
             ["45"]      -> old=4, new=5  （两位数粘连）
+        仅在游戏版本保持最大潜能等级小于10时有效。
 
         Args:
             texts: OCR filtered_results 中各结果的 text 列表

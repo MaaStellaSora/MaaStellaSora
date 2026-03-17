@@ -8,5 +8,6 @@ __all__ = [
     "EnhanceAction",
     "DailyGiftAction",
     "InviteAuto",
-    "UToolCalcRepeat"
+    "UToolCalcRepeat",
+    "AscensionPreparation"
 ]

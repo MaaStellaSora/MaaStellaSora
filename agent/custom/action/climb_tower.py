@@ -1,5 +1,6 @@
 import re
 import time
+import json
 from typing import Optional
 
 import numpy
@@ -986,3 +987,67 @@ class EnhanceAction(CustomAction):
 
         self.logger.error("无法读取当前强化所需金币数量")
         return 65535
+
+
+@AgentServer.custom_action("ascension_preparation")
+class AscensionPreparation(CustomAction):
+
+    def __init__(self):
+        super().__init__()
+        self.logger = logger.get_logger(__name__)
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> bool:
+        """为爬塔流程做准备
+        1. 修改循环节点的max_hit
+        2. 检查自定义优先级的json格式是否正确，并转换成python的list格式，储存到attach中
+
+        Args:
+            context: 任务上下文。
+            argv: 自定义动作参数。
+
+        Returns:
+            bool: 始终返回 True。
+        """
+        node_data = context.get_node_data("星塔_循环用节点_agent")
+        if not node_data:
+            node_data = {}
+        max_hit = node_data.get("max_hit", 1)
+        real_max_hit = max_hit - 1
+        context.override_pipeline({
+            "星塔_循环用节点_agent": {
+                "max_hit": real_max_hit
+            }
+        })
+
+        node_data = context.get_node_data("星塔_节点_选择潜能_agent")
+        try:
+            priority_list_str = node_data["attach"]["priority_list"]
+            if priority_list_str:
+                self.logger.debug("自定义优先级选项为开启")
+                priority_list = json.loads(priority_list_str)
+            else:
+                self.logger.debug("自定义优先级选项为关闭")
+                priority_list = []
+        except KeyError as e:
+            self.logger.error(f"无法读取自定义优先级信息，错误信息：{e}")
+            context.tasker.post_stop()
+            return False
+        except json.decoder.JSONDecodeError as e:
+            self.logger.error(f"无法解析自定义优先级信息，错误信息：{e}")
+            self.logger.error("请核实json格式是否正确")
+            context.tasker.post_stop()
+            return False
+
+        context.override_pipeline({
+            "星塔_节点_选择潜能_agent": {
+                "attach": {
+                    "priority_list": priority_list
+                }
+            }
+        })
+
+        return True

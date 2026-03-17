@@ -14,7 +14,7 @@
         "child_exec": "python",
         "child_args": [
             "-u",
-            "./../agent/main_refactor.py"
+            "./../agent/main.py"
         ],
         "timeout": -1
     },
@@ -148,7 +148,7 @@
             "description": "自动打开基金页面，并且领取基金奖励"
         },
         {
-            "name": "爬塔",
+            "name": "旧版爬塔",
             "entry": "星塔_入口",
             "repeatable": true,
             "repeat_count": 1,
@@ -159,27 +159,8 @@
             ]
         },
         {
-            "name": "新版爬塔（测试版）",
-            "entry": "星塔_入口",
-            "repeatable": true,
-            "repeat_count": 1,
-            "pipeline_override": {
-                "星塔_节点_商店": {
-                    "next": [
-                        "星塔_节点_商店_购物流程_agent"
-                    ]
-                },
-                "星塔_节点_最终商店": {
-                    "next": [
-                        "星塔_节点_最终商店_购物流程_agent"
-                    ]
-                },
-                "星塔_节点_商店_主界面": {
-                    "next": [
-                        "星塔_节点_商店_购物流程_agent"
-                    ]
-                }
-            },
+            "name": "新版爬塔",
+            "entry": "星塔_入口_agent",
             "option": [
                 "属性塔",
                 "音符购买_agent",

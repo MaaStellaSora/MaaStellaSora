@@ -1,11 +1,230 @@
 {
+    "星塔_入口_agent": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ascension_preparation"
+            }
+        },
+        "next": [
+            "星塔_跳过进入星塔流程_agent",
+            "星塔_出发_agent",
+            "[JumpBack]通用_返回主页"
+        ]
+    },
+    "星塔_出发_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "出发"
+                ],
+                "roi": [
+                    1112,
+                    652,
+                    83,
+                    39
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_星塔探索按钮_agent"
+        ]
+    },
+    "星塔_跳过进入星塔流程_agent": {
+        "enabled": false,
+        "next": [
+            "星塔_开始爬塔_agent"
+        ]
+    },
+    "星塔_星塔探索按钮_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "星塔探索"
+                ],
+                "roi": [
+                    703,
+                    429,
+                    161,
+                    75
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_属性塔选择_agent",
+            "星塔_星塔探索按钮_agent"
+        ]
+    },
+    "星塔_属性塔选择_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                ],
+                "roi": [
+                    226,
+                    104,
+                    346,
+                    391
+                ],
+                "order_by": "Score"
+            },
+            "type": "TemplateMatch"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_进入星塔按钮_agent",
+            "星塔_属性塔选择_agent"
+        ]
+    },
+    "星塔_进入星塔按钮_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "进入星塔"
+                ],
+                "roi": [
+                    895,
+                    572,
+                    115,
+                    48
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_快速战斗按钮_agent",
+            "星塔_回到未完成的星塔探索_agent",
+            "星塔_进入星塔按钮_agent"
+        ]
+    },
+    "星塔_快速战斗按钮_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "快速战斗"
+                ],
+                "roi": [
+                    850,
+                    631,
+                    94,
+                    39
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_编队角色_agent",
+            "星塔_快速战斗按钮_agent"
+        ]
+    },
+    "星塔_回到未完成的星塔探索_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "确认"
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_开始爬塔_agent",
+            "星塔_回到未完成的星塔探索_agent"
+        ]
+    },
+    "星塔_编队角色_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "下",
+                    "步"
+                ],
+                "roi": [
+                    1111,
+                    642,
+                    117,
+                    40
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_编队秘纹_agent",
+            "星塔_编队角色_agent"
+        ]
+    },
+    "星塔_编队秘纹_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "开始战斗"
+                ],
+                "roi": [
+                    1111,
+                    642,
+                    117,
+                    40
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_开始爬塔_agent",
+            "星塔_编队秘纹_agent"
+        ],
+        "pre_wait_freeze": 100
+    },
+    "星塔_开始爬塔_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
+                ],
+                "roi": [
+                    76,
+                    7,
+                    132,
+                    62
+                ]
+            },
+            "type": "TemplateMatch"
+        },
+        "next": [
+            "星塔_爬塔流程_agent"
+        ]
+    },
     "星塔_爬塔流程_agent": {
         "anchor": "星塔总循环",
         "next": [
             "星塔_节点_进入商店_agent",
             "[JumpBack]星塔_节点_进入潜能选择_agent",
             "[JumpBack]星塔_节点_进入对话_agent",
-            "[JumpBack]星塔_点击空白处关闭"
+            "[JumpBack]星塔_点击空白处关闭_agent"
         ]
     },
     "星塔_节点_进入潜能选择_agent": {
@@ -16,6 +235,7 @@
             }
         },
         "next": [
+            "星塔_节点_选择潜能_拿走_agent",
             "星塔_节点_选择潜能_agent"
         ]
     },
@@ -44,12 +264,11 @@
                 "template": [
                     "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
                 ],
-                "roi": "星塔_节点_选择潜能_agent",
-                "roi_offset": [
-                    0,
-                    0,
-                    261,
-                    247
+                "roi": [
+                    150,
+                    530,
+                    980,
+                    65
                 ]
             },
             "type": "TemplateMatch"
@@ -285,8 +504,8 @@
         },
         "next": [
             "星塔_保存记录_agent",
-            "[JumpBack]星塔_点击空白处关闭",
-            "[JumpBack]星塔_默契提升"
+            "[JumpBack]星塔_点击空白处关闭_agent",
+            "[JumpBack]星塔_默契提升_agent"
         ]
     },
     "星塔_保存记录_agent": {
@@ -308,7 +527,84 @@
             "type": "Click"
         },
         "next": [
-            "星塔_保存记录_确认"
+            "星塔_保存记录_确认_agent"
+        ]
+    },
+    "星塔_保存记录_确认_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower/爬塔_记录保存确认按钮.png"
+                ],
+                "roi": [
+                    571,
+                    486,
+                    147,
+                    43
+                ]
+            },
+            "type": "TemplateMatch"
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_循环用节点_agent",
+            "星塔_回到主页_agent"
+        ]
+    },
+    "星塔_默契提升_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "默契",
+                    "提升"
+                ],
+                "roi": [
+                    786,
+                    143,
+                    257,
+                    102
+                ]
+            },
+            "type": "OCR"
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "星塔_点击空白处关闭_agent": {
+        "action": {
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "点击空白",
+                    "处继续",
+                    "处关闭"
+                ],
+                "roi": [
+                    471,
+                    486,
+                    335,
+                    216
+                ]
+            },
+            "type": "OCR"
+        },
+        "timeout": 1000
+    },
+    "星塔_循环用节点_agent": {
+        "max_hit": 1,
+        "next": [
+            "星塔_快速战斗按钮_agent"
+        ]
+    },
+    "星塔_回到主页_agent": {
+        "next": [
+            "通用_主页标记",
+            "[JumpBack]通用_返回主页"
         ]
     }
 }

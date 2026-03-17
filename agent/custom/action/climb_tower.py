@@ -1,10 +1,49 @@
+import re
+import time
+from typing import Optional
+
+import numpy
+
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-import json
-import time
-import re
+
 from utils import logger
+
+
+def _get_current_coin(
+    context: Context,
+    image: Optional[numpy.ndarray] = None,
+    max_try: int = 3,
+) -> int:
+    """获取当前金币数量。
+
+    Args:
+        context: 任务上下文。
+        image: 截图，为 None 时自动截图。
+        max_try: 最大重试次数。
+
+    Returns:
+        int: 当前金币数量，识别失败时返回 0。
+    """
+    _logger = logger.get_logger(__name__)
+
+    if image is None:
+        image = context.tasker.controller.post_screencap().wait().get()
+
+    for _ in range(max_try):
+        reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
+        _logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
+        if reco_detail and reco_detail.hit:
+            return int(reco_detail.best_result.text)
+        time.sleep(1)
+        image = context.tasker.controller.post_screencap().wait().get()
+        if context.tasker.stopping:
+            return 0
+
+    _logger.error("无法读取当前金币数量，将当作 0 金币处理")
+    return 0
+
 
 @AgentServer.custom_action("shop_action")
 class ShopAction(CustomAction):
@@ -139,6 +178,12 @@ class ShopAction(CustomAction):
         }
     }
 
+    ITEM_STANDARD_PRICES: dict[str, int] = {
+        "potential_drink": 200,
+        "melody_5": 90,
+        "melody_15": 400,
+    }
+
     DISCOUNT_TEXT = {
         "cn": ["优惠"],
         "tw": ["優惠"],
@@ -220,6 +265,32 @@ class ShopAction(CustomAction):
         context.run_task("星塔_节点_商店_购物_返回商店层_agent")
         return True
 
+    def _get_params(self, context: Context, node_name: str) -> dict:
+        """从节点 attach 读取商店配置参数，缺失时返回安全默认值。
+
+        Args:
+            context: 任务上下文。
+            node_name: 当前节点名称。
+
+        Returns:
+            dict: 包含所有商店配置参数。
+        """
+        defaults = {
+            "lang_type": "cn",
+            "reserve_coin": 0,
+            "priority": ["drink", "melody"],
+            "drink_discount_threshold": 1.0,
+            "melody_discount_threshold": 1.0,
+            "element_melodies": [],
+            "stat_melodies": [],
+        }
+        node_data = context.get_node_data(node_name)
+        if not node_data:
+            self.logger.warning("get_node_data 返回 None，使用默认参数")
+            return defaults
+        attach = node_data.get("attach", {})
+        return {key: attach.get(key, default) for key, default in defaults.items()}
+
     @staticmethod
     def _check_shop_type(context, image = None):
         """
@@ -253,38 +324,6 @@ class ShopAction(CustomAction):
                 return ""
 
         return ""
-
-    def _get_current_coin(self, context, image = None, max_try = 3):
-        """
-            检查当前金币
-
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图
-                max_try(int): 最大尝试次数
-
-            Returns:
-                int: 当前金币数量，识别失败时返回0
-        """
-        if not image:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        for _ in range(max_try):
-            reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
-            self.logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
-            if reco_detail and reco_detail.hit:
-                return int(reco_detail.best_result.text)
-
-            # 失败时，等待1秒后重试
-            time.sleep(1)
-            image = context.tasker.controller.post_screencap().wait().get()
-
-            # 检查是否中断任务
-            if context.tasker.stopping:
-                return 0
-
-        self.logger.error("无法读取当前金币数量，将当作0金币处理")
-        return 0
 
     def _get_grids_info(self, context):
         """
@@ -543,30 +582,33 @@ class ShopAction(CustomAction):
         return False
 
     @staticmethod
-    def _get_discount(item_name, item_quantity, item_price):
-        """
-            获取物品的折扣信息
+    def _get_discount(
+        item_name: str,
+        item_quantity: int,
+        item_price: int,
+    ) -> float:
+        """获取物品的折扣比值（实际价格 / 标准价）。
 
-            Args:
-                item_name(str): 物品名称
-                item_quantity(int): 物品数量
-                item_price(int): 物品价格
+        Args:
+            item_name: 物品内部名称。
+            item_quantity: 物品数量。
+            item_price: 物品实际价格。
 
-            Returns:
-                int: 折扣信息，0表示无折扣，1表示有折扣
+        Returns:
+            float: 折扣比值，值越低越划算；无法计算时返回 1.0。
         """
-        # 检查是否为潜能特饮
         if item_name == "potential_drink":
-            return item_price / 200.0
+            std = ShopAction.ITEM_STANDARD_PRICES["potential_drink"]
+            return item_price / std
 
-        # 检查是否为音符
         if "melody" in item_name and item_quantity == 5:
-            return  item_price / 90.0
+            std = ShopAction.ITEM_STANDARD_PRICES["melody_5"]
+            return item_price / std
 
         if "melody" in item_name and item_quantity == 15:
-            return  item_price / 400.0
+            std = ShopAction.ITEM_STANDARD_PRICES["melody_15"]
+            return item_price / std
 
-        # 其他情况
         return 1.0
 
     def _get_refresh_remaining(self, context, max_count=3):
@@ -639,38 +681,6 @@ class EnhanceAction(CustomAction):
             context.run_task("星塔_节点_商店_点击强化_agent")
 
         return True
-
-    def _get_current_coin(self, context, image = None, max_try = 3):
-        """
-            检查当前金币
-
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图
-                max_try(int): 最大尝试次数
-
-            Returns:
-                int: 当前金币数量，识别失败时返回0
-        """
-        if not image:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        for _ in range(max_try):
-            reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
-            self.logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
-            if reco_detail and reco_detail.hit:
-                return int(reco_detail.best_result.text)
-
-            # 失败时，等待1秒后重试
-            time.sleep(1)
-            image = context.tasker.controller.post_screencap().wait().get()
-
-            # 检查是否中断任务
-            if context.tasker.stopping:
-                return 0
-
-        self.logger.error("无法读取当前金币数量，将当作0金币处理")
-        return 0
 
     def _get_enhancement_cost(self, context, image = None):
         """

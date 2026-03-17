@@ -338,6 +338,7 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         排名使用原始 JSON 的 1-based 行号（index + 1），数值越小排名越高。
         condition 不满足的条目直接跳过，其行号仍保留在原始位置，不影响其他条目的排名。
+        TODO: 添加refresh_count键，默认值为0，用于激活兜底策略。
 
         Args:
             potential_priority_raw: 原始优先级列表，每个元素结构：

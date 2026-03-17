@@ -36,6 +36,7 @@ class ChoosePotentialRecognition(CustomRecognition):
     def __init__(self):
         super().__init__()
         self.logger = logger.get_logger(__name__)
+        self._refresh_count: int = 0  # 本次潜能选择的已刷新次数，每次 analyze 开始时重置
 
     def analyze(
             self,
@@ -58,6 +59,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         """
         node_name = argv.node_name
         attach = self._get_attachments(context, node_name)
+        self._refresh_count = 0
         priority_list = self._parse_priority_raw_list(
             attach["priority_list"],
             attach["owned_potentials"],
@@ -85,6 +87,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             if refresh_count > 0:
                 context.run_task("星塔_通用_点击刷新_agent")
                 refresh_count -= 1
+                self._refresh_count += 1
             else:
                 break
 
@@ -338,7 +341,6 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         排名使用原始 JSON 的 1-based 行号（index + 1），数值越小排名越高。
         condition 不满足的条目直接跳过，其行号仍保留在原始位置，不影响其他条目的排名。
-        TODO: 添加refresh_count键，默认值为0，用于激活兜底策略。
 
         Args:
             potential_priority_raw: 原始优先级列表，每个元素结构：
@@ -347,6 +349,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                     "potential": str|list,  # 必填，潜能名称或名称列表
                     "level_span": int,      # 可选，默认 1，最小升级跨度
                     "max_level": int,       # 可选，默认 MAX_POTENTIAL_LEVEL，旧等级上限（不含）
+                    "refresh": int,         # 可选，默认 0，已刷新次数必须 >= 该值规则才生效
                     "condition": list       # 可选，生效条件，元素为 dict 时 AND，为 list 时 OR
                 }
             owned_potentials: 已拥有潜能状态，按 trekker 分组，结构：
@@ -359,6 +362,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                     "names": list[str],     # 目标潜能名称列表
                     "level_span": int,      # 最小升级跨度
                     "max_level": int,       # 旧等级上限（不含）
+                    "refresh": int,         # 已刷新次数下限
                     "priority": int         # 原始 JSON 的 1-based 行号，越小排名越高
                 }
         """
@@ -420,6 +424,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 "names": names,
                 "level_span": raw.get("level_span", 1),
                 "max_level": raw.get("max_level", ChoosePotentialRecognition.MAX_POTENTIAL_LEVEL),
+                "refresh": raw.get("refresh", 0),
                 "priority": index + 1,
             })
 
@@ -445,20 +450,20 @@ class ChoosePotentialRecognition(CustomRecognition):
         cleaned_rule = re.sub(r'\W', '', rule_name)
         return cleaned_ocr in cleaned_rule or cleaned_rule in cleaned_ocr
 
-    @staticmethod
     def _get_potential_priority(
+        self,
         potential_priority_list: list[dict],
         potential: dict,
     ) -> tuple[int, str | None]:
         """获取单个待选潜能在规则列表中的最高排名及其 trekker 归属。
 
-        遍历 priority_list，找到所有名称匹配且满足 level_span / max_level 条件的规则，
-        返回排名数值最小（即优先级最高）的规则对应的排名与 trekker。
+        遍历 priority_list，找到所有名称匹配且满足 level_span / max_level / refresh
+        条件的规则，返回排名数值最小（即优先级最高）的规则对应的排名与 trekker。
 
         Args:
             potential_priority_list: _parse_priority_raw_list 的返回值，每个元素结构：
                 {"trekker": str|None, "names": list, "level_span": int,
-                 "max_level": int, "priority": int}
+                 "max_level": int, "refresh": int, "priority": int}
             potential: 单个待选潜能，结构：
                 {"name": str, "old_level": int, "new_level": int, "is_core": bool, "box": list}
 
@@ -483,6 +488,8 @@ class ChoosePotentialRecognition(CustomRecognition):
             if old_level >= entry["max_level"]:
                 continue
             if level_span < entry["level_span"]:
+                continue
+            if self._refresh_count < entry["refresh"]:
                 continue
             if best_priority == -1 or entry["priority"] < best_priority:
                 best_priority = entry["priority"]

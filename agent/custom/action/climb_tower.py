@@ -412,7 +412,7 @@ class ShopAction(CustomAction):
 
             # 获取单个格子的道具信息并添加到结果列表
             # 暂时不需要用discount_flag，所以用_接收
-            # TODO： 潜能特饮增加对主控专用的检测
+            # TODO(samipale)： 潜能特饮增加对主控专用的检测
             item_name, item_quantity, item_price, _ = self._get_single_grid_info(context, item_roi, price_roi, name_roi)
             if item_name and item_quantity and item_price:
                 discount = self._get_discount(item_name, item_quantity, item_price)
@@ -432,7 +432,7 @@ class ShopAction(CustomAction):
                 self.logger.error(f"item_name: {item_name}, item_quantity: {item_quantity}, item_price: {item_price}")
 
         # 根据价格从低到高排序
-        # TODO(me): 实现主控专属检测后，对潜能特饮按主控专属优先、价格升序的复合排序
+        # TODO(samipale): 实现主控专属检测后，对潜能特饮按主控专属优先、价格升序的复合排序
         grids_info.sort(key=lambda x: int(x["item_price"]))
 
         return grids_info
@@ -809,6 +809,7 @@ class ShopAction(CustomAction):
             return True
 
         if not context.tasker.stopping:
+            # TODO(samipale): 购买操作出现问题改为跳到下一个格子，但需要做一个异常情况的pipeline处理，回到购买界面
             self.logger.error("购买操作出现问题，将中止任务")
             context.tasker.post_stop()
         return False

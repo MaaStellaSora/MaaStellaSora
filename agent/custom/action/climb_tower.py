@@ -291,6 +291,35 @@ class ShopAction(CustomAction):
         attach = node_data.get("attach", {})
         return {key: attach.get(key, default) for key, default in defaults.items()}
 
+    def _calc_min_buyable_price(
+        self,
+        priority: list[str],
+        drink_threshold: float,
+        melody_threshold: float,
+        target_melodies: list[str],
+    ) -> float:
+        """基于用户策略计算刷新后理论最低可购买商品价格。
+
+        遍历 ITEM_STANDARD_PRICES，按 priority 和 threshold 筛选用户愿意
+        购买的商品，取 标准价 × 对应 threshold 的最小值。
+
+        Args:
+            priority: 购买优先级列表。
+            drink_threshold: 潜能特饮折扣比值上限。
+            melody_threshold: 音符折扣比值上限。
+            target_melodies: 用户指定的目标音符名称列表。
+
+        Returns:
+            float: 理论最低可购买价格；无符合条件商品时返回 float("inf")。
+        """
+        prices = []
+        if "drink" in priority:
+            prices.append(self.ITEM_STANDARD_PRICES["potential_drink"] * drink_threshold)
+        if "melody" in priority and target_melodies:
+            prices.append(self.ITEM_STANDARD_PRICES["melody_5"] * melody_threshold)
+            prices.append(self.ITEM_STANDARD_PRICES["melody_15"] * melody_threshold)
+        return min(prices) if prices else float("inf")
+
     @staticmethod
     def _check_shop_type(context, image = None):
         """
@@ -367,13 +396,14 @@ class ShopAction(CustomAction):
                     "item_roi": item_roi,
                     "price_roi": price_roi,
                     "name_roi": name_roi,
+                    "bought": False,
                 })
             else:
                 self.logger.error(f"第{i+1}个格子内容识别失败")
                 self.logger.error(f"item_name: {item_name}, item_quantity: {item_quantity}, item_price: {item_price}")
 
-            # 根据价格从低到高排序
-            grids_info.sort(key=lambda x: int(x["item_price"]))
+        # 根据价格从低到高排序
+        grids_info.sort(key=lambda x: int(x["item_price"]))
 
         return grids_info
 
@@ -556,30 +586,33 @@ class ShopAction(CustomAction):
         return min(parsed_item_price, default=0)
 
     @staticmethod
-    def _buy_item(context, roi):
-        """
-            使用pipeline执行购买操作
+    def _buy_item(
+        context: Context,
+        roi: list,
+        drink_reserve_coin: Optional[int] = None,
+    ) -> bool:
+        """使用 pipeline 执行购买操作。
 
-            Args:
-                context(Context): 上下文对象
-                roi(list): 道具的点击范围
+        Args:
+            context: 任务上下文。
+            roi: 道具价格区域的点击范围。
+            drink_reserve_coin: 购买潜能特饮时传入，注入选择潜能节点的
+                                reserve_coin；购买其他道具时传 None。
 
-            Returns:
-                bool: 是否完美执行购买操作
+        Returns:
+            bool: 购买操作成功返回 True。
         """
-        # TODO: 从商店进入潜能选择时，需要传递预留金币参数
-        run_result = context.run_task("星塔_节点_商店_购物_购买道具_agent", {
+        override: dict = {
             "星塔_节点_商店_购物_购买道具_agent": {
-                "action": {
-                    "param": {
-                        "target": roi
-                    }
-                }
+                "action": {"param": {"target": roi}}
             }
-        })
-        if run_result and run_result.status.succeeded:
-            return True
-        return False
+        }
+        if drink_reserve_coin is not None:
+            override["星塔_节点_选择潜能_agent"] = {
+                "attach": {"reserve_coin": drink_reserve_coin}
+            }
+        run_result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
+        return bool(run_result and run_result.status.succeeded)
 
     @staticmethod
     def _get_discount(

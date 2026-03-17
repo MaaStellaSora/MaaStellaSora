@@ -306,18 +306,20 @@ class ShopAction(CustomAction):
         return min(prices) if prices else float("inf")
 
     @staticmethod
-    def _check_shop_type(context, image = None):
-        """
-            检查商店类型
+    def _check_shop_type(
+        context: Context,
+        image: Optional[numpy.ndarray] = None,
+    ) -> str:
+        """检查商店类型。
 
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图，默认为None
+        Args:
+            context: 任务上下文。
+            image: 截图，为 None 时自动截图。
 
-            Returns:
-                str: 商店类型，中途商店为regular，最终商店为final，如果没有结果为空值
+        Returns:
+            str: 商店类型，中途商店为 regular，最终商店为 final，识别失败返回空字符串。
         """
-        if not image:
+        if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
         for _ in range(3): # 最多尝试3次
@@ -393,19 +395,28 @@ class ShopAction(CustomAction):
 
         return grids_info
 
-    def _get_single_grid_info(self, context, item_roi, price_roi, name_roi, retry_max=3):
-        """
-            格子内容识别函数
+    def _get_single_grid_info(
+        self,
+        context: Context,
+        item_roi: list,
+        price_roi: list,
+        name_roi: list,
+        retry_max: int = 3,
+    ) -> tuple:
+        """格子内容识别函数。
 
-            Args:
-                context(Context): 上下文对象
-                item_roi(list): 整个道具格子的识别框范围
-                price_roi(list): 道具价格的识别框范围
-                name_roi(list): 道具名的识别框范围
-                retry_max(int): 最大重试次数，默认为3
+        先对整个 item_roi 区域做 OCR（方法一），若识别不完整则逐区域重试（方法二）。
 
-            Returns:
-                tuple: 格子的道具信息，包含item_name, item_quantity, item_price, discount_flag
+        Args:
+            context: 任务上下文。
+            item_roi: 整个道具格子的识别框范围。
+            price_roi: 道具价格的识别框范围。
+            name_roi: 道具名的识别框范围。
+            retry_max: 最大重试次数，默认为 3。
+
+        Returns:
+            tuple: (item_name, item_quantity, item_price, discount_flag)，
+                   识别失败时各字段为 None。
         """
 
         # 方法一，通过整个道具格子识别
@@ -853,71 +864,80 @@ class ShopAction(CustomAction):
 @AgentServer.custom_action("enhance_action")
 class EnhanceAction(CustomAction):
 
-    # TODO：加到pipeline里处理，agent不处理
-    FREE_ENHANCE_TEXT = {
-        "zh": "免费",
-        "tw": "免費",
-        "en": "FREE",
-        "jp": "無料",
-    }
-
     def __init__(self):
         super().__init__()
         self.logger = logger.get_logger(__name__)
 
     def run(
-            self,
-            context: Context,
-            argv: CustomAction.RunArg,
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
     ) -> bool:
+        """商店楼层自动强化主流程。
 
-        # TODO:读取配置中的允许最大强化消耗
-        max_cost = 180
-        # 检查当前金币
-        current_coin = self._get_current_coin(context)
-        # 检查当前强化所需金币
-        current_enhancement_cost = self._get_enhancement_cost(context)
-        # 计算出可强化次数
-        # TODO:默认按60算，但如果星塔等级没满就会出问题，配置加个选项会比较好
-        max_enhance_count = self._calculate_max_enhance_count(current_coin, current_enhancement_cost, max_cost)
+        Args:
+            context: 任务上下文。
+            argv: 自定义动作参数。
 
-        # 开始循环
-        for _ in range(max_enhance_count):
+        Returns:
+            bool: 始终返回 True。
+        """
+        params = self._get_params(context, argv.node_name)
+        current_coin = _get_current_coin(context)
+        current_cost = self._get_enhancement_cost(context)
+        count = self._calculate_max_enhance_count(
+            current_coin, current_cost, params["max_cost"], params["enhance_step"]
+        )
+        for _ in range(count):
             context.run_task("星塔_节点_商店_点击强化_agent")
-
         return True
 
-    def _get_enhancement_cost(self, context, image = None):
-        """
-            检查当前强化所需金币
+    def _get_params(self, context: Context, node_name: str) -> dict:
+        """从节点 attach 读取强化配置参数，缺失时返回安全默认值。
 
-            Args:
-                context(Context): 上下文对象
+        Args:
+            context: 任务上下文。
+            node_name: 当前节点名称。
 
-            Returns:
-                int: 当前强化所需金币数量，识别失败时返回65535
+        Returns:
+            dict: 包含 max_cost 和 enhance_step。
         """
-        if not image:
+        defaults = {"max_cost": 180, "enhance_step": 60}
+        node_data = context.get_node_data(node_name)
+        if not node_data:
+            self.logger.warning("get_node_data 返回 None，使用默认参数")
+            return defaults
+        attach = node_data.get("attach", {})
+        return {key: attach.get(key, default) for key, default in defaults.items()}
+
+    def _get_enhancement_cost(
+        self,
+        context: Context,
+        image: Optional[numpy.ndarray] = None,
+    ) -> int:
+        """检查当前强化所需金币。
+
+        Args:
+            context: 任务上下文。
+            image: 截图，为 None 时自动截图。
+
+        Returns:
+            int: 当前强化所需金币数量，免费强化返回 0，识别失败返回 65535。
+        """
+        if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
-        for _ in range(3): # 最多尝试3次
-            reco_detail = context.run_recognition("星塔_节点_商店_识别强化是否免费_agent", image)
-            self.logger.debug(f"识别强化是否免费结果：{[r.text for r in reco_detail.all_results]}")
-            if reco_detail and reco_detail.hit:
-                self.logger.debug(f"识别到免费强化")
-                return 0
+        for _ in range(3):
             reco_detail = context.run_recognition("星塔_节点_商店_识别强化所需金币_agent", image)
             self.logger.debug(f"识别强化所需金币结果：{[r.text for r in reco_detail.all_results]}")
             if reco_detail and reco_detail.hit:
                 self.logger.debug(f"识别到强化所需金币：{reco_detail.best_result.text}")
                 return int(reco_detail.best_result.text)
 
-            # 失败时，等待1秒后重试
-            self.logger.debug(f"识别强化是否免费和所需金币失败，等待1秒后重试")
+            self.logger.debug("识别强化是否免费和所需金币失败，等待1秒后重试")
             time.sleep(1)
             image = context.tasker.controller.post_screencap().wait().get()
 
-            # 检查是否中断任务
             if context.tasker.stopping:
                 return 65535
 
@@ -925,25 +945,27 @@ class EnhanceAction(CustomAction):
         return 65535
 
     @staticmethod
-    def _calculate_max_enhance_count(current_coin, current_enhancement_cost, max_cost):
-        """
-            计算出可强化次数
+    def _calculate_max_enhance_count(
+        current_coin: int,
+        current_enhancement_cost: int,
+        max_cost: int,
+        enhance_step: int,
+    ) -> int:
+        """计算可强化次数。
 
-            Args:
-                current_coin(int): 当前金币数量
-                current_enhancement_cost(int): 当前强化所需金币数量
-                max_cost(int): 允许最大强化消耗
+        Args:
+            current_coin: 当前金币数量。
+            current_enhancement_cost: 当前强化所需金币数量。
+            max_cost: 允许的单次强化金币上限。
+            enhance_step: 每次强化后费用递增的步长。
 
-            Returns:
-                int: 可强化次数
+        Returns:
+            int: 可强化次数。
         """
         count = 0
-        step = 60
-
-        # 由于次数不多，使用while循环暴力解决
-        while current_coin >= current_enhancement_cost and current_enhancement_cost <= max_cost:
-            current_coin -= current_enhancement_cost  # 扣钱
-            count += 1  # 增加一次升级
-            current_enhancement_cost += step  # 下一次的消耗变得更贵
-
+        while (current_coin >= current_enhancement_cost
+               and current_enhancement_cost <= max_cost):
+            current_coin -= current_enhancement_cost
+            count += 1
+            current_enhancement_cost += enhance_step
         return count

@@ -403,6 +403,7 @@ class ShopAction(CustomAction):
                 self.logger.error(f"item_name: {item_name}, item_quantity: {item_quantity}, item_price: {item_price}")
 
         # 根据价格从低到高排序
+        # TODO(me): 实现主控专属检测后，对潜能特饮按主控专属优先、价格升序的复合排序
         grids_info.sort(key=lambda x: int(x["item_price"]))
 
         return grids_info
@@ -664,6 +665,136 @@ class ShopAction(CustomAction):
             self.logger.debug(f"识别内容：{[result.text for result in reco_detail.all_results]}")
             time.sleep(1)
         return 0
+
+    def _execute_regular_buy(
+        self,
+        context: Context,
+        grids_info: list[dict],
+        priority: list[str],
+        drink_threshold: float,
+        melody_threshold: float,
+        target_melodies: list[str],
+        reserve_coin: int,
+    ) -> bool:
+        """按用户策略遍历格子执行常规购买。
+
+        按 priority 顺序分轮遍历 grids_info，各轮内按筛选条件决定是否购买。
+        购买成功后将格子 bought 置 True。
+
+        Args:
+            context: 任务上下文。
+            grids_info: _get_grids_info() 的返回值，格子按价格升序排列。
+            priority: 购买优先级列表。
+            drink_threshold: 潜能特饮折扣比值上限。
+            melody_threshold: 音符折扣比值上限。
+            target_melodies: 用户指定的目标音符名称列表。
+            reserve_coin: 预留金币。
+
+        Returns:
+            bool: 所有购买操作正常完成返回 True；操作异常返回 False。
+        """
+        for item_type in priority:
+            for grid in grids_info:
+                if grid["bought"]:
+                    continue
+                if not self._is_target_grid(
+                    grid, item_type, drink_threshold, melody_threshold, target_melodies
+                ):
+                    continue
+                if not self._try_buy_grid(context, grid, reserve_coin):
+                    return False
+        return True
+
+    @staticmethod
+    def _is_target_grid(
+        grid: dict,
+        item_type: str,
+        drink_threshold: float,
+        melody_threshold: float,
+        target_melodies: list[str],
+    ) -> bool:
+        """判断格子是否符合当前轮次的购买条件。
+
+        Args:
+            grid: 单个格子信息字典。
+            item_type: 当前处理的商品类型（"drink" 或 "melody"）。
+            drink_threshold: 潜能特饮折扣比值上限。
+            melody_threshold: 音符折扣比值上限。
+            target_melodies: 用户指定的目标音符名称列表。
+
+        Returns:
+            bool: 符合条件返回 True。
+        """
+        if item_type == "drink":
+            return (
+                grid["item_name"] == "potential_drink"
+                and grid["discount"] <= drink_threshold
+            )
+        if item_type == "melody":
+            return (
+                grid["item_name"] in target_melodies
+                and grid["discount"] <= melody_threshold
+            )
+        return False
+
+    def _try_buy_grid(
+        self,
+        context: Context,
+        grid: dict,
+        reserve_coin: int,
+    ) -> bool:
+        """检查可支配金币并尝试购买单个格子。
+
+        购买成功后将格子 bought 置 True。
+
+        Args:
+            context: 任务上下文。
+            grid: 单个格子信息字典。
+            reserve_coin: 预留金币。
+
+        Returns:
+            bool: 操作正常完成返回 True；购买异常返回 False。
+        """
+        usable = max(0, _get_current_coin(context) - reserve_coin)
+        if usable < grid["item_price"]:
+            self.logger.info(
+                f"可支配金币 {usable} 不足，跳过 {grid['item_name']}（{grid['item_price']}）"
+            )
+            return True
+
+        is_drink = grid["item_name"] == "potential_drink"
+        drink_arg = reserve_coin if is_drink else None
+        success = self._buy_item(context, grid["price_roi"], drink_arg)
+
+        if success:
+            grid["bought"] = True
+            return True
+
+        if not context.tasker.stopping:
+            self.logger.error("购买操作出现问题，将中止任务")
+            context.tasker.post_stop()
+        return False
+
+    def _get_refresh_cost(self, context: Context, max_try: int = 3) -> int:
+        """识别当前刷新费用。
+
+        Args:
+            context: 任务上下文。
+            max_try: 最大重试次数。
+
+        Returns:
+            int: 刷新费用；识别失败时返回 65535 防止误刷新。
+        """
+        for _ in range(max_try):
+            image = context.tasker.controller.post_screencap().wait().get()
+            reco_detail = context.run_recognition("星塔_通用_识别刷新花费_agent", image)
+            if reco_detail and reco_detail.hit:
+                return int(reco_detail.best_result.text)
+            if context.tasker.stopping:
+                return 65535
+            time.sleep(1)
+        self.logger.error("无法识别刷新费用，返回 65535")
+        return 65535
 
     def _get_reverse_mapping(self, lang_type):
         """

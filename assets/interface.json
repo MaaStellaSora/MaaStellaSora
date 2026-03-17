@@ -105,7 +105,6 @@
             "name": "活动快速战斗",
             "entry": "活动_入口",
             "description": "自动打开活动页面，并且对活动第一关进行快速战斗",
-            "repeatable": false,
             "option": [
                 "作战关卡",
                 "活动战斗消耗所有干劲"
@@ -115,7 +114,6 @@
             "name": "悬赏试炼快速战斗",
             "entry": "战斗_入口",
             "description": "自动前往悬赏试炼页面，并且对指定关卡进行快速战斗",
-            "repeatable": false,
             "option": [
                 "悬赏试炼关卡",
                 "选择悬赏试炼难度",
@@ -165,15 +163,6 @@
                 "属性塔",
                 "音符购买_agent",
                 "速刷"
-            ]
-        },
-        {
-            "name": "自定义爬塔",
-            "entry": "星塔_入口",
-            "description": "自定义爬塔 Beta 不保证可用",
-            "option": [
-                "是否开启自定义爬塔",
-                "自定义卡牌优先级"
             ]
         }
     ],
@@ -905,18 +894,7 @@
                     "default": "",
                     "pipeline_type": "string"
                 }
-            ],
-            "pipeline_override": {
-                "星塔_节点_选择buff_推荐": {
-                    "recognition": {
-                        "type": "Custom",
-                        "param": {
-                            "custom_recognition": "auto_tower",
-                            "custom_recognition_param": "{作业}"
-                        }
-                    }
-                }
-            }
+            ]
         },
         "邀约旅人": {
             "type": "input",
@@ -1022,7 +1000,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -1032,7 +1010,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -1042,7 +1020,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -1060,7 +1038,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -1070,7 +1048,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -1080,7 +1058,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -1098,7 +1076,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -1108,7 +1086,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -1118,7 +1096,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -1136,7 +1114,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -1146,7 +1124,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -1156,7 +1134,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -1174,7 +1152,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {
@@ -1184,7 +1162,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {
@@ -1194,7 +1172,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {

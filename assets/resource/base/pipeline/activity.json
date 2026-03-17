@@ -86,11 +86,12 @@
       "param": {
         "template": [
           "activity.png"
-        ]
+        ],
+        "threshold": 0.9
       },
       "type": "TemplateMatch"
     },
-    "post_wait_freezes": 100
+    "post_wait_freezes": 500
   },
   "活动_添加战斗次数": {
     "action": {

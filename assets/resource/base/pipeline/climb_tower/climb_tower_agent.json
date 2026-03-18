@@ -409,7 +409,28 @@
         "next": [
             "[JumpBack]星塔_节点_商店_购物_返回商店层_agent",
             "星塔_节点_回到商店层_agent"
-        ]
+        ],
+        "attach": {
+            "lang_type": "cn",
+            "priority": ["drink", "melody"],
+            "drink_discount_threshold": 1.0,
+            "melody_5_discount_threshold": 1.0,
+            "melody_15_discount_threshold": 1.0,
+            "regular_shop_refresh_threshold": 1500,
+            "melody_of_aqua": false,
+            "melody_of_ignis": false,
+            "melody_of_terra": false,
+            "melody_of_ventus": false,
+            "melody_of_lux": false,
+            "melody_of_umbra": false,
+            "melody_of_focus": false,
+            "melody_of_skill": false,
+            "melody_of_ultimate": false,
+            "melody_of_pummel": false,
+            "melody_of_luck": false,
+            "melody_of_burst": false,
+            "melody_of_stamina": false
+        }
     },
     "星塔_节点_商店_购物_返回商店层_agent": {
         "recognition": {
@@ -550,8 +571,7 @@
             "type": "Click"
         },
         "next": [
-            "星塔_循环用节点_agent",
-            "星塔_回到主页_agent"
+            "星塔_循环用节点_agent"
         ]
     },
     "星塔_默契提升_agent": {
@@ -596,10 +616,18 @@
         }
     },
     "星塔_循环用节点_agent": {
-        "max_hit": 1,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ascension_loop"
+            }
+        },
         "next": [
             "星塔_快速战斗按钮_agent"
-        ]
+        ],
+        "attach": {
+            "loop_count": 1
+        }
     },
     "星塔_回到主页_agent": {
         "next": [

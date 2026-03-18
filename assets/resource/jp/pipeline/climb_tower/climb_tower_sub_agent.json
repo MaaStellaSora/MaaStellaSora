@@ -1,0 +1,32 @@
+{
+    "星塔_节点_商店_点击商店购物_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "コンビニ"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_购买道具_确认购买_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "購入"
+                ],
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_点击强化_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "強化"
+                ],
+            },
+            "type": "OCR"
+        }
+    }
+}

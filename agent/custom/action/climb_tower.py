@@ -1002,7 +1002,7 @@ class AscensionPreparation(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         """为爬塔流程做准备
-        1. 修改循环节点的max_hit
+        1. 检查并导入预设文件
         2. 检查自定义优先级的json格式是否正确，并转换成python的list格式，储存到attach中
 
         Args:
@@ -1012,16 +1012,25 @@ class AscensionPreparation(CustomAction):
         Returns:
             bool: 成功时返回 True，失败时返回 False。
         """
-        node_data = context.get_node_data("星塔_循环用节点_agent")
-        if not node_data:
-            node_data = {}
-        max_hit = node_data.get("max_hit", 1)
-        real_max_hit = max_hit - 1
-        context.override_pipeline({
-            "星塔_循环用节点_agent": {
-                "max_hit": real_max_hit
-            }
-        })
+        # TODO：处理预设文件
+        # 检查设置中的预设选项
+        # 检查预设文件中是否有预设选项，如果有则把预设选项覆盖到相应节点的attach中，如果没有，则把没有的统计起来，日志报错然后结束任务
+        # 目前的选项有：
+        """
+            "drink_discount_threshold": 1.0, # 这个不能预设，选项给全价、8折、5折
+            "melody_5_discount_threshold": 1.0,# 这个不能预设，选项给全价、8折、5折
+            "melody_15_discount_threshold": 1.0, # 这个不能预设，选项给全价、8折、5折
+            "regular_shop_refresh_threshold": 1500, # 这个不能预设，选项为输入框
+            "max_cost": 180, # 这个不能预设，选项为输入框
+            "enhance_step": 60 # 这个不能预设，选项为输入框
+            "max_refresh_count": 0, # 这个不能预设，选项为输入框
+            "element_melodies": [], # 这个可以预设，设置中名字要改成element，值要str。选项时为选择框，需要改属性塔跟音符两种
+            "stat_melodies": [], # 这个可以预设，设置中名字要改成melodies，值要list。选项时为checkbox框
+            "priority_list": [], # 这个可以预设，设置中名字维持priority_list，值要list。选项时为选择框+输入框
+        """
+        # 选项里还有个在哪里开始的选项，这个不能预设，选项为选择框
+        # 日服拿走buff的图片（確定），爬塔_记录保存确认按钮(確認)
+
 
         node_data = context.get_node_data("星塔_节点_选择潜能_agent")
         try:
@@ -1049,5 +1058,46 @@ class AscensionPreparation(CustomAction):
                 }
             }
         })
+
+        return True
+
+@AgentServer.custom_action("ascension_loop")
+class AscensionLoop(CustomAction):
+
+    def __init__(self):
+        super().__init__()
+        self.logger = logger.get_logger(__name__)
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> bool:
+        """检查剩余循环次数，决定是否退出爬塔流程
+
+        Args:
+            context: 任务上下文。
+            argv: 自定义动作参数。
+
+        Returns:
+            bool: 返回 True。
+        """
+
+        node_data = context.get_node_data(argv.node_name)
+        if not node_data:
+            node_data = {}
+        attachment = node_data.get("attach", {})
+        loop_count = attachment.get("loop_count", 1)
+        loop_count -= 1
+        if loop_count:
+            context.override_pipeline({
+                argv.node_name: {
+                    "attach": {
+                        "loop_count": loop_count
+                    }
+                }
+            })
+        else:
+            context.override_next(argv.node_name, ["星塔_回到主页_agent"])
 
         return True

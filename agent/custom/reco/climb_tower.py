@@ -65,6 +65,10 @@ class ChoosePotentialRecognition(CustomRecognition):
             attach["owned_potentials"],
         )
 
+        if not priority_list:
+            target_box = self._get_recommended_box(context, argv.image)
+            return CustomRecognition.AnalyzeResult(box=target_box, detail={})
+
         refresh_count = 0
         if self._is_refreshable(context, argv.image):
             current_coin = self._get_current_coin(context, argv.image)
@@ -368,19 +372,22 @@ class ChoosePotentialRecognition(CustomRecognition):
                 }
         """
         owned_map: dict[str, int] = {}
-        for potentials in owned_potentials.values():
-            owned_map.update(potentials)
-
-        trekker_count_map: dict[str, int] = {
-            trekker: len(potentials)
-            for trekker, potentials in owned_potentials.items()
-            if trekker != "unknown"
-        }
+        for _p in owned_potentials.values():
+            owned_map.update(_p)
 
         def _check_single_condition(item: dict) -> bool:
             """检查单个 condition 子项是否满足。"""
             if "count_at_least" in item or "count_at_most" in item:
-                count = trekker_count_map.get(item["trekker"], 0)
+                potentials = owned_potentials.get(item["trekker"], {})
+                level_min = item.get("level_at_least")
+                level_max = item.get("level_at_most")
+                if level_min is not None or level_max is not None:
+                    potentials = {
+                        name: level for name, level in potentials.items()
+                        if (level_min is None or level >= level_min)
+                        and (level_max is None or level <= level_max)
+                    }
+                count = len(potentials)
                 if "count_at_least" in item and count < item["count_at_least"]:
                     return False
                 if "count_at_most" in item and count > item["count_at_most"]:

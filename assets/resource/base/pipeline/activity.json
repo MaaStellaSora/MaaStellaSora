@@ -91,7 +91,10 @@
       },
       "type": "TemplateMatch"
     },
-    "post_wait_freezes": 500
+    "post_wait_freezes": {
+        "time": 1500,
+        "rate_limit": 1500
+    }
   },
   "活动_添加战斗次数": {
     "action": {
@@ -134,7 +137,8 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "post_wait_freezes": 100
   },
   "活动_选择活动难度": {
     "action": {
@@ -184,7 +188,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "深入温室的调查I"
+          "1-1"
         ],
         "replace": [
           ["Ⅰ", "I"],
@@ -199,6 +203,6 @@
       },
       "type": "OCR"
     },
-    "post_delay": 1000
+    "post_wait_freezes": 100
   }
 }

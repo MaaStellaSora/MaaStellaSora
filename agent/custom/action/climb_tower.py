@@ -1,7 +1,9 @@
+import os
 import re
 import time
 import json
 from typing import Optional
+from pathlib import Path
 
 import numpy
 
@@ -1001,9 +1003,7 @@ class AscensionPreparation(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        """为爬塔流程做准备
-        1. 检查并导入预设文件
-        2. 检查自定义优先级的json格式是否正确，并转换成python的list格式，储存到attach中
+        """检查并导入预设文件，为爬塔流程做准备
 
         Args:
             context: 任务上下文。
@@ -1012,51 +1012,60 @@ class AscensionPreparation(CustomAction):
         Returns:
             bool: 成功时返回 True，失败时返回 False。
         """
-        # TODO：处理预设文件
-        # 检查设置中的预设选项
-        # 预设文件在本文件目录的../../presets/目录下，通过json文件保存
-        # 注意json文件格式，UTF-8 with BOM、路径过长等问题
-        # 如果用户提供了预设文件就导入预设文件，如果没提供就检查选项里是否选择了预设，有选择则报错，没选择则通过检查
-        # 检查预设文件中是否有预设选项，如果有则把预设选项覆盖到相应节点的attach中，如果没有，则把没有的统计起来，日志报错然后结束任务
-        # 目前的选项有：
-        """
-            "drink_discount_threshold": 1.0, # 这个不能预设，选项给全价、8折、5折
-            "melody_5_discount_threshold": 1.0,# 这个不能预设，选项给全价、8折、5折
-            "melody_15_discount_threshold": 1.0, # 这个不能预设，选项给全价、8折、5折
-            "regular_shop_refresh_threshold": 1500, # 这个不能预设，选项为输入框
-            "max_cost": 180, # 这个不能预设，选项为输入框
-            "enhance_step": 60 # 这个不能预设，选项为输入框
-            "max_refresh_count": 0, # 这个不能预设，选项为输入框
-            "element_melodies": [], # 这个可以预设，设置中名字要改成element，值要str。选项时为选择框，需要改属性塔跟音符两种
-            "stat_melodies": [], # 这个可以预设，设置中名字要改成melodies，值要list。选项时为checkbox框
-            "priority_list": [], # 这个可以预设，设置中名字维持priority_list，值要list。选项时为选择框+输入框
-        """
-        # 选项里还有个在哪里开始的选项，这个不能预设，选项为选择框
-        # 选项再加个是否跳过商店
-
         # 本地化
         # 日服拿走buff的图片（確定），爬塔_记录保存确认按钮(確認)
-        # 检查文件路径的文件夹有没有agent后缀
 
-        # 看看选项中断的时候是不是打开还是没有背包
+        node_data = context.get_node_data(argv.node_name)
+        preset_path = Path(os.path.abspath(__file__)).parent.parent / "presets"
+        full_path = ""
+        error_flag = False
 
-
-        node_data = context.get_node_data("星塔_节点_选择潜能_agent")
         try:
-            priority_list_str = node_data["attach"]["priority_list"]
-            if priority_list_str:
-                self.logger.debug("自定义优先级选项为开启")
-                priority_list = json.loads(priority_list_str)
-            else:
-                self.logger.debug("自定义优先级选项为关闭")
-                priority_list = []
+            presets_name = node_data["attach"]["preset_name"]
+            preset_element_flag = node_data["attach"]["preset_element"]
+            preset_melodies_flag = node_data["attach"]["preset_melodies"]
+
+            # 检查有无预设作业
+            if not presets_name:
+                self.logger.debug("没有提供预设作业，检查选项是否选择了预设")
+                if preset_element_flag or preset_melodies_flag:
+                    self.logger.error("没有预设作业，请把其他选项里的作业预设改为其他选项")
+                    context.tasker.post_stop()
+                    return False
+                else:
+                    self.logger.debug("选项检查通过")
+                    return True
+
+            # 读取预设作业
+            full_path = (preset_path / presets_name).with_suffix(".json")
+            with open(full_path, "r", encoding="utf-8") as f:
+                presets = json.load(f)
+                priority_list = presets.get("priority_list", [])
+                preset_element = presets.get("element", "")
+                preset_melodies = presets.get("melodies", [])
+
+            # 检查预设作业是否有预设选项
+            if preset_element_flag and not preset_element:
+                self.logger.error("作业中没有预设属性选项，请手动选择属性")
+                error_flag = True
+            if preset_melodies_flag and not preset_melodies:
+                self.logger.error("作业中没有预设音符，请手动选择商店购买的音符")
+                error_flag = True
+            if error_flag:
+                return False
+
+        except FileNotFoundError as e:
+            self.logger.error(f"无法找到预设作业文件：{full_path}")
+            self.logger.error(f"请核实预设作业名字是否正确，或预设作业是否存在等")
+            return False
         except KeyError as e:
-            self.logger.error(f"无法读取自定义优先级信息，错误信息：{e}")
+            self.logger.error(f"无法读取预设作业信息，错误信息：{e}")
+            self.logger.error(f"请核实预设作业名字是否正确，或预设作业是否存在")
             context.tasker.post_stop()
             return False
         except json.decoder.JSONDecodeError as e:
-            self.logger.error(f"无法解析自定义优先级信息，错误信息：{e}")
-            self.logger.error("请核实json格式是否正确")
+            self.logger.error(f"无法解析作业文件，错误信息：{e}")
+            self.logger.error("请核实json内容的格式是否正确")
             context.tasker.post_stop()
             return False
 
@@ -1067,6 +1076,132 @@ class AscensionPreparation(CustomAction):
                 }
             }
         })
+
+        if preset_element:
+            match preset_element:
+                case "aqua":
+                    context.override_pipeline({
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_aqua": True
+                            }
+                        }
+                    })
+                case "ignis":
+                    context.override_pipeline({
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_ignis": True
+                            }
+                        }
+                    })
+                case "terra":
+                    context.override_pipeline({
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_terra": True
+                            }
+                        }
+                    })
+                case "ventus":
+                    context.override_pipeline({
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_ventus": True
+                            }
+                        }
+                    })
+                case "lux":
+                    context.override_pipeline({
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_lux": True
+                            }
+                        }
+                    })
+                case "umbra":
+                    context.override_pipeline({
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_umbra": True
+                            }
+                        }
+                    })
+                case _:
+                    self.logger.error(f"检测到未知属性：{preset_element}，请核实属性名是否符合文档要求")
+                    context.tasker.post_stop()
+                    return False
+
+        if preset_melodies:
+            node_data = context.get_node_data("星塔_节点_商店_购物_agent")
+            shop_attachments = node_data.get("attach", {})
+            for melody in preset_melodies:
+                if melody in shop_attachments:
+                    context.override_pipeline({
+                        "星塔_属性塔选择_agent": {
+                            "attach": {
+                                melody: True
+                            }
+                        }
+                    })
+                else:
+                    self.logger.error(f"未找到音符：{melody}，请核实音符名是否符合文档要求")
+                    context.tasker.post_stop()
+                    return False
 
         return True
 

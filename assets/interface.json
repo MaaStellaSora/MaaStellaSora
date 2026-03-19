@@ -1486,7 +1486,7 @@
             "pipeline_override": {
                 "星塔_入口_agent": {
                     "attach": {
-                        "presets": "{预设作业_作业名}"
+                        "preset_name": "{预设作业_作业名}"
                     }
                 }
             }

@@ -10,7 +10,12 @@
             "星塔_跳过进入星塔流程_agent",
             "星塔_出发_agent",
             "[JumpBack]通用_返回主页"
-        ]
+        ],
+        "attach": {
+            "preset_name": "",
+            "preset_element": false,
+            "preset_melodies": false
+        }
     },
     "星塔_出发_agent": {
         "recognition": {

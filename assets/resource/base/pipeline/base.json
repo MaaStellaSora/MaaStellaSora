@@ -184,7 +184,8 @@
         "template": [
           "home.png",
           "Base/通用_返回主页按钮2.png"
-        ]
+        ],
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     },

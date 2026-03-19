@@ -112,7 +112,6 @@ def _apply_debug_to_logger(logger: logging.Logger, log_file: str) -> None:
     for handler in logger.handlers:
         handler.setLevel(logging.DEBUG)
 
-    logger.debug(f"Debug mode enabled. Log file: {log_file}")
 
 
 def debug_mode() -> None:
@@ -138,6 +137,9 @@ def debug_mode() -> None:
     for logger_name in _initialized_loggers:
         logger = logging.getLogger(logger_name)
         _apply_debug_to_logger(logger, log_file)
+
+    logger = get_logger(__name__)
+    logger.debug(f"Debug mode enabled. Log file: {log_file}")
 
 
 def set_log_level(level: int) -> None:

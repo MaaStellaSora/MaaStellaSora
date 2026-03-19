@@ -161,7 +161,7 @@
             "entry": "星塔_入口_agent",
             "option": [
                 "新版爬塔_开始位置",
-                "新版爬塔_重复次数",
+                "新版爬塔_爬塔次数",
                 "新版爬塔_预设作业_cn",
                 "新版爬塔_预设作业_tw",
                 "新版爬塔_预设作业_en",
@@ -1145,21 +1145,21 @@
                 }
             ]
         },
-        "新版爬塔_重复次数": {
+        "新版爬塔_爬塔次数": {
             "type": "input",
             "inputs": [
                 {
-                    "name": "重复次数",
+                    "name": "爬塔次数",
                     "pipeline_type": "int",
                     "default": "1",
                     "verify": "^[1-9]\\d*$",
-                    "pattern_msg": "请输入重复次数"
+                    "pattern_msg": "请输入爬塔次数"
                 }
             ],
             "pipeline_override": {
                 "星塔_循环用节点_agent": {
                     "attach": {
-                        "loop_count": "{重复次数}"
+                        "loop_count": "{爬塔次数}"
                     }
                 }
             }

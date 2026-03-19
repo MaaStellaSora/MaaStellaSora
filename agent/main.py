@@ -7,8 +7,8 @@ from maa.toolkit import Toolkit
 import custom # noqa: F401
 
 # 开启debug_mode
-# from utils import logger
-# logger.debug_mode()
+from utils import logger
+logger.debug_mode()
 
 
 

@@ -67,7 +67,7 @@
         "recognition": {
             "param": {
                 "template": [
-                    "ClimbTower/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                    "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
                 ],
                 "roi": [
                     226,
@@ -203,14 +203,10 @@
         "recognition": {
             "param": {
                 "template": [
-                    "ClimbTower/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
+                    "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png",
+                    "ClimbTower_agent/爬塔_开始战斗按钮__121_15_38_41__71_0_138_106.png"
                 ],
-                "roi": [
-                    76,
-                    7,
-                    132,
-                    62
-                ]
+                "threshold": 0.9
             },
             "type": "TemplateMatch"
         },
@@ -253,8 +249,10 @@
             "星塔_节点_选择潜能_拿走_agent"
         ],
         "attach": {
-            "owned_potentials": [],
-            "reserve_coin": 0
+            "priority_list": [],
+            "max_refresh_count": 0,
+            "reserve_coin": 0,
+            "owned_potentials": {}
         },
         "post_wait_freeze": 100
     },
@@ -482,7 +480,11 @@
         "next": [
             "星塔_节点_商店_离开商店_agent",
             "星塔_节点_商店_离开星塔_agent"
-        ]
+        ],
+        "attach": {
+            "max_cost": 180,
+            "cost_increment": 60
+        }
     },
     "星塔_节点_商店_离开商店_agent": {
         "recognition": {
@@ -556,7 +558,7 @@
         "recognition": {
             "param": {
                 "template": [
-                    "ClimbTower/爬塔_记录保存确认按钮.png"
+                    "ClimbTower_agent/爬塔_记录保存确认按钮.png"
                 ],
                 "roi": [
                     571,

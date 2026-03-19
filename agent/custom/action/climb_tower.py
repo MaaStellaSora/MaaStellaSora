@@ -944,9 +944,9 @@ class EnhanceAction(CustomAction):
             node_name: 当前节点名称。
 
         Returns:
-            dict: 包含 max_cost 和 enhance_step。
+            dict: 包含 max_cost 和 cost_increment。
         """
-        defaults = {"max_cost": 180, "enhance_step": 60}
+        defaults = {"max_cost": 180, "cost_increment": 60}
         node_data = context.get_node_data(node_name)
         if not node_data:
             self.logger.warning("get_node_data 返回 None，使用默认参数")
@@ -1014,6 +1014,9 @@ class AscensionPreparation(CustomAction):
         """
         # TODO：处理预设文件
         # 检查设置中的预设选项
+        # 预设文件在本文件目录的../../presets/目录下，通过json文件保存
+        # 注意json文件格式，UTF-8 with BOM、路径过长等问题
+        # 如果用户提供了预设文件就导入预设文件，如果没提供就检查选项里是否选择了预设，有选择则报错，没选择则通过检查
         # 检查预设文件中是否有预设选项，如果有则把预设选项覆盖到相应节点的attach中，如果没有，则把没有的统计起来，日志报错然后结束任务
         # 目前的选项有：
         """
@@ -1029,7 +1032,13 @@ class AscensionPreparation(CustomAction):
             "priority_list": [], # 这个可以预设，设置中名字维持priority_list，值要list。选项时为选择框+输入框
         """
         # 选项里还有个在哪里开始的选项，这个不能预设，选项为选择框
+        # 选项再加个是否跳过商店
+
+        # 本地化
         # 日服拿走buff的图片（確定），爬塔_记录保存确认按钮(確認)
+        # 检查文件路径的文件夹有没有agent后缀
+
+        # 看看选项中断的时候是不是打开还是没有背包
 
 
         node_data = context.get_node_data("星塔_节点_选择潜能_agent")

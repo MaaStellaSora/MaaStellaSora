@@ -107,6 +107,11 @@
             "type": "OCR"
         }
     },
+    "星塔_节点_商店_购物_agent": {
+        "attach": {
+            "lang_type": "jp"
+        }
+    },
     "星塔_节点_回到商店层_agent": {
         "recognition": {
             "param": {

@@ -160,133 +160,18 @@
             "name": "新版爬塔",
             "entry": "星塔_入口_agent",
             "option": [
-                "属性塔",
-                "音符购买_agent",
-                "速刷"
+                "新版爬塔_开始位置",
+                "新版爬塔_重复次数",
+                "新版爬塔_预设作业_cn",
+                "新版爬塔_预设作业_tw",
+                "新版爬塔_预设作业_en",
+                "新版爬塔_预设作业_jp",
+                "新版爬塔_属性",
+                "新版爬塔_速刷"
             ]
         }
     ],
     "option": {
-        "是否开启自定义爬塔": {
-            "type": "select",
-            "label": "是否开启自定义爬塔",
-            "description": "是否开启自定义爬塔",
-            "default_case": "关闭",
-            "cases": [
-                {
-                    "name": "开启",
-                    "label": "开启",
-                    "description": "开启自定义爬塔",
-                    "pipeline_override": {
-                        "星塔_爬塔流程": {
-                            "next": [
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_点击空白处关闭"
-                                },
-                                "星塔_保存记录",
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_默契提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_结束爬塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_离开星塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_等级提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_选择buff_推荐_自定义"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_最终商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话选项"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话忽略"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "关闭",
-                    "label": "关闭",
-                    "description": "关闭自定义爬塔",
-                    "pipeline_override": {
-                        "星塔_爬塔流程": {
-                            "next": [
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_点击空白处关闭"
-                                },
-                                "星塔_保存记录",
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_默契提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_结束爬塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_离开星塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_等级提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_选择buff_推荐"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_最终商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话选项"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话忽略"
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
         "作战关卡": {
             "type": "select",
             "label": "选择活动关卡",
@@ -796,27 +681,6 @@
                 }
             ]
         },
-        "音符购买_agent": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "激活协奏且折扣",
-                    "label": "激活协奏且折扣",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "激活协奏",
-                    "label": "激活协奏",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_格子_优惠_agent": {
-                            "expected": [
-                                ""
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
         "速刷": {
             "type": "select",
             "cases": [
@@ -1255,6 +1119,587 @@
                             ]
                         }
                     }
+                }
+            ]
+        },
+        "新版爬塔_开始位置": {
+            "type": "select",
+            "label": "开始位置",
+            "description": "是否开启自定义爬塔",
+            "default_case": "主页",
+            "cases": [
+                {
+                    "name": "开始位置_主页",
+                    "label": "主页",
+                    "description": "从主页开始，不需要调整队伍时选择"
+                },
+                {
+                    "name": "开始位置_进入星塔后",
+                    "label": "进入星塔后",
+                    "description": "进入星塔后开始，需要调整队伍时或爬塔中断时选择",
+                    "pipeline_override": {
+                        "星塔_跳过进入星塔流程_agent": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_重复次数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "重复次数",
+                    "pipeline_type": "int",
+                    "default": "1",
+                    "verify": "^[1-9]\\d*$",
+                    "pattern_msg": "请输入重复次数"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_循环用节点_agent": {
+                    "attach": {
+                        "loop_count": "{重复次数}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_速刷": {
+            "type": "select",
+            "label": "跳过商店层",
+            "description": "只想速刷周常时勾选，勾选后会跳过商店层",
+            "default_case": "no",
+            "cases": [
+                {
+                    "name": "no",
+                    "option": [
+                        "新版爬塔_潜能最大刷新次数",
+                        "新版爬塔_商店_中途商店刷新最小金额",
+                        "新版爬塔_商店_中途商店潜能特饮折扣",
+                        "新版爬塔_商店_5个音符折扣",
+                        "新版爬塔_商店_15个音符折扣",
+                        "新版爬塔_商店_购买音符类型",
+                        "新版爬塔_商店_最大强化金额",
+                        "新版爬塔_商店_强化递增金额",
+                    ]
+                },
+                {
+                    "name": "yes",
+                    "pipeline_override": {
+                        "星塔_节点_进入商店_agent": {
+                            "next": [
+                                "星塔_节点_商店_离开商店_agent",
+                                "星塔_节点_商店_离开星塔_agent"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_潜能最大刷新次数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "潜能最大刷新次数",
+                    "pipeline_type": "int",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入潜能最大刷新次数"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_选择潜能_agent": {
+                    "attach": {
+                        "max_refresh_count": "{潜能最大刷新次数}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_商店_中途商店刷新最小金额": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "中途商店刷新最小金额",
+                    "pipeline_type": "int",
+                    "default": "1500",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入中途商店刷新最小金额"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_购物_agent": {
+                    "attach": {
+                        "regular_shop_refresh_threshold": "{中途商店刷新最小金额}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_商店_中途商店潜能特饮折扣": {
+            "type": "select",
+            "label": "中途商店潜能特饮折扣",
+            "description": "在中途商店时，只会买入低于等于该折扣的潜能特饮<br>最终商店仍会购买所有潜能特饮",
+            "default_case": "全价",
+            "cases": [
+                {
+                    "name": "全价"
+                },
+                {
+                    "name": "8折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "drink_discount_threshold": 0.8
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "drink_discount_threshold": 0.5
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_商店_5个音符折扣": {
+            "type": "select",
+            "label": "5个音符折扣",
+            "description": "只会买入低于等于该折扣的音符，无论是中途商店还是最终商店都会限制",
+            "default_case": "全价",
+            "cases": [
+                {
+                    "name": "全价"
+                },
+                {
+                    "name": "8折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_5_discount_threshold": 0.8
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_5_discount_threshold": 0.5
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_商店_15个音符折扣": {
+            "type": "select",
+            "label": "15个音符折扣",
+            "description": "只会买入低于等于该折扣的音符，无论是中途商店还是最终商店都会限制",
+            "default_case": "全价",
+            "cases": [
+                {
+                    "name": "全价"
+                },
+                {
+                    "name": "8折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_15_discount_threshold": 0.8
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_15_discount_threshold": 0.5
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_商店_购买音符类型": {
+            "type": "select",
+            "label": "购买音符类型",
+            "default_case": "作业预设",
+            "cases": [
+                {
+                    "name": "作业预设",
+                    "description": "根据预设作业购买音符，需要预设作业里有设置音符类型",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_melodies": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "手动选择",
+                    "option": [
+                        "新版爬塔_商店_购买音符类型_手动选择音符"
+                    ]
+                }
+            ]
+        },
+        "新版爬塔_商店_最大强化金额": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "最大强化金额",
+                    "default": "180",
+                    "pipeline_type": "int",
+                    "verify": "^\\d+$",
+                    "description": "只会在单次强化消耗金币低于等于该金额时进行强化"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_强化_agent": {
+                    "attach": {
+                        "max_cost": "{最大强化金额}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_商店_强化递增金额": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "强化递增金额",
+                    "default": "60",
+                    "pipeline_type": "int",
+                    "verify": "^\\d+$",
+                    "description": "星塔没满级时，需要自己调整"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_强化_agent": {
+                    "attach": {
+                        "cost_increment": "{强化递增金额}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_商店_购买音符类型_手动选择音符": {
+            "type": "checkbox",
+            "label": "手动选择音符",
+            "description": "属性音符会根据属性选项购买，这里只需要选择能力值音符",
+            "cases": [
+                {
+                    "name": "专注之音",
+                    "description": "增加普攻伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_focus": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "技巧之音",
+                    "description": "增加技能伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_skill": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "绝招之音",
+                    "description": "增加绝招伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_ultimate": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "强攻之音",
+                    "description": "增加攻击力",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_pummel": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "幸运之音",
+                    "description": "增加暴击率",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_luck": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "暴发之音",
+                    "description": "增加暴击伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_burst": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "体力之音",
+                    "description": "增加体力",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_stamina": true
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "预设作业_手动输入作业名": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "预设作业_作业名",
+                    "label": "作业名",
+                    "pipeline_type": "string",
+                    "description": "作业需以json格式保存在程序的/agent/presets/目录下，填写名称时不需要添加.json后缀"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_入口_agent": {
+                    "attach": {
+                        "presets": "{预设作业_作业名}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_属性": {
+            "type": "select",
+            "label": "属性",
+            "description": "本选项会影响爬塔属性及属性音符选择",
+            "default_case": "属性_参考预设作业",
+            "cases": [
+                {
+                    "name": "属性_参考预设作业",
+                    "label": "作业预设",
+                    "description": "根据预设作业选择爬塔属性及属性音符购买，需要预设作业里有设置属性",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_element": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_光",
+                    "label": "光",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_lux": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_土",
+                    "label": "土",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_terra": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_水",
+                    "label": "水",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_aqua": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_风",
+                    "label": "风",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_ventus": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_火",
+                    "label": "火",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_ignis": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_暗",
+                    "label": "暗",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_umbra": true
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_预设作业_cn": {
+            "resource": ["官服"],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无"
+                },
+                {
+                    "name": "手动输入",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
+                }
+            ]
+        },
+        "新版爬塔_预设作业_tw": {
+            "resource": ["台服"],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无"
+                },
+                {
+                    "name": "手动输入",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
+                }
+            ]
+        },
+        "新版爬塔_预设作业_en": {
+            "resource": ["国际服"],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无"
+                },
+                {
+                    "name": "手动输入",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
+                }
+            ]
+        },
+        "新版爬塔_预设作业_jp": {
+            "resource": ["日服"],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无"
+                },
+                {
+                    "name": "手动输入",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
                 }
             ]
         }

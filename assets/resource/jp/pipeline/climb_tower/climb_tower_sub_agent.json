@@ -28,5 +28,15 @@
             },
             "type": "OCR"
         }
+    },
+    "星塔_节点_商店_强化_回到商店层_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "コンビニ"
+                ]
+            },
+            "type": "OCR"
+        }
     }
 }

@@ -290,6 +290,7 @@ class ShopAction(CustomAction):
         Returns:
             bool: 正常完成返回 True；购买异常中止返回 False。
         """
+        # TODO: 增加对秘纹音符的处理，pipeline写好一个秘纹专用的节点，然后判断为选买时调用这个节点就行了
         params = self._get_params(context, argv.node_name)
         self.lang_type = params["lang_type"]
         reserve_coin = params["reserve_coin"]
@@ -848,7 +849,6 @@ class ShopAction(CustomAction):
             return True
 
         if not context.tasker.stopping:
-            # TODO(samipale): 购买操作出现问题改为跳到下一个格子，但需要做一个异常情况的pipeline处理，回到购买界面
             self.logger.error("购买失败，跳过该格子")
             return True
         return False

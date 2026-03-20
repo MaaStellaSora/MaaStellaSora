@@ -176,8 +176,7 @@
             "type": "Click"
         },
         "next": [
-            "星塔_编队秘纹_agent",
-            "星塔_编队角色_agent"
+            "星塔_编队秘纹_agent"
         ],
         "post_wait_freeze": 100
     },
@@ -200,8 +199,7 @@
             "type": "Click"
         },
         "next": [
-            "星塔_开始爬塔_agent",
-            "星塔_编队秘纹_agent"
+            "星塔_开始爬塔_agent"
         ],
         "pre_wait_freeze": 100
     },
@@ -210,7 +208,8 @@
             "param": {
                 "template": [
                     "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png",
-                    "ClimbTower_agent/爬塔_开始战斗按钮__121_15_38_41__71_0_138_106.png"
+                    "ClimbTower_agent/爬塔_开始战斗按钮__121_15_38_41__71_0_138_106.png",
+                    "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
                 ],
                 "threshold": 0.9
             },
@@ -432,6 +431,7 @@
             "melody_5_discount_threshold": 1.0,
             "melody_15_discount_threshold": 0.5,
             "regular_shop_refresh_threshold": 1500,
+            "buy_secondary_skill_melody": false,
             "melody_of_aqua": false,
             "melody_of_ignis": false,
             "melody_of_terra": false,

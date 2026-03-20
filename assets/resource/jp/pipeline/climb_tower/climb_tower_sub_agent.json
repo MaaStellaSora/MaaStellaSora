@@ -38,5 +38,27 @@
             },
             "type": "OCR"
         }
+    },
+    "星塔_节点_商店_购买协奏音符_检查确认框_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "購入"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购买协奏音符_核实协奏_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "関連",
+                    "アシスト",
+                    "効果"
+                ]
+            },
+            "type": "OCR"
+        }
     }
 }

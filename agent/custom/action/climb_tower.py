@@ -188,10 +188,10 @@ class ShopAction(CustomAction):
             "jp": ["火の音符"]
         },
         "melody_of_terra": {
-            "cn": ["土之音"],
-            "tw": ["土之音"],
+            "cn": ["地之音"],
+            "tw": ["地之音"],
             "en": ["Melody of Terra"],
-            "jp": ["土の音符"]
+            "jp": ["地の音符"]
         },
         "melody_of_ventus": {
             "cn": ["风之音"],
@@ -271,6 +271,7 @@ class ShopAction(CustomAction):
     def __init__(self):
         super().__init__()
         self.lang_type = None
+        self.buy_secondary_skill_melody = False
         self.logger = logger.get_logger(__name__)
 
     def run(
@@ -290,9 +291,9 @@ class ShopAction(CustomAction):
         Returns:
             bool: 正常完成返回 True；购买异常中止返回 False。
         """
-        # TODO: 增加对秘纹音符的处理，pipeline写好一个秘纹专用的节点，然后判断为选买时调用这个节点就行了
         params = self._get_params(context, argv.node_name)
         self.lang_type = params["lang_type"]
+        self.buy_secondary_skill_melody = params["buy_secondary_skill_melody"]
         reserve_coin = params["reserve_coin"]
         priority = params["priority"]
         regular_shop_refresh_threshold = params["regular_shop_refresh_threshold"]
@@ -323,6 +324,7 @@ class ShopAction(CustomAction):
             if shop_type == "regular" and (current_coin-reserve_coin) < regular_shop_refresh_threshold:
                 break
 
+            # TODO: 这里不对，要先买光潜能特饮，然后才能买音符，这里先买了潜能特饮跟音符然后才补买是不对的
             if shop_type == "final":
                 if not self._execute_drink_supplement_buy(context, grids_info, reserve_coin):
                     return False
@@ -355,6 +357,7 @@ class ShopAction(CustomAction):
             "melody_5_discount_threshold": 1.0,
             "melody_15_discount_threshold": 1.0,
             "regular_shop_refresh_threshold": 1500,
+            "buy_secondary_skill_melody": False,
             "melody_of_aqua": False,
             "melody_of_ignis": False,
             "melody_of_terra": False,
@@ -531,7 +534,7 @@ class ShopAction(CustomAction):
                 return None, None, None
 
             # 睡觉
-            self.logger.info(f"识别道具格子失败，准备重试")
+            self.logger.warning(f"识别道具格子失败，准备重试")
             time.sleep(1)
 
         # 虽然未能识别完整，但能返回多少是多少
@@ -683,6 +686,28 @@ class ShopAction(CustomAction):
         return bool(run_result and run_result.status.succeeded)
 
     @staticmethod
+    def _buy_secondary_skill_melody(
+        context: Context,
+        roi: list,
+    ) -> bool:
+        """使用 pipeline 执行购买操作。
+
+        Args:
+            context: 任务上下文。
+            roi: 道具价格区域的点击范围。
+
+        Returns:
+            bool: 购买操作成功返回 True。
+        """
+        override: dict = {
+            "星塔_节点_商店_购买协奏音符_agent": {
+                "action": {"param": {"target": roi}}
+            }
+        }
+        run_result = context.run_task("星塔_节点_商店_购买协奏音符_agent", override)
+        return bool(run_result and run_result.status.succeeded)
+
+    @staticmethod
     def _get_discount(
         item_name: str,
         item_quantity: int,
@@ -768,9 +793,14 @@ class ShopAction(CustomAction):
             for grid in grids_info:
                 if grid["bought"]:
                     continue
-                if not self._is_target_grid(
-                    grid, item_type, drink_threshold, melody_5_discount_threshold, melody_15_discount_threshold, target_melodies
-                ):
+                target_type = self._is_target_grid(
+                    grid, item_type, drink_threshold, melody_5_discount_threshold, melody_15_discount_threshold,
+                    target_melodies
+                )
+                if not target_type:
+                    continue
+                if target_type == "Special":
+                    self._buy_secondary_skill_melody(context, grid["price_roi"])
                     continue
                 if not self._try_buy_grid(context, grid, reserve_coin):
                     return False
@@ -804,15 +834,15 @@ class ShopAction(CustomAction):
                 and grid["discount"] <= drink_threshold
             )
         if item_type == "melody" and grid["item_quantity"] == 5:
-            return (
-                grid["item_name"] in target_melodies
-                and grid["discount"] <= melody_5_discount_threshold
-            )
+            if grid["item_name"] in target_melodies and grid["discount"] <= melody_5_discount_threshold:
+                return True
+            elif "melody" in grid["item_name"] and grid["item_name"] not in target_melodies and grid["discount"] <= melody_5_discount_threshold:
+                return "Special"
         if item_type == "melody" and grid["item_quantity"] == 15:
-            return (
-                grid["item_name"] in target_melodies
-                and grid["discount"] <= melody_15_discount_threshold
-            )
+            if grid["item_name"] in target_melodies and grid["discount"] <= melody_15_discount_threshold:
+                return True
+            elif "melody" in grid["item_name"] and grid["item_name"] not in target_melodies and grid["discount"] <= melody_15_discount_threshold:
+                return "Special"
         return False
 
     def _try_buy_grid(
@@ -840,6 +870,7 @@ class ShopAction(CustomAction):
             )
             return True
 
+        # TODO: 没有必要判断是不是潜能特饮，可以不管三七二十一把reserve_coin传给节点
         is_drink = grid["item_name"] == "potential_drink"
         drink_arg = reserve_coin if is_drink else None
         success = self._buy_item(context, grid["price_roi"], drink_arg)

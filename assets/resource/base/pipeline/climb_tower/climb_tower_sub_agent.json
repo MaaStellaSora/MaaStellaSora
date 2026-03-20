@@ -34,7 +34,8 @@
                     168,
                     550,
                     468
-                ]
+                ],
+                "threshold": 0.9
             },
             "type": "TemplateMatch"
         }
@@ -46,8 +47,29 @@
                     "\\d+"
                 ],
                 "replace": [
-                    [",", ""]
-                ]
+                    ["\\D", ""]
+                ],
+                "roi": [
+                    1130,
+                    0,
+                    150,
+                    60
+                ],
+                "order_by": "Horizontal"
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_识别物品价格_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [
+                    ["\\D", ""]
+                ],
+                "color_filter": "星塔_节点_商店_购物_识别物品内容_价格滤色器_agent"
             },
             "type": "OCR"
         }
@@ -57,19 +79,17 @@
             "param": {
                 "expected": [
                     ".+"
-                ],
-                "color_filter": "星塔_节点_商店_识别物品内容_滤色器_agent",
-                "order_by": "Vertical"
+                ]
             },
             "type": "OCR"
         }
     },
-    "星塔_节点_商店_购物_识别物品内容_滤色器_agent": {
+    "星塔_节点_商店_购物_识别物品内容_价格滤色器_agent": {
         "recognition": {
             "param": {
-                "method": 4, // (39, 67, 121)
-                "lower": [30, 60, 120],
-                "upper": [50, 80, 140]
+                "method": 4,
+                "lower": [20, 50, 110],
+                "upper": [160, 170, 170]
             },
             "type": "ColorMatch"
         }
@@ -80,7 +100,8 @@
         },
         "next": [
             "星塔_节点_商店_购物_购买道具_确认购买_agent"
-        ]
+        ],
+        "timeout": 2000
     },
     "星塔_节点_商店_购物_购买道具_确认购买_agent": {
         "recognition": {
@@ -102,7 +123,7 @@
         },
         "next": [
             "星塔_节点_商店_进入购物界面_agent",
-            "[JumpBack]星塔_节点_选择潜能_agent",
+            "[JumpBack]星塔_节点_进入潜能选择_agent",
             "[JumpBack]星塔_点击空白处关闭"
         ],
         "post_wait_freezes": 200
@@ -137,6 +158,9 @@
                     560,
                     105,
                     50
+                ],
+                "replace": [
+                    ["\\D", ""]
                 ]
             },
             "type": "OCR"
@@ -204,7 +228,7 @@
             "type": "Click"
         },
         "next": [
-            "星塔_节点_选择潜能_agent"
+            "星塔_节点_进入潜能选择_agent"
         ],
         "post_wait_freezes": 100
     },

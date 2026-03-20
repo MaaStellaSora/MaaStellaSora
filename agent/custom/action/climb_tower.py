@@ -36,25 +36,34 @@ def _get_current_coin(
 
     for _ in range(max_try):
         reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
-        _logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
         if reco_detail and reco_detail.hit:
-            return int(reco_detail.best_result.text)
-        time.sleep(1)
-        image = context.tasker.controller.post_screencap().wait().get()
+            _logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
+            return int(reco_detail.filtered_results[-1].text)
+        else:
+            if reco_detail and reco_detail.all_results:
+                _logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
+            else:
+                _logger.debug("未识别到任何关于当前金币的内容")
+            _logger.debug("等待1秒后重新识别")
+
         if context.tasker.stopping:
             return 0
+
+        time.sleep(1)
+        image = context.tasker.controller.post_screencap().wait().get()
+
 
     _logger.error("无法读取当前金币数量，将当作 0 金币处理")
     return 0
 
 
-def _calculate_max_enhance_count(
+def _calculate_max_enhance(
     current_coin: int,
     current_enhancement_cost: int,
     max_cost: int,
     enhance_step: int,
-) -> int:
-    """计算可强化次数。
+) -> tuple[int, int]:
+    """计算可强化次数及消耗的金币数量。
 
     Args:
         current_coin: 当前金币数量。
@@ -63,15 +72,54 @@ def _calculate_max_enhance_count(
         enhance_step: 每次强化后费用递增的步长。
 
     Returns:
-        int: 可强化次数。
+        tuple(int, int): 可强化次数, 总共消耗的金币数量。
     """
     count = 0
+    total_cost = 0
     while (current_coin >= current_enhancement_cost
            and current_enhancement_cost <= max_cost):
         current_coin -= current_enhancement_cost
+        total_cost += current_enhancement_cost
         count += 1
         current_enhancement_cost += enhance_step
-    return count
+
+    return count, total_cost
+
+
+def _check_shop_type(
+    context: Context,
+    image: Optional[numpy.ndarray] = None,
+) -> str:
+    """检查商店类型。
+
+    Args:
+        context: 任务上下文。
+        image: 截图，为 None 时自动截图。
+
+    Returns:
+        str: 商店类型，中途商店为 regular，最终商店为 final，识别失败返回空字符串。
+    """
+    if image is None:
+        image = context.tasker.controller.post_screencap().wait().get()
+
+    for _ in range(3): # 最多尝试3次
+        reco_detail = context.run_recognition("星塔_节点_商店_离开商店_agent", image)
+        if reco_detail and reco_detail.hit:
+            return "regular"
+
+        reco_detail = context.run_recognition("星塔_节点_商店_离开星塔_agent", image)
+        if reco_detail and reco_detail.hit:
+            return "final"
+
+        # 检查是否中断任务
+        if context.tasker.stopping:
+            return ""
+
+        # 失败时，等待1秒后重试
+        time.sleep(1)
+        image = context.tasker.controller.post_screencap().wait().get()
+
+    return ""
 
 
 @AgentServer.custom_action("shop_action")
@@ -122,10 +170,10 @@ class ShopAction(CustomAction):
 
     ITEM_NAMES= {
         "potential_drink": {
-            "cn": ["潜能特饮"],
-            "tw": ["潛能特飲"],
-            "en": ["Potential Drink"],
-            "jp": ["素質メザメール", "素質"]
+            "cn": ["潜能特饮", "能特", "特饮"],
+            "tw": ["潛能特飲", "能特"],
+            "en": ["Potential Drink", "Drink"],
+            "jp": ["素質メザメール","メザ", "メサ", "メール"]
         },
         "melody_of_aqua": {
             "cn": ["水之音"],
@@ -246,14 +294,19 @@ class ShopAction(CustomAction):
         self.lang_type = params["lang_type"]
         reserve_coin = params["reserve_coin"]
         priority = params["priority"]
+        regular_shop_refresh_threshold = params["regular_shop_refresh_threshold"]
         drink_threshold = params["drink_discount_threshold"]
-        melody_threshold = params["melody_discount_threshold"]
-        target_melodies = params["element_melodies"] + params["stat_melodies"]
+        melody_5_discount_threshold = params["melody_5_discount_threshold"]
+        melody_15_discount_threshold = params["melody_15_discount_threshold"]
+        target_melodies = [m for m in params if m.startswith("melody_of_") and params[m]]
 
-        shop_type = self._check_shop_type(context)
+        shop_type = _check_shop_type(context)
+        self.logger.debug(f"当前商店类型: {shop_type}")
+        self.logger.debug(f"预留金币: {reserve_coin}")
+
         context.run_task("星塔_节点_商店_点击商店购物_agent")
         min_price = self._calc_min_buyable_price(
-            priority, drink_threshold, melody_threshold, target_melodies
+            priority, drink_threshold, melody_5_discount_threshold, melody_15_discount_threshold, target_melodies
         )
 
         while True:
@@ -261,15 +314,17 @@ class ShopAction(CustomAction):
 
             if not self._execute_regular_buy(
                 context, grids_info, priority,
-                drink_threshold, melody_threshold, target_melodies, reserve_coin
+                drink_threshold, melody_5_discount_threshold, melody_15_discount_threshold, target_melodies, reserve_coin
             ):
                 return False
 
-            if shop_type == "regular":
+            current_coin = _get_current_coin(context)
+            if shop_type == "regular" and (current_coin-reserve_coin) < regular_shop_refresh_threshold:
                 break
 
-            if not self._execute_drink_supplement_buy(context, grids_info, reserve_coin):
-                return False
+            if shop_type == "final":
+                if not self._execute_drink_supplement_buy(context, grids_info, reserve_coin):
+                    return False
 
             if not self._should_refresh(context, reserve_coin, min_price):
                 break
@@ -296,28 +351,43 @@ class ShopAction(CustomAction):
             "lang_type": "cn",
             "priority": ["drink", "melody"],
             "drink_discount_threshold": 1.0,
-            "melody_discount_threshold": 1.0,
-            "element_melodies": [],
-            "stat_melodies": [],
+            "melody_5_discount_threshold": 1.0,
+            "melody_15_discount_threshold": 1.0,
+            "regular_shop_refresh_threshold": 1500,
+            "melody_of_aqua": False,
+            "melody_of_ignis": False,
+            "melody_of_terra": False,
+            "melody_of_ventus": False,
+            "melody_of_lux": False,
+            "melody_of_umbra": False,
+            "melody_of_focus": False,
+            "melody_of_skill": False,
+            "melody_of_ultimate": False,
+            "melody_of_pummel": False,
+            "melody_of_luck": False,
+            "melody_of_burst": False,
+            "melody_of_stamina": False
         }
         node_data = context.get_node_data(node_name)
         if not node_data:
-            self.logger.warning("get_node_data 返回 None，使用默认参数")
+            self.logger.error("无法获取商店设置，将使用默认参数")
             return {**defaults, "reserve_coin": 0}
         attach = node_data.get("attach", {})
         params = {key: attach.get(key, default) for key, default in defaults.items()}
 
         enhance_node_data = context.get_node_data("星塔_节点_商店_强化_agent")
         if not enhance_node_data:
-            self.logger.warning("无法读取强化节点数据，reserve_coin 将设为 0")
+            self.logger.error("无法读取强化设置，将使用默认参数")
             params["reserve_coin"] = 0
             return params
 
         enhance_attach = enhance_node_data.get("attach", {})
         max_cost = enhance_attach.get("max_cost", 180)
         enhance_step = enhance_attach.get("enhance_step", 60)
-        params["reserve_coin"] = _calculate_max_enhance_count(
-            0, 0, max_cost, enhance_step
+        current_coin = _get_current_coin(context)
+        print(f"当前金币: {current_coin}, max_cost: {max_cost}, enhance_step: {enhance_step}")
+        _, params["reserve_coin"] = _calculate_max_enhance(
+            current_coin, enhance_step, max_cost, enhance_step
         )
         return params
 
@@ -325,7 +395,8 @@ class ShopAction(CustomAction):
         self,
         priority: list[str],
         drink_threshold: float,
-        melody_threshold: float,
+        melody_5_discount_threshold: float,
+        melody_15_discount_threshold: float,
         target_melodies: list[str],
     ) -> float:
         """基于用户策略计算刷新后理论最低可购买商品价格。
@@ -336,7 +407,8 @@ class ShopAction(CustomAction):
         Args:
             priority: 购买优先级列表。
             drink_threshold: 潜能特饮折扣比值上限。
-            melody_threshold: 音符折扣比值上限。
+            melody_5_discount_threshold: 5个音符折扣比值上限。
+            melody_15_discount_threshold: 15个音符折扣比值上限。
             target_melodies: 用户指定的目标音符名称列表。
 
         Returns:
@@ -346,45 +418,9 @@ class ShopAction(CustomAction):
         if "drink" in priority:
             prices.append(self.ITEM_STANDARD_PRICES["potential_drink"] * drink_threshold)
         if "melody" in priority and target_melodies:
-            prices.append(self.ITEM_STANDARD_PRICES["melody_5"] * melody_threshold)
-            prices.append(self.ITEM_STANDARD_PRICES["melody_15"] * melody_threshold)
+            prices.append(self.ITEM_STANDARD_PRICES["melody_5"] * melody_5_discount_threshold)
+            prices.append(self.ITEM_STANDARD_PRICES["melody_15"] * melody_15_discount_threshold)
         return min(prices) if prices else float("inf")
-
-    @staticmethod
-    def _check_shop_type(
-        context: Context,
-        image: Optional[numpy.ndarray] = None,
-    ) -> str:
-        """检查商店类型。
-
-        Args:
-            context: 任务上下文。
-            image: 截图，为 None 时自动截图。
-
-        Returns:
-            str: 商店类型，中途商店为 regular，最终商店为 final，识别失败返回空字符串。
-        """
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        for _ in range(3): # 最多尝试3次
-            reco_detail = context.run_recognition("星塔_节点_商店_离开商店_agent", image)
-            if reco_detail and reco_detail.hit:
-                return "regular"
-
-            reco_detail = context.run_recognition("星塔_节点_商店_离开星塔_agent", image)
-            if reco_detail and reco_detail.hit:
-                return "final"
-
-            # 失败时，等待1秒后重试
-            time.sleep(1)
-            image = context.tasker.controller.post_screencap().wait().get()
-
-            # 检查是否中断任务
-            if context.tasker.stopping:
-                return ""
-
-        return ""
 
     def _get_grids_info(self, context):
         """
@@ -414,9 +450,8 @@ class ShopAction(CustomAction):
             name_roi = grid["name_roi"]
 
             # 获取单个格子的道具信息并添加到结果列表
-            # 暂时不需要用discount_flag，所以用_接收
             # TODO(samipale)： 潜能特饮增加对主控专用的检测
-            item_name, item_quantity, item_price, _ = self._get_single_grid_info(context, item_roi, price_roi, name_roi)
+            item_name, item_quantity, item_price = self._get_single_grid_info(context, price_roi, name_roi)
             if item_name and item_quantity and item_price:
                 discount = self._get_discount(item_name, item_quantity, item_price)
                 grids_info.append({
@@ -436,72 +471,48 @@ class ShopAction(CustomAction):
 
         # 根据价格从低到高排序
         # TODO(samipale): 实现主控专属检测后，对潜能特饮按主控专属优先、价格升序的复合排序
-        grids_info.sort(key=lambda x: int(x["item_price"]))
+        grids_info.sort(key=lambda x: x["item_price"])
+        self.logger.debug(f"排序后道具列表: {grids_info}")
 
         return grids_info
 
     def _get_single_grid_info(
         self,
         context: Context,
-        item_roi: list,
         price_roi: list,
         name_roi: list,
         retry_max: int = 3,
     ) -> tuple:
         """格子内容识别函数。
 
-        先对整个 item_roi 区域做 OCR（方法一），若识别不完整则逐区域重试（方法二）。
-
         Args:
             context: 任务上下文。
-            item_roi: 整个道具格子的识别框范围。
             price_roi: 道具价格的识别框范围。
             name_roi: 道具名的识别框范围。
             retry_max: 最大重试次数，默认为 3。
 
         Returns:
-            tuple: (item_name, item_quantity, item_price, discount_flag)，
-                   识别失败时各字段为 None。
+            tuple: (item_name, item_quantity, item_price)，
+                   识别失败时各字段为 "", 0, 0。
         """
 
-        # 方法一，通过整个道具格子识别
-        raw_item_price = []
-        raw_item_name = ""
-        discount_flag = 0
+        item_price = []
+        item_name = ""
+        item_quantity = 0
+        # discount_flag = 0
 
-        image = context.tasker.controller.post_screencap().wait().get()
-        results = self._grid_recognition(context, image, item_roi)
-        for r in results:
-            if price_roi[0] <= r.box[0] <= price_roi[2] and price_roi[1] <= r.box[1] <= price_roi[3]:
-                raw_item_price.append(r.text)
-            if name_roi[0] <= r.box[0] <= name_roi[2] and name_roi[1] <= r.box[1] <= name_roi[3]:
-                raw_item_name += r.text
-            if r.text in self.DISCOUNT_TEXT[self.lang_type]:
-                discount_flag = 1
-
-        # 检查并清洗识别结果
-        item_name, item_quantity = self._parse_item_name(raw_item_name)
-        item_price = self._parse_item_price(raw_item_price)
-        self.logger.debug(f"将道具名称数据从'{raw_item_name}'解析为道具名：'{item_name}'与数量：'{item_quantity}'")
-        self.logger.debug(f"将道具价格数据从'{raw_item_price}'解析为'{item_price}'")
-
-        # 如果都识别到了，直接返回
-        if item_name and item_quantity and item_price:
-            return item_name, item_quantity, item_price, discount_flag
-
-        # 未能检测到的内容，使用方法二，识别每个细分区域
         for count in range(retry_max):
-            self.logger.debug(f"使用方法二识别，第{count+1}次重试识别道具格子")
+            self.logger.debug(f"第{count+1}次识别道具格子")
             image = context.tasker.controller.post_screencap().wait().get()
             # 识别价格
             if not item_price:
-                results = self._grid_recognition(context, image, price_roi)
+                results = self._grid_recognition(context, image, price_roi, "price")
                 raw_item_price = [r.text for r in results]
                 item_price = self._parse_item_price(raw_item_price)
                 self.logger.debug(f"将道具价格数据从'{raw_item_price}'解析为'{item_price}'")
             # 识别道具名字及数量
             if not item_name or not item_quantity:
-                results = self._grid_recognition(context, image, name_roi)
+                results = self._grid_recognition(context, image, name_roi, "name")
                 raw_item_name = "".join([r.text for r in results])
                 item_name_temp, item_quantity_temp = self._parse_item_name(raw_item_name)
                 self.logger.debug(f"将道具名称数据从'{raw_item_name}'解析为道具名：'{item_name_temp}'与数量：'{item_quantity_temp}'")
@@ -512,20 +523,20 @@ class ShopAction(CustomAction):
 
             # 如果都识别到了，直接返回
             if item_name and item_quantity and item_price:
-                return item_name, item_quantity, item_price, discount_flag
+                return item_name, item_quantity, item_price
 
             # 检查是否中断任务
             if context.tasker.stopping:
-                return None, None, None, None
+                return None, None, None
 
             # 睡觉
-            self.logger.debug(f"第{count+1}次重试识别道具格子失败，等待1秒后重试")
+            self.logger.info(f"识别道具格子失败，准备重试")
             time.sleep(1)
 
-        # 两个方法都没办法识别完整，能返回多少是多少
-        return item_name, item_quantity, item_price, discount_flag
+        # 虽然未能识别完整，但能返回多少是多少
+        return item_name, item_quantity, item_price
 
-    def _grid_recognition(self, context, image, roi, expected=r".+"):
+    def _grid_recognition(self, context, image, roi, content):
         """
             格子内容识别函数
 
@@ -533,24 +544,35 @@ class ShopAction(CustomAction):
                 context(Context): 上下文对象
                 image(Image): 截图
                 roi(list): 识别框范围
-                expected(str): 预期的正则表达式，默认为".+"
+                content(str): 要识别的内容类型，"price"或"name"
 
             Returns:
                 list: 可遍历的格子内容识别结果
         """
-        reco_detail = context.run_recognition("星塔_节点_商店_购物_识别物品内容_agent", image, {
-            "星塔_节点_商店_购物_识别物品内容_agent": {
+        if content == "price":
+            node_name = "星塔_节点_商店_购物_识别物品价格_agent"
+        elif content == "name":
+            node_name = "星塔_节点_商店_购物_识别物品内容_agent"
+        else:
+            self.logger.error(f"未知的内容类型：{content}")
+            return []
+
+        reco_detail = context.run_recognition(node_name, image, {
+            node_name: {
                 "recognition": {
                     "param": {
-                        "expected": expected,
                         "roi": roi
                     }
                 }
             }
         })
-        self.logger.debug(f"识别到的格子内容：{[reco_detail.text for reco_detail in reco_detail.all_results]}")
         if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到物品内容：{[reco_detail.text for reco_detail in reco_detail.filtered_results]}")
             return reco_detail.filtered_results
+        if reco_detail and reco_detail.all_results:
+            self.logger.debug(f"识别到的格子内容：{[reco_detail.text for reco_detail in reco_detail.all_results]}")
+        else:
+            self.logger.debug(f"格子:{roi}未识别到任何内容")
         return []
 
     def _parse_item_name(self, item_name: str):
@@ -578,7 +600,10 @@ class ShopAction(CustomAction):
 
         # 检查物品名称，尝试转换为程序内部通用名称，以适配不同服务端语言
         if not item_name in self.ITEM_NAMES:
-            item_name = mapping.get(item_name, "")
+            for m in mapping:
+                if m in item_name:
+                    item_name = mapping[m]
+                    break
 
         # 针对潜能特饮，把数量改为1
         if item_name == "potential_drink":
@@ -686,7 +711,7 @@ class ShopAction(CustomAction):
 
         return 1.0
 
-    def _get_refresh_remaining(self, context, max_count=3):
+    def _get_refresh_remaining(self, context):
         """
             获取商店可刷新次数
 
@@ -696,15 +721,17 @@ class ShopAction(CustomAction):
             Returns:
                 int: 商店可刷新次数
         """
-        for count in range(max_count):
-            image = context.tasker.controller.post_screencap().wait().get()
-            reco_detail = context.run_recognition("星塔_节点_商店_购物_识别可刷新次数_agent", image)
-            if reco_detail and reco_detail.hit:
-                self.logger.debug(f"识别到刷新次数：{reco_detail.best_result.text}")
-                return int(reco_detail.best_result.text)
-            self.logger.debug(f"第{count+1}次刷新次数识别失败，等待1秒后重试")
+        image = context.tasker.controller.post_screencap().wait().get()
+        reco_detail = context.run_recognition("星塔_节点_商店_购物_识别可刷新次数_agent", image)
+        if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到刷新次数：{reco_detail.best_result.text}")
+            return int(reco_detail.best_result.text)
+        self.logger.debug(f"刷新次数识别失败，将返回0")
+        if reco_detail and reco_detail.all_results:
             self.logger.debug(f"识别内容：{[result.text for result in reco_detail.all_results]}")
-            time.sleep(1)
+        else:
+            self.logger.debug("未识别到任何内容")
+
         return 0
 
     def _execute_regular_buy(
@@ -713,7 +740,8 @@ class ShopAction(CustomAction):
         grids_info: list[dict],
         priority: list[str],
         drink_threshold: float,
-        melody_threshold: float,
+        melody_5_discount_threshold: float,
+        melody_15_discount_threshold: float,
         target_melodies: list[str],
         reserve_coin: int,
     ) -> bool:
@@ -727,7 +755,8 @@ class ShopAction(CustomAction):
             grids_info: _get_grids_info() 的返回值，格子按价格升序排列。
             priority: 购买优先级列表。
             drink_threshold: 潜能特饮折扣比值上限。
-            melody_threshold: 音符折扣比值上限。
+            melody_5_discount_threshold: 5个音符折扣比值上限。
+            melody_15_discount_threshold: 15个音符折扣比值上限。
             target_melodies: 用户指定的目标音符名称列表。
             reserve_coin: 预留金币。
 
@@ -739,7 +768,7 @@ class ShopAction(CustomAction):
                 if grid["bought"]:
                     continue
                 if not self._is_target_grid(
-                    grid, item_type, drink_threshold, melody_threshold, target_melodies
+                    grid, item_type, drink_threshold, melody_5_discount_threshold, melody_15_discount_threshold, target_melodies
                 ):
                     continue
                 if not self._try_buy_grid(context, grid, reserve_coin):
@@ -751,7 +780,8 @@ class ShopAction(CustomAction):
         grid: dict,
         item_type: str,
         drink_threshold: float,
-        melody_threshold: float,
+        melody_5_discount_threshold: float,
+        melody_15_discount_threshold: float,
         target_melodies: list[str],
     ) -> bool:
         """判断格子是否符合当前轮次的购买条件。
@@ -760,7 +790,8 @@ class ShopAction(CustomAction):
             grid: 单个格子信息字典。
             item_type: 当前处理的商品类型（"drink" 或 "melody"）。
             drink_threshold: 潜能特饮折扣比值上限。
-            melody_threshold: 音符折扣比值上限。
+            melody_5_discount_threshold: 5个音符折扣比值上限。
+            melody_15_discount_threshold: 15个音符折扣比值上限。
             target_melodies: 用户指定的目标音符名称列表。
 
         Returns:
@@ -771,10 +802,15 @@ class ShopAction(CustomAction):
                 grid["item_name"] == "potential_drink"
                 and grid["discount"] <= drink_threshold
             )
-        if item_type == "melody":
+        if item_type == "melody" and grid["item_quantity"] == 5:
             return (
                 grid["item_name"] in target_melodies
-                and grid["discount"] <= melody_threshold
+                and grid["discount"] <= melody_5_discount_threshold
+            )
+        if item_type == "melody" and grid["item_quantity"] == 15:
+            return (
+                grid["item_name"] in target_melodies
+                and grid["discount"] <= melody_15_discount_threshold
             )
         return False
 
@@ -794,12 +830,12 @@ class ShopAction(CustomAction):
             reserve_coin: 预留金币。
 
         Returns:
-            bool: 操作正常完成返回 True；购买异常返回 False。
+            bool: 用户没有终止任务时返回 True；用户终止任务时返回 False。
         """
         usable = max(0, _get_current_coin(context) - reserve_coin)
         if usable < grid["item_price"]:
             self.logger.info(
-                f"可支配金币 {usable} 不足，跳过 {grid['item_name']}（{grid['item_price']}）"
+                f"可用金币 {usable} 不足，跳过 {self.ITEM_NAMES[grid['item_name']][self.lang_type][0]}（{grid['item_price']}）"
             )
             return True
 
@@ -813,8 +849,8 @@ class ShopAction(CustomAction):
 
         if not context.tasker.stopping:
             # TODO(samipale): 购买操作出现问题改为跳到下一个格子，但需要做一个异常情况的pipeline处理，回到购买界面
-            self.logger.error("购买操作出现问题，将中止任务")
-            context.tasker.post_stop()
+            self.logger.error("购买失败，跳过该格子")
+            return True
         return False
 
     def _get_refresh_cost(self, context: Context, max_try: int = 3) -> int:
@@ -883,15 +919,16 @@ class ShopAction(CustomAction):
         """
         refresh_remaining = self._get_refresh_remaining(context)
         if refresh_remaining == 0:
-            self.logger.info("刷新次数已用完，停止刷新")
+            self.logger.info("刷新次数已用完")
             return False
 
         refresh_cost = self._get_refresh_cost(context)
         usable = max(0, _get_current_coin(context) - reserve_coin)
         if usable >= refresh_cost + min_buyable_price:
+            self.logger.info(f"当前可用金币 {usable} 达到刷新费用标准 {refresh_cost+min_buyable_price}，尝试刷新")
             return True
 
-        self.logger.info("可支配金币不足以刷新并购买，停止刷新")
+        self.logger.info("可用金币不足以刷新")
         return False
 
     def _get_reverse_mapping(self, lang_type):
@@ -929,11 +966,18 @@ class EnhanceAction(CustomAction):
             bool: 始终返回 True。
         """
         params = self._get_params(context, argv.node_name)
+        shop_type = _check_shop_type(context)
         current_coin = _get_current_coin(context)
         current_cost = self._get_enhancement_cost(context)
-        count = _calculate_max_enhance_count(
-            current_coin, current_cost, params["max_cost"], params["enhance_step"]
+        if shop_type == "regular":
+            max_cost = params["max_cost"]
+        else:
+            max_cost = 65535
+        count, _ = _calculate_max_enhance(
+            current_coin, current_cost, max_cost, params["cost_increment"]
         )
+        self.logger.debug(f"最大强化金币:{max_cost}，强化递增金额：{params['cost_increment']}")
+        self.logger.debug(f"当前金币:{current_coin}，当前强化所需金币:{current_cost}，当前可强化次数：{count}")
         for _ in range(count):
             context.run_task("星塔_节点_商店_点击强化_agent")
         return True
@@ -951,7 +995,7 @@ class EnhanceAction(CustomAction):
         defaults = {"max_cost": 180, "cost_increment": 60}
         node_data = context.get_node_data(node_name)
         if not node_data:
-            self.logger.warning("get_node_data 返回 None，使用默认参数")
+            self.logger.error("无法读取强化设置，将使用默认参数")
             return defaults
         attach = node_data.get("attach", {})
         return {key: attach.get(key, default) for key, default in defaults.items()}
@@ -975,12 +1019,15 @@ class EnhanceAction(CustomAction):
 
         for _ in range(3):
             reco_detail = context.run_recognition("星塔_节点_商店_识别强化所需金币_agent", image)
-            self.logger.debug(f"识别强化所需金币结果：{[r.text for r in reco_detail.all_results]}")
             if reco_detail and reco_detail.hit:
                 self.logger.debug(f"识别到强化所需金币：{reco_detail.best_result.text}")
                 return int(reco_detail.best_result.text)
 
-            self.logger.debug("识别强化是否免费和所需金币失败，等待1秒后重试")
+            if reco_detail and reco_detail.all_results:
+                self.logger.debug(f"识别强化所需金币结果：{[r.text for r in reco_detail.all_results]}")
+            else:
+                self.logger.debug("未识别到任何关于强化金币的内容")
+            self.logger.debug("等待1秒后重试")
             time.sleep(1)
             image = context.tasker.controller.post_screencap().wait().get()
 
@@ -1012,8 +1059,6 @@ class AscensionPreparation(CustomAction):
         Returns:
             bool: 成功时返回 True，失败时返回 False。
         """
-        # 本地化
-        # 日服拿走buff的图片（確定），爬塔_记录保存确认按钮(確認)
 
         node_data = context.get_node_data(argv.node_name)
         preset_path = Path(os.path.abspath(__file__)).parent.parent / "presets"
@@ -1021,12 +1066,12 @@ class AscensionPreparation(CustomAction):
         error_flag = False
 
         try:
-            presets_name = node_data["attach"]["preset_name"]
+            preset_name = node_data["attach"]["preset_name"]
             preset_element_flag = node_data["attach"]["preset_element"]
             preset_melodies_flag = node_data["attach"]["preset_melodies"]
 
             # 检查有无预设作业
-            if not presets_name:
+            if not preset_name:
                 self.logger.debug("没有提供预设作业，检查选项是否选择了预设")
                 if preset_element_flag or preset_melodies_flag:
                     self.logger.error("没有预设作业，请把其他选项里的作业预设改为其他选项")
@@ -1037,7 +1082,7 @@ class AscensionPreparation(CustomAction):
                     return True
 
             # 读取预设作业
-            full_path = (preset_path / presets_name).with_suffix(".json")
+            full_path = (preset_path / preset_name).with_suffix(".json")
             with open(full_path, "r", encoding="utf-8") as f:
                 presets = json.load(f)
                 priority_list = presets.get("priority_list", [])
@@ -1054,7 +1099,7 @@ class AscensionPreparation(CustomAction):
             if error_flag:
                 return False
 
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             self.logger.error(f"无法找到预设作业文件：{full_path}")
             self.logger.error(f"请核实预设作业名字是否正确，或预设作业是否存在等")
             return False
@@ -1203,6 +1248,7 @@ class AscensionPreparation(CustomAction):
                     context.tasker.post_stop()
                     return False
 
+        self.logger.info(f"已导入预设作业：{preset_name}")
         return True
 
 @AgentServer.custom_action("ascension_loop")
@@ -1234,6 +1280,7 @@ class AscensionLoop(CustomAction):
         loop_count = attachment.get("loop_count", 1)
         loop_count -= 1
         if loop_count:
+            self.logger.info(f"完成一次爬塔，剩余爬塔次数：{loop_count}")
             context.override_pipeline({
                 argv.node_name: {
                     "attach": {
@@ -1242,6 +1289,7 @@ class AscensionLoop(CustomAction):
                 }
             })
         else:
+            self.logger.info("爬塔已完成，回到主页")
             context.override_next(argv.node_name, ["星塔_回到主页_agent"])
 
         return True

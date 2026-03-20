@@ -553,7 +553,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")
         return selected_potential, selected_trekker
 
-    def _get_recommended_box(self, context: Context, image) -> list:
+    def _get_recommended_box(self, context: Context, image, count: int = 3) -> list:
         """识别系统推荐图标，返回对应卡片的 box。
 
         推荐图标位于卡片 box 范围外，通过计算图标命中 x 坐标与各卡片
@@ -563,20 +563,26 @@ class ChoosePotentialRecognition(CustomRecognition):
         Args:
             context: maa.context.Context
             image: 截图
+            count: 识别次数，默认3次
 
         Returns:
             list: 目标卡片区域 [x, y, w, h]
         """
-        reco_detail = context.run_recognition(
-            "星塔_节点_选择潜能_识别推荐图标_agent", image
-        )
-        if reco_detail and reco_detail.hit:
-            hit_x = reco_detail.best_result.box[0]
-            closest = min(
-                self.POTENTIAL_ROIS,
-                key=lambda r: abs(r["general_potential"][0] - hit_x)
+        for c in range(count):
+            reco_detail = context.run_recognition(
+                "星塔_节点_选择潜能_识别推荐图标_agent", image
             )
-            return closest["general_potential"]
+            if reco_detail and reco_detail.hit:
+                hit_x = reco_detail.best_result.box[0]
+                closest = min(
+                    self.POTENTIAL_ROIS,
+                    key=lambda r: abs(r["general_potential"][0] - hit_x)
+                )
+                return closest["general_potential"]
+
+            self.logger.debug("推荐图标识别失败，等待1秒后重试")
+            time.sleep(1)
+            image = context.tasker.controller.post_screencap().wait().get()
 
         self.logger.warning("推荐图标识别失败，返回第一张卡片")
         return self.POTENTIAL_ROIS[0]["general_potential"]

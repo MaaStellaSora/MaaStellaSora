@@ -178,7 +178,8 @@
         "next": [
             "星塔_编队秘纹_agent",
             "星塔_编队角色_agent"
-        ]
+        ],
+        "post_wait_freeze": 100
     },
     "星塔_编队秘纹_agent": {
         "recognition": {
@@ -269,7 +270,7 @@
             "owned_potentials": {}
         },
         "post_wait_freeze": 100,
-        "timeout": 1000
+        "timeout": 1500
     },
     "星塔_节点_选择潜能_拿走_agent": {
         "recognition": {
@@ -417,19 +418,19 @@
         "action": {
             "type": "Custom",
             "param": {
-                "action": "shop_action"
+                "custom_action": "shop_action"
             }
         },
         "next": [
+            "星塔_节点_回到商店层_agent",
             "[JumpBack]星塔_节点_商店_购物_返回商店层_agent",
-            "星塔_节点_回到商店层_agent"
         ],
         "attach": {
             "lang_type": "cn",
             "priority": ["drink", "melody"],
             "drink_discount_threshold": 1.0,
             "melody_5_discount_threshold": 1.0,
-            "melody_15_discount_threshold": 1.0,
+            "melody_15_discount_threshold": 0.5,
             "regular_shop_refresh_threshold": 1500,
             "melody_of_aqua": false,
             "melody_of_ignis": false,
@@ -490,7 +491,7 @@
         "action": {
             "type": "Custom",
             "param": {
-                "action": "enhance_action"
+                "custom_action": "enhance_action"
             }
         },
         "next": [
@@ -631,7 +632,8 @@
                 ]
             },
             "type": "OCR"
-        }
+        },
+        "post_delay": 500
     },
     "星塔_循环用节点_agent": {
         "action": {

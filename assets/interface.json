@@ -166,8 +166,16 @@
                 "新版爬塔_预设作业_tw",
                 "新版爬塔_预设作业_en",
                 "新版爬塔_预设作业_jp",
-                "新版爬塔_属性",
-                "新版爬塔_速刷"
+                "新版爬塔_属性塔",
+                "新版爬塔_潜能最大刷新次数",
+                "新版爬塔_商店_购买音符策略",
+                "新版爬塔_商店_其他音符策略",
+                "新版爬塔_商店_中途商店刷新最小金额",
+                "新版爬塔_商店_中途商店潜能特饮折扣",
+                "新版爬塔_商店_5个音符折扣",
+                "新版爬塔_商店_15个音符折扣",
+                "新版爬塔_商店_最大强化金额",
+                "新版爬塔_商店_强化递增金额"
             ]
         }
     ],
@@ -1164,38 +1172,6 @@
                 }
             }
         },
-        "新版爬塔_速刷": {
-            "type": "select",
-            "label": "跳过商店层",
-            "description": "只想速刷周常时勾选，勾选后会跳过商店层",
-            "default_case": "no",
-            "cases": [
-                {
-                    "name": "no",
-                    "option": [
-                        "新版爬塔_潜能最大刷新次数",
-                        "新版爬塔_商店_中途商店刷新最小金额",
-                        "新版爬塔_商店_中途商店潜能特饮折扣",
-                        "新版爬塔_商店_5个音符折扣",
-                        "新版爬塔_商店_15个音符折扣",
-                        "新版爬塔_商店_购买音符类型",
-                        "新版爬塔_商店_最大强化金额",
-                        "新版爬塔_商店_强化递增金额"
-                    ]
-                },
-                {
-                    "name": "yes",
-                    "pipeline_override": {
-                        "星塔_节点_进入商店_agent": {
-                            "next": [
-                                "星塔_节点_商店_离开商店_agent",
-                                "星塔_节点_商店_离开星塔_agent"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
         "新版爬塔_潜能最大刷新次数": {
             "type": "input",
             "inputs": [
@@ -1217,6 +1193,7 @@
         },
         "新版爬塔_商店_中途商店刷新最小金额": {
             "type": "input",
+            "description": "只在中途商店生效。在最终商店会无视该金额，尽可能刷新。",
             "inputs": [
                 {
                     "name": "中途商店刷新最小金额",
@@ -1327,27 +1304,24 @@
                 }
             ]
         },
-        "新版爬塔_商店_购买音符类型": {
+        "新版爬塔_商店_购买音符策略": {
             "type": "select",
-            "label": "购买音符类型",
-            "default_case": "作业预设",
+            "label": "购买音符策略",
+            "default_case": "激活协奏",
             "cases": [
                 {
-                    "name": "作业预设",
-                    "description": "根据预设作业购买音符，需要预设作业里有设置音符类型",
+                    "name": "无"
+                },
+                {
+                    "name": "激活协奏",
+                    "description": "只买与协奏有关的音符",
                     "pipeline_override": {
-                        "星塔_入口_agent": {
+                        "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "preset_melodies": true
+                                "buy_secondary_skill_melody": true
                             }
                         }
                     }
-                },
-                {
-                    "name": "手动选择",
-                    "option": [
-                        "新版爬塔_商店_购买音符类型_手动选择音符"
-                    ]
                 }
             ]
         },
@@ -1359,7 +1333,7 @@
                     "default": "180",
                     "pipeline_type": "int",
                     "verify": "^\\d+$",
-                    "description": "只会在单次强化消耗金币低于等于该金额时进行强化"
+                    "description": "单次强化消耗金币没超过该金额时，才会进行强化"
                 }
             ],
             "pipeline_override": {
@@ -1389,11 +1363,77 @@
                 }
             }
         },
-        "新版爬塔_商店_购买音符类型_手动选择音符": {
+        "新版爬塔_商店_其他音符策略": {
             "type": "checkbox",
-            "label": "手动选择音符",
-            "description": "属性音符会根据属性选项购买，这里只需要选择能力值音符",
+            "label": "其他音符策略",
+            "description": "这里勾选的会与上面的音符策略同时生效",
             "cases": [
+                {
+                    "name": "水之音",
+                    "description": "增加水属性伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_aqua": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "火之音",
+                    "description": "增加火属性伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_ignis": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "地之音",
+                    "description": "增加地属性伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_terra": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风之音",
+                    "description": "增加风属性伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_ventus": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "光之音",
+                    "description": "增加光属性伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_lux": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "暗之音",
+                    "description": "增加暗属性伤害",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_of_umbra": true
+                            }
+                        }
+                    }
+                },
                 {
                     "name": "专注之音",
                     "description": "增加普攻伤害",
@@ -1491,27 +1531,14 @@
                 }
             }
         },
-        "新版爬塔_属性": {
+        "新版爬塔_属性塔": {
             "type": "select",
-            "label": "属性",
-            "description": "本选项会影响爬塔属性及属性音符选择",
-            "default_case": "属性_参考预设作业",
+            "label": "属性塔",
+            "default_case": "属性_光土",
             "cases": [
                 {
-                    "name": "属性_参考预设作业",
-                    "label": "作业预设",
-                    "description": "根据预设作业选择爬塔属性及属性音符购买，需要预设作业里有设置属性",
-                    "pipeline_override": {
-                        "星塔_入口_agent": {
-                            "attach": {
-                                "preset_element": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "属性_光",
-                    "label": "光",
+                    "name": "属性_光土",
+                    "label": "光土",
                     "pipeline_override": {
                         "星塔_属性塔选择": {
                             "recognition": {
@@ -1521,37 +1548,12 @@
                                     ]
                                 }
                             }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_lux": true
-                            }
                         }
                     }
                 },
                 {
-                    "name": "属性_土",
-                    "label": "土",
-                    "pipeline_override": {
-                        "星塔_属性塔选择": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
-                                    ]
-                                }
-                            }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_terra": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "属性_水",
-                    "label": "水",
+                    "name": "属性_水风",
+                    "label": "水风",
                     "pipeline_override": {
                         "星塔_属性塔选择": {
                             "recognition": {
@@ -1561,37 +1563,12 @@
                                     ]
                                 }
                             }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_aqua": true
-                            }
                         }
                     }
                 },
                 {
-                    "name": "属性_风",
-                    "label": "风",
-                    "pipeline_override": {
-                        "星塔_属性塔选择": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
-                                    ]
-                                }
-                            }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_ventus": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "属性_火",
-                    "label": "火",
+                    "name": "属性_火暗",
+                    "label": "火暗",
                     "pipeline_override": {
                         "星塔_属性塔选择": {
                             "recognition": {
@@ -1600,31 +1577,6 @@
                                         "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
                                     ]
                                 }
-                            }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_ignis": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "属性_暗",
-                    "label": "暗",
-                    "pipeline_override": {
-                        "星塔_属性塔选择": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
-                                    ]
-                                }
-                            }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_umbra": true
                             }
                         }
                     }

@@ -294,6 +294,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 },
             )
             if reco_detail and reco_detail.hit:
+                self.logger.debug(f"识别第 {i + 1} 个潜能的名称：{reco_detail.filtered_results}")
                 potential_name = "".join(r.text for r in reco_detail.filtered_results)
             else:
                 self.logger.error(f"无法识别第 {i + 1} 个潜能的名称")
@@ -321,6 +322,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             if reco_detail and reco_detail.hit:
                 texts = [r.text for r in reco_detail.filtered_results]
                 old_level, new_level = self._parse_level_text(texts)
+                self.logger.debug(f"解析第 {i + 1} 个潜能的等级：{texts} -> {old_level}, {new_level}")
                 if old_level == -1:
                     self.logger.warning(f"无法解析第 {i + 1} 个潜能的等级：{texts}")
             else:

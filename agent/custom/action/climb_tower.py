@@ -454,7 +454,6 @@ class ShopAction(CustomAction):
             name_roi = grid["name_roi"]
 
             # 获取单个格子的道具信息并添加到结果列表
-            # TODO(samipale)： 潜能特饮增加对主控专用的检测
             item_name, item_quantity, item_price = self._get_single_grid_info(context, price_roi, name_roi)
             if item_name and item_quantity and item_price:
                 discount = self._get_discount(item_name, item_quantity, item_price)
@@ -474,7 +473,6 @@ class ShopAction(CustomAction):
                 self.logger.error(f"item_name: {item_name}, item_quantity: {item_quantity}, item_price: {item_price}")
 
         # 根据价格从低到高排序
-        # TODO(samipale): 实现主控专属检测后，对潜能特饮按主控专属优先、价格升序的复合排序
         grids_info.sort(key=lambda x: x["item_price"])
         self.logger.debug(f"排序后道具列表: {grids_info}")
 

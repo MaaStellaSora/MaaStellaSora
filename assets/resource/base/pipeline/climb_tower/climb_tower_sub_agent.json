@@ -446,6 +446,9 @@
         "action": {
             "type": "Click"
         },
+        "next": [
+            "星塔_节点_商店_进入购物界面_agent"
+        ],
         "post_wait_freezes": 100
     }
 }

@@ -39,19 +39,18 @@ def _get_current_coin(
         if reco_detail and reco_detail.hit:
             _logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
             return int(reco_detail.filtered_results[-1].text)
+
+        if reco_detail and reco_detail.all_results:
+            _logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
         else:
-            if reco_detail and reco_detail.all_results:
-                _logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
-            else:
-                _logger.debug("未识别到任何关于当前金币的内容")
-            _logger.debug("等待1秒后重新识别")
+            _logger.debug("未识别到任何关于当前金币的内容")
+        _logger.debug("等待1秒后重新识别")
 
         if context.tasker.stopping:
             return 0
 
         time.sleep(1)
         image = context.tasker.controller.post_screencap().wait().get()
-
 
     _logger.error("无法读取当前金币数量，将当作 0 金币处理")
     return 0
@@ -63,7 +62,7 @@ def _calculate_max_enhance(
     max_cost: int,
     enhance_step: int,
 ) -> tuple[int, int]:
-    """计算可强化次数及消耗的金币数量。
+    """可强化次数及总消耗金币数量。
 
     Args:
         current_coin: 当前金币数量。
@@ -72,7 +71,7 @@ def _calculate_max_enhance(
         enhance_step: 每次强化后费用递增的步长。
 
     Returns:
-        tuple(int, int): 可强化次数, 总共消耗的金币数量。
+        tuple[int, int]: 可强化次数，总共消耗的金币数量。
     """
     count = 0
     total_cost = 0
@@ -102,7 +101,7 @@ def _check_shop_type(
     if image is None:
         image = context.tasker.controller.post_screencap().wait().get()
 
-    for _ in range(3): # 最多尝试3次
+    for _ in range(3):
         reco_detail = context.run_recognition("星塔_节点_商店_离开商店_agent", image)
         if reco_detail and reco_detail.hit:
             return "regular"
@@ -111,11 +110,9 @@ def _check_shop_type(
         if reco_detail and reco_detail.hit:
             return "final"
 
-        # 检查是否中断任务
         if context.tasker.stopping:
             return ""
 
-        # 失败时，等待1秒后重试
         time.sleep(1)
         image = context.tasker.controller.post_screencap().wait().get()
 
@@ -268,11 +265,20 @@ class ShopAction(CustomAction):
         "jp": ["割引"]
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.lang_type = None
-        self.buy_secondary_skill_melody = False
         self.logger = logger.get_logger(__name__)
+        self.shop_type: str = ""
+        self.lang_type: str = "cn"
+        self.reserve_coin: int = 0
+        self.priority: list[str] = []
+        self.drink_discount_threshold: float = 1.0
+        self.melody_5_discount_threshold: float = 1.0
+        self.melody_15_discount_threshold: float = 1.0
+        self.target_melodies: list[str] = []
+        self.buy_assist_melody: bool = False
+        self.regular_shop_refresh_threshold: int = 1500
+        self.min_buyable_price: float = float("inf")
 
     def run(
         self,
@@ -340,15 +346,17 @@ class ShopAction(CustomAction):
     def _get_params(self, context: Context, node_name: str) -> dict:
         """从节点 attach 读取商店配置参数，缺失时返回安全默认值。
 
-        reserve_coin 由 EnhanceAction 节点的 max_cost 和 enhance_step 计算得出，
-        假设强化费用从 0 开始累加，计算出强化阶段的最大总消耗。
+        reserve_coin 由 EnhanceAction 节点的 max_cost 和 enhance_step 计算得出。
+        游戏中后续商店层的初始强化费用不一定从 0 起步，以 enhance_step 作为初始费用
+        是合理的近似，且此处只取 total_cost，影响微乎其微。
 
         Args:
             context: 任务上下文。
             node_name: 当前节点名称。
 
         Returns:
-            dict: 包含所有商店配置参数，其中 reserve_coin 为计算所得。
+            dict: 包含所有商店配置参数，其中 reserve_coin 为计算所得，
+                  target_melodies 为已聚合的目标音符列表。
         """
         defaults = {
             "lang_type": "cn",
@@ -357,7 +365,7 @@ class ShopAction(CustomAction):
             "melody_5_discount_threshold": 1.0,
             "melody_15_discount_threshold": 1.0,
             "regular_shop_refresh_threshold": 1500,
-            "buy_secondary_skill_melody": False,
+            "buy_assist_melody": False,
             "melody_of_aqua": False,
             "melody_of_ignis": False,
             "melody_of_terra": False,
@@ -370,12 +378,15 @@ class ShopAction(CustomAction):
             "melody_of_pummel": False,
             "melody_of_luck": False,
             "melody_of_burst": False,
-            "melody_of_stamina": False
+            "melody_of_stamina": False,
         }
         node_data = context.get_node_data(node_name)
         if not node_data:
             self.logger.error("无法获取商店设置，将使用默认参数")
-            return {**defaults, "reserve_coin": 0}
+            params = {**defaults, "reserve_coin": 0}
+            params["target_melodies"] = []
+            return params
+
         attach = node_data.get("attach", {})
         params = {key: attach.get(key, default) for key, default in defaults.items()}
 
@@ -383,16 +394,21 @@ class ShopAction(CustomAction):
         if not enhance_node_data:
             self.logger.error("无法读取强化设置，将使用默认参数")
             params["reserve_coin"] = 0
-            return params
+        else:
+            enhance_attach = enhance_node_data.get("attach", {})
+            max_cost = enhance_attach.get("max_cost", 180)
+            enhance_step = enhance_attach.get("enhance_step", 60)
+            current_coin = _get_current_coin(context)
+            self.logger.debug(
+                f"当前金币: {current_coin}, max_cost: {max_cost}, enhance_step: {enhance_step}"
+            )
+            _, params["reserve_coin"] = _calculate_max_enhance(
+                current_coin, enhance_step, max_cost, enhance_step
+            )
 
-        enhance_attach = enhance_node_data.get("attach", {})
-        max_cost = enhance_attach.get("max_cost", 180)
-        enhance_step = enhance_attach.get("enhance_step", 60)
-        current_coin = _get_current_coin(context)
-        print(f"当前金币: {current_coin}, max_cost: {max_cost}, enhance_step: {enhance_step}")
-        _, params["reserve_coin"] = _calculate_max_enhance(
-            current_coin, enhance_step, max_cost, enhance_step
-        )
+        params["target_melodies"] = [
+            m for m in params if m.startswith("melody_of_") and params[m]
+        ]
         return params
 
     def _calc_min_buyable_price(

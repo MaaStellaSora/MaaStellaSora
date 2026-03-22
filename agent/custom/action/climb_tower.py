@@ -411,35 +411,27 @@ class ShopAction(CustomAction):
         ]
         return params
 
-    def _calc_min_buyable_price(
-        self,
-        priority: list[str],
-        drink_threshold: float,
-        melody_5_discount_threshold: float,
-        melody_15_discount_threshold: float,
-        target_melodies: list[str],
-    ) -> float:
+    def _calc_min_buyable_price(self) -> float:
         """基于用户策略计算刷新后理论最低可购买商品价格。
 
-        遍历 ITEM_STANDARD_PRICES，按 priority 和 threshold 筛选用户愿意
-        购买的商品，取 标准价 × 对应 threshold 的最小值。
-
-        Args:
-            priority: 购买优先级列表。
-            drink_threshold: 潜能特饮折扣比值上限。
-            melody_5_discount_threshold: 5个音符折扣比值上限。
-            melody_15_discount_threshold: 15个音符折扣比值上限。
-            target_melodies: 用户指定的目标音符名称列表。
+        遍历 ITEM_STANDARD_PRICES，按 priority 和 threshold 筛选用户愿意购买的商品，
+        取 标准价 × 对应 threshold 的最小值。
 
         Returns:
             float: 理论最低可购买价格；无符合条件商品时返回 float("inf")。
         """
         prices = []
-        if "drink" in priority:
-            prices.append(self.ITEM_STANDARD_PRICES["potential_drink"] * drink_threshold)
-        if "melody" in priority and target_melodies:
-            prices.append(self.ITEM_STANDARD_PRICES["melody_5"] * melody_5_discount_threshold)
-            prices.append(self.ITEM_STANDARD_PRICES["melody_15"] * melody_15_discount_threshold)
+        if "drink" in self.priority:
+            prices.append(
+                self.ITEM_STANDARD_PRICES["potential_drink"] * self.drink_discount_threshold
+            )
+        if "melody" in self.priority and self.target_melodies:
+            prices.append(
+                self.ITEM_STANDARD_PRICES["melody_5"] * self.melody_5_discount_threshold
+            )
+            prices.append(
+                self.ITEM_STANDARD_PRICES["melody_15"] * self.melody_15_discount_threshold
+            )
         return min(prices) if prices else float("inf")
 
     def _get_grids_info(self, context):
@@ -483,6 +475,8 @@ class ShopAction(CustomAction):
                     "price_roi": price_roi,
                     "name_roi": name_roi,
                     "bought": False,
+                    "buy_pipeline": None,
+                    "buy_priority": None,
                 })
             else:
                 self.logger.error(f"第{i+1}个格子内容识别失败")
@@ -670,56 +664,46 @@ class ShopAction(CustomAction):
         # 对解析后的价格列表取最低值
         return min(parsed_item_price, default=0)
 
-    @staticmethod
-    def _buy_item(
-        context: Context,
-        roi: list,
-        drink_reserve_coin: Optional[int] = None,
-    ) -> bool:
-        """使用 pipeline 执行购买操作。
+    def _buy_item(self, context: Context, grid: dict) -> bool:
+        """执行普通商品购买（潜能特饮 / 音符）。
+
+        统一将 reserve_coin 注入潜能选择节点，由 pipeline 按需取用。
 
         Args:
             context: 任务上下文。
-            roi: 道具价格区域的点击范围。
-            drink_reserve_coin: 购买潜能特饮时传入，注入选择潜能节点的
-                                reserve_coin；购买其他道具时传 None。
+            grid: 单个格子信息字典。
 
         Returns:
-            bool: 购买操作成功返回 True。
+            bool: 购买任务成功返回 True。
         """
         override: dict = {
             "星塔_节点_商店_购物_购买道具_agent": {
-                "action": {"param": {"target": roi}}
-            }
+                "action": {"param": {"target": grid["price_roi"]}}
+            },
+            "星塔_节点_选择潜能_agent": {
+                "attach": {"reserve_coin": self.reserve_coin}
+            },
         }
-        if drink_reserve_coin is not None:
-            override["星塔_节点_选择潜能_agent"] = {
-                "attach": {"reserve_coin": drink_reserve_coin}
-            }
-        run_result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
-        return bool(run_result and run_result.status.succeeded)
+        result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
+        return bool(result and result.status.succeeded)
 
-    @staticmethod
-    def _buy_secondary_skill_melody(
-        context: Context,
-        roi: list,
-    ) -> bool:
-        """使用 pipeline 执行购买操作。
+    def _buy_assist_melody(self, context: Context, grid: dict) -> bool:
+        """执行协奏音符购买，走单独的协奏音符 pipeline。
 
         Args:
             context: 任务上下文。
-            roi: 道具价格区域的点击范围。
+            grid: 单个格子信息字典。
 
         Returns:
-            bool: 购买操作成功返回 True。
+            bool: 购买任务成功返回 True。
         """
         override: dict = {
             "星塔_节点_商店_购买协奏音符_agent": {
-                "action": {"param": {"target": roi}}
-            }
+                "action": {"param": {"target": grid["price_roi"]}}
+            },
         }
-        run_result = context.run_task("星塔_节点_商店_购买协奏音符_agent", override)
-        return bool(run_result and run_result.status.succeeded)
+        result = context.run_task("星塔_节点_商店_购买协奏音符_agent", override)
+        return bool(result and result.status.succeeded)
 
     @staticmethod
     def _get_discount(
@@ -774,129 +758,145 @@ class ShopAction(CustomAction):
 
         return 0
 
-    def _execute_regular_buy(
-        self,
-        context: Context,
-        grids_info: list[dict],
-        priority: list[str],
-        drink_threshold: float,
-        melody_5_discount_threshold: float,
-        melody_15_discount_threshold: float,
-        target_melodies: list[str],
-        reserve_coin: int,
-    ) -> bool:
-        """按用户策略遍历格子执行常规购买。
+    def _is_target_drink(self, grid: dict) -> bool:
+        """判断格子是否为本轮应购买的潜能特饮。
 
-        按 priority 顺序分轮遍历 grids_info，各轮内按筛选条件决定是否购买。
-        购买成功后将格子 bought 置 True。
+        final 商店不限折扣全买；regular 商店按折扣阈值过滤。
+
+        Args:
+            grid: 单个格子信息字典。
+
+        Returns:
+            bool: 符合购买条件返回 True。
+        """
+        if grid["item_name"] != "potential_drink":
+            return False
+        if self.shop_type == "final":
+            return True
+        return grid["discount"] <= self.drink_discount_threshold
+
+    def _is_target_melody(self, grid: dict) -> bool:
+        """判断格子是否为用户指定的目标音符。
+
+        按 target_melodies 过滤商品名，再按数量对应的折扣阈值过滤。
+
+        Args:
+            grid: 单个格子信息字典。
+
+        Returns:
+            bool: 符合购买条件返回 True。
+        """
+        if grid["item_name"] not in self.target_melodies:
+            return False
+        if grid["item_quantity"] == 5:
+            return grid["discount"] <= self.melody_5_discount_threshold
+        if grid["item_quantity"] == 15:
+            return grid["discount"] <= self.melody_15_discount_threshold
+        return False
+
+    def _is_target_assist_melody(self, grid: dict) -> bool:
+        """判断格子是否为应购买的协奏音符。
+
+        仅在 buy_assist_melody=True 时生效，目标为非用户指定音符中折扣满足阈值的音符。
+
+        Args:
+            grid: 单个格子信息字典。
+
+        Returns:
+            bool: 符合购买条件返回 True。
+        """
+        if not self.buy_assist_melody:
+            return False
+        if "melody" not in grid["item_name"]:
+            return False
+        if grid["item_name"] in self.target_melodies:
+            return False
+        if grid["item_quantity"] == 5:
+            return grid["discount"] <= self.melody_5_discount_threshold
+        if grid["item_quantity"] == 15:
+            return grid["discount"] <= self.melody_15_discount_threshold
+        return False
+
+    def _mark_buy_plan(self, grids_info: list[dict]) -> None:
+        """按 priority 顺序对格子打标，写入 buy_pipeline 和 buy_priority。
+
+        已购买（bought=True）或已打标（buy_pipeline 非 None）的格子跳过。
+        melody 类型内优先判断目标音符，不符合时再判断协奏音符，两者共享同一 buy_priority。
+
+        Args:
+            grids_info: _get_grids_info() 返回的格子列表。
+        """
+        for priority_idx, item_type in enumerate(self.priority):
+            for grid in grids_info:
+                if grid["bought"] or grid["buy_pipeline"] is not None:
+                    continue
+                if item_type == "drink" and self._is_target_drink(grid):
+                    grid["buy_pipeline"] = "normal"
+                    grid["buy_priority"] = priority_idx
+                elif item_type == "melody":
+                    if self._is_target_melody(grid):
+                        grid["buy_pipeline"] = "normal"
+                        grid["buy_priority"] = priority_idx
+                    elif self._is_target_assist_melody(grid):
+                        grid["buy_pipeline"] = "assist"
+                        grid["buy_priority"] = priority_idx
+
+    def _execute_buy_plan(self, context: Context, grids_info: list[dict]) -> bool:
+        """过滤、排序买单并依次执行购买，统一标记 bought。
+
+        过滤出 buy_pipeline 非 None 的格子，按 (buy_priority, item_price) 升序排列后遍历。
+        每格执行前检查可支配金币，不足则跳过；购买成功标记 bought=True；
+        用户中止时立即返回 False；购买失败则记录日志并继续。
 
         Args:
             context: 任务上下文。
-            grids_info: _get_grids_info() 的返回值，格子按价格升序排列。
-            priority: 购买优先级列表。
-            drink_threshold: 潜能特饮折扣比值上限。
-            melody_5_discount_threshold: 5个音符折扣比值上限。
-            melody_15_discount_threshold: 15个音符折扣比值上限。
-            target_melodies: 用户指定的目标音符名称列表。
-            reserve_coin: 预留金币。
+            grids_info: 已完成打标的格子列表。
 
         Returns:
-            bool: 所有购买操作正常完成返回 True；操作异常返回 False。
+            bool: 未被用户中止时返回 True；用户中止时返回 False。
         """
-        for item_type in priority:
-            for grid in grids_info:
-                if grid["bought"]:
-                    continue
-                target_type = self._is_target_grid(
-                    grid, item_type, drink_threshold, melody_5_discount_threshold, melody_15_discount_threshold,
-                    target_melodies
+        plan = sorted(
+            [g for g in grids_info if g["buy_pipeline"] is not None],
+            key=lambda g: (g["buy_priority"], g["item_price"]),
+        )
+        for grid in plan:
+            usable = max(0, _get_current_coin(context) - self.reserve_coin)
+            if usable < grid["item_price"]:
+                self.logger.info(
+                    f"可用金币 {usable} 不足，跳过 "
+                    f"{self.ITEM_NAMES[grid['item_name']][self.lang_type][0]}"
+                    f"（{grid['item_price']}）"
                 )
-                if not target_type:
-                    continue
-                if target_type == "Special":
-                    self._buy_secondary_skill_melody(context, grid["price_roi"])
-                    continue
-                if not self._try_buy_grid(context, grid, reserve_coin):
-                    return False
+                continue
+
+            if grid["buy_pipeline"] == "normal":
+                success = self._buy_item(context, grid)
+            elif grid["buy_pipeline"] == "assist":
+                success = self._buy_assist_melody(context, grid)
+            else:
+                self.logger.error(f"未知的 buy_pipeline: {grid['buy_pipeline']}")
+                success = False
+
+            if success:
+                grid["bought"] = True
+            elif context.tasker.stopping:
+                return False
+            else:
+                self.logger.error("购买失败，跳过该格子")
         return True
 
-    @staticmethod
-    def _is_target_grid(
-        grid: dict,
-        item_type: str,
-        drink_threshold: float,
-        melody_5_discount_threshold: float,
-        melody_15_discount_threshold: float,
-        target_melodies: list[str],
-    ) -> bool:
-        """判断格子是否符合当前轮次的购买条件。
-
-        Args:
-            grid: 单个格子信息字典。
-            item_type: 当前处理的商品类型（"drink" 或 "melody"）。
-            drink_threshold: 潜能特饮折扣比值上限。
-            melody_5_discount_threshold: 5个音符折扣比值上限。
-            melody_15_discount_threshold: 15个音符折扣比值上限。
-            target_melodies: 用户指定的目标音符名称列表。
-
-        Returns:
-            bool: 符合条件返回 True。
-        """
-        if item_type == "drink":
-            return (
-                grid["item_name"] == "potential_drink"
-                and grid["discount"] <= drink_threshold
-            )
-        if item_type == "melody" and grid["item_quantity"] == 5:
-            if grid["item_name"] in target_melodies and grid["discount"] <= melody_5_discount_threshold:
-                return True
-            elif "melody" in grid["item_name"] and grid["item_name"] not in target_melodies and grid["discount"] <= melody_5_discount_threshold:
-                return "Special"
-        if item_type == "melody" and grid["item_quantity"] == 15:
-            if grid["item_name"] in target_melodies and grid["discount"] <= melody_15_discount_threshold:
-                return True
-            elif "melody" in grid["item_name"] and grid["item_name"] not in target_melodies and grid["discount"] <= melody_15_discount_threshold:
-                return "Special"
-        return False
-
-    def _try_buy_grid(
-        self,
-        context: Context,
-        grid: dict,
-        reserve_coin: int,
-    ) -> bool:
-        """检查可支配金币并尝试购买单个格子。
-
-        购买成功后将格子 bought 置 True。
+    def _execute_buy_round(self, context: Context, grids_info: list[dict]) -> bool:
+        """执行一轮完整的购买流程：打标 → 执行。
 
         Args:
             context: 任务上下文。
-            grid: 单个格子信息字典。
-            reserve_coin: 预留金币。
+            grids_info: _get_grids_info() 返回的格子列表。
 
         Returns:
-            bool: 用户没有终止任务时返回 True；用户终止任务时返回 False。
+            bool: 未被用户中止时返回 True；用户中止时返回 False。
         """
-        usable = max(0, _get_current_coin(context) - reserve_coin)
-        if usable < grid["item_price"]:
-            self.logger.info(
-                f"可用金币 {usable} 不足，跳过 {self.ITEM_NAMES[grid['item_name']][self.lang_type][0]}（{grid['item_price']}）"
-            )
-            return True
-
-        # TODO: 没有必要判断是不是潜能特饮，可以不管三七二十一把reserve_coin传给节点
-        is_drink = grid["item_name"] == "potential_drink"
-        drink_arg = reserve_coin if is_drink else None
-        success = self._buy_item(context, grid["price_roi"], drink_arg)
-
-        if success:
-            grid["bought"] = True
-            return True
-
-        if not context.tasker.stopping:
-            self.logger.error("购买失败，跳过该格子")
-            return True
-        return False
+        self._mark_buy_plan(grids_info)
+        return self._execute_buy_plan(context, grids_info)
 
     def _get_refresh_cost(self, context: Context, max_try: int = 3) -> int:
         """识别当前刷新费用。
@@ -919,58 +919,35 @@ class ShopAction(CustomAction):
         self.logger.error("无法识别刷新费用，返回 65535")
         return 65535
 
-    def _execute_drink_supplement_buy(
-        self,
-        context: Context,
-        grids_info: list[dict],
-        reserve_coin: int,
-    ) -> bool:
-        """最终商店补买阶段：对所有未买的潜能特饮格子执行购买，不限折扣。
-
-        Args:
-            context: 任务上下文。
-            grids_info: 本轮格子信息（格子按价格升序排列）。
-            reserve_coin: 预留金币。
-
-        Returns:
-            bool: 操作正常完成返回 True；购买异常返回 False。
-        """
-        for grid in grids_info:
-            if grid["bought"]:
-                continue
-            if grid["item_name"] != "potential_drink":
-                continue
-            if not self._try_buy_grid(context, grid, reserve_coin):
-                return False
-        return True
-
-    def _should_refresh(
-        self,
-        context: Context,
-        reserve_coin: int,
-        min_buyable_price: float,
-    ) -> bool:
+    def _should_refresh(self, context: Context) -> bool:
         """判断当前是否满足刷新条件。
 
-        刷新条件：剩余刷新次数 > 0 且 可支配金币 ≥ 刷新费用 + min_buyable_price。
+        regular 商店额外检查可支配金币是否达到 regular_shop_refresh_threshold；
+        两种商店均需满足：刷新次数 > 0 且 可支配金币 ≥ 刷新费用 + min_buyable_price。
 
         Args:
             context: 任务上下文。
-            reserve_coin: 预留金币。
-            min_buyable_price: 预计算的最低理论买单价格。
 
         Returns:
             bool: 满足刷新条件返回 True。
         """
+        if self.shop_type == "regular":
+            usable = max(0, _get_current_coin(context) - self.reserve_coin)
+            if usable < self.regular_shop_refresh_threshold:
+                self.logger.info("可用金币未达到刷新阈值")
+                return False
+
         refresh_remaining = self._get_refresh_remaining(context)
         if refresh_remaining == 0:
             self.logger.info("刷新次数已用完")
             return False
 
         refresh_cost = self._get_refresh_cost(context)
-        usable = max(0, _get_current_coin(context) - reserve_coin)
-        if usable >= refresh_cost + min_buyable_price:
-            self.logger.info(f"当前可用金币 {usable} 达到刷新费用标准 {refresh_cost+min_buyable_price}，尝试刷新")
+        usable = max(0, _get_current_coin(context) - self.reserve_coin)
+        if usable >= refresh_cost + self.min_buyable_price:
+            self.logger.info(
+                f"可用金币 {usable} 达到刷新标准 {refresh_cost + self.min_buyable_price}，尝试刷新"
+            )
             return True
 
         self.logger.info("可用金币不足以刷新")

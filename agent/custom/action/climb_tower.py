@@ -366,8 +366,7 @@ class ShopAction(CustomAction):
         node_data = context.get_node_data(node_name)
         if not node_data:
             self.logger.error("无法获取商店设置，将使用默认参数")
-            params = {**defaults, "reserve_coin": 0}
-            params["target_melodies"] = []
+            params = {**defaults, "reserve_coin": 0, "target_melodies": []}
             return params
 
         attach = node_data.get("attach", {})
@@ -512,7 +511,7 @@ class ShopAction(CustomAction):
                 return item_name, item_quantity, item_price
 
             if context.tasker.stopping:
-                return None, None, None
+                return "", 0, 0
 
             self.logger.warning("识别道具格子失败，准备重试")
             time.sleep(1)
@@ -655,7 +654,8 @@ class ShopAction(CustomAction):
         result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
         return bool(result and result.status.succeeded)
 
-    def _buy_assist_melody(self, context: Context, grid: dict) -> bool:
+    @staticmethod
+    def _buy_assist_melody(context: Context, grid: dict) -> bool:
         """执行协奏音符购买，走单独的协奏音符 pipeline。
 
         Args:

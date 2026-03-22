@@ -1318,7 +1318,7 @@
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "buy_secondary_skill_melody": true
+                                "buy_assist_melody": true
                             }
                         }
                     }
@@ -1517,8 +1517,8 @@
             "type": "input",
             "inputs": [
                 {
-                    "name": "预设作业_作业名",
-                    "label": "作业名",
+                    "name": "预设作业_作业文件名",
+                    "label": "作业文件名",
                     "pipeline_type": "string",
                     "description": "作业需以json格式保存在程序的/agent/presets/目录下，填写名称时不需要添加.json后缀"
                 }
@@ -1526,7 +1526,7 @@
             "pipeline_override": {
                 "星塔_入口_agent": {
                     "attach": {
-                        "preset_name": "{预设作业_作业名}"
+                        "preset_name": "{预设作业_作业文件名}"
                     }
                 }
             }

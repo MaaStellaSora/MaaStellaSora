@@ -550,6 +550,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         best_span = max(pot["new_level"] - pot["old_level"] for pot, _ in top)
         top = [(pot, trek) for pot, trek in top if pot["new_level"] - pot["old_level"] == best_span]
 
+        # TODO: 等级跨度相同时，改为按优先级list顺序选择
         selected_potential, selected_trekker = random.choice(top)
 
         self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")

@@ -1092,23 +1092,13 @@ class AscensionPreparation(CustomAction):
         node_data = context.get_node_data(argv.node_name)
         preset_path = Path(os.path.abspath(__file__)).parent.parent / "presets"
         full_path = ""
-        error_flag = False
 
         try:
             preset_name = node_data["attach"]["preset_name"]
-            preset_element_flag = node_data["attach"]["preset_element"]
-            preset_melodies_flag = node_data["attach"]["preset_melodies"]
 
-            # 检查有无预设作业
             if not preset_name:
-                self.logger.debug("没有提供预设作业，检查选项是否选择了预设")
-                if preset_element_flag or preset_melodies_flag:
-                    self.logger.error("没有预设作业，请把其他选项里的作业预设改为其他选项")
-                    context.tasker.post_stop()
-                    return False
-                else:
-                    self.logger.debug("选项检查通过")
-                    return True
+                self.logger.debug("未提供预设作业，将使用默认选项")
+                return True
 
             # 读取预设作业
             full_path = (preset_path / preset_name).with_suffix(".json")
@@ -1118,24 +1108,9 @@ class AscensionPreparation(CustomAction):
                 preset_element = presets.get("element", "")
                 preset_melodies = presets.get("melodies", [])
 
-            # 检查预设作业是否有预设选项
-            if preset_element_flag and not preset_element:
-                self.logger.error("作业中没有预设属性选项，请手动选择属性")
-                error_flag = True
-            if preset_melodies_flag and not preset_melodies:
-                self.logger.error("作业中没有预设音符，请手动选择商店购买的音符")
-                error_flag = True
-            if error_flag:
-                return False
-
         except FileNotFoundError:
             self.logger.error(f"无法找到预设作业文件：{full_path}")
             self.logger.error(f"请核实预设作业名字是否正确，或预设作业是否存在等")
-            return False
-        except KeyError as e:
-            self.logger.error(f"无法读取预设作业信息，错误信息：{e}")
-            self.logger.error(f"请核实预设作业名字是否正确，或预设作业是否存在")
-            context.tasker.post_stop()
             return False
         except json.decoder.JSONDecodeError as e:
             self.logger.error(f"无法解析作业文件，错误信息：{e}")
@@ -1152,6 +1127,7 @@ class AscensionPreparation(CustomAction):
         })
 
         if preset_element:
+            self.logger.info(f"从作业中检测到预设属性：{preset_element}，将覆盖选项中的属性塔选择")
             match preset_element:
                 case "aqua":
                     context.override_pipeline({
@@ -1162,11 +1138,6 @@ class AscensionPreparation(CustomAction):
                                         "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
                                     ]
                                 }
-                            }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_aqua": True
                             }
                         }
                     })
@@ -1180,11 +1151,6 @@ class AscensionPreparation(CustomAction):
                                     ]
                                 }
                             }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_ignis": True
-                            }
                         }
                     })
                 case "terra":
@@ -1196,11 +1162,6 @@ class AscensionPreparation(CustomAction):
                                         "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
                                     ]
                                 }
-                            }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_terra": True
                             }
                         }
                     })
@@ -1214,11 +1175,6 @@ class AscensionPreparation(CustomAction):
                                     ]
                                 }
                             }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_ventus": True
-                            }
                         }
                     })
                 case "lux":
@@ -1230,11 +1186,6 @@ class AscensionPreparation(CustomAction):
                                         "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
                                     ]
                                 }
-                            }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_lux": True
                             }
                         }
                     })
@@ -1248,11 +1199,6 @@ class AscensionPreparation(CustomAction):
                                     ]
                                 }
                             }
-                        },
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_umbra": True
-                            }
                         }
                     })
                 case _:
@@ -1261,19 +1207,20 @@ class AscensionPreparation(CustomAction):
                     return False
 
         if preset_melodies:
+            self.logger.info(f"从作业中检测到预设音符：{preset_melodies}，爬塔时会买入以上音符")
             node_data = context.get_node_data("星塔_节点_商店_购物_agent")
             shop_attachments = node_data.get("attach", {})
             for melody in preset_melodies:
                 if melody in shop_attachments:
                     context.override_pipeline({
-                        "星塔_属性塔选择_agent": {
+                        "星塔_节点_商店_购物_agent": {
                             "attach": {
                                 melody: True
                             }
                         }
                     })
                 else:
-                    self.logger.error(f"未找到音符：{melody}，请核实音符名是否符合文档要求")
+                    self.logger.error(f"导入音符：{melody} 失败，请核实音符名是否符合文档要求")
                     context.tasker.post_stop()
                     return False
 

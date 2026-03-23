@@ -205,6 +205,16 @@
             "type": "OCR"
         }
     },
+    "星塔_回到出发界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "星ノ塔探索"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
     "星塔_确认_agent": {
         "recognition": {
             "param": {

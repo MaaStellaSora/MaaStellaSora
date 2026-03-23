@@ -69,13 +69,15 @@
                 "expected": [
                     "\\d+"
                 ],
+                "roi": [795, 440, 110, 35],
                 "replace": [
                     [
                         "\\D",
                         ""
                     ]
                 ],
-                "color_filter": "星塔_节点_商店_购物_识别物品内容_价格滤色器_agent"
+                "threshold": 0.6
+                // "color_filter": "星塔_节点_商店_购物_识别物品内容_价格滤色器_agent"
             },
             "type": "OCR"
         }

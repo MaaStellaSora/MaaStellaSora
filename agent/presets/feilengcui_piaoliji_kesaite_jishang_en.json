@@ -1,0 +1,42 @@
+{
+    "trekker_name": [
+        "Firenze",
+        "Tilia",
+        "Cosette"
+    ],
+    "element": "Umbra",
+    "priority_list": [
+        {
+            "potential": [
+                "Step Kicking",
+                "Nimble Step",
+                "High Risk",
+                "Flash Break",
+                "Hunting Command",
+                "Place Your Bets",
+                "Renewed Spectrum",
+                "Perfect Spiral",
+                "Brilliant Relay",
+                "Phantom Mark",
+                "Eclipse Imprint",
+                "Gift of Darkness",
+                "Dark: Mirage",
+                "Dark: Demon Mark",
+                "Nether Blaze"
+            ]
+        },
+        {
+            "potential": [
+                "Dark Pirouette",
+                "Trick Boost",
+                "Void Blessing"
+            ]
+        },
+        {
+            "potential": [
+                "Instant Liquidation",
+                "Dark: Hallucination"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,46 @@
+{
+    "trekker_name": [
+        "Chitose",
+        "Freesia",
+        "Teresa"
+    ],
+    "element": "Aqua",
+    "priority_list": [
+        {
+            "potential": [
+                "Mirror Blade",
+                "Serpent's Glide",
+                "Aqueous Phantasm",
+                "Tremble and Fall",
+                "Chill Forecast",
+                "Realm of Frost",
+                "Temporal Revival",
+                "Winter's Grip",
+                "Surge: Infinite",
+                "Surge: Thunderbolt",
+                "Let Me Help!",
+                "Shortcut Seeker"
+            ]
+        },
+        {
+            "potential": [
+                "Dance of Elegance",
+                "Azure Embrace",
+                "Guardian's Heart",
+                "Isn't It Awesome!",
+                "Wave Breaker"
+            ]
+        },
+        {
+            "potential": [
+                "Waltz of Ripples",
+                "Adamant Scales",
+                "Crackling Zero",
+                "Blessing of Faith",
+                "Band-aid Collector",
+                "Hold On!",
+                "Stay Away!"
+            ]
+        }
+    ]
+}

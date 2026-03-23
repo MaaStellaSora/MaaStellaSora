@@ -89,10 +89,12 @@ class ChoosePotentialRecognition(CustomRecognition):
                 target_potential, target_trekker = result
                 break
             if refresh_count > 0:
+                self.logger.info("没有找到符合条件的潜能，尝试刷新")
                 context.run_task("星塔_通用_点击刷新_agent")
                 refresh_count -= 1
                 self._refresh_count += 1
             else:
+                self.logger.info("[潜能选择] 选择系统推荐")
                 break
 
         if target_potential:
@@ -120,13 +122,14 @@ class ChoosePotentialRecognition(CustomRecognition):
             Returns:
                 bool: 是否可刷新
         """
-        if not image:
+        if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
         reco_detail = context.run_recognition("星塔_通用_点击刷新_agent", image)
-        self.logger.debug(f"识别刷新按钮结果：{[r.text for r in reco_detail.all_results]}")
         if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到刷新按钮")
             return True
+        self.logger.debug(f"未识别到刷新按钮")
         return False
 
     def _get_current_coin(self, context, image=None, max_try=3):
@@ -141,14 +144,20 @@ class ChoosePotentialRecognition(CustomRecognition):
             Returns:
                 int: 当前金币数量，识别失败时返回0
         """
-        if not image:
+        if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
         for _ in range(max_try):
             reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
-            self.logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
             if reco_detail and reco_detail.hit:
+                self.logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
                 return int(reco_detail.best_result.text)
+
+            if reco_detail and reco_detail.all_results:
+                self.logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
+            else:
+                self.logger.debug("未识别到任何关于当前金币的内容")
+            self.logger.debug("等待1秒后重新识别")
 
             # 失败时，等待1秒后重试
             time.sleep(1)
@@ -158,39 +167,29 @@ class ChoosePotentialRecognition(CustomRecognition):
             if context.tasker.stopping:
                 return 0
 
-        self.logger.error("无法读取当前金币数量")
+        self.logger.error("无法读取当前金币数量，将当作 0 金币处理")
         return 0
 
-    def _get_refresh_cost(self, context, image=None, max_try=3):
+    def _get_refresh_cost(self, context, image=None):
         """
             检查刷新花费
 
             Args:
                 context(Context): 上下文对象
                 image(nd.array): 截图
-                max_try(int): 最大尝试次数
 
             Returns:
                 int: 刷新花费，识别失败时返回65535
         """
-        if not image:
+        if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
-        for _ in range(max_try):
-            reco_detail = context.run_recognition("星塔_通用_识别刷新花费_agent", image)
-            self.logger.debug(f"识别刷新花费结果：{[r.text for r in reco_detail.all_results]}")
-            if reco_detail and reco_detail.hit:
-                return int(reco_detail.best_result.text)
+        reco_detail = context.run_recognition("星塔_通用_识别刷新花费_agent", image)
+        if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到刷新费用：{[r.text for r in reco_detail.filtered_results]}")
+            return int(reco_detail.best_result.text)
 
-            # 失败时，等待1秒后重试
-            time.sleep(1)
-            image = context.tasker.controller.post_screencap().wait().get()
-
-            # 检查是否中断任务
-            if context.tasker.stopping:
-                return 65535
-
-        self.logger.error("无法读取刷新花费")
+        self.logger.error("无法识别刷新费用，返回 65535")
         return 65535
 
     def _get_attachments(self, context: Context, node_name: str) -> dict:
@@ -272,13 +271,14 @@ class ChoosePotentialRecognition(CustomRecognition):
                     "box": list,        # 卡片区域 [x, y, w, h]
                 }
         """
-        if not image:
+        if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
         reco_detail = context.run_recognition(
             "星塔_节点_选择潜能_识别核心潜能_agent", image
         )
-        is_core = not (reco_detail and reco_detail.hit)
+        is_core = reco_detail and reco_detail.hit
+        self.logger.debug(f"识别核心潜能结果：{is_core}")
 
         available_potentials = []
         for i, rois in enumerate(self.POTENTIAL_ROIS):
@@ -483,27 +483,39 @@ class ChoosePotentialRecognition(CustomRecognition):
                 trekker 为对应规则的归属角色；无匹配时返回 None
         """
         name = potential["name"]
+        is_core = potential["is_core"]
         old_level = potential["old_level"]
         level_span = potential["new_level"] - old_level
 
         best_priority = -1
         best_trekker = None
 
-        for entry in potential_priority_list:
-            if not any(
-                ChoosePotentialRecognition._match_potential_name(name, n)
-                for n in entry["names"]
-            ):
-                continue
-            if old_level >= entry["max_level"]:
-                continue
-            if level_span < entry["level_span"]:
-                continue
-            if self._refresh_count < entry["refresh"]:
-                continue
-            if best_priority == -1 or entry["priority"] < best_priority:
-                best_priority = entry["priority"]
-                best_trekker = entry["trekker"]
+        if is_core:
+            for entry in potential_priority_list:
+                if not any(
+                    self._match_potential_name(name, n)
+                    for n in entry["names"]
+                ):
+                    continue
+                if best_priority == -1 or entry["priority"] < best_priority:
+                    best_priority = entry["priority"]
+                    best_trekker = entry["trekker"]
+        else:
+            for entry in potential_priority_list:
+                if not any(
+                    self._match_potential_name(name, n)
+                    for n in entry["names"]
+                ):
+                    continue
+                if old_level >= entry["max_level"]:
+                    continue
+                if level_span < entry["level_span"]:
+                    continue
+                if self._refresh_count < entry["refresh"]:
+                    continue
+                if best_priority == -1 or entry["priority"] < best_priority:
+                    best_priority = entry["priority"]
+                    best_trekker = entry["trekker"]
 
         return best_priority, best_trekker
 
@@ -541,7 +553,6 @@ class ChoosePotentialRecognition(CustomRecognition):
                 candidates.append((potential, priority, trekker))
 
         if not candidates:
-            self.logger.info("[潜能选择] 选择系统推荐")
             return None
 
         best_priority = min(p for _, p, _ in candidates)

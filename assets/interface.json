@@ -1584,7 +1584,9 @@
             ]
         },
         "新版爬塔_预设作业_cn": {
-            "resource": ["官服"],
+            "resource": [
+                "官服"
+            ],
             "type": "select",
             "label": "预设作业",
             "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
@@ -1598,11 +1600,63 @@
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_pugong_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi-water_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetuliu_cn.json"
+                            }
+                        }
+                    }
                 }
             ]
         },
         "新版爬塔_预设作业_tw": {
-            "resource": ["台服"],
+            "resource": [
+                "台服"
+            ],
             "type": "select",
             "label": "预设作业",
             "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
@@ -1616,11 +1670,63 @@
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_pugong_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi-water_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetuliu_tw.json"
+                            }
+                        }
+                    }
                 }
             ]
         },
         "新版爬塔_预设作业_en": {
-            "resource": ["国际服"],
+            "resource": [
+                "国际服"
+            ],
             "type": "select",
             "label": "预设作业",
             "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
@@ -1634,11 +1740,63 @@
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_pugong_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi-water_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetuliu_en.json"
+                            }
+                        }
+                    }
                 }
             ]
         },
         "新版爬塔_预设作业_jp": {
-            "resource": ["日服"],
+            "resource": [
+                "日服"
+            ],
             "type": "select",
             "label": "预设作业",
             "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
@@ -1652,6 +1810,56 @@
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_pugong_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi-water_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetuliu_jp.json"
+                            }
+                        }
+                    }
                 }
             ]
         }

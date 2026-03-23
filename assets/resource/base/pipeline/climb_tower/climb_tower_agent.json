@@ -205,8 +205,7 @@
             "param": {
                 "template": [
                     "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png",
-                    "ClimbTower_agent/爬塔_开始战斗按钮__121_15_38_41__71_0_138_106.png",
-                    "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
+                    "ClimbTower_agent/星塔_节点_对话图标__999_625_42_40__949_575_142_140.png"
                 ],
                 "threshold": 0.9
             },
@@ -542,6 +541,7 @@
         },
         "next": [
             "星塔_回到难度选择界面_agent",
+            "星塔_回到出发界面_agent",
             "[JumpBack]星塔_确认_agent",
             "[JumpBack]星塔_保存记录_agent",
             "[JumpBack]星塔_点击空白处关闭_agent",
@@ -640,7 +640,8 @@
             }
         },
         "next": [
-            "星塔_快速战斗按钮_agent"
+            "星塔_快速战斗按钮_agent",
+            "星塔_星塔探索按钮_agent"
         ],
         "attach": {
             "loop_count": 1
@@ -657,6 +658,25 @@
                     631,
                     94,
                     39
+                ]
+            },
+            "type": "OCR"
+        },
+        "next": [
+            "星塔_循环用节点_agent"
+        ]
+    },
+    "星塔_回到出发界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "星塔探索"
+                ],
+                "roi": [
+                    703,
+                    429,
+                    161,
+                    75
                 ]
             },
             "type": "OCR"

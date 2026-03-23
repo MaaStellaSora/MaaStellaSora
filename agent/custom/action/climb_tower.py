@@ -125,42 +125,42 @@ class ShopAction(CustomAction):
     GRID_ROIS = [
         {
             "item_roi": [625, 130, 150, 190],
-            "price_roi": [645, 250, 110, 25],
+            "price_roi": [645, 242, 110, 35],
             "name_roi": [645, 275, 110, 25],
         },
         {
             "item_roi": [775, 130, 150, 190],
-            "price_roi": [795, 250, 110, 25],
+            "price_roi": [795, 242, 110, 35],
             "name_roi": [795, 275, 110, 25],
         },
         {
             "item_roi": [925, 130, 150, 190],
-            "price_roi": [945, 250, 110, 25],
+            "price_roi": [945, 242, 110, 35],
             "name_roi": [945, 275, 110, 25],
         },
         {
             "item_roi": [1075, 130, 150, 190],
-            "price_roi": [1095, 250, 110, 25],
+            "price_roi": [1095, 242, 110, 35],
             "name_roi": [1095, 275, 110, 25],
         },
         {
             "item_roi": [625, 330, 150, 190],
-            "price_roi": [645, 450, 110, 25],
+            "price_roi": [645, 440, 110, 35],
             "name_roi": [645, 475, 110, 25],
         },
         {
             "item_roi": [775, 330, 150, 190],
-            "price_roi": [795, 450, 110, 25],
+            "price_roi": [795, 440, 110, 35],
             "name_roi": [795, 475, 110, 25],
         },
         {
             "item_roi": [925, 330, 150, 190],
-            "price_roi": [945, 450, 110, 25],
+            "price_roi": [945, 440, 110, 35],
             "name_roi": [945, 475, 110, 25],
         },
         {
             "item_roi": [1075, 330, 150, 190],
-            "price_roi": [1095, 450, 110, 25],
+            "price_roi": [1095, 440, 110, 35],
             "name_roi": [1095, 475, 110, 25],
         },
     ]
@@ -612,7 +612,7 @@ class ShopAction(CustomAction):
         parsed_item_price = []
 
         for p in item_price:
-            if p.isdecimal() and int(p) == 0:
+            if p.isdecimal() and (int(p) in [0, 1, 11]):
                 continue
 
             # 清洗混入的打折价格，例如 "09045"->45, "400200"->200
@@ -852,24 +852,21 @@ class ShopAction(CustomAction):
                 self.logger.error("购买失败，跳过该格子")
         return True
 
-    def _get_refresh_cost(self, context: Context, max_try: int = 3) -> int:
+    def _get_refresh_cost(self, context: Context) -> int:
         """识别当前刷新费用。
 
         Args:
             context: 任务上下文。
-            max_try: 最大重试次数。
 
         Returns:
             int: 刷新费用；识别失败时返回 65535 防止误刷新。
         """
-        for _ in range(max_try):
-            image = context.tasker.controller.post_screencap().wait().get()
-            reco_detail = context.run_recognition("星塔_通用_识别刷新花费_agent", image)
-            if reco_detail and reco_detail.hit:
-                return int(reco_detail.best_result.text)
-            if context.tasker.stopping:
-                return 65535
-            time.sleep(1)
+        image = context.tasker.controller.post_screencap().wait().get()
+        reco_detail = context.run_recognition("星塔_通用_识别刷新花费_agent", image)
+        if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到刷新费用：{[r.text for r in reco_detail.filtered_results]}")
+            return int(reco_detail.best_result.text)
+
         self.logger.error("无法识别刷新费用，返回 65535")
         return 65535
 
@@ -891,6 +888,7 @@ class ShopAction(CustomAction):
             self.logger.info("可用金币未达到刷新阈值")
             return False
 
+        # TODO: 改为_is_refreshable，跟潜能识别那边一样
         refresh_remaining = self._get_refresh_remaining(context)
         if refresh_remaining == 0:
             self.logger.info("刷新次数已用完")
@@ -1047,7 +1045,7 @@ class AscensionPreparation(CustomAction):
         """
 
         node_data = context.get_node_data(argv.node_name)
-        preset_path = Path(os.path.abspath(__file__)).parent.parent / "presets"
+        preset_path = Path(os.path.abspath(__file__)).parent.parent.parent / "presets"
         full_path = ""
 
         try:
@@ -1085,10 +1083,11 @@ class AscensionPreparation(CustomAction):
 
         if preset_element:
             self.logger.info(f"从作业中检测到预设属性：{preset_element}，将覆盖选项中的属性塔选择")
+            preset_element = preset_element.lower()
             match preset_element:
                 case "aqua":
                     context.override_pipeline({
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -1100,7 +1099,7 @@ class AscensionPreparation(CustomAction):
                     })
                 case "ignis":
                     context.override_pipeline({
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -1112,7 +1111,7 @@ class AscensionPreparation(CustomAction):
                     })
                 case "terra":
                     context.override_pipeline({
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -1124,7 +1123,7 @@ class AscensionPreparation(CustomAction):
                     })
                 case "ventus":
                     context.override_pipeline({
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -1136,7 +1135,7 @@ class AscensionPreparation(CustomAction):
                     })
                 case "lux":
                     context.override_pipeline({
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -1148,7 +1147,7 @@ class AscensionPreparation(CustomAction):
                     })
                 case "umbra":
                     context.override_pipeline({
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -1168,6 +1167,7 @@ class AscensionPreparation(CustomAction):
             node_data = context.get_node_data("星塔_节点_商店_购物_agent")
             shop_attachments = node_data.get("attach", {})
             for melody in preset_melodies:
+                melody = melody.lower()
                 if melody in shop_attachments:
                     context.override_pipeline({
                         "星塔_节点_商店_购物_agent": {

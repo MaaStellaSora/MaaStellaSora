@@ -458,6 +458,12 @@ class ChoosePotentialRecognition(CustomRecognition):
         """
         cleaned_ocr = re.sub(r'\W', '', ocr_name)
         cleaned_rule = re.sub(r'\W', '', rule_name)
+
+        chars_to_remove = "ー一"
+        table = str.maketrans("", "", chars_to_remove)
+        cleaned_ocr = cleaned_ocr.translate(table)
+        cleaned_rule = cleaned_rule.translate(table)
+
         return cleaned_ocr in cleaned_rule or cleaned_rule in cleaned_ocr
 
     def _get_potential_priority(
@@ -561,7 +567,6 @@ class ChoosePotentialRecognition(CustomRecognition):
         best_span = max(pot["new_level"] - pot["old_level"] for pot, _ in top)
         top = [(pot, trek) for pot, trek in top if pot["new_level"] - pot["old_level"] == best_span]
 
-        # TODO: 等级跨度相同时，改为按优先级list顺序选择
         selected_potential, selected_trekker = random.choice(top)
 
         self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")

@@ -169,6 +169,41 @@
             },
             "type": "OCR"
         },
+        "next": [
+            "星塔_编队角色_选择队伍_agent"
+        ],
+        "post_wait_freeze": 100
+    },
+    "星塔_编队角色_选择队伍_agent": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "select_party"
+            }
+        },
+        "next": [
+            "星塔_编队角色_点击下一步_agent"
+        ],
+        "attach": {
+            "trekker_names": []
+        }
+    },
+    "星塔_编队角色_点击下一步_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "下",
+                    "步"
+                ],
+                "roi": [
+                    1111,
+                    642,
+                    117,
+                    40
+                ]
+            },
+            "type": "OCR"
+        },
         "action": {
             "type": "Click"
         },
@@ -361,10 +396,10 @@
                     "合作无间"
                 ],
                 "roi": [
-                    350,
-                    151,
-                    870,
-                    475
+                    604,
+                    255,
+                    574,
+                    334
                 ]
             },
             "type": "OCR"
@@ -378,10 +413,10 @@
                     "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
                 ],
                 "roi": [
-                    573,
-                    206,
-                    642,
-                    385
+                    604,
+                    255,
+                    574,
+                    334
                 ]
             },
             "type": "TemplateMatch"

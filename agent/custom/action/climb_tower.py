@@ -1062,6 +1062,8 @@ class AscensionPreparation(CustomAction):
                 priority_list = presets.get("priority_list", [])
                 preset_element = presets.get("element", "")
                 preset_melodies = presets.get("melodies", [])
+                preset_trekker_names = presets.get("trekker_names", [])
+                preset_potential_refresh = presets.get("potential_refresh", 0)
 
         except FileNotFoundError:
             self.logger.error(f"无法找到预设作业文件：{full_path}")
@@ -1162,6 +1164,26 @@ class AscensionPreparation(CustomAction):
                     context.tasker.post_stop()
                     return False
 
+        if preset_trekker_names:
+            self.logger.info(f"从作业中检测到预设队伍：{preset_trekker_names}，爬塔前会自动选择该队伍")
+            context.override_pipeline({
+                "星塔_编队角色_选择队伍_agent": {
+                    "attach": {
+                        "trekker_names": preset_trekker_names
+                    }
+                }
+            })
+
+        if preset_potential_refresh:
+            self.logger.info(f"从作业中检测到预设潜能最大刷新次数：{preset_potential_refresh}，将覆盖选项设置")
+            context.override_pipeline({
+                "星塔_节点_选择潜能_agent": {
+                    "attach": {
+                        "max_refresh_count": preset_potential_refresh
+                    }
+                }
+            })
+
         if preset_melodies:
             self.logger.info(f"从作业中检测到预设音符：{preset_melodies}，爬塔时会买入以上音符")
             node_data = context.get_node_data("星塔_节点_商店_购物_agent")
@@ -1181,8 +1203,111 @@ class AscensionPreparation(CustomAction):
                     context.tasker.post_stop()
                     return False
 
+
         self.logger.info(f"已导入预设作业：{preset_name}")
         return True
+
+
+@AgentServer.custom_action("select_party")
+class SelectParty(CustomAction):
+
+    NAME_ROI = [
+        [235, 466, 170, 55],
+        [574, 500, 170, 55],
+        [910, 466, 170, 55]
+    ]
+
+    def __init__(self):
+        super().__init__()
+        self.logger = logger.get_logger(__name__)
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> bool:
+        """选择队伍
+
+        Args:
+            context: 任务上下文。
+            argv: 自定义动作参数。
+
+        Returns:
+            bool: 是否成功选择队伍。
+        """
+
+        node_data = context.get_node_data(argv.node_name)
+        if not node_data:
+            node_data = {}
+        attachment = node_data.get("attach", {})
+        trekker_names = attachment.get("trekker_names", [])
+        cleaned_trekker_names = [re.sub(r'\W', '', name) for name in trekker_names]
+
+        chars_to_remove = "ー一"
+        table = str.maketrans("", "", chars_to_remove)
+        cleaned_trekker_names = [name.translate(table) for name in cleaned_trekker_names]
+
+        if not trekker_names:
+            return True
+
+        for p in range(6):
+            image = context.tasker.controller.post_screencap().wait().get()
+            self.logger.debug(f"开始识别第{p+1}个队伍")
+            reco_names = []
+            for i in range(len(self.NAME_ROI)):
+                self.logger.debug(f"开始识别第{i+1}个旅人名称")
+                roi = self.NAME_ROI[i]
+                reco_name = self._recognize_trekker_name(context, roi, image)
+                cleaned_reco_name = re.sub(r'\W', '', reco_name)
+                cleaned_reco_name = cleaned_reco_name.translate(table)
+                if cleaned_reco_name in cleaned_trekker_names:
+                    reco_names.append(reco_name)
+            if len(reco_names) == 3:
+                self.logger.info(f"成功识别到队伍：{reco_names}")
+                return True
+            context.tasker.controller.post_click(1245, 345).wait()
+            time.sleep(1)
+
+        self.logger.error("没有识别到作业对应队伍，请检查旅人名称是否正确，或是否有现成作业的编队")
+        context.tasker.post_stop()
+        return False
+
+    def _recognize_trekker_name(self, context, roi, image=None):
+        """
+        识别旅人名称
+
+        Args:
+            context: 任务上下文。
+            roi: 识别区域。
+            image: 图片数据。
+
+        Returns:
+            str: 识别到的旅人名称。
+        """
+        if image is None:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        reco_detail = context.run_recognition("星塔_编队角色_识别旅人名称_agent", image, {
+            "星塔_编队角色_识别旅人名称_agent": {
+                "recognition": {
+                    "param": {
+                        "roi": roi
+                    }
+                }
+            }
+        })
+        if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到旅人名称：{[[r.text, r.score] for r in reco_detail.filtered_results]}")
+            return "".join(r.text for r in reco_detail.filtered_results)
+
+        if reco_detail and reco_detail.all_results:
+            self.logger.debug(f"没有识别到旅人名称")
+            self.logger.debug(f"识别到的结果：{[[r.text, r.score] for r in reco_detail.all_results]}")
+        else:
+            self.logger.error(f"识别旅人名称失败")
+
+        return ""
+
 
 @AgentServer.custom_action("ascension_loop")
 class AscensionLoop(CustomAction):

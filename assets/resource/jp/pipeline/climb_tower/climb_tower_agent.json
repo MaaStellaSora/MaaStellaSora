@@ -65,6 +65,16 @@
             "type": "OCR"
         }
     },
+    "星塔_编队角色_点击下一步_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "次へ"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
     "星塔_编队秘纹_agent": {
         "recognition": {
             "param": {

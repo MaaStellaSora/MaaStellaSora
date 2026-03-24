@@ -1133,18 +1133,18 @@
         "新版爬塔_开始位置": {
             "type": "select",
             "label": "开始位置",
-            "description": "是否开启自定义爬塔",
+            "description": "设置在哪个界面开始任务",
             "default_case": "主页",
             "cases": [
                 {
                     "name": "开始位置_主页",
                     "label": "主页",
-                    "description": "从主页开始，不需要调整队伍时选择"
+                    "description": "从主页开始，不需要调整编队时选择"
                 },
                 {
                     "name": "开始位置_进入星塔后",
                     "label": "进入星塔后",
-                    "description": "进入星塔后开始，需要调整队伍时或爬塔中断时选择",
+                    "description": "进入星塔后开始，需要调整编队时或爬塔中断时选择",
                     "pipeline_override": {
                         "星塔_跳过进入星塔流程_agent": {
                             "enabled": true
@@ -1193,10 +1193,10 @@
         },
         "新版爬塔_商店_中途商店刷新最小金额": {
             "type": "input",
-            "description": "只在中途商店生效。在最终商店会无视该金额，尽可能刷新。",
             "inputs": [
                 {
                     "name": "中途商店刷新最小金额",
+                    "description": "只在中途商店生效。在最终商店会无视该金额，尽可能刷新。",
                     "pipeline_type": "int",
                     "default": "1500",
                     "verify": "^\\d+$",
@@ -1520,7 +1520,7 @@
                     "name": "预设作业_作业文件名",
                     "label": "作业文件名",
                     "pipeline_type": "string",
-                    "description": "作业需以json格式保存在程序的/agent/presets/目录下，填写名称时不需要添加.json后缀"
+                    "description": "作业需以json格式保存在程序的/agent/presets/目录下，填写文件名时可以不添加.json后缀<br>自行编写作业可以使用更多隐藏功能"
                 }
             ],
             "pipeline_override": {
@@ -1589,24 +1589,36 @@
             ],
             "type": "select",
             "label": "预设作业",
-            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>程序自带的预设作业会帮你自动选择属性塔，会识别现有队伍，但不能帮你编队",
             "default_case": "无",
             "cases": [
                 {
-                    "name": "无"
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
                 },
                 {
                     "name": "手动输入",
+                    "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
                 },
                 {
-                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "name": "小禾+苍蓝+多娜",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_cn.json"
+                                "preset_name": "xiaohe_canglan_duona_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_qie_cn.json"
                             }
                         }
                     }
@@ -1616,17 +1628,27 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "fengying_xiahua_xingzi_pugong_cn.json"
+                                "preset_name": "fengying_xiahua_xingzi_cn.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "千都世+苍蓝+特丽莎",
+                    "name": "翡冷翠+缇莉娅+珂赛特",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "qiandushi-water_cn.json"
+                                "preset_name": "feilengcui_tiliya_kesaite_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+圣夜菈露+紫槿",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_cn.json"
                             }
                         }
                     }
@@ -1646,7 +1668,17 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiya_miniewa_tiliya_yetuliu_cn.json"
+                                "preset_name": "xiya_miniewa_tiliya_yetu_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_cn.json"
                             }
                         }
                     }
@@ -1659,24 +1691,36 @@
             ],
             "type": "select",
             "label": "预设作业",
-            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>程序自带的预设作业会帮你自动选择属性塔，会识别现有队伍，但不能帮你编队",
             "default_case": "无",
             "cases": [
                 {
-                    "name": "无"
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
                 },
                 {
                     "name": "手动输入",
+                    "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
                 },
                 {
-                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "name": "小禾+苍蓝+多娜",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_tw.json"
+                                "preset_name": "xiaohe_canglan_duona_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_qie_tw.json"
                             }
                         }
                     }
@@ -1686,17 +1730,27 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "fengying_xiahua_xingzi_pugong_tw.json"
+                                "preset_name": "fengying_xiahua_xingzi_tw.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "千都世+苍蓝+特丽莎",
+                    "name": "翡冷翠+缇莉娅+珂赛特",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "qiandushi-water_tw.json"
+                                "preset_name": "feilengcui_tiliya_kesaite_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+圣夜菈露+紫槿",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_tw.json"
                             }
                         }
                     }
@@ -1716,7 +1770,17 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiya_miniewa_tiliya_yetuliu_tw.json"
+                                "preset_name": "xiya_miniewa_tiliya_yetu_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_tw.json"
                             }
                         }
                     }
@@ -1729,24 +1793,36 @@
             ],
             "type": "select",
             "label": "预设作业",
-            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>程序自带的预设作业会帮你自动选择属性塔，会识别现有队伍，但不能帮你编队",
             "default_case": "无",
             "cases": [
                 {
-                    "name": "无"
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
                 },
                 {
                     "name": "手动输入",
+                    "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
                 },
                 {
-                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "name": "小禾+苍蓝+多娜",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_en.json"
+                                "preset_name": "xiaohe_canglan_duona_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_qie_en.json"
                             }
                         }
                     }
@@ -1756,17 +1832,27 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "fengying_xiahua_xingzi_pugong_en.json"
+                                "preset_name": "fengying_xiahua_xingzi_en.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "千都世+苍蓝+特丽莎",
+                    "name": "翡冷翠+缇莉娅+珂赛特",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "qiandushi-water_en.json"
+                                "preset_name": "feilengcui_tiliya_kesaite_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+圣夜菈露+紫槿",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_en.json"
                             }
                         }
                     }
@@ -1786,7 +1872,17 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiya_miniewa_tiliya_yetuliu_en.json"
+                                "preset_name": "xiya_miniewa_tiliya_yetu_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_en.json"
                             }
                         }
                     }
@@ -1799,24 +1895,36 @@
             ],
             "type": "select",
             "label": "预设作业",
-            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业不能帮你编队！！！",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>程序自带的预设作业会帮你自动选择属性塔，会识别现有队伍，但不能帮你编队",
             "default_case": "无",
             "cases": [
                 {
-                    "name": "无"
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
                 },
                 {
                     "name": "手动输入",
+                    "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
                     ]
                 },
                 {
-                    "name": "翡冷翠+缇莉娅+珂赛特（技伤）",
+                    "name": "小禾+苍蓝+多娜",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "feilengcui_piaoliji_kesaite_jishang_jp.json"
+                                "preset_name": "xiaohe_canglan_duona_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_qie_jp.json"
                             }
                         }
                     }
@@ -1826,17 +1934,27 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "fengying_xiahua_xingzi_pugong_jp.json"
+                                "preset_name": "fengying_xiahua_xingzi_jp.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "千都世+苍蓝+特丽莎",
+                    "name": "翡冷翠+缇莉娅+珂赛特",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "qiandushi-water_jp.json"
+                                "preset_name": "feilengcui_tiliya_kesaite_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+圣夜菈露+紫槿",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_jp.json"
                             }
                         }
                     }
@@ -1856,7 +1974,17 @@
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiya_miniewa_tiliya_yetuliu_jp.json"
+                                "preset_name": "xiya_miniewa_tiliya_yetu_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_jp.json"
                             }
                         }
                     }

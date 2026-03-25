@@ -1,0 +1,54 @@
+{
+  "活动_选择活动难度": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Normal"
+        ]
+      }
+    }
+  },
+  "活动_选择活动关卡": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Mail Scramble I"
+        ],
+        "replace": [
+          [
+            "Ⅰ",
+            "I"
+          ],
+          [
+            "Ⅱ",
+            "II"
+          ],
+          [
+            "Ⅲ",
+            "III"
+          ],
+          [
+            "Ⅳ",
+            "IV"
+          ],
+          [
+            "Ⅴ",
+            "V"
+          ],
+          [
+            "Ⅵ",
+            "VI"
+          ],
+          [
+            "Ⅶ",
+            "VII"
+          ],
+          [
+            "Ⅷ",
+            "VIII"
+          ]
+        ]
+      }
+    }
+  }
+}

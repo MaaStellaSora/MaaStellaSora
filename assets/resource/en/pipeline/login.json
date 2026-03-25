@@ -1,0 +1,22 @@
+{
+  "登录_点击文字": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Claimable", // TODO
+          "Items Obtained",
+          "Select anywhere to start"
+        ]
+      }
+    }
+  },
+  "登录_下载完成_文字": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere to start"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "邀约_打开心链": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Heartlink"
+        ]
+      }
+    }
+  },
+  "邀约_前往邀约": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Invite"
+        ]
+      }
+    }
+  },
+  "邀约_主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Invite"
+        ]
+      }
+    }
+  },
+  "邀约_已回到邀约界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Invite"
+        ]
+      }
+    }
+  },
+  "邀约_1号": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Shia"
+        ]
+      }
+    }
+  },
+  "邀约_2号": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Mistique"
+        ]
+      }
+    }
+  },
+  "邀约_3号": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Freesia"
+        ]
+      }
+    }
+  },
+  "邀约_地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select"
+        ]
+      }
+    }
+  },
+  "邀约_还是算了": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Never Mind"
+        ]
+      }
+    }
+  },
+  "邀约_送出礼物": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Send Gift"
+        ]
+      }
+    }
+  },
+  "邀约_送礼": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Send Gift"
+        ]
+      }
+    }
+  },
+  "邀约_送礼流程": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Gifts Received"
+        ]
+      }
+    }
+  }
+}

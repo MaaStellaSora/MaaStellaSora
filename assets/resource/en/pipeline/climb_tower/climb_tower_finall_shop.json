@@ -1,0 +1,56 @@
+{
+  "星塔_节点_最终商店_购物": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Purchase at the shop"
+        ]
+      }
+    }
+  },
+  "星塔_节点_最终商店_货币不足": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Insufficient"
+        ]
+      }
+    }
+  },
+  "星塔_节点_最终商店_回到商店层": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Purchase at the shop"
+        ]
+      }
+    }
+  },
+  "星塔_节点_最终商店_强化": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Enhance"
+        ]
+      }
+    }
+  },
+  "星塔_节点_最终商店_钱不够": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Insufficient"
+        ]
+      }
+    }
+  },
+  "星塔_节点_最终商店_离开星塔": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Leave Monolith"
+        ]
+      }
+    }
+  }
+}

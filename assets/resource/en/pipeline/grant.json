@@ -1,0 +1,47 @@
+{
+  "基金_核实是否处于营业目标": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Today's Target"
+        ]
+      }
+    }
+  },
+  "基金_营业目标全部领取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Claim All"
+        ]
+      }
+    }
+  },
+  "基金_进入基金补贴": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Grant Milestone"
+        ]
+      }
+    }
+  },
+  "基金_核实是否处于基金补贴": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Starter"
+        ]
+      }
+    }
+  },
+  "基金_基金补贴全部领取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Claim All"
+        ]
+      }
+    }
+  }
+}

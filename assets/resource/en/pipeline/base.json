@@ -1,0 +1,23 @@
+{
+  "通用_点击空白处": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere to continue",
+          "Select anywhere to close"
+        ]
+      }
+    }
+  },
+  "月卡_领取": { // TODO
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere",
+          "claim",
+          "Everbright Wishes"
+        ]
+      }
+    }
+  }
+}

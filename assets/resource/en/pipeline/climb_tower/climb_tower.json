@@ -1,0 +1,133 @@
+{
+  "星塔_出发": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Go"
+        ]
+      }
+    }
+  },
+  "星塔_进入星塔": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Enter Monolith"
+        ]
+      }
+    }
+  },
+  "星塔_回到未完成的星塔探索": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Confirm"
+        ]
+      }
+    }
+  },
+  "星塔_快速战斗按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Quick Battle"
+        ]
+      }
+    }
+  },
+  "星塔_开始战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Start Battle"
+        ]
+      }
+    }
+  },
+  "星塔_节点_等级提升": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "level has increased"
+        ]
+      }
+    }
+  },
+  "星塔_节点_最终商店": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "in the last room"
+        ]
+      }
+    }
+  },
+  "星塔_结束爬塔": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "ASCENDED",
+          "Max Floor",
+          "Total Potentials"
+        ]
+      }
+    }
+  },
+  "星塔_保存记录": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Save Record"
+        ]
+      }
+    }
+  },
+  "星塔_离开星塔": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Confirm"
+        ]
+      }
+    }
+  },
+  "星塔_点击空白处关闭": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere",
+          "to continue",
+          "to close"
+        ]
+      }
+    }
+  },
+  "星塔_节点_对话选项": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Just a try",
+          "Twelve o'clock",
+          "follow it through",
+          "aims high",
+          "always three options",
+          "6?",
+          "more veg things",
+          "sit too long",
+          "12?",
+          "Carpe diem",
+          "governed by desire",
+          "1024",
+          "light it up",
+          "I'll listen to anything",
+          "I'm willing to pay for this",
+          "Victory beckons",
+          "Get stronger",
+          "Can I play it",
+          "Anywhere my heart leads",
+          "We are Kindred spirits"
+        ]
+      }
+    }
+  }
+}

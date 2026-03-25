@@ -1,99 +1,91 @@
 {
   "任务_今日事务": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      {
+        "jump_back": true,
+        "name": "任务_一键领取"
+      },
+      "通用_返回主页"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Daily Affairs"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "任务_每周事务": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "next": [
       {
-        "name": "任务_一键领取",
-        "jump_back": true
+        "jump_back": true,
+        "name": "任务_一键领取"
       },
-      "通用_返回主页"
-    ]
-  },
-  "任务_每周事务": {
+      "任务_魔王养成"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Weekly Affairs"
         ]
-      }
-    },
-    "action": {
-      "type": "Click",
-      "param": {}
-    },
-    "next": [
-      {
-        "name": "任务_一键领取",
-        "jump_back": true
       },
-      "任务_魔王养成"
-    ]
+      "type": "OCR"
+    }
   },
   "任务_领取任务": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Missions"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在尝试领取任务奖励"
     },
     "next": [
       "任务_每周事务"
-    ]
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "Missions"
+        ]
+      },
+      "type": "OCR"
+    }
   },
   "任务_魔王养成": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      {
+        "jump_back": true,
+        "name": "任务_一键领取"
+      },
+      "任务_今日事务"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Tyrant Growth"
         ]
-      }
-    },
-    "action": {
-      "type": "Click",
-      "param": {}
-    },
-    "next": [
-      {
-        "name": "任务_一键领取",
-        "jump_back": true
       },
-      "任务_今日事务"
-    ]
+      "type": "OCR"
+    }
   },
   "好友_一键获取": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Acquire All"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Failed": "没有找到一键获取按钮",
@@ -101,20 +93,20 @@
     },
     "next": [
       "通用_返回主页"
-    ]
-  },
-  "好友_一键赠送": {
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Gift All"
+          "Acquire All"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "好友_一键赠送": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Failed": "没有找到一键赠送按钮",
@@ -122,338 +114,332 @@
     },
     "next": [
       "好友_一键获取"
-    ]
-  },
-  "好友_好友列表": {
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Friend List"
+          "Gift All"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "好友_好友列表": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在前往好友列表"
     },
     "next": [
       "好友_一键赠送"
-    ]
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "Friend List"
+        ]
+      },
+      "type": "OCR"
+    }
   },
   "委托_再次派遣": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "通用_返回主页"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Dispatch Again"
         ]
-      }
-    },
-    "action": {
-      "type": "Click",
-      "param": {}
-    },
-    "next": [
-      "通用_返回主页"
-    ]
+      },
+      "type": "OCR"
+    }
   },
   "委托_跳过": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "通用_点击空白处继续"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Skip"
         ]
-      }
-    },
-    "action": {
-      "type": "Click",
-      "param": {}
-    },
-    "next": [
-      "通用_点击空白处继续"
-    ]
+      },
+      "type": "OCR"
+    }
   },
   "心链_打开心链": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Heartlink"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在打开心链"
     },
-    "post_wait_freezes": 2000,
     "next": [
       "心链_点击邮寄"
-    ]
-  },
-  "心链_点击邮寄": {
+    ],
+    "post_wait_freezes": 2000,
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Mail"
+          "Heartlink"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "心链_点击邮寄": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在点击邮寄按钮"
     },
     "next": [
       "心链_选择礼物"
-    ]
-  },
-  "心链_赠送礼物": {
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Give Gift"
+          "Mail"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "心链_赠送礼物": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在赠送礼物"
     },
     "next": [
       "心链_默契提升"
-    ]
-  },
-  "心链_默契提升": {
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Affinity Level Up"
+          "Give Gift"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "心链_默契提升": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在关闭弹窗"
     },
-    "pre_wait_freezes": 1000,
     "next": [
       "通用_返回主页"
-    ]
-  },
-  "活动_开启快速战斗": {
+    ],
+    "pre_wait_freezes": 1000,
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Quick Battle"
+          "Affinity Level Up"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "活动_开启快速战斗": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "next": [
       "通用_换算快速作战次数",
       "通用_返回主页"
-    ]
-  },
-  "活动_开始战斗": {
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Start Battle"
+          "Quick Battle"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "活动_开始战斗": {
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在点击开始战斗"
     },
     "next": [
       "活动_确认"
-    ]
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "Start Battle"
+        ]
+      },
+      "type": "OCR"
+    }
   },
   "活动_点击活动战斗关卡": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "活动_选择活动关卡"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Battle Stage"
         ]
-      }
-    },
-    "action": {
-      "type": "Click",
-      "param": {}
-    },
-    "next": [
-      "活动_选择活动关卡"
-    ]
+      },
+      "type": "OCR"
+    }
   },
   "活动_确认": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Confirm"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Succeeded": "正在点击确认"
     },
     "next": [
       "通用_返回主页"
-    ]
-  },
-  "登录_点击任意区域进入游戏": {
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
-          "Select anywhere to start"
+          "Confirm"
         ]
-      }
-    },
+      },
+      "type": "OCR"
+    }
+  },
+  "登录_点击任意区域进入游戏": {
     "action": {
-      "type": "Click",
       "param": {
         "contact": 0
-      }
+      },
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在尝试进入游戏"
     },
+    "recognition": {
+      "param": {
+        "expected": "Select anywhere to start"
+      },
+      "type": "OCR"
+    },
     "timeout": 10000
   },
   "登录_签到": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Claimable"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "通用_点击空白处继续",
+      "登录_签到_2"
+    ],
+    "recognition": {
+      "param": {
+        "expected": "Claimable"
+      },
+      "type": "OCR"
     },
     "repeat": 3,
     "repeat_delay": 1000,
-    "timeout": 1000,
-    "next": [
-      "登录_关闭每日签到",
-      "登录_关闭活动",
-      "通用_点击空白处继续",
-      "登录_签到_2"
-    ]
+    "timeout": 1000
   },
   "登录_签到_2": {
+    "action": {
+      "param": {
+        "contact": 0
+      },
+      "type": "Click"
+    },
+    "next": [
+      "通用_点击空白处继续"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Items Obtained"
         ]
-      }
+      },
+      "type": "OCR"
     },
-    "action": {
-      "type": "Click",
-      "param": {
-        "contact": 0
-      }
-    },
-    "timeout": 2000,
-    "next": [
-      "通用_点击空白处继续"
-    ]
+    "timeout": 2000
   },
   "通用_点击空白处继续": {
+    "action": {
+      "param": {
+        "contact": 0
+      },
+      "type": "Click"
+    },
+    "next": [
+      "通用_判断是否在主页"
+    ],
     "recognition": {
-      "type": "OCR",
       "param": {
         "expected": [
           "Select anywhere to continue"
         ]
-      }
+      },
+      "type": "OCR"
     },
-    "action": {
-      "type": "Click",
-      "param": {
-        "contact": 0
-      }
-    },
-    "timeout": 1000,
-    "next": [
-      "通用_判断是否在主页"
-    ]
+    "timeout": 1000
   },
   "采购_判断是否已领取": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Claimed"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Succeeded": "检测到每日赠礼已领取 将跳过"
     },
-    "timeout": 2000,
     "next": [
       {
-        "name": "通用_返回主页",
-        "jump_back": true
+        "jump_back": true,
+        "name": "通用_返回主页"
       }
-    ]
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "Claimed"
+        ]
+      },
+      "type": "OCR"
+    },
+    "timeout": 2000
   },
   "采购_前往采购": {
-    "recognition": {
-      "type": "TemplateMatch",
-      "param": {
-        "template": [
-          "procurement.png"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "anchor": [
       "前往采购"
@@ -464,34 +450,42 @@
     "next": [
       "采购_领取每日赠礼",
       "采购_判断是否已领取"
-    ]
+    ],
+    "recognition": {
+      "param": {
+        "template": [
+          "procurement.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    }
   },
   "采购_领取每日赠礼": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Daily Gift"
-        ]
-      }
-    },
     "action": {
-      "type": "Click",
-      "param": {}
+      "param": {},
+      "type": "Click"
     },
     "focus": {
       "Node.Recognition.Starting": "正在领取每日赠礼"
     },
-    "timeout": 2000,
     "next": [
       {
-        "name": "通用_返回主页",
-        "jump_back": true
+        "jump_back": true,
+        "name": "通用_返回主页"
       },
       {
-        "name": "通用_点击空白处继续",
-        "jump_back": true
+        "jump_back": true,
+        "name": "通用_点击空白处继续"
       }
-    ]
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "Daily Gift"
+        ]
+      },
+      "type": "OCR"
+    },
+    "timeout": 2000
   }
 }

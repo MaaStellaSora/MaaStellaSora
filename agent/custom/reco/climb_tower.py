@@ -212,7 +212,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             self.logger.debug(f"识别到刷新费用：{[r.text for r in reco_detail.filtered_results]}")
             return int(reco_detail.best_result.text)
 
-        self.logger.error("无法识别刷新费用，返回 65535")
+        self.logger.error("无法识别刷新费用，将默认为无法刷新")
         return 65535
 
     def _get_available_potential_num(self, context, image=None):
@@ -234,7 +234,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             self.logger.debug(f"识别到可选潜能数量：{len(reco_detail.filtered_results)}")
             return len(reco_detail.filtered_results)
 
-        self.logger.error("无法识别可选潜能数量，默认为3")
+        self.logger.error("无法识别可选潜能数量，将默认为3")
         return 3
 
     def _get_attachments(self, context: Context, node_name: str) -> dict:

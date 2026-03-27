@@ -348,6 +348,7 @@ class ShopAction(CustomAction):
             "melody_5_discount_threshold": 1.0,
             "melody_15_discount_threshold": 1.0,
             "regular_shop_refresh_threshold": 1500,
+            "full_price_buy_reserve_base": 400,
             "buy_assist_melody": False,
             "melody_of_aqua": False,
             "melody_of_ignis": False,

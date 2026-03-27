@@ -1,0 +1,156 @@
+{
+    "task": [
+        {
+            "name": "旧版爬塔",
+            "entry": "星塔_入口",
+            "description": "如无特殊情况，旧版爬塔不再维护",
+            "repeatable": true,
+            "repeat_count": 1,
+            "option": [
+                "属性塔",
+                "音符购买",
+                "速刷",
+                "是否开启自定义爬塔"
+            ]
+        }
+    ],
+    "option": {
+        "属性塔": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "光土",
+                    "label": "光土",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "水风",
+                    "label": "水风",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower/爬塔_水风__384_271_129_39__334_221_229_139.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "火暗",
+                    "label": "火暗",
+                    "pipeline_override": {
+                        "星塔_属性塔选择": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower/爬塔_火暗__381_404_129_39__331_354_229_139.png"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "音符购买": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "激活协奏且折扣",
+                    "label": "激活协奏且折扣",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "激活协奏",
+                    "label": "激活协奏",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_格子_音符_激活": {
+                            "next": [
+                                "星塔_节点_商店_购物_格子_购买"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "速刷": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "正常",
+                    "label": "正常",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "不点商店和强化",
+                    "label": "不点商店和强化",
+                    "pipeline_override": {
+                        "星塔_节点_商店": {
+                            "next": [
+                                "星塔_节点_商店_下一层"
+                            ]
+                        },
+                        "星塔_节点_最终商店": {
+                            "next": [
+                                "星塔_节点_最终商店_离开星塔"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "是否开启自定义爬塔": {
+            "type": "select",
+            "name": "是否开启自定义爬塔",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "option": [
+                        "自定义卡牌优先级"
+                    ],
+                    "pipeline_override": {
+                        "星塔_节点_选择buff_推荐": {
+                            "recognition": {
+                                "type": "Custom",
+                                "param": {
+                                    "custom_recognition": "auto_tower",
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "No"
+                }
+            ]
+        },
+        "自定义卡牌优先级": {
+            "type": "input",
+            "label": "自定义卡牌优先级（Nightly）",
+            "description": "抄作业.png",
+            "inputs": [
+                {
+                    "name": "作业",
+                    "label": "作业",
+                    "description": "作业字典，格式为{\"优先级\": [\"卡牌名称\"]}",
+                    "default": "",
+                    "pipeline_type": "string"
+                }
+            ]
+        }
+    }
+}

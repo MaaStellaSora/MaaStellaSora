@@ -15,28 +15,50 @@ class ChoosePotentialRecognition(CustomRecognition):
 
     MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
 
-    POTENTIAL_ROIS = [
-        {
-            "core_potential": [190, 425, 210, 40],
-            "general_potential": [190, 395, 210, 40],
-            "general_potential_level": [190, 425, 210, 40]
-        },
-        {
-            "core_potential": [535, 425, 210, 40],
-            "general_potential": [535, 395, 210, 40],
-            "general_potential_level": [535, 425, 210, 40]
-        },
-        {
-            "core_potential": [880, 425, 210, 40],
-            "general_potential": [880, 395, 210, 40],
-            "general_potential_level": [880, 425, 210, 40]
-        }
-    ]
+    POTENTIAL_ROIS = {
+        1: [
+            {
+                "core_potential": [530, 425, 220, 40],
+                "general_potential": [530, 395, 220, 40],
+                "general_potential_level": [530, 425, 220, 40]
+            }
+        ],
+        2: [
+            {
+                "core_potential": [358, 425, 220, 40],
+                "general_potential": [358, 395, 220, 40],
+                "general_potential_level": [358, 425, 220, 40]
+            },
+            {
+                "core_potential": [703, 425, 220, 40],
+                "general_potential": [703, 395, 220, 40],
+                "general_potential_level": [703, 425, 220, 40]
+            }
+        ],
+        3: [
+            {
+                "core_potential": [187, 425, 220, 40],
+                "general_potential": [187, 395, 220, 40],
+                "general_potential_level": [187, 425, 220, 40]
+            },
+            {
+                "core_potential": [530, 425, 220, 40],
+                "general_potential": [530, 395, 220, 40],
+                "general_potential_level": [530, 425, 220, 40]
+            },
+            {
+                "core_potential": [875, 425, 220, 40],
+                "general_potential": [875, 395, 220, 40],
+                "general_potential_level": [875, 425, 220, 40]
+            }
+        ]
+    }
 
     def __init__(self):
         super().__init__()
         self.logger = logger.get_logger(__name__)
         self._refresh_count: int = 0  # 本次潜能选择的已刷新次数，每次 analyze 开始时重置
+        self.available_potential_num: int = 3  # 可选潜能卡片数量，每次 analyze 开始时重置
 
     def analyze(
             self,
@@ -60,6 +82,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         node_name = argv.node_name
         attach = self._get_attachments(context, node_name)
         self._refresh_count = 0
+        self.available_potential_num = self._get_available_potential_num(context, argv.image)
         priority_list = self._parse_priority_raw_list(
             attach["priority_list"],
             attach["owned_potentials"],
@@ -90,7 +113,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 break
             if refresh_count > 0:
                 self.logger.info("没有找到符合条件的潜能，尝试刷新")
-                context.run_task("星塔_通用_点击刷新_agent")
+                context.run_task("星塔_节点_选择潜能_点击刷新_agent")
                 refresh_count -= 1
                 self._refresh_count += 1
             else:
@@ -125,7 +148,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
-        reco_detail = context.run_recognition("星塔_通用_点击刷新_agent", image)
+        reco_detail = context.run_recognition("星塔_节点_选择潜能_点击刷新_agent", image)
         if reco_detail and reco_detail.hit:
             self.logger.debug(f"识别到刷新按钮")
             return True
@@ -192,6 +215,28 @@ class ChoosePotentialRecognition(CustomRecognition):
         self.logger.error("无法识别刷新费用，返回 65535")
         return 65535
 
+    def _get_available_potential_num(self, context, image=None):
+        """
+            检查可选潜能卡片数量
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图
+
+            Returns:
+                int: 可选潜能卡片数量，识别失败时返回1
+        """
+        if image is None:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        reco_detail = context.run_recognition("星塔_节点_选择潜能_识别潜能数量_agent", image)
+        if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到可选潜能数量：{len(reco_detail.filtered_results)}")
+            return len(reco_detail.filtered_results)
+
+        self.logger.error("无法识别可选潜能数量，默认为3")
+        return 3
+
     def _get_attachments(self, context: Context, node_name: str) -> dict:
         """获取节点 attach 中的所有参数，缺失时返回安全默认值。
 
@@ -255,7 +300,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         return -1, -1
 
     def _get_available_potentials(self, context: Context, image=None) -> list[dict]:
-        """获取当前待选的三个潜能卡片信息。
+        """获取当前待选的潜能卡片信息。
 
         Args:
             context: maa.context.Context
@@ -277,11 +322,18 @@ class ChoosePotentialRecognition(CustomRecognition):
         reco_detail = context.run_recognition(
             "星塔_节点_选择潜能_识别核心潜能_agent", image
         )
-        is_core = reco_detail and reco_detail.hit
-        self.logger.debug(f"识别核心潜能结果：{is_core}")
+        if reco_detail and reco_detail.hit:
+            is_core = True
+            # self.available_potential_num = len(reco_detail.filtered_results)
+            self.logger.debug(f"识别到{len(reco_detail.filtered_results)}张核心潜能卡片：")
+        else:
+            is_core = False
+            # self.logger.debug(f"识别到一般潜能卡片")
+
+        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
 
         available_potentials = []
-        for i, rois in enumerate(self.POTENTIAL_ROIS):
+        for i, rois in enumerate(potential_rois):
             name_roi = rois["core_potential"] if is_core else rois["general_potential"]
 
             reco_detail = context.run_recognition(
@@ -459,7 +511,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         cleaned_ocr = re.sub(r'\W', '', ocr_name)
         cleaned_rule = re.sub(r'\W', '', rule_name)
 
-        chars_to_remove = "ー一"
+        chars_to_remove = "ー"
         table = str.maketrans("", "", chars_to_remove)
         cleaned_ocr = cleaned_ocr.translate(table)
         cleaned_rule = cleaned_rule.translate(table)
@@ -587,6 +639,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         Returns:
             list: 目标卡片区域 [x, y, w, h]
         """
+        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
         for c in range(count):
             reco_detail = context.run_recognition(
                 "星塔_节点_选择潜能_识别推荐图标_agent", image
@@ -594,7 +647,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             if reco_detail and reco_detail.hit:
                 hit_x = reco_detail.best_result.box[0]
                 closest = min(
-                    self.POTENTIAL_ROIS,
+                    potential_rois,
                     key=lambda r: abs(r["general_potential"][0] - hit_x)
                 )
                 return closest["general_potential"]
@@ -604,7 +657,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             image = context.tasker.controller.post_screencap().wait().get()
 
         self.logger.warning("推荐图标识别失败，返回第一张卡片")
-        return self.POTENTIAL_ROIS[0]["general_potential"]
+        return potential_rois[0]["general_potential"]
 
     def _update_owned_potentials(
         self,

@@ -10,5 +10,6 @@ __all__ = [
     "InviteAuto",
     "UToolCalcRepeat",
     "AscensionPreparation",
-    "AscensionLoop"
+    "AscensionLoop",
+    "SelectParty"
 ]

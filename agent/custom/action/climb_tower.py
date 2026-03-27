@@ -321,7 +321,7 @@ class ShopAction(CustomAction):
                 return False
             if not self._should_refresh(context):
                 break
-            context.run_task("星塔_通用_点击刷新_agent")
+            context.run_task("星塔_节点_商店_点击刷新_agent")
 
         context.run_task("星塔_节点_商店_购物_返回商店层_agent")
         return True
@@ -823,13 +823,13 @@ class ShopAction(CustomAction):
             bool: 未被用户中止时返回 True；用户中止时返回 False。
         """
         plan = sorted(
-            [g for g in grids_info if g["buy_pipeline"] is not None],
+            [g for g in grids_info if g["buy_pipeline"] is not None and not g["bought"]],
             key=lambda g: (g["buy_priority"], g["item_price"]),
         )
         for grid in plan:
             usable = max(0, _get_current_coin(context) - self.reserve_coin)
             if usable < grid["item_price"]:
-                self.logger.info(
+                self.logger.debug(
                     f"可用金币 {usable} 不足，跳过 "
                     f"{self.ITEM_NAMES[grid['item_name']][self.lang_type][0]}"
                     f"（{grid['item_price']}）"
@@ -841,7 +841,7 @@ class ShopAction(CustomAction):
             elif grid["buy_pipeline"] == "assist":
                 success = self._buy_assist_melody(context, grid)
             else:
-                self.logger.error(f"未知的 buy_pipeline: {grid['buy_pipeline']}")
+                self.logger.error(f"未知的购买方式: {grid['buy_pipeline']}")
                 success = False
 
             if success:
@@ -1087,7 +1087,7 @@ class AscensionPreparation(CustomAction):
             self.logger.info(f"从作业中检测到预设属性：{preset_element}，将覆盖选项中的属性塔选择")
             preset_element = preset_element.lower()
             match preset_element:
-                case "aqua":
+                case "aqua" | "ventus" | "水" | "风" | "風":
                     context.override_pipeline({
                         "星塔_属性塔选择_agent": {
                             "recognition": {
@@ -1099,7 +1099,7 @@ class AscensionPreparation(CustomAction):
                             }
                         }
                     })
-                case "ignis":
+                case "ignis" | "umbra" | "火" | "暗" | "闇":
                     context.override_pipeline({
                         "星塔_属性塔选择_agent": {
                             "recognition": {
@@ -1111,49 +1111,13 @@ class AscensionPreparation(CustomAction):
                             }
                         }
                     })
-                case "terra":
+                case "terra" | "lux" | "土" | "光":
                     context.override_pipeline({
                         "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
                                         "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
-                                    ]
-                                }
-                            }
-                        }
-                    })
-                case "ventus":
-                    context.override_pipeline({
-                        "星塔_属性塔选择_agent": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
-                                    ]
-                                }
-                            }
-                        }
-                    })
-                case "lux":
-                    context.override_pipeline({
-                        "星塔_属性塔选择_agent": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
-                                    ]
-                                }
-                            }
-                        }
-                    })
-                case "umbra":
-                    context.override_pipeline({
-                        "星塔_属性塔选择_agent": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
                                     ]
                                 }
                             }
@@ -1243,7 +1207,7 @@ class SelectParty(CustomAction):
         trekker_names = attachment.get("trekker_names", [])
         cleaned_trekker_names = [re.sub(r'\W', '', name) for name in trekker_names]
 
-        chars_to_remove = "ー一"
+        chars_to_remove = "ー"
         table = str.maketrans("", "", chars_to_remove)
         cleaned_trekker_names = [name.translate(table) for name in cleaned_trekker_names]
 
@@ -1337,7 +1301,7 @@ class AscensionLoop(CustomAction):
         attachment = node_data.get("attach", {})
         loop_count = attachment.get("loop_count", 1)
         loop_count -= 1
-        if loop_count:
+        if loop_count > 0:
             self.logger.info(f"完成一次爬塔，剩余爬塔次数：{loop_count}")
             context.override_pipeline({
                 argv.node_name: {

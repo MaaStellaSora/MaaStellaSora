@@ -1,246 +1,23 @@
 {
-    "星塔_入口_agent": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ascension_preparation"
-            }
-        },
-        "next": [
-            "星塔_跳过进入星塔流程_agent",
-            "星塔_出发_agent",
-            "[JumpBack]通用_返回主页"
-        ],
-        "attach": {
-            "preset_name": ""
-        }
-    },
-    "星塔_出发_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "出发"
-                ],
-                "roi": [
-                    1112,
-                    652,
-                    83,
-                    39
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_星塔探索按钮_agent"
-        ]
-    },
-    "星塔_跳过进入星塔流程_agent": {
-        "enabled": false,
-        "next": [
-            "星塔_开始爬塔_agent"
-        ]
-    },
-    "星塔_星塔探索按钮_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "星塔探索"
-                ],
-                "roi": [
-                    703,
-                    429,
-                    161,
-                    75
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_属性塔选择_agent",
-            "星塔_星塔探索按钮_agent"
-        ]
-    },
-    "星塔_属性塔选择_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
-                ],
-                "roi": [
-                    226,
-                    104,
-                    346,
-                    391
-                ],
-                "order_by": "Score"
-            },
-            "type": "TemplateMatch"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_进入星塔按钮_agent",
-            "星塔_属性塔选择_agent"
-        ]
-    },
-    "星塔_进入星塔按钮_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "进入星塔"
-                ],
-                "roi": [
-                    895,
-                    572,
-                    115,
-                    48
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_快速战斗按钮_agent",
-            "星塔_回到未完成的星塔探索_agent",
-            "星塔_进入星塔按钮_agent"
-        ]
-    },
-    "星塔_快速战斗按钮_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "快速战斗"
-                ],
-                "roi": [
-                    850,
-                    631,
-                    94,
-                    39
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_编队角色_agent"
-        ]
-    },
-    "星塔_回到未完成的星塔探索_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "确认"
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_开始爬塔_agent",
-            "星塔_回到未完成的星塔探索_agent"
-        ]
-    },
-    "星塔_编队角色_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "下",
-                    "步"
-                ],
-                "roi": [
-                    1111,
-                    642,
-                    117,
-                    40
-                ]
-            },
-            "type": "OCR"
-        },
-        "next": [
-            "星塔_编队角色_选择队伍_agent"
-        ],
-        "post_wait_freeze": 100
-    },
-    "星塔_编队角色_选择队伍_agent": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "select_party"
-            }
-        },
-        "next": [
-            "星塔_编队角色_点击下一步_agent"
-        ],
-        "attach": {
-            "trekker_names": []
-        }
-    },
-    "星塔_编队角色_点击下一步_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "下",
-                    "步"
-                ],
-                "roi": [
-                    1111,
-                    642,
-                    117,
-                    40
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_编队秘纹_agent"
-        ],
-        "post_wait_freeze": 100
-    },
-    "星塔_编队秘纹_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "开始战斗"
-                ],
-                "roi": [
-                    1111,
-                    642,
-                    117,
-                    40
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_开始爬塔_agent"
-        ],
-        "pre_wait_freeze": 100
-    },
     "星塔_开始爬塔_agent": {
+        "next": [
+            "星塔_开始爬塔_检测背包按钮_agent",
+            "[JumpBack]星塔_节点_进入对话_agent",
+            "[JumpBack]星塔_开始爬塔_检测商店购物界面_agent",
+            "[JumpBack]星塔_节点_进入对话选择_agent"
+        ]
+    },
+    "星塔_开始爬塔_检测背包按钮_agent": {
         "recognition": {
             "param": {
                 "template": [
-                    "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png",
-                    "ClimbTower_agent/星塔_节点_对话图标__999_625_42_40__949_575_142_140.png"
+                    "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
+                ],
+                "roi": [
+                    0,
+                    0,
+                    210,
+                    85
                 ],
                 "threshold": 0.9
             },
@@ -248,6 +25,26 @@
         },
         "next": [
             "星塔_爬塔流程_agent"
+        ]
+    },
+    "星塔_开始爬塔_检测商店购物界面_agent": {
+        "recognition": {
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
+                ],
+                "roi": [
+                    210,
+                    168,
+                    550,
+                    468
+                ],
+                "threshold": 0.9
+            },
+            "type": "TemplateMatch"
+        },
+        "next": [
+            "星塔_节点_商店_购物_返回商店层_agent"
         ]
     },
     "星塔_爬塔流程_agent": {

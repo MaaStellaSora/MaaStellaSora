@@ -279,6 +279,12 @@ class ShopAction(CustomAction):
         self.buy_assist_melody: bool = False
         self.regular_shop_refresh_threshold: int = 1500
         self.min_buyable_price: float = float("inf")
+        self.full_price_buy_reserve_base: int = 400
+        self.dynamic_reserve: int = 0
+        self.cost_increment: int = 60
+        self.max_cost: int = 180
+        self.refresh_remaining: int = 0
+        self.image = None # 仅用作道具与刷新次数的识别，不作可用金币识别
 
     def run(
         self,
@@ -287,8 +293,8 @@ class ShopAction(CustomAction):
     ) -> bool:
         """商店楼层自动购买主流程。
 
-        读取配置参数后按 priority 循环购买，满足条件则刷新并重新购买；
-        final 商店饮料不限折扣，regular 商店达到金币阈值才允许刷新。
+        读取配置参数后按 priority 循环购买，每轮结束后执行第二轮溢购饮料，
+        满足条件则刷新并重新购买；循环结束后 final 商店追加补买饮料和零头购买。
 
         Args:
             context: 任务上下文。
@@ -307,6 +313,7 @@ class ShopAction(CustomAction):
         self.target_melodies = params["target_melodies"]
         self.buy_assist_melody = params["buy_assist_melody"]
         self.regular_shop_refresh_threshold = params["regular_shop_refresh_threshold"]
+        self.full_price_buy_reserve_base = params["full_price_buy_reserve_base"]
 
         self.shop_type = _check_shop_type(context)
         self.logger.debug(f"商店类型: {self.shop_type}, 预留金币: {self.reserve_coin}")
@@ -315,13 +322,29 @@ class ShopAction(CustomAction):
         self.min_buyable_price = self._calc_min_buyable_price()
 
         while True:
+            self.image = context.tasker.controller.post_screencap().wait().get()
+            self.refresh_remaining = self._get_refresh_remaining(context)
             grids_info = self._get_grids_info(context)
+
             self._mark_buy_plan(grids_info)
             if not self._execute_buy_plan(context, grids_info):
                 return False
+
+            self._mark_full_price_buy_plan(grids_info)
+            if not self._execute_buy_plan(context, grids_info):
+                return False
+
             if not self._should_refresh(context):
                 break
             context.run_task("星塔_节点_商店_点击刷新_agent")
+
+        if self.shop_type == "final":
+            self._mark_remaining_drinks_buy_plan(grids_info)
+            if not self._execute_buy_plan(context, grids_info):
+                return False
+            self._mark_remainder_buy_plan(grids_info)
+            if not self._execute_buy_plan(context, grids_info):
+                return False
 
         context.run_task("星塔_节点_商店_购物_返回商店层_agent")
         return True
@@ -329,9 +352,10 @@ class ShopAction(CustomAction):
     def _get_params(self, context: Context, node_name: str) -> dict:
         """从节点 attach 读取商店配置参数，缺失时返回安全默认值。
 
-        reserve_coin 由 EnhanceAction 节点的 max_cost 和 enhance_step 计算得出。
-        游戏中后续商店层的初始强化费用不一定从 0 起步，以 enhance_step 作为初始费用
+        reserve_coin 由 EnhanceAction 节点的 max_cost 和 cost_increment 计算得出。
+        游戏中后续商店层的初始强化费用不一定从 0 起步，以 cost_increment 作为初始费用
         是合理的近似，且此处只取 total_cost，影响微乎其微。
+        同时将 max_cost、cost_increment 存为实例变量供后续函数直接读取。
 
         Args:
             context: 任务上下文。
@@ -380,13 +404,15 @@ class ShopAction(CustomAction):
         else:
             enhance_attach = enhance_node_data.get("attach", {})
             max_cost = enhance_attach.get("max_cost", 180)
-            enhance_step = enhance_attach.get("enhance_step", 60)
+            cost_increment = enhance_attach.get("cost_increment", 60)
+            self.max_cost = max_cost
+            self.cost_increment = cost_increment
             current_coin = _get_current_coin(context)
             self.logger.debug(
-                f"当前金币: {current_coin}, max_cost: {max_cost}, enhance_step: {enhance_step}"
+                f"当前金币: {current_coin}, max_cost: {max_cost}, cost_increment: {cost_increment}"
             )
             _, params["reserve_coin"] = _calculate_max_enhance(
-                current_coin, enhance_step, max_cost, enhance_step
+                current_coin, cost_increment, max_cost, cost_increment
             )
 
         params["target_melodies"] = [
@@ -421,7 +447,7 @@ class ShopAction(CustomAction):
         """识别购物界面 8 个格子的道具信息。
 
         每个格子识别名称、数量、价格，计算折扣比值后组装为 dict，
-        并初始化 bought、buy_pipeline、buy_priority 字段。
+        并初始化 bought、buy_type、buy_priority 字段。
         识别完成后按价格升序排列。
 
         Args:
@@ -430,7 +456,7 @@ class ShopAction(CustomAction):
         Returns:
             list[dict]: 格子信息列表，每个元素包含 grid_num、item_name、
                 item_quantity、item_price、discount、item_roi、price_roi、
-                name_roi、bought、buy_pipeline、buy_priority。
+                name_roi、bought、buy_type、buy_priority。
         """
         grids_info = []
 
@@ -450,8 +476,8 @@ class ShopAction(CustomAction):
                     "price_roi": grid_roi["price_roi"],
                     "name_roi": grid_roi["name_roi"],
                     "bought": False,
-                    "buy_pipeline": None,
-                    "buy_priority": None,
+                    "buy_type": None,
+                    "buy_priority": 0,
                 })
             else:
                 self.logger.error(
@@ -488,7 +514,7 @@ class ShopAction(CustomAction):
 
         for count in range(retry_max):
             self.logger.debug(f"第 {count + 1} 次识别道具格子")
-            image = context.tasker.controller.post_screencap().wait().get()
+            image = self.image
 
             if not item_price:
                 results = self._grid_recognition(context, image, price_roi, "price")
@@ -632,14 +658,19 @@ class ShopAction(CustomAction):
 
         return min(parsed_item_price, default=0)
 
-    def _buy_item(self, context: Context, grid: dict) -> bool:
+    @staticmethod
+    def _buy_item(context: Context, grid: dict, reserve_coin: int) -> bool:
         """执行普通商品购买（潜能特饮 / 音符）。
 
-        统一将 reserve_coin 注入潜能选择节点，由 pipeline 按需取用。
+        将调用方传入的 reserve_coin 注入潜能选择节点，防止潜能选择把预留给强化的金币刷光。
+        由 pipeline 按需取用，调用方无需判断商品类型。
 
         Args:
             context: 任务上下文。
             grid: 单个格子信息字典。
+            reserve_coin: 注入潜能选择节点的预留金币数，由 _execute_single_purchase 按
+                buy_type 决定传入值（normal/dynamic_drink 传 self.reserve_coin，
+                final_remainder 传强化总消耗 total_cost）。
 
         Returns:
             bool: 购买任务成功返回 True。
@@ -649,7 +680,7 @@ class ShopAction(CustomAction):
                 "action": {"param": {"target": grid["price_roi"]}}
             },
             "星塔_节点_选择潜能_agent": {
-                "attach": {"reserve_coin": self.reserve_coin}
+                "attach": {"reserve_coin": reserve_coin}
             },
         }
         result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
@@ -713,7 +744,7 @@ class ShopAction(CustomAction):
         Returns:
             int: 剩余刷新次数；识别失败时返回 0。
         """
-        image = context.tasker.controller.post_screencap().wait().get()
+        image = self.image
         reco_detail = context.run_recognition("星塔_节点_商店_购物_识别可刷新次数_agent", image)
         if reco_detail and reco_detail.hit:
             self.logger.debug(f"识别到刷新次数：{reco_detail.best_result.text}")
@@ -786,35 +817,37 @@ class ShopAction(CustomAction):
         return False
 
     def _mark_buy_plan(self, grids_info: list[dict]) -> None:
-        """按 priority 顺序对格子打标，写入 buy_pipeline 和 buy_priority。
+        """按 priority 顺序对格子打标，写入 buy_type 和 buy_priority。
 
-        已购买（bought=True）或已打标（buy_pipeline 非 None）的格子跳过。
-        melody 类型内优先判断目标音符，不符合时再判断协奏音符，两者共享同一 buy_priority。
+        打标前按价格升序排列，掌握后续执行顺序（执行函数不做价格二次排序）。
+        命中一个格子 buy_priority 就全局递增 +1，保证优先级唯一。
+        melody 类型内优先判断目标音符，不符合时再判断协奏音符。
 
         Args:
             grids_info: _get_grids_info() 返回的格子列表。
         """
-        for priority_idx, item_type in enumerate(self.priority):
+        grids_info.sort(key=lambda g: g["item_price"])
+        for item_type in self.priority:
             for grid in grids_info:
-                if grid["bought"] or grid["buy_pipeline"] is not None:
+                if grid["bought"]:
                     continue
                 if item_type == "drink" and self._is_target_drink(grid):
-                    grid["buy_pipeline"] = "normal"
-                    grid["buy_priority"] = priority_idx
+                    grid["buy_type"] = "normal"
+                    grid["buy_priority"] = max(g["buy_priority"] for g in grids_info) + 1
                 elif item_type == "melody":
                     if self._is_target_melody(grid):
-                        grid["buy_pipeline"] = "normal"
-                        grid["buy_priority"] = priority_idx
+                        grid["buy_type"] = "normal"
+                        grid["buy_priority"] = max(g["buy_priority"] for g in grids_info) + 1
                     elif self._is_target_assist_melody(grid):
-                        grid["buy_pipeline"] = "assist"
-                        grid["buy_priority"] = priority_idx
+                        grid["buy_type"] = "assist_melody"
+                        grid["buy_priority"] = max(g["buy_priority"] for g in grids_info) + 1
 
     def _execute_buy_plan(self, context: Context, grids_info: list[dict]) -> bool:
         """过滤、排序买单并依次执行购买，统一标记 bought。
 
-        过滤出 buy_pipeline 非 None 的格子，按 (buy_priority, item_price) 升序排列后遍历。
-        每格执行前检查可支配金币，不足则跳过；购买成功标记 bought=True；
-        用户中止时立即返回 False；购买失败则记录日志并继续。
+        过滤出 buy_priority 非 0 且 buy_type 非 None 且未购买的格子，
+        按 buy_priority 升序执行（排序权由各打标函数掌握，此处不做二次排序）。
+        购买成功标记 bought=True；用户中止时立即返回 False；购买失败则记录日志并继续。
 
         Args:
             context: 任务上下文。
@@ -824,27 +857,13 @@ class ShopAction(CustomAction):
             bool: 未被用户中止时返回 True；用户中止时返回 False。
         """
         plan = sorted(
-            [g for g in grids_info if g["buy_pipeline"] is not None and not g["bought"]],
-            key=lambda g: (g["buy_priority"], g["item_price"]),
+            [g for g in grids_info
+             if g["buy_priority"] != 0 and g["buy_type"] is not None and not g["bought"]],
+            key=lambda g: g["buy_priority"],
         )
         for grid in plan:
-            usable = max(0, _get_current_coin(context) - self.reserve_coin)
-            if usable < grid["item_price"]:
-                self.logger.debug(
-                    f"可用金币 {usable} 不足，跳过 "
-                    f"{self.ITEM_NAMES[grid['item_name']][self.lang_type][0]}"
-                    f"（{grid['item_price']}）"
-                )
-                continue
-
-            if grid["buy_pipeline"] == "normal":
-                success = self._buy_item(context, grid)
-            elif grid["buy_pipeline"] == "assist":
-                success = self._buy_assist_melody(context, grid)
-            else:
-                self.logger.error(f"未知的购买方式: {grid['buy_pipeline']}")
-                success = False
-
+            current_coin = _get_current_coin(context)
+            success = self._execute_single_purchase(context, grid, current_coin)
             if success:
                 grid["bought"] = True
             elif context.tasker.stopping:
@@ -852,6 +871,70 @@ class ShopAction(CustomAction):
             else:
                 self.logger.error("购买失败，跳过该格子")
         return True
+
+    def _execute_single_purchase(
+        self,
+        context: Context,
+        grid: dict,
+        current_coin: int,
+    ) -> bool:
+        """按 buy_type 路由执行单格购买，返回是否成功。
+
+        各路由类型在同一分支内完成 usable 计算、金币检查和购买调用，保持低耦合。
+
+        Args:
+            context: 任务上下文。
+            grid: 单个格子信息字典，含 buy_type、item_price 等字段。
+            current_coin: 调用前已取得的当前金币数。
+
+        Returns:
+            bool: 购买成功返回 True，失败或金币不足返回 False。
+        """
+        buy_type = grid["buy_type"]
+        item_display = self.ITEM_NAMES.get(grid["item_name"], {}).get(self.lang_type, ["?"])[0]
+
+        if buy_type == "normal":
+            usable = max(0, current_coin - self.reserve_coin)
+            if usable < grid["item_price"]:
+                self.logger.debug(
+                    f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
+                )
+                return False
+            return self._buy_item(context, grid, self.reserve_coin)
+
+        elif buy_type == "assist_melody":
+            usable = max(0, current_coin - self.reserve_coin)
+            if usable < grid["item_price"]:
+                self.logger.debug(
+                    f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
+                )
+                return False
+            return self._buy_assist_melody(context, grid)
+
+        elif buy_type == "dynamic_drink":
+            usable = max(0, current_coin - self.reserve_coin - self.dynamic_reserve)
+            if usable < grid["item_price"]:
+                self.logger.debug(
+                    f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
+                )
+                return False
+            return self._buy_item(context, grid, self.reserve_coin)
+
+        elif buy_type == "final_remainder":
+            _, total_cost = _calculate_max_enhance(
+                current_coin, self.cost_increment, 65535, self.cost_increment
+            )
+            usable = max(0, current_coin - total_cost)
+            if usable < grid["item_price"]:
+                self.logger.debug(
+                    f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
+                )
+                return False
+            return self._buy_item(context, grid, total_cost)
+
+        else:
+            self.logger.error(f"未知的购买类型: {buy_type}")
+            return False
 
     def _get_refresh_cost(self, context: Context) -> int:
         """识别当前刷新费用。
@@ -889,9 +972,7 @@ class ShopAction(CustomAction):
             self.logger.info("可用金币未达到刷新阈值")
             return False
 
-        # TODO: 改为_is_refreshable，跟潜能识别那边一样
-        refresh_remaining = self._get_refresh_remaining(context)
-        if refresh_remaining == 0:
+        if self.refresh_remaining <= 0:
             self.logger.info("刷新次数已用完")
             return False
 
@@ -904,6 +985,71 @@ class ShopAction(CustomAction):
 
         self.logger.info("可用金币不足以刷新")
         return False
+
+    def _mark_full_price_buy_plan(self, grids_info: list[dict]) -> None:
+        """第二轮购买打标：利用动态预留之外的溢出金币买入潜能特饮。
+
+        识别剩余刷新次数，计算动态预留并存为实例变量 self.dynamic_reserve，
+        对未购的潜能特饮格子按价格升序排列后逐格递增赋 buy_priority，
+        写入 buy_type="dynamic_drink"。
+
+        Args:
+            grids_info: 当前轮次的格子列表，复用第一轮识别结果。
+        """
+        refresh_remaining = self.refresh_remaining
+        self.dynamic_reserve = self.full_price_buy_reserve_base * (refresh_remaining + 1)
+        self.logger.debug(
+            f"剩余刷新次数: {refresh_remaining}, 动态预留: {self.dynamic_reserve}"
+        )
+
+        drinks = sorted(
+            [g for g in grids_info
+             if not g["bought"] and g["buy_type"] is None
+             and g["item_name"] == "potential_drink"],
+            key=lambda g: g["item_price"],
+        )
+        for grid in drinks:
+            grid["buy_type"] = "dynamic_drink"
+            grid["buy_priority"] = max(g["buy_priority"] for g in grids_info) + 1
+
+    @staticmethod
+    def _mark_remaining_drinks_buy_plan(grids_info: list[dict]) -> None:
+        """离开前补买饮料打标（仅 final 商店）：对所有未购潜能特饮打标为 normal。
+
+        按价格升序排列后逐格递增赋 buy_priority。self.reserve_coin 在整个
+        ShopAction 过程中始终生效，此阶段不解放。
+
+        Args:
+            grids_info: 当前轮次最后一次识别的格子列表。
+        """
+        drinks = sorted(
+            [g for g in grids_info
+             if not g["bought"] and g["buy_type"] is None
+             and g["item_name"] == "potential_drink"],
+            key=lambda g: g["item_price"],
+        )
+        for grid in drinks:
+            grid["buy_type"] = "normal"
+            grid["buy_priority"] = max(g["buy_priority"] for g in grids_info) + 1
+
+    @staticmethod
+    def _mark_remainder_buy_plan(grids_info: list[dict]) -> None:
+        """离开前零头购买打标（仅 final 商店）：对所有未购格子打标为 final_remainder。
+
+        按价格从高到低排列后逐格递增赋 buy_priority（贪心策略，从高到低更易花光零头）。
+        不限商品类型，usable 计算和 reserve_coin 传入均由执行函数按 final_remainder 路由处理。
+
+        Args:
+            grids_info: 当前轮次最后一次识别的格子列表。
+        """
+        candidates = sorted(
+            [g for g in grids_info if not g["bought"] and g["buy_type"] is None],
+            key=lambda g: g["item_price"],
+            reverse=True,
+        )
+        for grid in candidates:
+            grid["buy_type"] = "final_remainder"
+            grid["buy_priority"] = max(g["buy_priority"] for g in grids_info) + 1
 
     def _get_reverse_mapping(self, lang_type: str) -> dict[str, str]:
         """根据语言类型生成显示名到内部名的反向查找表。
@@ -919,6 +1065,7 @@ class ShopAction(CustomAction):
             for name in translations.get(lang_type, []):
                 reverse_map[name] = key
         return reverse_map
+
 
 @AgentServer.custom_action("enhance_action")
 class EnhanceAction(CustomAction):
@@ -965,8 +1112,8 @@ class EnhanceAction(CustomAction):
     def _get_params(self, context: Context, node_name: str) -> dict:
         """从节点 attach 读取强化配置参数，缺失时返回安全默认值。
 
-        attach 中的键名为 cost_increment，与 ShopAction._get_params() 读取强化节点时
-        使用的 enhance_step 键名不同，两处含义相同但命名不一致，注意区分。
+        强化节点 attach 的键名统一为 cost_increment（旧名 enhance_step 已废弃）。
+        ShopAction._get_params() 读取强化节点时同样使用 cost_increment。
 
         Args:
             context: 任务上下文。

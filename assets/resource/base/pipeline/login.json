@@ -1,190 +1,190 @@
 {
-    "登录_初次进入主页": {
-        "action": {
-            "param": {},
-            "type": "DoNothing"
-        },
-        "recognition": {
-            "param": {
-                "template": [
-                  "menu.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "next": [
-            "登录_二次确认进入主页",
-            {
-                "jump_back": true,
-                "name": "登录_点击关闭按钮"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_点击文字"
-            },
-            {
-              "jump_back": true,
-              "name": "通用_点击空白处继续"
-            }
-        ],
-        "post_delay": 2000
+  "登录_初次进入主页": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
     },
-    "登录_二次确认进入主页": {
-        "recognition": {
-            "param": {
-                "template": [
-                  "menu.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        }
-    },
-    "登录_点击关闭按钮": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "template": [
-                    "close.png", // 公告
-                    "close_variant_1.png", // 每日签到
-                    "close_variant_2.png" // 活动
-                ]
-            },
-            "type": "TemplateMatch"
-        }
-    },
-    "登录_点击任意区域进入游戏": {
-        "action": {
-            "param": {
-                "contact": 0
-            },
-            "type": "Click"
-        },
-        "focus": {
-            "Node.Action.Starting": "正在尝试进入游戏"
-        },
-        "recognition": {
-            "param": {
-                "expected": "点击任意区域进入游戏"
-            },
-            "type": "OCR"
-        },
-        "next": [
-            "登录_初次进入主页",
-            {
-                "jump_back": true,
-                "name": "登录_点击关闭按钮"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_点击文字"
-            },
-            {
-              "jump_back": true,
-              "name": "通用_点击空白处继续"
-            }
-        ],
-        "timeout": 30000
-    },
-    "登录_登录": {
-        "action": {
-            "param": {},
-            "type": "DoNothing"
-        },
-        "next": [
-            "登录_点击任意区域进入游戏",
-            {
-                "jump_back": true,
-                "name": "登录_登录悠星账号"
-            },
-            {
-                "jump_back": true,
-                "name": "登录_确认下载资源"
-            }
-        ],
-        "timeout": 30000
-    },
-    "登录_登录悠星账号": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "focus": {
-            "Node.Action.Starting": "正在尝试登录悠星账号"
-        },
-        "recognition": {
-            "param": {
-                "template": [
-                    "login.png",
-                    "login_2.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "timeout": 10000
-    },
-    "登录_点击文字": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "expected": [
-                  "可领取", // 活动签到时获得道具
-                  "获得道具", // 活动签到时获得道具
-                  "点击任意区域进入游戏" // 登录界面
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "登录_确认下载资源": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "template": [
-                    "ok.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "next": [
-            "登录_下载完成_图片",
-            "登录_下载完成_文字",
-            {
-              "jump_back": true,
-              "name": "登录_等待下载"
-            }
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
         ]
+      },
+      "type": "TemplateMatch"
     },
-    "登录_等待下载": {
-        "post_delay": 2000
-    },
-    "登录_下载完成_图片": {
-        "recognition": {
-            "param": {
-                "template": [
-                  "login.png",
-                  "login_2.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        }
-    },
-    "登录_下载完成_文字": {
-        "recognition": {
-            "param": {
-                "expected": [
-                  "点击任意区域进入游戏"
-                ]
-            },
-          "type": "OCR"
-        }
+    "next": [
+      "登录_二次确认进入主页",
+      {
+        "jump_back": true,
+        "name": "登录_点击关闭按钮"
+      },
+      {
+        "jump_back": true,
+        "name": "登录_点击文字"
+      },
+      {
+        "jump_back": true,
+        "name": "通用_点击空白处继续"
+      }
+    ],
+    "post_delay": 2000
+  },
+  "登录_二次确认进入主页": {
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
+        ]
+      },
+      "type": "TemplateMatch"
     }
+  },
+  "登录_点击关闭按钮": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "close.png", // 公告
+          "close_variant_1.png", // 每日签到
+          "close_variant_2.png" // 活动
+        ]
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "登录_点击任意区域进入游戏": {
+    "action": {
+      "param": {
+        "contact": 0
+      },
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Action.Starting": "正在尝试进入游戏"
+    },
+    "recognition": {
+      "param": {
+        "expected": "点击任意区域进入游戏"
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "登录_初次进入主页",
+      {
+        "jump_back": true,
+        "name": "登录_点击关闭按钮"
+      },
+      {
+        "jump_back": true,
+        "name": "登录_点击文字"
+      },
+      {
+        "jump_back": true,
+        "name": "通用_点击空白处继续"
+      }
+    ],
+    "timeout": 30000
+  },
+  "登录_登录": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "next": [
+      "登录_点击任意区域进入游戏",
+      {
+        "jump_back": true,
+        "name": "登录_登录悠星账号"
+      },
+      {
+        "jump_back": true,
+        "name": "登录_确认下载资源"
+      }
+    ],
+    "timeout": 30000
+  },
+  "登录_登录悠星账号": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Action.Starting": "正在尝试登录悠星账号"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "login.png",
+          "login_2.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "timeout": 10000
+  },
+  "登录_点击文字": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "expected": [
+          "可领取", // 活动签到时获得道具
+          "获得道具", // 活动签到时获得道具
+          "点击任意区域进入游戏" // 登录界面
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "登录_确认下载资源": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "ok.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "next": [
+      "登录_下载完成_图片",
+      "登录_下载完成_文字",
+      {
+        "jump_back": true,
+        "name": "登录_等待下载"
+      }
+    ]
+  },
+  "登录_等待下载": {
+    "post_delay": 2000
+  },
+  "登录_下载完成_图片": {
+    "recognition": {
+      "param": {
+        "template": [
+          "login.png",
+          "login_2.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "登录_下载完成_文字": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "点击任意区域进入游戏"
+        ]
+      },
+      "type": "OCR"
+    }
+  }
 }

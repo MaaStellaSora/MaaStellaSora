@@ -254,7 +254,10 @@
         ],
         "attach": {
             "lang_type": "cn",
-            "priority": ["drink", "melody"],
+            "priority": [
+                "drink",
+                "melody"
+            ],
             "drink_discount_threshold": 0.8,
             "melody_5_discount_threshold": 1.0,
             "melody_15_discount_threshold": 0.5,
@@ -379,7 +382,6 @@
             "[JumpBack]星塔_保存记录_agent",
             "[JumpBack]星塔_点击空白处关闭_agent",
             "[JumpBack]星塔_默契提升_agent",
-
         ]
     },
     "星塔_保存记录_agent": {

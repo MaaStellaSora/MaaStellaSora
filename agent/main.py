@@ -1,4 +1,5 @@
 import sys
+import os
 
 from maa.agent.agent_server import AgentServer
 from maa.toolkit import Toolkit
@@ -7,8 +8,9 @@ from maa.toolkit import Toolkit
 import custom # noqa: F401
 
 # 开启debug_mode
-from utils import logger
-logger.debug_mode()
+if os.getenv("APP_DEBUG", "false").lower() == "true":
+    from utils import logger
+    logger.debug_mode()
 
 
 

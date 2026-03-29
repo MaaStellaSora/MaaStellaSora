@@ -525,7 +525,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         self,
         potential_priority_list: list[dict],
         potential: dict,
-    ) -> tuple[int, str | None]:
+    ) -> tuple[int, str | None, int]:
         """获取单个待选潜能在规则列表中的最高排名及其 trekker 归属。
 
         遍历 priority_list，找到所有名称匹配且满足 level_span / max_level / refresh
@@ -539,9 +539,10 @@ class ChoosePotentialRecognition(CustomRecognition):
                 {"name": str, "old_level": int, "new_level": int, "is_core": bool, "box": list}
 
         Returns:
-            tuple[int, str | None]: (priority, trekker)
+            tuple[int, str | None, int]: (priority, trekker, name_order)
                 priority 为匹配到的最小排名数值；无匹配时返回 -1
                 trekker 为对应规则的归属角色；无匹配时返回 None
+                name_order 为命中的 potential 名称在该规则 names 列表中的下标；无匹配时返回 -1
         """
         name = potential["name"]
         is_core = potential["is_core"]
@@ -550,23 +551,29 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         best_priority = -1
         best_trekker = None
+        best_name_order = -1
 
         if is_core:
             for entry in potential_priority_list:
-                if not any(
-                    self._match_potential_name(name, n)
-                    for n in entry["names"]
-                ):
+                name_order = -1
+                for idx, rule_name in enumerate(entry["names"]):
+                    if self._match_potential_name(name, rule_name):
+                        name_order = idx
+                        break
+                if name_order == -1:
                     continue
                 if best_priority == -1 or entry["priority"] < best_priority:
                     best_priority = entry["priority"]
                     best_trekker = entry["trekker"]
+                    best_name_order = name_order
         else:
             for entry in potential_priority_list:
-                if not any(
-                    self._match_potential_name(name, n)
-                    for n in entry["names"]
-                ):
+                name_order = -1
+                for idx, rule_name in enumerate(entry["names"]):
+                    if self._match_potential_name(name, rule_name):
+                        name_order = idx
+                        break
+                if name_order == -1:
                     continue
                 if old_level >= entry["max_level"]:
                     continue
@@ -577,8 +584,9 @@ class ChoosePotentialRecognition(CustomRecognition):
                 if best_priority == -1 or entry["priority"] < best_priority:
                     best_priority = entry["priority"]
                     best_trekker = entry["trekker"]
+                    best_name_order = name_order
 
-        return best_priority, best_trekker
+        return best_priority, best_trekker, best_name_order
 
     def _select_best_potential(
         self,
@@ -589,7 +597,7 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         同时输出每个待选潜能的识别情况及最终选择的 info 日志。
         若多个潜能匹配到同一条规则（potential 为列表且跨度相同），
-        按候选列表顺序选择第一个。
+        按该规则 potential 列表中的顺序选择最靠前者。
 
         Args:
             available: _get_available_potentials 的返回值
@@ -599,9 +607,9 @@ class ChoosePotentialRecognition(CustomRecognition):
             tuple[dict, str | None]: (potential, trekker) 若找到匹配规则的潜能；
             None 若所有潜能均无匹配规则
         """
-        candidates: list[tuple[dict, int, str | None]] = []
+        candidates: list[tuple[dict, int, str | None, int]] = []
         for potential in available:
-            priority, trekker = self._get_potential_priority(priority_list, potential)
+            priority, trekker, name_order = self._get_potential_priority(priority_list, potential)
             rank_str = str(priority) if priority != -1 else "无"
 
             if potential["is_core"]:
@@ -612,18 +620,22 @@ class ChoosePotentialRecognition(CustomRecognition):
                 self.logger.info(f"[潜能识别] {potential['name']} | 等级 {old}→{new} | 排名 {rank_str}")
 
             if priority != -1:
-                candidates.append((potential, priority, trekker))
+                candidates.append((potential, priority, trekker, name_order))
 
         if not candidates:
             return None
 
-        best_priority = min(p for _, p, _ in candidates)
-        top = [(pot, trek) for pot, p, trek in candidates if p == best_priority]
+        best_priority = min(p for _, p, _, _ in candidates)
+        top = [(pot, trek, order) for pot, p, trek, order in candidates if p == best_priority]
 
-        best_span = max(pot["new_level"] - pot["old_level"] for pot, _ in top)
-        top = [(pot, trek) for pot, trek in top if pot["new_level"] - pot["old_level"] == best_span]
+        best_span = max(pot["new_level"] - pot["old_level"] for pot, _, _ in top)
+        top = [(pot, trek, order) for pot, trek, order in top if pot["new_level"] - pot["old_level"] == best_span]
 
-        selected_potential, selected_trekker = top[0]
+        if len(top) > 1:
+            best_name_order = min(order for _, _, order in top)
+            top = [(pot, trek, order) for pot, trek, order in top if order == best_name_order]
+
+        selected_potential, selected_trekker, _ = top[0]
 
         self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")
         return selected_potential, selected_trekker

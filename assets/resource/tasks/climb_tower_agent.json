@@ -125,7 +125,7 @@
                 {
                     "name": "潜能最大刷新次数",
                     "pipeline_type": "int",
-                    "default": "0",
+                    "default": "2",
                     "verify": "^\\d+$",
                     "pattern_msg": "请输入潜能最大刷新次数"
                 }

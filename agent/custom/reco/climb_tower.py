@@ -1,6 +1,5 @@
 import re
 import time
-import random
 
 from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
@@ -92,13 +91,13 @@ class ChoosePotentialRecognition(CustomRecognition):
             target_box = self._get_recommended_box(context, argv.image)
             return CustomRecognition.AnalyzeResult(box=target_box, detail={})
 
-        refresh_count = 0
+        available_refresh_count = 0
         if self._is_refreshable(context, argv.image):
             current_coin = self._get_current_coin(context, argv.image)
             refresh_cost = self._get_refresh_cost(context, argv.image)
             usable_coin = max(0, current_coin - attach["reserve_coin"])
             affordable = usable_coin // refresh_cost if refresh_cost else 0
-            refresh_count = min(attach["max_refresh_count"], affordable)
+            available_refresh_count = min(attach["max_refresh_count"], affordable)
 
         target_potential = None
         target_trekker = None
@@ -111,10 +110,10 @@ class ChoosePotentialRecognition(CustomRecognition):
             if result:
                 target_potential, target_trekker = result
                 break
-            if refresh_count > 0:
+            if available_refresh_count > 0:
                 self.logger.info("没有找到符合条件的潜能，尝试刷新")
                 context.run_task("星塔_节点_选择潜能_点击刷新_agent")
-                refresh_count -= 1
+                available_refresh_count -= 1
                 self._refresh_count += 1
             else:
                 self.logger.info("[潜能选择] 选择系统推荐")
@@ -473,8 +472,8 @@ class ChoosePotentialRecognition(CustomRecognition):
         valid_entries = []
         for index, raw in enumerate(potential_priority_raw):
             condition = raw.get("condition", [])
-            if isinstance(condition, dict):
-                condition = []
+            if not isinstance(condition, list):
+                continue
             if not _check_condition(condition):
                 continue
 
@@ -510,6 +509,10 @@ class ChoosePotentialRecognition(CustomRecognition):
         """
         cleaned_ocr = re.sub(r'\W', '', ocr_name)
         cleaned_rule = re.sub(r'\W', '', rule_name)
+
+        # 防止"" in "任意字符串" 返回True
+        if not cleaned_ocr or not cleaned_rule:
+            return False
 
         chars_to_remove = "ー"
         table = str.maketrans("", "", chars_to_remove)
@@ -585,7 +588,8 @@ class ChoosePotentialRecognition(CustomRecognition):
         """从待选潜能中选出排名最高的一个，返回潜能与其 trekker 归属。
 
         同时输出每个待选潜能的识别情况及最终选择的 info 日志。
-        若多个潜能匹配到同一条规则（potential 为列表且跨度相同），从并列者中随机选一个。
+        若多个潜能匹配到同一条规则（potential 为列表且跨度相同），
+        按候选列表顺序选择第一个。
 
         Args:
             available: _get_available_potentials 的返回值
@@ -619,7 +623,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         best_span = max(pot["new_level"] - pot["old_level"] for pot, _ in top)
         top = [(pot, trek) for pot, trek in top if pot["new_level"] - pot["old_level"] == best_span]
 
-        selected_potential, selected_trekker = random.choice(top)
+        selected_potential, selected_trekker = top[0]
 
         self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")
         return selected_potential, selected_trekker

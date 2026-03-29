@@ -92,7 +92,7 @@
         ],
         "attach": {
             "priority_list": [],
-            "max_refresh_count": 0,
+            "max_refresh_count": 2,
             "reserve_coin": 0,
             "owned_potentials": {}
         },

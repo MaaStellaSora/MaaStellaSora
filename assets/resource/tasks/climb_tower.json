@@ -121,17 +121,7 @@
                     "name": "Yes",
                     "option": [
                         "自定义卡牌优先级"
-                    ],
-                    "pipeline_override": {
-                        "星塔_节点_选择buff_推荐": {
-                            "recognition": {
-                                "type": "Custom",
-                                "param": {
-                                    "custom_recognition": "auto_tower",
-                                }
-                            }
-                        }
-                    }
+                    ]
                 },
                 {
                     "name": "No"
@@ -150,7 +140,18 @@
                     "default": "",
                     "pipeline_type": "string"
                 }
-            ]
+            ],
+            "pipeline_override": {
+                "星塔_节点_选择buff_推荐": {
+                    "recognition": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_recognition": "auto_tower",
+                            "custom_recognition_param": "{作业}"
+                        }
+                    }
+                }
+            }
         }
     }
 }

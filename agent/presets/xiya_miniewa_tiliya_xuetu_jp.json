@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "シア",
-        "ミネルバ",
-        "ティリア"
-    ],
-    "element": "Lux",
+    "trekker_names": {
+        "main": [
+            "シア"
+        ],
+        "sub": [
+            "ミネルバ",
+            "ティリア"
+        ]
+    },
+    "element": "光",
     "priority_list": [
         {
             "potential": [

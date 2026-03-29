@@ -1,9 +1,13 @@
 {
-    "trekker_names": [
-        "Shia",
-        "Minova",
-        "Tilia"
-    ],
+    "trekker_names": {
+        "main": [
+            "Shia"
+        ],
+        "sub": [
+            "Minova",
+            "Tilia"
+        ]
+    },
     "element": "Lux",
     "priority_list": [
         {

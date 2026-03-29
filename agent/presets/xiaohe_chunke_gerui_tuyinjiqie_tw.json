@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "小禾",
-        "緋春柯洛妮絲",
-        "格芮"
-    ],
-    "element": "Terra",
+    "trekker_names": {
+        "main": [
+            "小禾"
+        ],
+        "sub": [
+            "緋春柯洛妮絲",
+            "格芮"
+        ]
+    },
+    "element": "地",
     "priority_list": [
         {
             "potential": [

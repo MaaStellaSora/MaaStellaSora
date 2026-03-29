@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "チトセ",
-        "フリージア",
-        "テレサ"
-    ],
-    "element": "Aqua",
+    "trekker_names": {
+        "main": [
+            "チトセ"
+        ],
+        "sub": [
+            "フリージア",
+            "テレサ"
+        ]
+    },
+    "element": "水",
     "priority_list": [
         {
             "potential": [

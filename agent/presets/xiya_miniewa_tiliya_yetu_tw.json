@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "希婭",
-        "密涅瓦",
-        "緹莉婭"
-    ],
-    "element": "Lux",
+    "trekker_names": {
+        "main": [
+            "希婭"
+        ],
+        "sub": [
+            "密涅瓦",
+            "緹莉婭"
+        ]
+    },
+    "element": "光",
     "priority_list": [
         {
             "potential": [

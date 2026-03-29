@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "风影",
-        "夏花",
-        "杏子"
-    ],
-    "element": "Ventus",
+    "trekker_names": {
+        "main": [
+            "风影"
+        ],
+        "sub": [
+            "夏花",
+            "杏子"
+        ]
+    },
+    "element": "风",
     "priority_list": [
         {
             "potential": [

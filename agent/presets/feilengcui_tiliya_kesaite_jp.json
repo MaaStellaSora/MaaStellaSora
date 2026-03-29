@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "フィレン",
-        "ティリア",
-        "コゼット"
-    ],
-    "element": "Umbra",
+    "trekker_names": {
+        "main": [
+            "フィレン"
+        ],
+        "sub": [
+            "ティリア",
+            "コゼット"
+        ]
+    },
+    "element": "闇",
     "priority_list": [
         {
             "potential": [

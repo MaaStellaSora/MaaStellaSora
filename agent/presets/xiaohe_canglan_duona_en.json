@@ -1,9 +1,13 @@
 {
-    "trekker_names": [
-        "Nazuna",
-        "Freesia",
-        "Donna"
-    ],
+    "trekker_names": {
+        "main": [
+            "Nazuna"
+        ],
+        "sub": [
+            "Freesia",
+            "Donna"
+        ]
+    },
     "element": "Aqua",
     "priority_list": [
         {

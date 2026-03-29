@@ -1,9 +1,13 @@
 {
-    "trekker_names": [
-        "Firenze",
-        "Tilia",
-        "Cosette"
-    ],
+    "trekker_names": {
+        "main": [
+            "Firenze"
+        ],
+        "sub": [
+            "Tilia",
+            "Cosette"
+        ]
+    },
     "element": "Umbra",
     "priority_list": [
         {

@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "ナズナ",
-        "クルニス（華服）",
-        "グレイ"
-    ],
-    "element": "Terra",
+    "trekker_names": {
+        "main": [
+            "ナズナ"
+        ],
+        "sub": [
+            "クルニス（華服）",
+            "グレイ"
+        ]
+    },
+    "element": "地",
     "priority_list": [
         {
             "potential": [

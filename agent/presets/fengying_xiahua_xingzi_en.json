@@ -1,9 +1,13 @@
 {
-    "trekker_names": [
-        "Wraith",
-        "Nazuka",
-        "Ann"
-    ],
+    "trekker_names": {
+        "main": [
+            "Wraith"
+        ],
+        "sub": [
+            "Nazuka",
+            "Ann"
+        ]
+    },
     "element": "Ventus",
     "priority_list": [
         {

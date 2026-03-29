@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "千都世",
-        "蒼蘭",
-        "特麗莎"
-    ],
-    "element": "Aqua",
+    "trekker_names": {
+        "main": [
+            "千都世"
+        ],
+        "sub": [
+            "蒼蘭",
+            "特麗莎"
+        ]
+    },
+    "element": "水",
     "priority_list": [
         {
             "potential": [

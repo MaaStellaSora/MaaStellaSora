@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "翡冷翠",
-        "缇莉娅",
-        "珂赛特"
-    ],
-    "element": "Umbra",
+    "trekker_names": {
+        "main": [
+            "翡冷翠"
+        ],
+        "sub": [
+            "缇莉娅",
+            "珂赛特"
+        ]
+    },
+    "element": "暗",
     "priority_list": [
         {
             "potential": [

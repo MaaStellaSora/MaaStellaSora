@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "ナズナ",
-        "フリージア",
-        "トーナ"
-    ],
-    "element": "Aqua",
+    "trekker_names": {
+        "main": [
+            "ナズナ"
+        ],
+        "sub": [
+            "フリージア",
+            "トーナ"
+        ]
+    },
+    "element": "水",
     "priority_list": [
         {
             "potential": [

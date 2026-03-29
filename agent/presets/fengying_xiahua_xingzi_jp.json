@@ -1,10 +1,14 @@
 {
-    "trekker_names": [
-        "レイス",
-        "ナツカ",
-        "アンズ"
-    ],
-    "element": "Ventus",
+    "trekker_names": {
+        "main": [
+            "レイス"
+        ],
+        "sub": [
+            "ナツカ",
+            "アンズ"
+        ]
+    },
+    "element": "風",
     "priority_list": [
         {
             "potential": [

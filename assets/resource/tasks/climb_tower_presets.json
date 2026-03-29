@@ -14,7 +14,7 @@
                     "description": "只会选择系统推荐潜能"
                 },
                 {
-                    "name": "手动输入",
+                    "name": "手动输入文件名",
                     "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
@@ -31,11 +31,31 @@
                     }
                 },
                 {
-                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "name": "千都世+多娜+特丽莎",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiaohe_chunke_gerui_qie_cn.json"
+                                "preset_name": "qiandushi_duona_telisha_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_cn.json"
                             }
                         }
                     }
@@ -61,17 +81,17 @@
                     }
                 },
                 {
-                    "name": "冬香+圣夜菈露+紫槿",
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "dongxiang_shengdanlalu_zijin_cn.json"
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_cn.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
@@ -81,7 +101,7 @@
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
@@ -116,7 +136,7 @@
                     "description": "只会选择系统推荐潜能"
                 },
                 {
-                    "name": "手动输入",
+                    "name": "手动输入文件名",
                     "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
@@ -133,11 +153,31 @@
                     }
                 },
                 {
-                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "name": "千都世+多娜+特丽莎",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiaohe_chunke_gerui_qie_tw.json"
+                                "preset_name": "qiandushi_duona_telisha_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_tw.json"
                             }
                         }
                     }
@@ -163,17 +203,17 @@
                     }
                 },
                 {
-                    "name": "冬香+圣夜菈露+紫槿",
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "dongxiang_shengdanlalu_zijin_tw.json"
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_tw.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
@@ -183,7 +223,7 @@
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
@@ -218,7 +258,7 @@
                     "description": "只会选择系统推荐潜能"
                 },
                 {
-                    "name": "手动输入",
+                    "name": "手动输入文件名",
                     "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
@@ -235,11 +275,31 @@
                     }
                 },
                 {
-                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "name": "千都世+多娜+特丽莎",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiaohe_chunke_gerui_qie_en.json"
+                                "preset_name": "qiandushi_duona_telisha_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_en.json"
                             }
                         }
                     }
@@ -265,17 +325,17 @@
                     }
                 },
                 {
-                    "name": "冬香+圣夜菈露+紫槿",
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "dongxiang_shengdanlalu_zijin_en.json"
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_en.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
@@ -285,7 +345,7 @@
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
@@ -320,7 +380,7 @@
                     "description": "只会选择系统推荐潜能"
                 },
                 {
-                    "name": "手动输入",
+                    "name": "手动输入文件名",
                     "description": "手动输入文件名，以使用自定义作业",
                     "option": [
                         "预设作业_手动输入作业名"
@@ -337,11 +397,31 @@
                     }
                 },
                 {
-                    "name": "小禾+新春科洛妮丝+格芮（企鹅）",
+                    "name": "千都世+多娜+特丽莎",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "xiaohe_chunke_gerui_qie_jp.json"
+                                "preset_name": "qiandushi_duona_telisha_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_jp.json"
                             }
                         }
                     }
@@ -367,17 +447,17 @@
                     }
                 },
                 {
-                    "name": "冬香+圣夜菈露+紫槿",
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
-                                "preset_name": "dongxiang_shengdanlalu_zijin_jp.json"
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_jp.json"
                             }
                         }
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（雪兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {
@@ -387,7 +467,7 @@
                     }
                 },
                 {
-                    "name": "希娅+密涅瓦+缇莉娅（夜兔）",
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
                     "pipeline_override": {
                         "星塔_入口_agent": {
                             "attach": {

@@ -1,9 +1,13 @@
 {
-    "trekker_names": [
-        "Nazuna",
-        "Springseek Coronis",
-        "Gerie"
-    ],
+    "trekker_names": {
+        "main": [
+            "Nazuna"
+        ],
+        "sub": [
+            "Springseek Coronis",
+            "Gerie"
+        ]
+    },
     "element": "Terra",
     "priority_list": [
         {

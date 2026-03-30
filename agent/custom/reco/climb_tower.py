@@ -81,13 +81,13 @@ class ChoosePotentialRecognition(CustomRecognition):
         node_name = argv.node_name
         attach = self._get_attachments(context, node_name)
         self._refresh_count = 0
-        self.available_potential_num = self._get_available_potential_num(context, argv.image)
         priority_list = self._parse_priority_raw_list(
             attach["priority_list"],
             attach["owned_potentials"],
         )
 
         if not priority_list:
+            self.available_potential_num = self._get_available_potential_num(context, argv.image)
             target_box = self._get_recommended_box(context, argv.image)
             return CustomRecognition.AnalyzeResult(box=target_box, detail={})
 
@@ -104,6 +104,14 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         while True:
             image = context.tasker.controller.post_screencap().wait().get()
+
+            reco_detail = context.run_recognition("星塔_节点_选择潜能_检测干扰文字_agent", image)
+            if reco_detail and reco_detail.hit:
+                self.logger.debug("识别到干扰文字，等待1秒")
+                time.sleep(1)
+                continue
+
+            self.available_potential_num = self._get_available_potential_num(context, image)
             available = self._get_available_potentials(context, image)
             result = self._select_best_potential(available, priority_list)
 
@@ -122,7 +130,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         if target_potential:
             target_box = target_potential["box"]
         else:
-            target_box = self._get_recommended_box(context, argv.image)
+            target_box = self._get_recommended_box(context, image)
 
         owned = self._update_owned_potentials(
             attach["owned_potentials"],

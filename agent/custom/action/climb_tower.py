@@ -330,13 +330,13 @@ class ShopAction(CustomAction):
             if not self._execute_buy_plan(context, grids_info):
                 return False
 
-            self._mark_full_price_buy_plan(grids_info)
-            if not self._execute_buy_plan(context, grids_info):
-                return False
-
             if not self._should_refresh(context):
                 break
             context.run_task("星塔_节点_商店_点击刷新_agent")
+
+        self._mark_full_price_buy_plan(grids_info)
+        if not self._execute_buy_plan(context, grids_info):
+            return False
 
         if self.shop_type == "final":
             self._mark_remaining_drinks_buy_plan(grids_info)
@@ -368,9 +368,9 @@ class ShopAction(CustomAction):
         defaults = {
             "lang_type": "cn",
             "priority": ["drink", "melody"],
-            "drink_discount_threshold": 1.0,
+            "drink_discount_threshold": 0.8,
             "melody_5_discount_threshold": 1.0,
-            "melody_15_discount_threshold": 1.0,
+            "melody_15_discount_threshold": 0.5,
             "regular_shop_refresh_threshold": 1500,
             "full_price_buy_reserve_base": 400,
             "buy_assist_melody": False,
@@ -770,8 +770,6 @@ class ShopAction(CustomAction):
         """
         if grid["item_name"] != "potential_drink":
             return False
-        if self.shop_type == "final":
-            return True
         return grid["discount"] <= self.drink_discount_threshold
 
     def _is_target_melody(self, grid: dict) -> bool:

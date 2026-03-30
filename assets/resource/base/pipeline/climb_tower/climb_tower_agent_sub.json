@@ -354,13 +354,25 @@
             "type": "TemplateMatch"
         }
     },
+    "星塔_节点_选择潜能_检测干扰文字_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    ".+"
+                ],
+                "roi": [20, 375, 130, 90],
+                "threshold": 0.8
+            },
+            "type": "OCR"
+        }
+    },
     "星塔_节点_选择潜能_识别潜能名称_agent": {
         "recognition": {
             "param": {
                 "expected": [
                     ".+"
                 ],
-                "roi": [358, 395, 220, 40]
+                "roi": [187, 425, 220, 40]
             },
             "type": "OCR"
         }
@@ -405,7 +417,8 @@
                     169,
                     1018,
                     222
-                ]
+                ],
+                "threshold": 0.8
             },
             "type": "TemplateMatch"
         }

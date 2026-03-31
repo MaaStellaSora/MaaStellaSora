@@ -26,40 +26,10 @@
       "type": "TemplateMatch"
     },
     "next": [
-      "采购_开始采购"
-    ]
-  },
-  "采购_开始采购": {
-    "action": {
-      "param": {
-        "custom_action": "DailyGiftAction"
-      },
-      "type": "Custom"
-    },
-    "next": [
-      "通用_返回主页"
-    ]
-  },
-  "采购_判断是否已领取": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Recognition.Succeeded": "检测到每日赠礼已领取 将跳过"
-    },
-    "next": [
-      "通用_返回主页"
+      "[JumpBack]采购_前往采购",
+      "[JumpBack]采购_前往商城"
     ],
-    "recognition": {
-      "param": {
-        "expected": [
-          "已领取"
-        ]
-      },
-      "type": "OCR"
-    },
-    "timeout": 2000
+    "timeout": 5000
   },
   "采购_前往采购": {
     "action": {
@@ -70,8 +40,7 @@
       "Node.Action.Starting": "正在前往采购"
     },
     "next": [
-      "采购_领取每日赠礼",
-      "采购_判断是否已领取"
+      "采购_领取每日赠礼"
     ],
     "recognition": {
       "param": {
@@ -81,7 +50,7 @@
       },
       "type": "TemplateMatch"
     },
-    "timeout": 2000
+    "max_hit": 1
   },
   "采购_前往商城": {
     "action": {
@@ -92,8 +61,7 @@
       "Node.Action.Starting": "正在前往商城"
     },
     "next": [
-      "采购_领取每日赠礼",
-      "采购_判断是否已领取"
+      "采购_领取每日赠礼"
     ],
     "recognition": {
       "param": {
@@ -103,7 +71,7 @@
       },
       "type": "TemplateMatch"
     },
-    "timeout": 2000
+    "max_hit": 1
   },
   "采购_领取每日赠礼": {
     "action": {
@@ -114,11 +82,7 @@
       "Node.Action.Starting": "正在领取每日赠礼"
     },
     "next": [
-      "通用_返回主页",
-      {
-        "jump_back": true,
-        "name": "通用_点击空白处继续"
-      }
+      "通用_返回主页"
     ],
     "recognition": {
       "param": {
@@ -129,7 +93,6 @@
       },
       "type": "TemplateMatch"
     },
-    "pre_delay": 1000, // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
-    "timeout": 2000
+    "pre_delay": 1000 // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
   }
 }

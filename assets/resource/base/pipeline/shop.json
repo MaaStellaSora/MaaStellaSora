@@ -13,14 +13,16 @@
     ]
   },
   "采购_判断是否在主页": {
-    "action": {
-      "param": {},
-      "type": "DoNothing"
-    },
     "recognition": {
       "param": {
         "template": [
           "menu.png"
+        ],
+        "roi": [
+          1180,
+          0,
+          100,
+          80
         ]
       },
       "type": "TemplateMatch"
@@ -29,7 +31,7 @@
       "[JumpBack]采购_前往采购",
       "[JumpBack]采购_前往商城"
     ],
-    "timeout": 5000
+    "timeout": 3000
   },
   "采购_前往采购": {
     "action": {
@@ -88,7 +90,9 @@
       "param": {
         "template": [
           "shop/daily_gift_1.png",
-          "shop/daily_gift_2.png"
+          "shop/daily_gift_2.png",
+          "shop/daily_gift_1_obtained.png",
+          "shop/daily_gift_2_obtained.png"
         ]
       },
       "type": "TemplateMatch"

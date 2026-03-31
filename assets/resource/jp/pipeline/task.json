@@ -17,26 +17,6 @@
       }
     }
   },
-  "任务_领取任务": {
-    "action": {
-      "param": {
-        "target_offset": [
-          0,
-          -15,
-          0,
-          0
-        ]
-      }
-    },
-    "recognition": {
-      "type": "TemplateMatch",
-      "param": {
-        "template": [
-          "task/task.png"
-        ]
-      }
-    }
-  },
   "任务_魔王养成": {
     "recognition": {
       "param": {

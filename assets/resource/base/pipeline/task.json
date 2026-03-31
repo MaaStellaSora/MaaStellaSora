@@ -21,42 +21,61 @@
       "param": {
         "template": [
           "menu.png"
+        ],
+        "roi": [
+          1180,
+          0,
+          100,
+          80
         ]
       },
       "type": "TemplateMatch"
     },
     "next": [
-      "任务_领取任务"
+      "任务_与旅人互动"
     ]
+  },
+  "任务_与旅人互动": {
+    "action": {
+      "param": {
+        "target": [
+          480,
+          202,
+          390,
+          330
+        ]
+      },
+      "type": "Click"
+    },
+    "next": [
+      "任务_领取任务"
+    ],
+    "post_delay": 500
   },
   "任务_一键领取": {
     "action": {
       "param": {},
       "type": "Click"
     },
-    "focus": {
-      "Node.Recognition.Failed": "没有找到一键领取按钮！",
-      "Node.Action.Starting": "正在尝试点击一键领取"
-    },
     "next": [
-      {
-        "jump_back": true,
-        "name": "通用_点击空白处继续"
-      },
-      {
-        "jump_back": true,
-        "name": "任务_领取额外奖励"
-      }
+      "通用_点击空白处继续"
     ],
     "recognition": {
       "param": {
         "template": [
           "quick_claim.png"
+        ],
+        "roi": [
+          1014,
+          553,
+          220,
+          76
         ]
       },
       "type": "TemplateMatch"
     },
-    "timeout": 1000
+    "timeout": 5000,
+    "post_wait_freezes": 100
   },
   "任务_今日事务": {
     "action": {
@@ -68,6 +87,10 @@
         "jump_back": true,
         "name": "任务_一键领取"
       },
+      {
+        "jump_back": true,
+        "name": "任务_领取额外奖励"
+      },
       "通用_返回主页"
     ],
     "recognition": {
@@ -77,6 +100,15 @@
         ]
       },
       "type": "OCR"
+    },
+    "post_wait_freezes": {
+      "time": 100,
+      "target": [
+        610,
+        115,
+        590,
+        440
+      ]
     }
   },
   "任务_每周事务": {
@@ -89,6 +121,10 @@
         "jump_back": true,
         "name": "任务_一键领取"
       },
+      {
+        "jump_back": true,
+        "name": "任务_领取额外奖励"
+      },
       "任务_魔王养成"
     ],
     "recognition": {
@@ -98,6 +134,15 @@
         ]
       },
       "type": "OCR"
+    },
+    "post_wait_freezes": {
+      "time": 200,
+      "target": [
+        610,
+        115,
+        590,
+        440
+      ]
     }
   },
   "任务_领取任务": {
@@ -113,21 +158,17 @@
     ],
     "recognition": {
       "param": {
-        "expected": [
-          "任务"
+        "template": [
+          "task/missions.png"
         ]
       },
-      "type": "OCR"
+      "type": "TemplateMatch"
     }
   },
   "任务_领取额外奖励": {
     "action": {
       "param": {},
       "type": "Click"
-    },
-    "focus": {
-      "Node.Recognition.Failed": "没有找到领取按钮",
-      "Node.Action.Starting": "正在尝试领取任务额外的奖励"
     },
     "next": [
       "通用_点击空白处继续"
@@ -136,11 +177,19 @@
       "param": {
         "template": [
           "claim.png"
-        ]
+        ],
+        "roi": [
+          1087,
+          22,
+          123,
+          82
+        ],
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     },
-    "timeout": 1000
+    "timeout": 5000,
+    "post_wait_freezes": 100
   },
   "任务_魔王养成": {
     "action": {
@@ -152,6 +201,10 @@
         "jump_back": true,
         "name": "任务_一键领取"
       },
+      {
+        "jump_back": true,
+        "name": "任务_领取额外奖励"
+      },
       "任务_今日事务"
     ],
     "recognition": {
@@ -161,6 +214,15 @@
         ]
       },
       "type": "OCR"
+    },
+    "post_wait_freezes": {
+      "time": 200,
+      "target": [
+        610,
+        115,
+        590,
+        440
+      ]
     }
   }
 }

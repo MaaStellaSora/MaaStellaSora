@@ -1,0 +1,50 @@
+{
+    "trekker_names": {
+        "main": [
+            "Shia"
+        ],
+        "sub": [
+            "Minova",
+            "Tilia"
+        ]
+    },
+    "element": "Lux",
+    "priority_list": [
+        {
+            "potential": [
+                "Phantom Step Radiance",
+                "Rimecrystal Edge",
+                "Subzero Dominion",
+                "Glacial Dash",
+                "Rimeheart Pulse",
+                "Star Core Crumbled",
+                "Radiant Burst",
+                "Perfect Arc",
+                "Radiant Synergy",
+                "Fervent Applause",
+                "Renewed Spectrum",
+                "Holy Inscription",
+                "Enemy Counter"
+            ]
+        },
+        {
+            "potential": [
+                "Rabbit's Beam",
+                "Hare's Pursuit",
+                "Ashwind's Wrath",
+                "Brilliant Relay",
+                "Trick Boost",
+                "Knight's Seal"
+            ]
+        },
+        {
+            "potential": [
+                "Leporine Gale",
+                "Shutout Desire",
+                "Revealed Flaw",
+                "Guardian's Resolve",
+                "Knight Oath: Courage"
+            ]
+        }
+    ]
+}

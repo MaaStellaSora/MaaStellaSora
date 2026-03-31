@@ -1,0 +1,65 @@
+{
+    "trekker_names": {
+        "main": [
+            "Chitose"
+        ],
+        "sub": [
+            "Donna",
+            "Teresa"
+        ]
+    },
+    "element": "Aqua",
+    "priority_list": [
+        {
+            "potential": [
+                "Mirror Blade",
+                "Serpent's Glide",
+                "Aqueous Phantasm",
+                "Azure Embrace"
+            ]
+        },
+        {
+            "potential": [
+                "Tremble and Fall"
+            ],
+            "max_level": 1
+        },
+        {
+            "potential": [
+                "Stray Arrow",
+                "Wave-Chasing String",
+                "Water Ripple",
+                "Chilling Onslaught",
+                "Aquatic Assault"
+            ]
+        },
+        {
+            "potential": [
+                "Freezing Stasis"
+            ],
+            "max_level": 1
+        },
+        {
+            "potential": [
+                "Surge: Infinite",
+                "Surge: Immortality",
+                "Let Me Help!",
+                "Isn't It Awesome!",
+                "Shortcut Seeker"
+            ]
+        },
+        {
+            "potential": [
+                "Dance of Elegance",
+                "Wave Resonance",
+                "Band-aid Collector"
+            ]
+        },
+        {
+            "potential": [
+                "Tremble and Fall",
+                "Freezing Stasis"
+            ]
+        }
+    ]
+}

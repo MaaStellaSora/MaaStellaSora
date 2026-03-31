@@ -1,0 +1,85 @@
+{
+    "trekker_names": {
+        "main": [
+            "Nazuna"
+        ],
+        "sub": [
+            "Springseek Coronis",
+            "Ridge"
+        ]
+    },
+    "element": "Terra",
+    "priority_list": [
+        {
+            "potential": [
+                "Graceful Turn",
+                "Roll the Dice",
+                "Rocket Cart"
+            ]
+        },
+        {
+            "potential": [
+                "Balloonado"
+            ],
+            "max_level": 1
+        },
+        {
+            "potential": [
+                "Wily Wonder"
+            ]
+        },
+        {
+            "potential": [
+                "Clean Sweep"
+            ],
+            "max_level": 1
+        },
+        {
+            "potential": [
+                "Aromatic Room",
+                "Return to Earth",
+                "Lasting Aftertaste",
+                "Waning Year",
+                "Faded Splendor"
+            ]
+        },
+        {
+            "potential": [
+                "Sense the Stir",
+                "Hasty Growth"
+            ]
+        },
+        {
+            "potential": [
+                "Cutie's Rally",
+                "Fill the Gap",
+                "Herbal Tempering",
+                "Flying Fire",
+                "Bouquet Blast",
+                "Root Grasp",
+                "Corrosive Vines"
+            ]
+        },
+        {
+            "potential": [
+                "Operation: Pandemonium",
+                "Focus Fire",
+                "Swiftstep"
+            ],
+            "max_level": 1
+        },
+        {
+            "potential": [
+                "Balloonado",
+                "Clean Sweep"
+            ]
+        },
+        {
+            "potential": [
+                "Operation: Pandemonium",
+                "Focus Fire",
+                "Swiftstep"
+            ]
+        }
+    ]
+}

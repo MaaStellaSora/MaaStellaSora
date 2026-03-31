@@ -1,0 +1,159 @@
+{
+    "星塔_节点_进行对话选择_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "午前0時",
+                    "食事",
+                    "気にしない",
+                    "実行する",
+                    "数字は3",
+                    "野菜",
+                    "欲望に忠実",
+                    "志の高い人",
+                    "1024",
+                    "座りっぱなし",
+                    "12音",
+                    "6つ",
+                    "助け合って",
+                    "ぴったり",
+                    "目的は一つ",
+                    "渡す",
+                    "換えて",
+                    "道案内",
+                    "やってみよう",
+                    "勝てる",
+                    "^なりたい",
+                    "一番元気",
+                    "好な曲",
+                    "部聴きたい",
+                    "試して",
+                    "賭けよう"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_进入商店_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "コンビニ"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_agent": {
+        "attach": {
+            "lang_type": "jp"
+        }
+    },
+    "星塔_节点_回到商店层_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "コンビニ"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_离开商店_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "先へ進む"
+                ]
+            }
+        }
+    },
+    "星塔_节点_商店_离开星塔_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "離れる"
+                ]
+            }
+        }
+    },
+    "星塔_保存记录_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "記録保存"
+                ]
+            }
+        }
+    },
+    "星塔_默契提升_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "信頼度",
+                    "アップ"
+                ],
+                "roi": [
+                    0,
+                    0,
+                    1280,
+                    720
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_点击空白处关闭_agent": {
+        "action": {
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "タップして",
+                    "続ける"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_回到难度选择界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "掃討"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_回到出发界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "星ノ塔探索"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_确认_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "確認"
+                ],
+                "roi": [
+                    500,
+                    425,
+                    352,
+                    143
+                ]
+            },
+            "type": "OCR"
+        }
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "trekker_names": {
+        "main": [
+            "Fuyuka"
+        ],
+        "sub": [
+            "Flora",
+            "Snowish Laru"
+        ]
+    },
+    "element": "Ignis",
+    "priority_list": [
+        {
+            "potential": [
+                "Multi-Shot",
+                "Kitty Punch",
+                "Finishing Blow",
+                "Peak Performance",
+                "Ironfist Blow",
+                "Combo Punch",
+                "Ember of Tomorrow",
+                "Ashes of the Past",
+                "Foreshadowing Verification",
+                "Guest Performer",
+                "Lethal Inferno",
+                "Fire Downpour",
+                "Special Ammo",
+                "Fairy Tale Rule",
+                "Toy Army",
+                "Celebration Resumed",
+                "Two-Gun Salute"
+            ]
+        },
+        {
+            "potential": [
+                "Swirling Counterattack",
+                "Perfect Acting"
+            ]
+        },
+        {
+            "potential": [
+                "Bold Challenge"
+            ]
+        }
+    ]
+}

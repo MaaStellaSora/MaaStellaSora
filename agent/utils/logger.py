@@ -102,7 +102,7 @@ def _apply_debug_to_logger(logger: logging.Logger, log_file: str) -> None:
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
 
-        file_fmt = "%(asctime)s|%(levelname)s|%(message)s"
+        file_fmt = "%(asctime)s|%(name)s|%(levelname)s|%(message)s"
         file_formatter = logging.Formatter(file_fmt, datefmt="%Y-%m-%d %H:%M:%S")
         file_handler.setFormatter(file_formatter)
 
@@ -112,7 +112,6 @@ def _apply_debug_to_logger(logger: logging.Logger, log_file: str) -> None:
     for handler in logger.handlers:
         handler.setLevel(logging.DEBUG)
 
-    logger.debug(f"Debug mode enabled. Log file: {log_file}")
 
 
 def debug_mode() -> None:
@@ -138,6 +137,9 @@ def debug_mode() -> None:
     for logger_name in _initialized_loggers:
         logger = logging.getLogger(logger_name)
         _apply_debug_to_logger(logger, log_file)
+
+    logger = get_logger(__name__)
+    logger.debug(f"Debug mode enabled. Log file: {log_file}")
 
 
 def set_log_level(level: int) -> None:

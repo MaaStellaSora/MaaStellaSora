@@ -1,0 +1,47 @@
+{
+    "trekker_names": {
+        "main": [
+            "Nazuna"
+        ],
+        "sub": [
+            "Springseek Coronis",
+            "Gerie"
+        ]
+    },
+    "element": "Terra",
+    "priority_list": [
+        {
+            "potential": [
+                "Small Force",
+                "Wobble Dance",
+                "Touch of Nature",
+                "Wily Wonder",
+                "Essence Extraction",
+                "Lasting Aftertaste",
+                "Terra Chorus",
+                "Symptom Sight",
+                "Curtain Call",
+                "Sin-Bound Echo",
+                "Anima Resonance",
+                "Hexacalamity: Famine",
+                "Hexacalamity: Death"
+            ]
+        },
+        {
+            "potential": [
+                "Cutie's Rally",
+                "Rocket Cart",
+                "Aromatic Room",
+                "Lingering Grace",
+                "Twilight's Hunt",
+                "Twilight's Verdict"
+            ]
+        },
+        {
+            "potential": [
+                "Focus Fire",
+                "Flying Fire"
+            ]
+        }
+    ]
+}

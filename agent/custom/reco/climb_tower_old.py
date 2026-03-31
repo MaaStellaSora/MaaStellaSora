@@ -1,75 +1,15 @@
 import json
-import sys
-import os
-from typing import Any, Dict, Iterable, List, Tuple
-
-# 将agent目录添加到Python搜索路径，以便直接导入custom模块
-current_file_path = os.path.abspath(__file__)
-current_script_dir = os.path.dirname(current_file_path)  # agent目录
-if current_script_dir not in sys.path:
-    sys.path.insert(0, current_script_dir)
+from typing import Any, Dict, Iterable, List
 
 from maa.agent.agent_server import AgentServer
 from maa.context import Context
-from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
-from maa.toolkit import Toolkit
 
-# 导入自定义识别器和动作器
-from custom import ShopRecognition, ShopAction
 
 _FALLBACK_TEMPLATE = (
     "ClimbTower/爬塔_buff推荐图标1__146_389_43_44__96_339_143_144.png"
 )
 _FALLBACK_THRESHOLD = 0.6
-
-
-@AgentServer.custom_action("utool_calc_repeat")
-class UToolCalcRepeat(CustomAction):
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> bool:
-        raw = argv.custom_action_param
-        if raw is None:
-            return True
-
-        try:
-            if isinstance(raw, (bytes, bytearray)):
-                raw = raw.decode("utf-8", errors="replace")
-            if isinstance(raw, str):
-                raw = raw.strip()
-                if not raw:
-                    return True
-                value = int(raw)
-            else:
-                value = int(raw)
-        except Exception as exc:
-            print(f"utool_calc_repeat: invalid param {raw!r}: {exc}")
-            return True
-
-        if value < 1:
-            value = 1
-
-        if value <= 1:
-            # No extra runs needed: skip the "add times" click and go on.
-            context.override_pipeline(
-                {
-                    "活动_添加战斗次数": {
-                        "recognition": {"type": "DirectHit", "param": {}},
-                        "action": {"type": "DoNothing", "param": {}},
-                        "next": ["活动_确认", "活动_开始战斗"],
-                    }
-                }
-            )
-            print("utool_calc_repeat: input=1, skip add times")
-            return True
-
-        repeat = value - 1
-        context.override_pipeline({"活动_添加战斗次数": {"repeat": repeat}})
-        print(f"utool_calc_repeat: input={value}, repeat={repeat}")
-        return True
 
 
 def _normalize_priority_param(param: Any) -> Dict[int, List[str]]:
@@ -222,22 +162,3 @@ class TowerRecognition(CustomRecognition):
             box=(0, 0, 0, 0),
             detail="not found",
         )
-
-
-def main():
-    Toolkit.init_option("./")
-
-    if len(sys.argv) < 2:
-        print("Usage: python main_refactor.py <socket_id>")
-        print("socket_id is provided by AgentIdentifier.")
-        sys.exit(1)
-
-    socket_id = sys.argv[-1]
-
-    AgentServer.start_up(socket_id)
-    AgentServer.join()
-    AgentServer.shut_down()
-
-
-if __name__ == "__main__":
-    main()

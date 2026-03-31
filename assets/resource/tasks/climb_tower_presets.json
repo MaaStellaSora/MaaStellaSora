@@ -1,0 +1,492 @@
+{
+    "option": {
+        "新版爬塔_预设作业_cn": {
+            "resource": [
+                "官服"
+            ],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业可能会覆盖一些选项设置，开始任务时需要留意提示信息",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
+                },
+                {
+                    "name": "手动输入文件名",
+                    "description": "手动输入文件名，以使用自定义作业",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
+                },
+                {
+                    "name": "小禾+苍蓝+多娜",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_canglan_duona_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+多娜+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_duona_telisha_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_tiliya_kesaite_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetu_cn.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_cn.json"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_预设作业_tw": {
+            "resource": [
+                "台服"
+            ],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业可能会覆盖一些选项设置，开始任务时需要留意提示信息",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
+                },
+                {
+                    "name": "手动输入文件名",
+                    "description": "手动输入文件名，以使用自定义作业",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
+                },
+                {
+                    "name": "小禾+苍蓝+多娜",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_canglan_duona_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+多娜+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_duona_telisha_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_tiliya_kesaite_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetu_tw.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_tw.json"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_预设作业_en": {
+            "resource": [
+                "国际服"
+            ],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业可能会覆盖一些选项设置，开始任务时需要留意提示信息",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
+                },
+                {
+                    "name": "手动输入文件名",
+                    "description": "手动输入文件名，以使用自定义作业",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
+                },
+                {
+                    "name": "小禾+苍蓝+多娜",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_canglan_duona_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+多娜+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_duona_telisha_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_tiliya_kesaite_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetu_en.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_en.json"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_预设作业_jp": {
+            "resource": [
+                "日服"
+            ],
+            "type": "select",
+            "label": "预设作业",
+            "description": "选择预设作业，「无」表示只选择系统推荐潜能，「手动输入」可以自己输入作业名<br>预设作业可能会覆盖一些选项设置，开始任务时需要留意提示信息",
+            "default_case": "无",
+            "cases": [
+                {
+                    "name": "无",
+                    "description": "只会选择系统推荐潜能"
+                },
+                {
+                    "name": "手动输入文件名",
+                    "description": "手动输入文件名，以使用自定义作业",
+                    "option": [
+                        "预设作业_手动输入作业名"
+                    ]
+                },
+                {
+                    "name": "小禾+苍蓝+多娜",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_canglan_duona_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+多娜+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_duona_telisha_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+格芮（土印记企鹅流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_gerui_tuyinjiqie_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小禾+新春科洛妮丝+岭川（枯萎流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiaohe_chunke_lingchuan_kuwei_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "风影+夏花+杏子",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "fengying_xiahua_xingzi_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "翡冷翠+缇莉娅+珂赛特",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "feilengcui_tiliya_kesaite_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "冬香+紫槿+圣夜菈露（大招流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "dongxiang_shengdanlalu_zijin_dazhao_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（雪兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_xuetu_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "希娅+密涅瓦+缇莉娅（夜兔流）",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "xiya_miniewa_tiliya_yetu_jp.json"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "千都世+苍蓝+特丽莎",
+                    "pipeline_override": {
+                        "星塔_入口_agent": {
+                            "attach": {
+                                "preset_name": "qiandushi_canglan_telisha_jp.json"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

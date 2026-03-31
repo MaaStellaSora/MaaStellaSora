@@ -1,0 +1,44 @@
+{
+    "trekker_names": {
+        "main": [
+            "Wraith"
+        ],
+        "sub": [
+            "Nazuka",
+            "Ann"
+        ]
+    },
+    "element": "Ventus",
+    "priority_list": [
+        {
+            "potential": [
+                "Twin Shadows",
+                "Last Gasp of Gale",
+                "Dauntless Poise",
+                "Flower Formation: Waves",
+                "Flower Formation: Turbulent",
+                "Self-Improvement",
+                "Flower Formation: Erosion",
+                "Wind Demon Seed",
+                "Gale Bastion",
+                "Wind Banish",
+                "Wind Erosion Havoc",
+                "Turbulent Flow"
+            ]
+        },
+        {
+            "potential": [
+                "Zero Hour",
+                "Rapid Draw",
+                "Blade's Waltz",
+                "Almighty Leader",
+                "Forest Princess' Blessing"
+            ]
+        },
+        {
+            "potential": [
+                "Flower Formation: Blast"
+            ]
+        }
+    ]
+}

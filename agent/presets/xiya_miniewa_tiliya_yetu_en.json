@@ -1,0 +1,51 @@
+{
+    "trekker_names": {
+        "main": [
+            "Shia"
+        ],
+        "sub": [
+            "Minova",
+            "Tilia"
+        ]
+    },
+    "element": "Lux",
+    "priority_list": [
+        {
+            "potential": [
+                "Astral Pirouette",
+                "Moonlight Overflow",
+                "Lunar Detonation",
+                "Final Crescent",
+                "Lunar Combo",
+                "Star Core Crumbled",
+                "Radiant Burst",
+                "Perfect Arc",
+                "Radiant Synergy",
+                "Fervent Applause",
+                "Renewed Spectrum",
+                "Holy Inscription",
+                "Enemy Counter"
+            ]
+        },
+        {
+            "potential": [
+                "Hare's Pursuit",
+                "Rabbit's Beam",
+                "Ashwind's Wrath",
+                "Brilliant Relay",
+                "Trick Boost",
+                "Knight's Seal"
+            ]
+        },
+        {
+            "potential": [
+                "Leporine Gale",
+                "Glacial Dash",
+                "Shutout Desire",
+                "Revealed Flaw",
+                "Guardian's Resolve",
+                "Knight Oath: Courage"
+            ]
+        }
+    ]
+}

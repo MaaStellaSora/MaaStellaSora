@@ -14,7 +14,7 @@
         "child_exec": "python",
         "child_args": [
             "-u",
-            "./../agent/main_refactor.py"
+            "./../agent/main.py"
         ],
         "timeout": -1
     },
@@ -105,7 +105,6 @@
             "name": "活动快速战斗",
             "entry": "活动_入口",
             "description": "自动打开活动页面，并且对活动第一关进行快速战斗",
-            "repeatable": false,
             "option": [
                 "作战关卡",
                 "活动战斗消耗所有干劲"
@@ -115,7 +114,6 @@
             "name": "悬赏试炼快速战斗",
             "entry": "战斗_入口",
             "description": "自动前往悬赏试炼页面，并且对指定关卡进行快速战斗",
-            "repeatable": false,
             "option": [
                 "悬赏试炼关卡",
                 "选择悬赏试炼难度",
@@ -146,177 +144,14 @@
             "name": "领取基金奖励",
             "entry": "基金_入口",
             "description": "自动打开基金页面，并且领取基金奖励"
-        },
-        {
-            "name": "爬塔",
-            "entry": "星塔_入口",
-            "repeatable": true,
-            "repeat_count": 1,
-            "option": [
-                "属性塔",
-                "音符购买",
-                "速刷"
-            ]
-        },
-        {
-            "name": "新版爬塔（测试版）",
-            "entry": "星塔_入口",
-            "repeatable": true,
-            "repeat_count": 1,
-            "pipeline_override": {
-                "星塔_节点_商店": {
-                    "next": [
-                        "星塔_节点_商店_购物流程_agent"
-                    ]
-                },
-                "星塔_节点_最终商店": {
-                    "next": [
-                        "星塔_节点_最终商店_购物流程_agent"
-                    ]
-                },
-                "星塔_节点_商店_主界面": {
-                    "next": [
-                        "星塔_节点_商店_购物流程_agent"
-                    ]
-                }
-            },
-            "option": [
-                "属性塔",
-                "音符购买_agent",
-                "速刷"
-            ]
-        },
-        {
-            "name": "自定义爬塔",
-            "entry": "星塔_入口",
-            "description": "自定义爬塔 Beta 不保证可用",
-            "option": [
-                "是否开启自定义爬塔",
-                "自定义卡牌优先级"
-            ]
         }
     ],
+    "import": [
+        "resource/tasks/climb_tower.json",
+        "resource/tasks/climb_tower_agent.json",
+        "resource/tasks/climb_tower_presets.json"
+    ],
     "option": {
-        "是否开启自定义爬塔": {
-            "type": "select",
-            "label": "是否开启自定义爬塔",
-            "description": "是否开启自定义爬塔",
-            "default_case": "关闭",
-            "cases": [
-                {
-                    "name": "开启",
-                    "label": "开启",
-                    "description": "开启自定义爬塔",
-                    "pipeline_override": {
-                        "星塔_爬塔流程": {
-                            "next": [
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_点击空白处关闭"
-                                },
-                                "星塔_保存记录",
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_默契提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_结束爬塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_离开星塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_等级提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_选择buff_推荐_自定义"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_最终商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话选项"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话忽略"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "关闭",
-                    "label": "关闭",
-                    "description": "关闭自定义爬塔",
-                    "pipeline_override": {
-                        "星塔_爬塔流程": {
-                            "next": [
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_点击空白处关闭"
-                                },
-                                "星塔_保存记录",
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_默契提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_结束爬塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_离开星塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_等级提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_选择buff_推荐"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_最终商店"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话选项"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话忽略"
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
         "作战关卡": {
             "type": "select",
             "label": "选择活动关卡",
@@ -755,188 +590,6 @@
                 }
             }
         },
-        "属性塔": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "光土",
-                    "label": "光土",
-                    "pipeline_override": {
-                        "星塔_属性塔选择": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower/爬塔_光土__387_137_124_45__337_87_224_145.png"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "水风",
-                    "label": "水风",
-                    "pipeline_override": {
-                        "星塔_属性塔选择": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower/爬塔_水风__384_271_129_39__334_221_229_139.png"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "火暗",
-                    "label": "火暗",
-                    "pipeline_override": {
-                        "星塔_属性塔选择": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower/爬塔_火暗__381_404_129_39__331_354_229_139.png"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "音符购买": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "激活协奏且折扣",
-                    "label": "激活协奏且折扣",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "激活协奏",
-                    "label": "激活协奏",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_格子_音符_激活": {
-                            "next": [
-                                "星塔_节点_商店_购物_格子_购买"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        "音符购买_agent": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "激活协奏且折扣",
-                    "label": "激活协奏且折扣",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "激活协奏",
-                    "label": "激活协奏",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_格子_优惠_agent": {
-                            "expected": [
-                                ""
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        "速刷": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "正常",
-                    "label": "正常",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "不点商店和强化",
-                    "label": "不点商店和强化",
-                    "pipeline_override": {
-                        "星塔_爬塔流程": {
-                            "next": [
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_点击空白处关闭"
-                                },
-                                "星塔_保存记录",
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_默契提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_结束爬塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_离开星塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_等级提升"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_选择buff_推荐"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_商店_下一层"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_最终商店_离开星塔"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话选项"
-                                },
-                                {
-                                    "jump_back": true,
-                                    "name": "星塔_节点_对话忽略"
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        "自定义卡牌优先级": {
-            "type": "input",
-            "label": "自定义卡牌优先级（Nightly）",
-            "description": "抄作业.png",
-            "inputs": [
-                {
-                    "name": "作业",
-                    "label": "作业",
-                    "description": "作业字典，格式为{\"优先级\": [\"卡牌名称\"]}",
-                    "default": "",
-                    "pipeline_type": "string"
-                }
-            ],
-            "pipeline_override": {
-                "星塔_节点_选择buff_推荐": {
-                    "recognition": {
-                        "type": "Custom",
-                        "param": {
-                            "custom_recognition": "auto_tower",
-                            "custom_recognition_param": "{作业}"
-                        }
-                    }
-                }
-            }
-        },
         "邀约旅人": {
             "type": "input",
             "inputs": [
@@ -1041,7 +694,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -1051,7 +704,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -1061,7 +714,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -1079,7 +732,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -1089,7 +742,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -1099,7 +752,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -1117,7 +770,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -1127,7 +780,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -1137,7 +790,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -1155,7 +808,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -1165,7 +818,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -1175,7 +828,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -1193,7 +846,7 @@
             "default_case": "所有",
             "cases": [
                 {
-                    "label": "所有",
+                    "name": "所有",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {
@@ -1203,7 +856,7 @@
                     }
                 },
                 {
-                    "label": "最爱",
+                    "name": "最爱",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {
@@ -1213,7 +866,7 @@
                     }
                 },
                 {
-                    "label": "不送",
+                    "name": "不送",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {

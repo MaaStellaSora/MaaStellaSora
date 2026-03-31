@@ -1,164 +1,164 @@
 {
-    "基金_入口": {
-        "action": {
-            "param": {},
-            "type": "DoNothing"
-        },
-        "next": [
-            "基金_判断是否在主页",
-            {
-                "jump_back": true,
-                "name": "通用_返回主页"
-            }
+  "基金_入口": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "next": [
+      "基金_判断是否在主页",
+      {
+        "jump_back": true,
+        "name": "通用_返回主页"
+      }
+    ]
+  },
+  "基金_判断是否在主页": {
+    "action": {
+      "param": {},
+      "type": "DoNothing"
+    },
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
         ]
+      },
+      "type": "TemplateMatch"
     },
-    "基金_判断是否在主页": {
-        "action": {
-            "param": {},
-            "type": "DoNothing"
-        },
-        "recognition": {
-            "param": {
-                "template": [
-                  "menu.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "next": [
-          "基金_打开基金"
+    "next": [
+      "基金_打开基金"
+    ]
+  },
+  "基金_打开基金": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "基金_核实是否处于营业目标",
+      "基金_核实是否处于基金补贴"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "基金"
         ]
-    },
-    "基金_打开基金": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "next": [
-            "基金_核实是否处于营业目标",
-            "基金_核实是否处于基金补贴"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "基金"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "基金_核实是否处于营业目标": {
-        "next": [
-            "基金_营业目标全部领取"
-        ],
-        "on_error": [
-            "通用_返回主页"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "今日目标"
-                ]
-            },
-            "type": "OCR"
-        },
-        "timeout": 5000
-    },
-    "基金_营业目标全部领取": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "next": [
-            "基金_核实是否处于基金补贴",
-            {
-                "jump_back": true,
-                "name": "基金_基金等级提升"
-            },
-            {
-                "jump_back": true,
-                "name": "基金_进入基金补贴"
-            }
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "全部领取"
-                ]
-            },
-            "type": "OCR"
-        },
-        "post_delay": 2000
-    },
-    "基金_基金等级提升": {
-        "action": {
-            "param": {
-                "target": [
-                    5,
-                    5
-                ]
-            },
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "expected": [
-                    "提升"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "基金_进入基金补贴": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "expected": [
-                    "基金补贴"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "基金_核实是否处于基金补贴": {
-        "next": [
-            "基金_基金补贴全部领取"
-        ],
-        "on_error": [
-            "通用_返回主页"
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "基础补贴"
-                ]
-            },
-            "type": "OCR"
-        },
-        "timeout": 5000
-    },
-    "基金_基金补贴全部领取": {
-        "action": {
-            "param": {},
-            "type": "Click"
-        },
-        "next": [
-                "通用_返回主页",
-                {
-                    "jump_back": true,
-                    "name": "通用_点击空白处继续"
-                }
-        ],
-        "recognition": {
-            "param": {
-                "expected": [
-                    "全部领取"
-                ]
-            },
-            "type": "OCR"
-        }
+      },
+      "type": "OCR"
     }
+  },
+  "基金_核实是否处于营业目标": {
+    "next": [
+      "基金_营业目标全部领取"
+    ],
+    "on_error": [
+      "通用_返回主页"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "今日目标"
+        ]
+      },
+      "type": "OCR"
+    },
+    "timeout": 5000
+  },
+  "基金_营业目标全部领取": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "基金_核实是否处于基金补贴",
+      {
+        "jump_back": true,
+        "name": "基金_基金等级提升"
+      },
+      {
+        "jump_back": true,
+        "name": "基金_进入基金补贴"
+      }
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "全部领取"
+        ]
+      },
+      "type": "OCR"
+    },
+    "post_delay": 2000
+  },
+  "基金_基金等级提升": {
+    "action": {
+      "param": {
+        "target": [
+          5,
+          5
+        ]
+      },
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "expected": [
+          "提升"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "基金_进入基金补贴": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "expected": [
+          "基金补贴"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "基金_核实是否处于基金补贴": {
+    "next": [
+      "基金_基金补贴全部领取"
+    ],
+    "on_error": [
+      "通用_返回主页"
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "基础补贴"
+        ]
+      },
+      "type": "OCR"
+    },
+    "timeout": 5000
+  },
+  "基金_基金补贴全部领取": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "next": [
+      "通用_返回主页",
+      {
+        "jump_back": true,
+        "name": "通用_点击空白处继续"
+      }
+    ],
+    "recognition": {
+      "param": {
+        "expected": [
+          "全部领取"
+        ]
+      },
+      "type": "OCR"
+    }
+  }
 }

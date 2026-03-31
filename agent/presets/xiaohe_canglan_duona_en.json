@@ -1,0 +1,45 @@
+{
+    "trekker_names": {
+        "main": [
+            "Nazuna"
+        ],
+        "sub": [
+            "Freesia",
+            "Donna"
+        ]
+    },
+    "element": "Aqua",
+    "priority_list": [
+        {
+            "potential": [
+                "Graceful Turn",
+                "Roll the Dice",
+                "Operation: Pandemonium",
+                "Localized Snowfall",
+                "Chill Forecast",
+                "Penetrating Chill",
+                "Arrowfall Reckoning",
+                "Unleashed Arrow",
+                "Water Ripple",
+                "Ice Vortex",
+                "Blessing of Faith",
+                "Arrow Pursuit",
+                "Frostbitten Arrow"
+            ]
+        },
+        {
+            "potential": [
+                "Fill the Gap",
+                "Focus Fire",
+                "Cutie's Rally",
+                "Winter's Grip",
+                "Power of Redemption"
+            ]
+        },
+        {
+            "potential": [
+                "Swiftstep"
+            ]
+        }
+    ]
+}

@@ -1,8 +1,14 @@
 import sys
 import os
+from pathlib import Path
 
 from maa.agent.agent_server import AgentServer
 from maa.toolkit import Toolkit
+
+# 添加agent目录，解决便携版python不自动添加脚本目录的问题
+AGENT_DIR = Path(__file__).resolve().parent
+if str(AGENT_DIR) not in sys.path:
+    sys.path.insert(0, str(AGENT_DIR))
 
 # 导入自定义的action和recognition，以注册到AgentServer
 import custom # noqa: F401

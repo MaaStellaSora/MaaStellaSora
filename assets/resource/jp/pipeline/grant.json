@@ -1,19 +1,9 @@
 {
-    "基金_打开基金": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "grant/grant.png"
-                ]
-            },
-            "type": "TemplateMatch"
-        }
-    },
-    "基金_核实是否处于营业目标": {
+    "基金_判断是否已进入基金": {
         "recognition": {
             "param": {
                 "expected": [
-                    "本日の目標"
+                    "事業支援"
                 ]
             }
         }
@@ -27,29 +17,11 @@
             }
         }
     },
-    "基金_基金等级提升": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "レベルアップ"
-                ]
-            }
-        }
-    },
     "基金_进入基金补贴": {
         "recognition": {
             "param": {
                 "expected": [
                     "補助物資"
-                ]
-            }
-        }
-    },
-    "基金_核实是否处于基金补贴": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "プレミアム"
                 ]
             }
         }

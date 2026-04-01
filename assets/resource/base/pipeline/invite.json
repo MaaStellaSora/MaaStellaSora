@@ -27,7 +27,6 @@
     "next": [
       "邀约_前往邀约"
     ],
-    "post_wait_freezes": 1000,
     "recognition": {
       "param": {
         "expected": [
@@ -37,7 +36,7 @@
       "type": "OCR"
     }
   },
-  "开始邀约": {
+  "邀约_开始邀约": {
     "action": {
       "param": {},
       "type": "Click"
@@ -58,29 +57,15 @@
         ]
       },
       "type": "TemplateMatch"
-    }
-  },
-  "未邀约": {
-    "focus": {
-      "Node.Recognition.Succeeded": "未邀约"
     },
     "next": [
-      "邀约流程"
-    ],
-    "recognition": {
-      "param": {
-        "roi": [
-          833,
-          629,
-          128,
-          40
-        ],
-        "template": [
-          "Invite/邀约按钮.png"
-        ]
+      "邀约_地点",
+      {
+        "jump_back": true,
+        "name": "邀约_点击确认按钮"
       },
-      "type": "TemplateMatch"
-    },
+      "邀约_开始邀约"
+    ],
     "timeout": 5000
   },
   "邀约_1号": {
@@ -246,7 +231,8 @@
       "Node.Recognition.Succeeded": "邀约_前往邀约"
     },
     "next": [
-      "邀约_主界面"
+      "邀约_主界面",
+      "邀约_前往邀约"
     ],
     "recognition": {
       "param": {
@@ -284,7 +270,11 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "next": [
+      "邀约_跳过",
+      "邀约_地点",
+    ]
   },
   "邀约_总循环": {
     "action": {
@@ -378,7 +368,11 @@
         ]
       },
       "type": "TemplateMatch"
-    }
+    },
+    "next": [
+      "邀约_跳过",
+      "邀约_送礼"
+    ]
   },
   "邀约_还是算了": {
     "action": {
@@ -467,19 +461,23 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "next": [
+      "邀约_送礼流程",
+      "邀约_送礼"
+    ]
   },
   "邀约_送礼流程": {
     "recognition": {
       "param": {
         "expected": [
-          "赠礼"
+          "0.?1"
         ],
         "roi": [
-          767,
-          123,
-          104,
-          81
+          1000,
+          580,
+          200,
+          90
         ]
       },
       "type": "OCR"
@@ -514,16 +512,16 @@
         ],
         "order_by": "Vertical"
       },
-      "type": "TemplateMatch",
-      "post_wait_freezes": {
-        "time": 200,
-        "target": [
-          905,
-          160,
-          297,
-          44
-        ]
-      }
+      "type": "TemplateMatch"
+    },
+    "post_wait_freezes": {
+      "time": 200,
+      "target": [
+        905,
+        160,
+        297,
+        44
+      ]
     }
   },
   "邀约_选择礼物成功": {
@@ -533,17 +531,18 @@
     "recognition": {
       "param": {
         "expected": [
-          "1"
+          "1.?1"
         ],
         "roi": [
-          1131,
-          584,
-          16,
-          24
+          1000,
+          580,
+          200,
+          90
         ]
       },
       "type": "OCR"
-    }
+    },
+    "post_wait_freezes": 200
   },
   "邀约_默契提升": {
     "action": {
@@ -567,52 +566,20 @@
     }
   },
   "邀约_达上限": {
-    "focus": {
-      "Node.Recognition.Succeeded": "邀约_达上限"
-    },
     "recognition": {
       "param": {
         "expected": [
-          "5/5"
+          "5.?5"
         ],
         "roi": [
-          1021,
-          640,
-          156,
-          46
+          1000,
+          630,
+          190,
+          60
         ],
-        "replace": [
-          ["\\.", "/"]
-        ]
       },
       "type": "OCR"
     }
-  },
-  "邀约流程": {
-    "next": [
-      "邀约_送礼流程",
-      "邀约_达上限",
-      {
-        "jump_back": true,
-        "name": "开始邀约"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_点击确认按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_地点"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_跳过"
-      },
-      {
-        "jump_back": true,
-        "name": "邀约_送礼"
-      }
-    ]
   },
   "邀约_左方识别邀约对象": {
     "recognition": {

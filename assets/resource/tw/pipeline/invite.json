@@ -1,13 +1,4 @@
 {
-  "邀约_打开心链": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "心鏈"
-        ]
-      }
-    }
-  },
   "邀约_前往邀约": {
     "recognition": {
       "param": {
@@ -94,15 +85,6 @@
       "param": {
         "expected": [
           "送出禮物"
-        ]
-      }
-    }
-  },
-  "邀约_送礼流程": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "贈禮"
         ]
       }
     }

@@ -20,13 +20,17 @@ class InviteAuto(CustomAction):
             邀约功能总控制节点
         """
 
-        # 开启debug模式
-        # logger.debug_mode()
-
         # 邀约对象的任务列表
         invite_nodes = ["邀约_1号", "邀约_2号", "邀约_3号", "邀约_4号", "邀约_5号"]
 
         for node in invite_nodes:
+            # 检查邀约对象是否达到上限
+            image = context.tasker.controller.post_screencap().wait().get()
+            reco_detail = context.run_recognition("邀约_达上限", image)
+            if reco_detail and reco_detail.hit:
+                self.logger.info(f"邀约次数已达到本日上限")
+                return True
+
             trekker_name, choose_gift = self._get_trekker_info(context, node)
             if not trekker_name:
                 self.logger.debug(f"节点'{node}'的邀约对象为空，跳过")
@@ -37,9 +41,9 @@ class InviteAuto(CustomAction):
             # 执行邀约流程
             while not context.tasker.stopping:
                 if self._click_trekker(context, trekker_name):
-                    # 成功点击邀约对象后，按照choose_gift情况修改送礼流程，然后尝试执行邀约
-                    self._change_choose_gift_pipeline(context, choose_gift)
-                    res = context.run_task("未邀约")
+                    # 成功点击邀约对象后，按照choose_gift情况获取送礼流程，然后尝试执行邀约
+                    pipeline_override = self._get_choose_gift_pipeline(choose_gift)
+                    res = context.run_task("邀约_开始邀约", pipeline_override)
 
                     # 成功识别到邀约按钮时，不需要手动重置位置
                     if res and res.status.succeeded:
@@ -256,19 +260,21 @@ class InviteAuto(CustomAction):
             if context.tasker.stopping:
                 return False
 
-    def _change_choose_gift_pipeline(self, context: Context, choose_gift: str):
+    def _get_choose_gift_pipeline(self, choose_gift: str) -> dict:
         """
             根据choose_gift修改送礼流程
+            pipeline默认是送最好的礼物
 
             Args:
-                context: maa.context.Context
                 choose_gift: 送礼选项，只有"all"、"favorite"、"no"三种
 
             Returns:
-                bool: 是否成功修改送礼流程
+                dict: 重置的pipeline配置
         """
-        if choose_gift == "all":
-            context.override_pipeline({
+        if choose_gift == "favorite":
+            pipeline_override = {}
+        elif choose_gift == "all":
+            pipeline_override = {
                 "邀约_选择礼物":{
                     "recognition":{
                         "param":{
@@ -280,30 +286,16 @@ class InviteAuto(CustomAction):
                         }
                     }
                 }
-            })
-            context.override_next("邀约_送礼流程", [
-                "邀约_选择礼物成功",
-                "[JumpBack]邀约_选择礼物"
-            ])
-        elif choose_gift == "favorite":
-            context.override_pipeline({
-                "邀约_选择礼物":{
-                    "recognition":{
-                        "param":{
-                            "template":[
-                                "Invite/邀约_喜好图标.png"
-                            ]
-                        }
-                    }
-                }
-            })
-            context.override_next("邀约_送礼流程", [
-                "邀约_选择礼物成功",
-                "[JumpBack]邀约_选择礼物"
-            ])
+            }
         elif choose_gift == "no":
-            context.override_next("邀约_送礼流程",["邀约_还是算了"])
+            pipeline_override = {
+                "邀约_送礼流程": {
+                    "next": [
+                        "邀约_还是算了"
+                    ]
+                }
+            }
         else:
-            self.logger.error(f"未知的送礼选项：{choose_gift}")
-            return False
-        return True
+            self.logger.error(f"未知的送礼选项：{choose_gift}，将默认只送黄色笑脸")
+            return {}
+        return pipeline_override

@@ -8,6 +8,15 @@
             }
         }
     },
+  "基金_跳过月初皮肤展示": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "事業支援"
+        ]
+      }
+    }
+  },
     "基金_营业目标全部领取": {
         "recognition": {
             "param": {

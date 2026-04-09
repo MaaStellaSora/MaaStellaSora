@@ -465,7 +465,8 @@
     "next": [
       "邀约_送礼流程",
       "邀约_送礼"
-    ]
+    ],
+    "post_wait_freezes": 200
   },
   "邀约_送礼流程": {
     "recognition": {

@@ -1049,7 +1049,7 @@ class ShopAction(CustomAction):
             grids_info: 当前轮次最后一次识别的格子列表。
         """
         candidates = sorted(
-            [g for g in grids_info if not g["bought"] and g["buy_type"] is None],
+            [g for g in grids_info if not g["bought"]],
             key=lambda g: g["item_price"],
             reverse=True,
         )

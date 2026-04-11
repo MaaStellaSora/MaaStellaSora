@@ -8,6 +8,12 @@
       "param": {
         "template": [
           "menu.png"
+        ],
+        "roi": [
+          1180,
+          0,
+          100,
+          80
         ]
       },
       "type": "TemplateMatch"
@@ -34,6 +40,12 @@
       "param": {
         "template": [
           "menu.png"
+        ],
+        "roi": [
+          1180,
+          0,
+          100,
+          80
         ]
       },
       "type": "TemplateMatch"
@@ -53,13 +65,11 @@
         ]
       },
       "type": "TemplateMatch"
-    }
+    },
+    "post_delay": 500
   },
   "登录_点击任意区域进入游戏": {
     "action": {
-      "param": {
-        "contact": 0
-      },
       "type": "Click"
     },
     "focus": {
@@ -86,6 +96,7 @@
         "name": "通用_点击空白处继续"
       }
     ],
+    "post_delay": 500,
     "timeout": 30000
   },
   "登录_登录": {
@@ -104,7 +115,7 @@
         "name": "登录_确认下载资源"
       }
     ],
-    "timeout": 30000
+    "timeout": 120000
   },
   "登录_登录悠星账号": {
     "action": {
@@ -139,7 +150,8 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "post_delay": 500
   },
   "登录_确认下载资源": {
     "action": {

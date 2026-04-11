@@ -58,6 +58,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         self.logger = logger.get_logger(__name__)
         self._refresh_count: int = 0  # 本次潜能选择的已刷新次数，每次 analyze 开始时重置
         self.available_potential_num: int = 3  # 可选潜能卡片数量，每次 analyze 开始时重置
+        self.is_core = False # 是否为核心潜能
 
     def analyze(
             self,
@@ -111,6 +112,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 time.sleep(1)
                 continue
 
+            self.is_core = self._check_core_potential(context, image)
             self.available_potential_num = self._get_available_potential_num(context, image)
             available = self._get_available_potentials(context, image)
             result = self._select_best_potential(available, priority_list)
@@ -233,6 +235,10 @@ class ChoosePotentialRecognition(CustomRecognition):
             Returns:
                 int: 可选潜能卡片数量，识别失败时返回1
         """
+        if self.is_core:
+            self.logger.debug("核心潜能默认可选潜能数量为3")
+            return 3
+
         if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
@@ -243,6 +249,30 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         self.logger.error("无法识别可选潜能数量，将默认为3")
         return 3
+
+    def _check_core_potential(self, context, image=None):
+        """
+            检查是否为核心潜能
+
+            Args:
+                context(Context): 上下文对象
+                image(nd.array): 截图
+
+            Returns:
+                bool: 是否为核心潜能
+        """
+        if image is None:
+            image = context.tasker.controller.post_screencap().wait().get()
+
+        reco_detail = context.run_recognition(
+            "星塔_节点_选择潜能_识别核心潜能_agent", image
+        )
+
+        if reco_detail and reco_detail.hit:
+            self.logger.debug(f"识别到核心潜能")
+            return True
+        else:
+            return False
 
     def _get_attachments(self, context: Context, node_name: str) -> dict:
         """获取节点 attach 中的所有参数，缺失时返回安全默认值。
@@ -326,22 +356,11 @@ class ChoosePotentialRecognition(CustomRecognition):
         if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
 
-        reco_detail = context.run_recognition(
-            "星塔_节点_选择潜能_识别核心潜能_agent", image
-        )
-        if reco_detail and reco_detail.hit:
-            is_core = True
-            # self.available_potential_num = len(reco_detail.filtered_results)
-            self.logger.debug(f"识别到{len(reco_detail.filtered_results)}张核心潜能卡片：")
-        else:
-            is_core = False
-            # self.logger.debug(f"识别到一般潜能卡片")
-
         potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
 
         available_potentials = []
         for i, rois in enumerate(potential_rois):
-            name_roi = rois["core_potential"] if is_core else rois["general_potential"]
+            name_roi = rois["core_potential"] if self.is_core else rois["general_potential"]
 
             reco_detail = context.run_recognition(
                 "星塔_节点_选择潜能_识别潜能名称_agent",
@@ -359,7 +378,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 self.logger.error(f"无法识别第 {i + 1} 个潜能的名称")
                 potential_name = ""
 
-            if is_core:
+            if self.is_core:
                 available_potentials.append({
                     "name": potential_name,
                     "old_level": 0,

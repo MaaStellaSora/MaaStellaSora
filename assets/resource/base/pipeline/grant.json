@@ -151,7 +151,7 @@
       "type": "OCR"
     },
     "post_wait_freezes": {
-      "time": 500,
+      "time": 600,
       "target": [
         650,
         160,

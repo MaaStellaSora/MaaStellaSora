@@ -658,8 +658,7 @@ class ShopAction(CustomAction):
 
         return min(parsed_item_price, default=0)
 
-    @staticmethod
-    def _buy_item(context: Context, grid: dict, reserve_coin: int) -> bool:
+    def _buy_item(self, context: Context, grid: dict, reserve_coin: int) -> bool:
         """执行普通商品购买（潜能特饮 / 音符）。
 
         将调用方传入的 reserve_coin 注入潜能选择节点，防止潜能选择把预留给强化的金币刷光。
@@ -684,10 +683,14 @@ class ShopAction(CustomAction):
             },
         }
         result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
-        return bool(result and result.status.succeeded)
+        if result and result.status.succeeded:
+            self.logger.debug(f"购买 {grid['item_name']} 成功")
+            return True
+        else:
+            self.logger.error(f"购买 {grid['item_name']} 过程出现问题")
+            return False
 
-    @staticmethod
-    def _buy_assist_melody(context: Context, grid: dict) -> bool:
+    def _buy_assist_melody(self, context: Context, grid: dict) -> bool:
         """执行协奏音符购买，走单独的协奏音符 pipeline。
 
         Args:
@@ -703,7 +706,12 @@ class ShopAction(CustomAction):
             },
         }
         result = context.run_task("星塔_节点_商店_购买协奏音符_agent", override)
-        return bool(result and result.status.succeeded)
+        if result and result.status.succeeded:
+            self.logger.debug(f"执行购买协奏音符 {grid['item_name']} 任务成功（不代表已购买）")
+            return True
+        else:
+            self.logger.error(f"购买协奏音符 {grid['item_name']} 过程出现问题")
+            return False
 
     @staticmethod
     def _get_discount(
@@ -867,7 +875,7 @@ class ShopAction(CustomAction):
             elif context.tasker.stopping:
                 return False
             else:
-                self.logger.error("购买失败，跳过该格子")
+                self.logger.debug("跳过该格子")
         return True
 
     def _execute_single_purchase(

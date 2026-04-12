@@ -481,28 +481,33 @@ class ShopAction(CustomAction):
         ]
         return params
 
-    def _calc_min_buyable_price(self) -> float:
+    def _calc_min_buyable_price(self) -> int:
         """基于用户策略计算刷新后理论最低可购买商品价格。
 
         遍历 ITEM_STANDARD_PRICES，按 priority 和 threshold 筛选用户愿意购买的商品，
         取 标准价 × 对应 threshold 的最小值。
 
         Returns:
-            float: 理论最低可购买价格；无符合条件商品时返回 float("inf")。
+            int: 理论最低可购买价格；无符合条件商品时返回 65535。
         """
         prices = []
         if "drink" in self.priority:
             prices.append(
                 self.ITEM_STANDARD_PRICES["potential_drink"] * self.drink_discount_threshold
             )
-        if "melody" in self.priority and self.target_melodies:
+        if "melody" in self.priority and (self.target_melodies or self.buy_assist_melody):
             prices.append(
                 self.ITEM_STANDARD_PRICES["melody_5"] * self.melody_5_discount_threshold
             )
             prices.append(
                 self.ITEM_STANDARD_PRICES["melody_15"] * self.melody_15_discount_threshold
             )
-        return min(prices) if prices else float("inf")
+
+        if prices:
+            return int(min(prices))
+        else:
+            self.logger.error("无法计算理论最低可购买商品价格，本错误将导致无法执行刷新")
+            return 65535
 
     def _get_grids_info(self, context: Context) -> list[dict]:
         """识别购物界面 8 个格子的道具信息。
@@ -766,12 +771,28 @@ class ShopAction(CustomAction):
                 "action": {"param": {"target": grid["price_roi"]}}
             },
         }
-        result = context.run_task("星塔_节点_商店_购买协奏音符_agent", override)
-        if result and result.status.succeeded:
-            self.logger.debug(f"执行购买协奏音符 {grid['item_name']} 任务成功（不代表已购买）")
-            return True
+        run_result = context.run_task("星塔_节点_商店_购买协奏音符_agent", override)
+        if not(run_result and run_result.status.succeeded):
+            self.logger.error(f"点击协奏音符 {grid['item_name']} 过程出现问题")
+            return False
+
+        image = context.tasker.controller.post_screencap().wait().get()
+        reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实协奏_agent", image)
+        if reco_detail and reco_detail.hit:
+            run_result = context.run_task("星塔_节点_商店_购物_购买道具_确认购买_agent")
+            if run_result and run_result.status.succeeded:
+                self.logger.debug(f"购买 {grid['item_name']} 成功")
+                return True
+            else:
+                self.logger.error(f"购买 {grid['item_name']} 过程出现问题")
+                return False
         else:
-            self.logger.error(f"购买协奏音符 {grid['item_name']} 过程出现问题")
+            self.logger.debug("该音符不是协奏音符，关闭确认框")
+            run_result = context.run_task("星塔_节点_商店_购买协奏音符_退出购买_agent")
+            if run_result and run_result.status.succeeded:
+                self.logger.debug(f"关闭购买协奏音符 {grid['item_name']} 成功")
+            else:
+                self.logger.error(f"关闭购买协奏音符 {grid['item_name']} 过程出现问题")
             return False
 
     @staticmethod

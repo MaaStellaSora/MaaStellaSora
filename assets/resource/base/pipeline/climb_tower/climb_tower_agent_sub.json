@@ -154,7 +154,8 @@
             "[JumpBack]星塔_节点_进入潜能选择_agent",
             "[JumpBack]星塔_点击空白处关闭_agent"
         ],
-        "post_wait_freezes": 200
+        "post_wait_freezes": 200,
+        "timeout": 2000
     },
     "星塔_节点_商店_购物_识别可刷新次数_agent": {
         "recognition": {
@@ -485,11 +486,7 @@
                 ]
             },
             "type": "OCR"
-        },
-        "next": [
-            "星塔_节点_商店_购买协奏音符_核实协奏_agent",
-            "星塔_节点_商店_购买协奏音符_退出购买_agent",
-        ]
+        }
     },
     "星塔_节点_商店_购买协奏音符_核实协奏_agent": {
         "recognition": {

@@ -19,36 +19,42 @@ class ChoosePotentialRecognition(CustomRecognition):
             {
                 "core_potential": [530, 425, 220, 40],
                 "general_potential": [530, 395, 220, 40],
-                "general_potential_level": [530, 425, 220, 40]
+                "general_potential_level": [530, 425, 220, 40],
+                "x_border": [470, 813]
             }
         ],
         2: [
             {
                 "core_potential": [358, 425, 220, 40],
                 "general_potential": [358, 395, 220, 40],
-                "general_potential_level": [358, 425, 220, 40]
+                "general_potential_level": [358, 425, 220, 40],
+                "x_border": [0, 639]
             },
             {
                 "core_potential": [703, 425, 220, 40],
                 "general_potential": [703, 395, 220, 40],
-                "general_potential_level": [703, 425, 220, 40]
+                "general_potential_level": [703, 425, 220, 40],
+                "x_border": [640, 1280]
             }
         ],
         3: [
             {
                 "core_potential": [187, 425, 220, 40],
                 "general_potential": [187, 395, 220, 40],
-                "general_potential_level": [187, 425, 220, 40]
+                "general_potential_level": [187, 425, 220, 40],
+                "x_border": [0, 469]
             },
             {
                 "core_potential": [530, 425, 220, 40],
                 "general_potential": [530, 395, 220, 40],
-                "general_potential_level": [530, 425, 220, 40]
+                "general_potential_level": [530, 425, 220, 40],
+                "x_border": [470, 813]
             },
             {
                 "core_potential": [875, 425, 220, 40],
                 "general_potential": [875, 395, 220, 40],
-                "general_potential_level": [875, 425, 220, 40]
+                "general_potential_level": [875, 425, 220, 40],
+                "x_border": [814, 1280]
             }
         ]
     }
@@ -88,6 +94,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         )
 
         if not priority_list:
+            self.is_core = self._check_core_potential(context, argv.image)
             self.available_potential_num = self._get_available_potential_num(context, argv.image)
             target_box = self._get_recommended_box(context, argv.image)
             return CustomRecognition.AnalyzeResult(box=target_box, detail={})
@@ -670,8 +677,8 @@ class ChoosePotentialRecognition(CustomRecognition):
     def _get_recommended_box(self, context: Context, image, count: int = 3) -> list:
         """识别系统推荐图标，返回对应卡片的 box。
 
-        推荐图标位于卡片 box 范围外，通过计算图标命中 x 坐标与各卡片
-        general_potential box 的 x 距离，取最近者对应的卡片。
+        推荐图标位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
+        x_border 区间（左开右开）来确定归属卡片。
         识别失败时返回第一张卡片的 box 作为兜底。
 
         Args:
@@ -689,11 +696,12 @@ class ChoosePotentialRecognition(CustomRecognition):
             )
             if reco_detail and reco_detail.hit:
                 hit_x = reco_detail.best_result.box[0]
-                closest = min(
-                    potential_rois,
-                    key=lambda r: abs(r["general_potential"][0] - hit_x)
+                matched = next(
+                    (r for r in potential_rois if r["x_border"][0] <= hit_x <= r["x_border"][1]),
+                    None,
                 )
-                return closest["general_potential"]
+                if matched:
+                    return matched["general_potential"]
 
             self.logger.debug("推荐图标识别失败，等待1秒后重试")
             time.sleep(1)

@@ -542,6 +542,7 @@ class ShopAction(CustomAction):
                     "price_roi": grid_roi["price_roi"],
                     "name_roi": grid_roi["name_roi"],
                     "bought": False,
+                    "checked": False,
                     "buy_type": None,
                     "buy_priority": 0,
                 })
@@ -778,6 +779,7 @@ class ShopAction(CustomAction):
 
         image = context.tasker.controller.post_screencap().wait().get()
         reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实协奏_agent", image)
+        grid["checked"] = True
         if reco_detail and reco_detail.hit:
             run_result = context.run_task("星塔_节点_商店_购物_购买道具_确认购买_agent")
             if run_result and run_result.status.succeeded:
@@ -991,6 +993,9 @@ class ShopAction(CustomAction):
             return self._buy_item(context, grid, self.reserve_coin)
 
         elif buy_type == "assist_melody":
+            if grid["checked"]:
+                self.logger.debug(f"跳过已检查的协奏音符 {item_display}")
+                return False
             usable = max(0, current_coin - self.reserve_coin)
             if usable < grid["item_price"]:
                 self.logger.debug(
@@ -1069,7 +1074,7 @@ class ShopAction(CustomAction):
         if usable >= min_threshold:
             if self.shop_type == "regular":
                 self.logger.info(
-                    f"可用金币 {usable} 达到商店刷新标准 {min_threshold + self.regular_shop_refresh_threshold}，尝试刷新"
+                    f"可用金币 {usable} 达到商店刷新标准 {max(min_threshold, self.regular_shop_refresh_threshold)}，尝试刷新"
                 )
             elif self.shop_type == "final":
                 self.logger.info(

@@ -332,7 +332,7 @@
         ],
         "attach": {
             "max_cost": 180,
-            "cost_increment": 60
+            "initial_cost": 60
         }
     },
     "星塔_节点_商店_离开商店_agent": {

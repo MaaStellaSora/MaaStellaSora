@@ -466,21 +466,21 @@
                 }
             }
         },
-        "新版爬塔_商店_强化递增金额": {
+        "新版爬塔_商店_初始强化金额": {
             "type": "input",
             "inputs": [
                 {
-                    "name": "强化递增金额",
+                    "name": "初始强化金额",
                     "default": "60",
                     "pipeline_type": "int",
-                    "verify": "^\\d+$",
-                    "description": "星塔没满级时，需要自己调整"
+                    "verify": "^[1-9]\\d*$",
+                    "description": "没点相关研究时，需要自己调整<br>免费强化不算在内"
                 }
             ],
             "pipeline_override": {
                 "星塔_节点_商店_强化_agent": {
                     "attach": {
-                        "cost_increment": "{强化递增金额}"
+                        "initial_cost": "{初始强化金额}"
                     }
                 }
             }

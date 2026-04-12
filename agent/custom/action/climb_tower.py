@@ -391,13 +391,13 @@ class ShopAction(CustomAction):
             if not self._execute_buy_plan(context, grids_info):
                 return False
 
+            self._mark_full_price_buy_plan(grids_info)
+            if not self._execute_buy_plan(context, grids_info):
+                return False
+
             if not self._should_refresh(context):
                 break
             context.run_task("星塔_节点_商店_点击刷新_agent")
-
-        self._mark_full_price_buy_plan(grids_info)
-        if not self._execute_buy_plan(context, grids_info):
-            return False
 
         if self.shop_type == "final":
             self._mark_remaining_drinks_buy_plan(grids_info)
@@ -433,7 +433,7 @@ class ShopAction(CustomAction):
             "melody_5_discount_threshold": 1.0,
             "melody_15_discount_threshold": 0.5,
             "regular_shop_refresh_threshold": 1500,
-            "full_price_buy_reserve_base": 400,
+            "full_price_buy_reserve_base": 500,
             "buy_assist_melody": False,
             "melody_of_aqua": False,
             "melody_of_ignis": False,
@@ -936,7 +936,7 @@ class ShopAction(CustomAction):
             elif context.tasker.stopping:
                 return False
             else:
-                self.logger.debug("跳过该格子")
+                self.logger.debug(f"购买失败，跳过第{grid['grid_num']}个格子")
         return True
 
     def _execute_single_purchase(
@@ -1036,7 +1036,7 @@ class ShopAction(CustomAction):
         usable = max(0, _get_current_coin(context) - self.reserve_coin)
 
         if self.shop_type == "regular" and usable < self.regular_shop_refresh_threshold:
-            self.logger.info("可用金币未达到刷新阈值")
+            self.logger.info(f"可用金币 {usable} 未达到刷新标准 {self.regular_shop_refresh_threshold}，跳过刷新")
             return False
 
         if self.refresh_remaining <= 0:
@@ -1044,13 +1044,19 @@ class ShopAction(CustomAction):
             return False
 
         refresh_cost = self._get_refresh_cost(context)
-        if usable >= refresh_cost + self.min_buyable_price:
-            self.logger.info(
-                f"可用金币 {usable} 达到刷新标准 {refresh_cost + self.min_buyable_price}，尝试刷新"
-            )
+        min_threshold = refresh_cost + self.min_buyable_price
+        if usable >= min_threshold:
+            if self.shop_type == "regular":
+                self.logger.info(
+                    f"可用金币 {usable} 达到商店刷新标准 {min_threshold + self.regular_shop_refresh_threshold}，尝试刷新"
+                )
+            elif self.shop_type == "final":
+                self.logger.info(
+                    f"可用金币 {usable} 达到最终商店刷新标准 {min_threshold}，尝试刷新"
+                )
             return True
 
-        self.logger.info("可用金币不足以刷新")
+        self.logger.info(f"可用金币 {usable} 不足以刷新")
         return False
 
     def _mark_full_price_buy_plan(self, grids_info: list[dict]) -> None:

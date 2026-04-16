@@ -1,529 +1,554 @@
 {
-    "星塔_开始爬塔_agent": {
-        "next": [
-            "星塔_开始爬塔_检测背包按钮_agent",
-            "[JumpBack]星塔_节点_进入对话_agent",
-            "[JumpBack]星塔_开始爬塔_检测商店购物界面_agent",
-            "[JumpBack]星塔_节点_进入对话选择_agent"
-        ]
-    },
-    "星塔_开始爬塔_检测背包按钮_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
-                ],
-                "roi": [
-                    0,
-                    0,
-                    210,
-                    85
-                ],
-                "threshold": 0.9
-            },
-            "type": "TemplateMatch"
-        },
-        "next": [
-            "星塔_爬塔流程_agent"
-        ]
-    },
-    "星塔_开始爬塔_检测商店购物界面_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
-                ],
-                "roi": [
-                    210,
-                    168,
-                    550,
-                    468
-                ],
-                "threshold": 0.9
-            },
-            "type": "TemplateMatch"
-        },
-        "next": [
-            "星塔_节点_商店_购物_返回商店层_agent"
-        ]
-    },
-    "星塔_爬塔流程_agent": {
-        "anchor": "星塔总循环",
-        "next": [
-            "星塔_节点_进入商店_agent",
-            "[JumpBack]星塔_节点_进入潜能选择_agent",
-            "[JumpBack]星塔_节点_进入对话_agent",
-            "[JumpBack]星塔_点击空白处关闭_agent"
-        ]
-    },
-    "星塔_节点_进入潜能选择_agent": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "ClimbTower_agent/爬塔_buff推荐图标1__146_389_43_44__96_339_143_144.png",
-                "green_mask": true,
-                "roi": [
-                    125,
-                    110,
-                    1030,
-                    450
-                ],
-                "threshold": 0.6
-            }
-        },
-        "next": [
-            "星塔_节点_选择潜能_拿走_agent",
-            "星塔_节点_选择潜能_agent"
+  "星塔_开始爬塔_agent": {
+    "next": [
+      "[JumpBack]星塔_开始爬塔_检测商店购物界面_agent",
+      "[JumpBack]星塔_节点_进入对话_agent",
+      "[JumpBack]星塔_节点_进入对话选择_agent",
+      "星塔_开始爬塔_检测背包按钮_agent"
+    ]
+  },
+  "星塔_开始爬塔_检测背包按钮_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
         ],
-        "timeout": 5000
-    },
-    "星塔_节点_选择潜能_agent": {
-        "recognition": {
-            "type": "Custom",
-            "param": {
-                "custom_recognition": "choose_potential_recognition"
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_节点_选择潜能_拿走_agent"
+        "roi": [
+          0,
+          0,
+          210,
+          85
         ],
-        "attach": {
-            "priority_list": [],
-            "max_refresh_count": 2,
-            "reserve_coin": 0,
-            "owned_potentials": {}
-        },
-        "post_wait_freeze": 100,
-        "timeout": 1500
+        "threshold": 0.9
+      },
+      "type": "TemplateMatch"
     },
-    "星塔_节点_选择潜能_拿走_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
-                ],
-                "roi": [
-                    148,
-                    569,
-                    996,
-                    84
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "post_delay": 1000,
-    },
-    "星塔_节点_进入对话_agent": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": [
-                    "ClimbTower_agent/星塔_节点_对话图标__999_625_42_40__949_575_142_140.png"
-                ],
-                "roi": [
-                    260,
-                    465,
-                    851,
-                    236
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_节点_进入对话选择_agent",
-            "星塔_节点_进入对话_agent"
-        ]
-    },
-    "星塔_节点_进入对话选择_agent": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
-                ],
-                "roi": [
-                    573,
-                    206,
-                    642,
-                    385
-                ]
-            }
-        },
-        "next": [
-            "星塔_节点_进行对话选择_agent",
-            "星塔_节点_随便选择_agent"
+    "next": [
+      "星塔_爬塔流程_agent"
+    ]
+  },
+  "星塔_开始爬塔_检测商店购物界面_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
         ],
-        "post_wait_freeze": 100
-    },
-    "星塔_节点_进行对话选择_agent": {
-        "action": {
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "expected": [
-                    "试试",
-                    "12点",
-                    "认真执行",
-                    "志存高远",
-                    "总是如此",
-                    "^6个",
-                    "均衡饮食",
-                    "多吃蔬菜",
-                    "少久坐",
-                    "12个",
-                    "今朝有酒",
-                    "忠于欲望",
-                    "1024",
-                    "亮灯吧",
-                    "我倾听所有",
-                    "互相帮助",
-                    "会赢的",
-                    "需要力量",
-                    "试一下吧",
-                    "随心所欲",
-                    "合作无间"
-                ],
-                "roi": [
-                    604,
-                    255,
-                    574,
-                    334
-                ]
-            },
-            "type": "OCR"
-        },
-        "timeout": 1000
-    },
-    "星塔_节点_随便选择_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
-                ],
-                "roi": [
-                    604,
-                    255,
-                    574,
-                    334
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "星塔_节点_进入商店_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "商店购物"
-                ],
-                "roi": [
-                    395,
-                    243,
-                    338,
-                    98
-                ]
-            },
-            "type": "OCR"
-        },
-        "next": [
-            "星塔_节点_商店_购物_agent"
-        ]
-    },
-    "星塔_节点_商店_购物_agent": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "shop_action"
-            }
-        },
-        "next": [
-            "星塔_节点_回到商店层_agent",
-            "[JumpBack]星塔_节点_商店_购物_返回商店层_agent",
+        "roi": [
+          210,
+          168,
+          550,
+          468
         ],
-        "attach": {
-            "lang_type": "cn",
-            "priority": [
-                "drink",
-                "melody"
-            ],
-            "drink_discount_threshold": 0.8,
-            "melody_5_discount_threshold": 1.0,
-            "melody_15_discount_threshold": 0.5,
-            "regular_shop_refresh_threshold": 1500,
-            "full_price_buy_reserve_base": 500,
-            "buy_assist_melody": false,
-            "melody_of_aqua": false,
-            "melody_of_ignis": false,
-            "melody_of_terra": false,
-            "melody_of_ventus": false,
-            "melody_of_lux": false,
-            "melody_of_umbra": false,
-            "melody_of_focus": false,
-            "melody_of_skill": false,
-            "melody_of_ultimate": false,
-            "melody_of_pummel": false,
-            "melody_of_luck": false,
-            "melody_of_burst": false,
-            "melody_of_stamina": false
-        }
+        "threshold": 0.9
+      },
+      "type": "TemplateMatch"
     },
-    "星塔_节点_商店_购物_返回商店层_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/星塔_商店_返回__50_17_37_38__0_0_137_105.png",
-                    "ClimbTower_agent/爬塔_背包返回__34_16_54_49__0_0_138_115.png"
-                ],
-                "roi": [
-                    13,
-                    7,
-                    201,
-                    89
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "action": {
-            "type": "Click"
-        },
-        "post_wait_freezes": 100
-    },
-    "星塔_节点_回到商店层_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "商店购物"
-                ],
-                "roi": [
-                    395,
-                    243,
-                    338,
-                    98
-                ]
-            },
-            "type": "OCR"
-        },
-        "next": [
-            "星塔_节点_商店_强化_agent"
+    "next": [
+      "星塔_节点_商店_购物_返回商店层_agent"
+    ]
+  },
+  "星塔_爬塔流程_agent": {
+    "anchor": "星塔总循环",
+    "next": [
+      "星塔_节点_进入商店_agent",
+      "[JumpBack]星塔_节点_进入潜能选择_agent",
+      "[JumpBack]星塔_节点_进入对话_agent",
+      "[JumpBack]星塔_点击空白处关闭_agent"
+    ]
+  },
+  "星塔_节点_进入潜能选择_agent": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png",
+        "roi": [
+          148,
+          569,
+          996,
+          84
         ]
+      }
     },
-    "星塔_节点_商店_强化_agent": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "enhance_action"
-            }
-        },
-        "next": [
-            "星塔_节点_商店_离开商店_agent",
-            "星塔_节点_商店_离开星塔_agent"
+    "next": [
+      "星塔_节点_选择潜能_agent"
+    ],
+    "timeout": 5000
+  },
+  "星塔_节点_选择潜能_agent": {
+    "recognition": {
+      "type": "Custom",
+      "param": {
+        "custom_recognition": "choose_potential_recognition"
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "星塔_节点_选择潜能_拿走_agent"
+    ],
+    "attach": {
+      "priority_list": [],
+      "max_refresh_count": 2,
+      "reserve_coin": 0,
+      "owned_potentials": {}
+    },
+    "post_wait_freeze": 100,
+    "timeout": 2000
+  },
+  "星塔_节点_选择潜能_拿走_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
         ],
-        "attach": {
-            "max_cost": 180,
-            "initial_cost": 60
-        }
-    },
-    "星塔_节点_商店_离开商店_agent": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": [
-                    "上楼"
-                ],
-                "roi": [
-                    421,
-                    487,
-                    287,
-                    59
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "[Anchor]星塔总循环"
+        "roi": [
+          148,
+          569,
+          996,
+          84
         ]
+      },
+      "type": "TemplateMatch"
     },
-    "星塔_节点_商店_离开星塔_agent": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": [
-                    "离开星塔"
-                ],
-                "roi": [
-                    421,
-                    487,
-                    287,
-                    59
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_回到难度选择界面_agent",
-            "星塔_回到出发界面_agent",
-            "[JumpBack]星塔_确认_agent",
-            "[JumpBack]星塔_保存记录_agent",
-            "[JumpBack]星塔_点击空白处关闭_agent",
-            "[JumpBack]星塔_默契提升_agent",
-        ]
+    "action": {
+      "type": "Click"
     },
-    "星塔_保存记录_agent": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": [
-                    "保存记录"
-                ],
-                "roi": [
-                    1076,
-                    623,
-                    135,
-                    57
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
-        "next": [
-            "星塔_确认_agent"
-        ]
-    },
-    "星塔_确认_agent": {
-        "recognition": {
-            "param": {
-                "template": [
-                    "ClimbTower_agent/爬塔_记录保存确认按钮.png"
-                ],
-                "roi": [
-                    500,
-                    425,
-                    352,
-                    143
-                ]
-            },
-            "type": "TemplateMatch"
-        },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "星塔_默契提升_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "默契",
-                    "提升"
-                ],
-                "roi": [
-                    786,
-                    143,
-                    257,
-                    102
-                ]
-            },
-            "type": "OCR"
-        },
-        "action": {
-            "type": "Click"
-        }
-    },
-    "星塔_点击空白处关闭_agent": {
-        "action": {
-            "type": "Click"
-        },
-        "recognition": {
-            "param": {
-                "expected": [
-                    "点击空白",
-                    "处继续",
-                    "处关闭"
-                ],
-                "roi": [
-                    471,
-                    486,
-                    335,
-                    216
-                ]
-            },
-            "type": "OCR"
-        },
-        "post_delay": 500
-    },
-    "星塔_循环用节点_agent": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ascension_loop"
-            }
-        },
-        "next": [
-            "星塔_快速战斗按钮_agent",
-            "星塔_星塔探索按钮_agent"
+    "next": [
+      "星塔_节点_选择潜能_等待确认_agent",
+      "星塔_节点_选择潜能_已确认_agent"
+    ]
+  },
+  "星塔_节点_选择潜能_等待确认_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
         ],
-        "attach": {
-            "loop_count": 1
-        }
-    },
-    "星塔_回到难度选择界面_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "快速战斗"
-                ],
-                "roi": [
-                    850,
-                    631,
-                    94,
-                    39
-                ]
-            },
-            "type": "OCR"
-        },
-        "next": [
-            "星塔_循环用节点_agent"
+        "roi": [
+          148,
+          569,
+          996,
+          84
         ]
+      },
+      "type": "TemplateMatch"
     },
-    "星塔_回到出发界面_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "星塔探索"
-                ],
-                "roi": [
-                    703,
-                    429,
-                    161,
-                    75
-                ]
-            },
-            "type": "OCR"
-        },
-        "next": [
-            "星塔_循环用节点_agent"
-        ]
+    "action": {
+      "type": "Click"
     },
-    "星塔_回到主页_agent": {
-        "next": [
-            "通用_主页标记",
-            "[JumpBack]通用_返回主页"
-        ]
+    "post_delay": 500,
+  },
+  "星塔_节点_选择潜能_已确认_agent": {
+    "action": {
+      "type": "DoNothing"
     }
+  },
+  "星塔_节点_进入对话_agent": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "ClimbTower_agent/星塔_节点_对话图标__999_625_42_40__949_575_142_140.png"
+        ],
+        "roi": [
+          260,
+          465,
+          851,
+          236
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "星塔_节点_进入对话选择_agent",
+      "星塔_节点_进入对话_agent"
+    ]
+  },
+  "星塔_节点_进入对话选择_agent": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
+        ],
+        "roi": [
+          573,
+          206,
+          642,
+          385
+        ]
+      }
+    },
+    "next": [
+      "星塔_节点_进行对话选择_agent",
+      "星塔_节点_随便选择_agent"
+    ],
+    "post_wait_freeze": 100
+  },
+  "星塔_节点_进行对话选择_agent": {
+    "action": {
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "expected": [
+          "试试",
+          "12点",
+          "认真执行",
+          "志存高远",
+          "总是如此",
+          "^6个",
+          "均衡饮食",
+          "多吃蔬菜",
+          "少久坐",
+          "12个",
+          "今朝有酒",
+          "忠于欲望",
+          "1024",
+          "亮灯吧",
+          "我倾听所有",
+          "互相帮助",
+          "会赢的",
+          "需要力量",
+          "试一下吧",
+          "随心所欲",
+          "合作无间"
+        ],
+        "roi": [
+          672,
+          196,
+          585,
+          452
+        ]
+      },
+      "type": "OCR"
+    },
+    "timeout": 1000
+  },
+  "星塔_节点_随便选择_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
+        ],
+        "roi": [
+          672,
+          196,
+          585,
+          452
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "星塔_节点_进入商店_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "商店购物"
+        ],
+        "roi": [
+          395,
+          243,
+          338,
+          98
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "星塔_节点_商店_购物_agent"
+    ]
+  },
+  "星塔_节点_商店_购物_agent": {
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "shop_action"
+      }
+    },
+    "next": [
+      "星塔_节点_回到商店层_agent",
+      "[JumpBack]星塔_节点_商店_购物_返回商店层_agent",
+    ],
+    "attach": {
+      "lang_type": "cn",
+      "priority": [
+        "drink",
+        "melody"
+      ],
+      "drink_discount_threshold": 0.8,
+      "melody_5_discount_threshold": 1.0,
+      "melody_15_discount_threshold": 0.5,
+      "regular_shop_refresh_threshold": 1500,
+      "full_price_buy_reserve_base": 500,
+      "buy_assist_melody": true,
+      "melody_of_aqua": false,
+      "melody_of_ignis": false,
+      "melody_of_terra": false,
+      "melody_of_ventus": false,
+      "melody_of_lux": false,
+      "melody_of_umbra": false,
+      "melody_of_focus": false,
+      "melody_of_skill": false,
+      "melody_of_ultimate": false,
+      "melody_of_pummel": false,
+      "melody_of_luck": false,
+      "melody_of_burst": false,
+      "melody_of_stamina": false
+    }
+  },
+  "星塔_节点_商店_购物_返回商店层_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/星塔_商店_返回__50_17_37_38__0_0_137_105.png",
+          "ClimbTower_agent/爬塔_背包返回__34_16_54_49__0_0_138_115.png"
+        ],
+        "roi": [
+          13,
+          7,
+          201,
+          89
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 100
+  },
+  "星塔_节点_回到商店层_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "商店购物"
+        ],
+        "roi": [
+          395,
+          243,
+          338,
+          98
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "星塔_节点_商店_强化_agent"
+    ]
+  },
+  "星塔_节点_商店_强化_agent": {
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "enhance_action"
+      }
+    },
+    "next": [
+      "星塔_节点_商店_离开商店_agent",
+      "星塔_节点_商店_离开星塔_agent"
+    ],
+    "attach": {
+      "max_cost": 180,
+      "initial_cost": 60
+    }
+  },
+  "星塔_节点_商店_离开商店_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "上楼"
+        ],
+        "roi": [
+          421,
+          487,
+          287,
+          59
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "[Anchor]星塔总循环"
+    ]
+  },
+  "星塔_节点_商店_离开星塔_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "离开星塔"
+        ],
+        "roi": [
+          421,
+          487,
+          287,
+          59
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "星塔_回到难度选择界面_agent",
+      "星塔_回到出发界面_agent",
+      "[JumpBack]星塔_确认_agent",
+      "[JumpBack]星塔_保存记录_agent",
+      "[JumpBack]星塔_点击空白处关闭_agent",
+      "[JumpBack]星塔_默契提升_agent",
+    ]
+  },
+  "星塔_保存记录_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "保存记录"
+        ],
+        "roi": [
+          1076,
+          623,
+          135,
+          57
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "星塔_确认_agent"
+    ]
+  },
+  "星塔_确认_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_记录保存确认按钮.png"
+        ],
+        "roi": [
+          500,
+          425,
+          352,
+          143
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "星塔_默契提升_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "默契",
+          "提升"
+        ],
+        "roi": [
+          786,
+          143,
+          257,
+          102
+        ]
+      },
+      "type": "OCR"
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "星塔_点击空白处关闭_agent": {
+    "action": {
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "expected": [
+          "点击空白",
+          "处继续",
+          "处关闭"
+        ],
+        "roi": [
+          471,
+          486,
+          335,
+          216
+        ]
+      },
+      "type": "OCR"
+    },
+    "post_delay": 500
+  },
+  "星塔_循环用节点_agent": {
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "ascension_loop"
+      }
+    },
+    "next": [
+      "星塔_快速战斗按钮_agent",
+      "星塔_星塔探索按钮_agent"
+    ],
+    "attach": {
+      "loop_count": 1
+    }
+  },
+  "星塔_回到难度选择界面_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "快速战斗"
+        ],
+        "roi": [
+          850,
+          631,
+          94,
+          39
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "星塔_循环用节点_agent"
+    ]
+  },
+  "星塔_回到出发界面_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "星塔探索"
+        ],
+        "roi": [
+          703,
+          429,
+          161,
+          75
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "星塔_循环用节点_agent"
+    ]
+  },
+  "星塔_回到主页_agent": {
+    "next": [
+      "通用_主页标记",
+      "[JumpBack]通用_返回主页"
+    ]
+  }
 }

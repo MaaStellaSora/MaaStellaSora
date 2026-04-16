@@ -62,6 +62,7 @@ class ChoosePotentialRecognition(CustomRecognition):
     def __init__(self):
         super().__init__()
         self.logger = logger.get_logger(__name__)
+        self.available_refresh_count: int = 0  # 可用刷新次数，每次 analyze 开始时重置，然后从 attach 中获取
         self._refresh_count: int = 0  # 本次潜能选择的已刷新次数，每次 analyze 开始时重置
         self.available_potential_num: int = 3  # 可选潜能卡片数量，每次 analyze 开始时重置
         self.is_core = False # 是否为核心潜能
@@ -93,19 +94,32 @@ class ChoosePotentialRecognition(CustomRecognition):
             attach["owned_potentials"],
         )
 
-        if not priority_list:
-            self.is_core = self._check_core_potential(context, argv.image)
-            self.available_potential_num = self._get_available_potential_num(context, argv.image)
-            target_box = self._get_recommended_box(context, argv.image)
-            return CustomRecognition.AnalyzeResult(box=target_box, detail={})
-
-        available_refresh_count = 0
+        self.available_refresh_count = 0
         if self._is_refreshable(context, argv.image):
             current_coin = self._get_current_coin(context, argv.image)
             refresh_cost = self._get_refresh_cost(context, argv.image)
             usable_coin = max(0, current_coin - attach["reserve_coin"])
             affordable = usable_coin // refresh_cost if refresh_cost else 0
-            available_refresh_count = min(attach["max_refresh_count"], affordable)
+            self.available_refresh_count = min(attach["max_refresh_count"], affordable)
+
+        if not priority_list:
+            self.is_core = self._check_core_potential(context, argv.image)
+            self.available_potential_num = self._get_available_potential_num(context, argv.image)
+            while True:
+                image = context.tasker.controller.post_screencap().wait().get()
+                target_box = self._get_recommended_box(context, image)
+                if target_box:
+                    self.logger.info("[潜能选择] 选择系统推荐")
+                    break
+                elif self.available_refresh_count > 0:
+                    self.logger.info("没有找到符合条件的潜能，尝试刷新")
+                    context.run_task("星塔_节点_选择潜能_点击刷新_agent")
+                    self.available_refresh_count -= 1
+                else:
+                    self.logger.info("[潜能选择] 识别系统推荐失败，选择默认潜能")
+                    target_box = [5, 710, 5, 5]
+                    break
+            return CustomRecognition.AnalyzeResult(box=target_box, detail={})
 
         target_potential = None
         target_trekker = None
@@ -127,10 +141,10 @@ class ChoosePotentialRecognition(CustomRecognition):
             if result:
                 target_potential, target_trekker = result
                 break
-            if available_refresh_count > 0:
+            if self.available_refresh_count > 0:
                 self.logger.info("没有找到符合条件的潜能，尝试刷新")
                 context.run_task("星塔_节点_选择潜能_点击刷新_agent")
-                available_refresh_count -= 1
+                self.available_refresh_count -= 1
                 self._refresh_count += 1
             else:
                 self.logger.info("[潜能选择] 选择系统推荐")
@@ -140,6 +154,9 @@ class ChoosePotentialRecognition(CustomRecognition):
             target_box = target_potential["box"]
         else:
             target_box = self._get_recommended_box(context, image)
+            if not target_box:
+                self.logger.info("[潜能选择] 识别系统推荐失败，选择默认潜能")
+                target_box = [5, 710, 5, 5]
 
         owned = self._update_owned_potentials(
             attach["owned_potentials"],
@@ -364,10 +381,12 @@ class ChoosePotentialRecognition(CustomRecognition):
             image = context.tasker.controller.post_screencap().wait().get()
 
         potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
+        select_potential_index = self._get_selected_potential_index(context, image)
 
         available_potentials = []
         for i, rois in enumerate(potential_rois):
             name_roi = rois["core_potential"] if self.is_core else rois["general_potential"]
+            name_roi[1] = name_roi[1] - 35 if i == select_potential_index else name_roi[1] # 根据拿走按钮位置调整 y 坐标
 
             reco_detail = context.run_recognition(
                 "星塔_节点_选择潜能_识别潜能名称_agent",
@@ -395,12 +414,14 @@ class ChoosePotentialRecognition(CustomRecognition):
                 })
                 continue
 
+            level_roi = rois["general_potential_level"]
+            level_roi[1] = level_roi[1] - 35 if i == select_potential_index else level_roi[1] # 根据拿走按钮位置调整 y 坐标
             reco_detail = context.run_recognition(
                 "星塔_节点_选择潜能_识别潜能等级_agent",
                 image,
                 {
                     "星塔_节点_选择潜能_识别潜能等级_agent": {
-                        "recognition": {"param": {"roi": rois["general_potential_level"]}}
+                        "recognition": {"param": {"roi": level_roi}}
                     }
                 },
             )
@@ -674,7 +695,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")
         return selected_potential, selected_trekker
 
-    def _get_recommended_box(self, context: Context, image, count: int = 3) -> list:
+    def _get_recommended_box(self, context: Context, image) -> list:
         """识别系统推荐图标，返回对应卡片的 box。
 
         推荐图标位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
@@ -684,30 +705,64 @@ class ChoosePotentialRecognition(CustomRecognition):
         Args:
             context: maa.context.Context
             image: 截图
-            count: 识别次数，默认3次
 
         Returns:
             list: 目标卡片区域 [x, y, w, h]
         """
         potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
-        for c in range(count):
-            reco_detail = context.run_recognition(
-                "星塔_节点_选择潜能_识别推荐图标_agent", image
-            )
-            if reco_detail and reco_detail.hit:
-                hit_x = reco_detail.best_result.box[0]
-                matched = next(
-                    (r for r in potential_rois if r["x_border"][0] <= hit_x <= r["x_border"][1]),
-                    None,
-                )
-                if matched:
-                    return matched["general_potential"]
+        reco_detail = context.run_recognition(
+            "星塔_节点_选择潜能_识别推荐图标_agent", image
+        )
+        if reco_detail and reco_detail.hit:
+            hit_x = reco_detail.best_result.box[0]
+            matched = []
+            for i, r in enumerate(potential_rois):
+                if r["x_border"][0] <= hit_x <= r["x_border"][1]:
+                    matched = r
+                    break
+            if matched:
+                return matched["general_potential"]
 
-            self.logger.debug("推荐图标识别失败，等待1秒后重试")
-            time.sleep(1)
-            image = context.tasker.controller.post_screencap().wait().get()
+        self.logger.debug("推荐图标识别失败，有可能是没有推荐图标，也有可能是识别问题")
+        return []
 
-        self.logger.warning("推荐图标识别失败，返回第一张卡片")
+    def _get_selected_potential_index(self, context: Context, image) -> int:
+        """识别拿走按钮，返回对应卡片的索引。
+
+        拿走按钮位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
+        x_border 区间（左开右开）来确定归属卡片。
+        识别失败时返回第一张卡片的索引 作为兜底。
+
+        Args:
+            context: maa.context.Context
+            image: 截图
+
+        Returns:
+            int: 目标卡片索引
+        """
+        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
+        reco_detail = context.run_recognition(
+            "星塔_节点_选择潜能_识别预选潜能位置_agent", image
+        )
+        if reco_detail and reco_detail.hit:
+            hit_x = reco_detail.best_result.box[0]
+            matched_index = 0
+            for i, r in enumerate(potential_rois):
+                if r["x_border"][0] <= hit_x <= r["x_border"][1]:
+                    matched_index = i
+                    break
+            return matched_index
+
+        self.logger.error("拿走按钮识别失败，将会导致识别出现问题")
+        return 0
+
+    def _get_first_box(self) -> list:
+        """返回第一张卡片的 box。
+
+        Returns:
+            list: 目标卡片区域 [x, y, w, h]
+        """
+        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
         return potential_rois[0]["general_potential"]
 
     def _update_owned_potentials(

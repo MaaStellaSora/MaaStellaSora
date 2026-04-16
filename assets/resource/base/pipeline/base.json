@@ -71,7 +71,8 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "post_wait_freezes": 100
   },
   "通用_换算快速作战次数": {
     "action": {

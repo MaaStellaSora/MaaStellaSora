@@ -76,7 +76,7 @@
                     "name": "属性_光土",
                     "label": "光土",
                     "pipeline_override": {
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -91,7 +91,7 @@
                     "name": "属性_水风",
                     "label": "水风",
                     "pipeline_override": {
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [
@@ -106,7 +106,7 @@
                     "name": "属性_火暗",
                     "label": "火暗",
                     "pipeline_override": {
-                        "星塔_属性塔选择": {
+                        "星塔_属性塔选择_agent": {
                             "recognition": {
                                 "param": {
                                     "template": [

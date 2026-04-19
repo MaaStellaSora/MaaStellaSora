@@ -137,7 +137,7 @@
     "action": {
       "type": "Click"
     },
-    "post_delay": 500,
+    "post_delay": 500
   },
   "星塔_节点_选择潜能_已确认_agent": {
     "action": {
@@ -275,7 +275,7 @@
     },
     "next": [
       "星塔_节点_回到商店层_agent",
-      "[JumpBack]星塔_节点_商店_购物_返回商店层_agent",
+      "[JumpBack]星塔_节点_商店_购物_返回商店层_agent"
     ],
     "attach": {
       "lang_type": "cn",

@@ -235,7 +235,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "\\d+",
+          "\\d+"
         ],
         "roi": [
           347,
@@ -273,7 +273,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "强化",
+          "强化"
         ],
         "roi": [
           347,

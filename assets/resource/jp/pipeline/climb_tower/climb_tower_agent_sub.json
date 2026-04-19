@@ -14,7 +14,7 @@
             "param": {
                 "expected": [
                     "購入"
-                ],
+                ]
             },
             "type": "OCR"
         }
@@ -24,7 +24,7 @@
             "param": {
                 "expected": [
                     "強化"
-                ],
+                ]
             },
             "type": "OCR"
         }

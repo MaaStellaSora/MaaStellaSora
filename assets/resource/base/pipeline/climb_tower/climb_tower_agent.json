@@ -406,7 +406,7 @@
       "[JumpBack]星塔_确认_agent",
       "[JumpBack]星塔_保存记录_agent",
       "[JumpBack]星塔_点击空白处关闭_agent",
-      "[JumpBack]星塔_默契提升_agent",
+      "[JumpBack]星塔_默契提升_agent"
     ]
   },
   "星塔_保存记录_agent": {
@@ -414,7 +414,7 @@
       "type": "OCR",
       "param": {
         "expected": [
-          "保存记录"
+          "保存纪录"
         ],
         "roi": [
           1076,

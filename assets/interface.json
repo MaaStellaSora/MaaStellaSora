@@ -147,7 +147,6 @@
         }
     ],
     "import": [
-        "resource/tasks/climb_tower.json",
         "resource/tasks/climb_tower_agent.json",
         "resource/tasks/climb_tower_presets.json"
     ],

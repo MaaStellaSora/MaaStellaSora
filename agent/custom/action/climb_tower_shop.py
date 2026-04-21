@@ -1,9 +1,7 @@
-import os
 import re
 import time
-import json
+from dataclasses import dataclass, field
 from typing import Optional
-from pathlib import Path
 
 import numpy
 
@@ -11,7 +9,8 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
-from utils import logger
+from utils import logger as logger_module
+logger = logger_module.get_logger("climb_tower_action")
 
 
 def _get_current_coin(
@@ -29,7 +28,6 @@ def _get_current_coin(
     Returns:
         int: 当前金币数量，识别失败时返回 0。
     """
-    _logger = logger.get_logger(__name__)
 
     if image is None:
         image = context.tasker.controller.post_screencap().wait().get()
@@ -37,14 +35,14 @@ def _get_current_coin(
     for _ in range(max_try):
         reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
         if reco_detail and reco_detail.hit:
-            _logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
+            logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
             return int(reco_detail.filtered_results[-1].text)
 
         if reco_detail and reco_detail.all_results:
-            _logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
+            logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
         else:
-            _logger.debug("未识别到任何关于当前金币的内容")
-        _logger.debug("等待1秒后重新识别")
+            logger.debug("未识别到任何关于当前金币的内容")
+        logger.debug("等待1秒后重新识别")
 
         if context.tasker.stopping:
             return 0
@@ -52,7 +50,7 @@ def _get_current_coin(
         time.sleep(1)
         image = context.tasker.controller.post_screencap().wait().get()
 
-    _logger.error("无法读取当前金币数量，将当作 0 金币处理")
+    logger.error("无法读取当前金币数量，将当作 0 金币处理")
     return 0
 
 
@@ -69,31 +67,29 @@ def _get_enhancement_cost(
     Returns:
         int: 当前强化所需金币；识别失败返回 65535。
     """
-    _logger = logger.get_logger(__name__)
-
     if image is None:
         image = context.tasker.controller.post_screencap().wait().get()
 
     for _ in range(3):
         reco_detail = context.run_recognition("星塔_节点_商店_识别强化所需金币_agent", image)
         if reco_detail and reco_detail.hit:
-            _logger.debug(f"识别到强化所需金币：{reco_detail.best_result.text}")
+            logger.debug(f"识别到强化所需金币：{reco_detail.best_result.text}")
             return int(reco_detail.best_result.text)
 
         if reco_detail and reco_detail.all_results:
-            _logger.debug(
+            logger.debug(
                 f"识别强化所需金币结果：{[r.text for r in reco_detail.all_results]}"
             )
         else:
-            _logger.debug("未识别到任何关于强化金币的内容")
-        _logger.debug("等待1秒后重试")
+            logger.debug("未识别到任何关于强化金币的内容")
+        logger.debug("等待1秒后重试")
         time.sleep(1)
         image = context.tasker.controller.post_screencap().wait().get()
 
         if context.tasker.stopping:
             return 65535
 
-    _logger.error("无法读取当前强化所需金币数量")
+    logger.error("无法读取当前强化所需金币数量")
     return 65535
 
 
@@ -325,26 +321,32 @@ class ShopAction(CustomAction):
         "jp": ["割引"]
     }
 
+    @dataclass
+    class _Config:
+        # 商店设置
+        shop_type: str = "regular"
+        lang_type: str = "cn"
+        reserve_coin: int = 0
+        priority: list[str] = field(default_factory=list)
+        drink_discount_threshold: float = 0.8
+        melody_5_discount_threshold: float = 1.0
+        melody_15_discount_threshold: float = 0.5
+        target_melodies: list[str] = field(default_factory=list)
+        buy_assist_melody: bool = False
+        regular_shop_refresh_threshold: int = 1500
+        min_buyable_price: float = float("inf")
+        full_price_buy_reserve_base: int = 500
+        # 强化设置
+        initial_cost: int = 60
+        max_cost: int = 180
+
+
     def __init__(self) -> None:
         super().__init__()
-        self.logger = logger.get_logger(__name__)
-        self.shop_type: str = ""
-        self.lang_type: str = "cn"
-        self.reserve_coin: int = 0
-        self.priority: list[str] = []
-        self.drink_discount_threshold: float = 1.0
-        self.melody_5_discount_threshold: float = 1.0
-        self.melody_15_discount_threshold: float = 1.0
-        self.target_melodies: list[str] = []
-        self.buy_assist_melody: bool = False
-        self.regular_shop_refresh_threshold: int = 1500
-        self.min_buyable_price: float = float("inf")
-        self.full_price_buy_reserve_base: int = 400
+        self.cfg = self._Config()
         self.dynamic_reserve: int = 0
-        self.initial_cost: int = 60
-        self.max_cost: int = 180
-        self.current_cost: int = 65535
         self.refresh_remaining: int = 0
+        self.current_cost: int = 65535
         self.image = None # 仅用作道具与刷新次数的识别，不作可用金币识别
 
     def run(
@@ -365,22 +367,22 @@ class ShopAction(CustomAction):
             bool: 正常完成返回 True；用户中止返回 False。
         """
         params = self._get_params(context, argv.node_name)
-        self.lang_type = params["lang_type"]
-        self.reserve_coin = params["reserve_coin"]
-        self.priority = params["priority"]
-        self.drink_discount_threshold = params["drink_discount_threshold"]
-        self.melody_5_discount_threshold = params["melody_5_discount_threshold"]
-        self.melody_15_discount_threshold = params["melody_15_discount_threshold"]
-        self.target_melodies = params["target_melodies"]
-        self.buy_assist_melody = params["buy_assist_melody"]
-        self.regular_shop_refresh_threshold = params["regular_shop_refresh_threshold"]
-        self.full_price_buy_reserve_base = params["full_price_buy_reserve_base"]
+        self.cfg.lang_type = params["lang_type"]
+        self.cfg.reserve_coin = params["reserve_coin"]
+        self.cfg.priority = params["priority"]
+        self.cfg.drink_discount_threshold = params["drink_discount_threshold"]
+        self.cfg.melody_5_discount_threshold = params["melody_5_discount_threshold"]
+        self.cfg.melody_15_discount_threshold = params["melody_15_discount_threshold"]
+        self.cfg.target_melodies = params["target_melodies"]
+        self.cfg.buy_assist_melody = params["buy_assist_melody"]
+        self.cfg.regular_shop_refresh_threshold = params["regular_shop_refresh_threshold"]
+        self.cfg.full_price_buy_reserve_base = params["full_price_buy_reserve_base"]
 
-        self.shop_type = _check_shop_type(context)
-        self.logger.debug(f"商店类型: {self.shop_type}, 预留金币: {self.reserve_coin}")
+        self.cfg.shop_type = _check_shop_type(context)
+        logger.debug(f"商店类型: {self.cfg.shop_type}, 预留金币: {self.cfg.reserve_coin}")
 
         context.run_task("星塔_节点_商店_点击商店购物_agent")
-        self.min_buyable_price = self._calc_min_buyable_price()
+        self.cfg.min_buyable_price = self._calc_min_buyable_price()
 
         while True:
             self.image = context.tasker.controller.post_screencap().wait().get()
@@ -399,7 +401,7 @@ class ShopAction(CustomAction):
                 break
             context.run_task("星塔_节点_商店_点击刷新_agent")
 
-        if self.shop_type == "final":
+        if self.cfg.shop_type == "final":
             self._mark_remaining_drinks_buy_plan(grids_info)
             if not self._execute_buy_plan(context, grids_info):
                 return False
@@ -451,7 +453,7 @@ class ShopAction(CustomAction):
         }
         node_data = context.get_node_data(node_name)
         if not node_data:
-            self.logger.error("无法获取商店设置，将使用默认参数")
+            logger.error("无法获取商店设置，将使用默认参数")
             params = {**defaults, "reserve_coin": 0, "target_melodies": []}
             return params
 
@@ -460,7 +462,7 @@ class ShopAction(CustomAction):
 
         enhance_node_data = context.get_node_data("星塔_节点_商店_强化_agent")
         if not enhance_node_data:
-            self.logger.error("无法读取强化设置，将使用默认参数")
+            logger.error("无法读取强化设置，将使用默认参数")
             params["reserve_coin"] = 0
         else:
             enhance_attach = enhance_node_data.get("attach", {})
@@ -468,7 +470,7 @@ class ShopAction(CustomAction):
             self.initial_cost = enhance_attach.get("initial_cost", 60)
             self.current_cost = _get_enhancement_cost(context)
             current_coin = _get_current_coin(context)
-            self.logger.debug(
+            logger.debug(
                 f"当前金币: {current_coin}, 当前强化费用: {self.current_cost}, "
                 f"最大当前强化费用: {self.max_cost}, 初始强化费用: {self.initial_cost}"
             )
@@ -491,22 +493,22 @@ class ShopAction(CustomAction):
             int: 理论最低可购买价格；无符合条件商品时返回 65535。
         """
         prices = []
-        if "drink" in self.priority:
+        if "drink" in self.cfg.priority:
             prices.append(
-                self.ITEM_STANDARD_PRICES["potential_drink"] * self.drink_discount_threshold
+                self.ITEM_STANDARD_PRICES["potential_drink"] * self.cfg.drink_discount_threshold
             )
-        if "melody" in self.priority and (self.target_melodies or self.buy_assist_melody):
+        if "melody" in self.cfg.priority and (self.cfg.target_melodies or self.cfg.buy_assist_melody):
             prices.append(
-                self.ITEM_STANDARD_PRICES["melody_5"] * self.melody_5_discount_threshold
+                self.ITEM_STANDARD_PRICES["melody_5"] * self.cfg.melody_5_discount_threshold
             )
             prices.append(
-                self.ITEM_STANDARD_PRICES["melody_15"] * self.melody_15_discount_threshold
+                self.ITEM_STANDARD_PRICES["melody_15"] * self.cfg.melody_15_discount_threshold
             )
 
         if prices:
             return int(min(prices))
         else:
-            self.logger.error("无法计算理论最低可购买商品价格，本错误将导致无法执行刷新")
+            logger.error("无法计算理论最低可购买商品价格，本错误将导致无法执行刷新")
             return 65535
 
     def _get_grids_info(self, context: Context) -> list[dict]:
@@ -527,7 +529,7 @@ class ShopAction(CustomAction):
         grids_info = []
 
         for i, grid_roi in enumerate(self.GRID_ROIS):
-            self.logger.debug(f"正在识别第 {i + 1} 个格子")
+            logger.debug(f"正在识别第 {i + 1} 个格子")
             item_name, item_quantity, item_price = self._get_single_grid_info(
                 context, grid_roi["price_roi"], grid_roi["name_roi"]
             )
@@ -547,13 +549,13 @@ class ShopAction(CustomAction):
                     "buy_priority": 0,
                 })
             else:
-                self.logger.error(
+                logger.error(
                     f"第 {i + 1} 个格子内容识别失败："
                     f"item_name={item_name}, item_quantity={item_quantity}, item_price={item_price}"
                 )
 
         grids_info.sort(key=lambda x: x["item_price"])
-        self.logger.debug(f"排序后道具列表: {grids_info}")
+        logger.debug(f"排序后道具列表: {grids_info}")
         return grids_info
 
     def _get_single_grid_info(
@@ -580,20 +582,20 @@ class ShopAction(CustomAction):
         item_quantity = 0
 
         for count in range(retry_max):
-            self.logger.debug(f"第 {count + 1} 次识别道具格子")
+            logger.debug(f"第 {count + 1} 次识别道具格子")
             image = self.image
 
             if not item_price:
                 results = self._grid_recognition(context, image, price_roi, "price")
                 raw_item_price = [r.text for r in results]
                 item_price = self._parse_item_price(raw_item_price)
-                self.logger.debug(f"价格从 '{raw_item_price}' 解析为 '{item_price}'")
+                logger.debug(f"价格从 '{raw_item_price}' 解析为 '{item_price}'")
 
             if not item_name or not item_quantity:
                 results = self._grid_recognition(context, image, name_roi, "name")
                 raw_item_name = "".join([r.text for r in results])
                 item_name_temp, item_quantity_temp = self._parse_item_name(raw_item_name)
-                self.logger.debug(
+                logger.debug(
                     f"名称从 '{raw_item_name}' 解析为名称: '{item_name_temp}'，数量: '{item_quantity_temp}'"
                 )
                 if not item_name:
@@ -607,13 +609,13 @@ class ShopAction(CustomAction):
             if context.tasker.stopping:
                 return "", 0, 0
 
-            self.logger.warning("识别道具格子失败，准备重试")
+            logger.warning("识别道具格子失败，准备重试")
             time.sleep(1)
 
         return item_name, item_quantity, item_price
 
+    @staticmethod
     def _grid_recognition(
-        self,
         context: Context,
         image: numpy.ndarray,
         roi: list[int],
@@ -635,23 +637,23 @@ class ShopAction(CustomAction):
         elif content == "name":
             node_name = "星塔_节点_商店_购物_识别物品内容_agent"
         else:
-            self.logger.error(f"未知的内容类型：{content}")
+            logger.error(f"未知的内容类型：{content}")
             return []
 
         reco_detail = context.run_recognition(node_name, image, {
             node_name: {"recognition": {"param": {"roi": roi}}}
         })
         if reco_detail and reco_detail.hit:
-            self.logger.debug(
+            logger.debug(
                 f"识别到物品内容：{[r.text for r in reco_detail.filtered_results]}"
             )
             return reco_detail.filtered_results
         if reco_detail and reco_detail.all_results:
-            self.logger.debug(
+            logger.debug(
                 f"识别到的格子内容：{[r.text for r in reco_detail.all_results]}"
             )
         else:
-            self.logger.debug(f"格子 {roi} 未识别到任何内容")
+            logger.debug(f"格子 {roi} 未识别到任何内容")
         return []
 
     def _parse_item_name(self, item_name: str) -> tuple[str, int]:
@@ -667,7 +669,7 @@ class ShopAction(CustomAction):
             tuple[str, int]: (item_name, item_quantity)，
                 item_name 为内部通用名，item_quantity 为数量（0 表示未识别）。
         """
-        mapping = self._get_reverse_mapping(self.lang_type)
+        mapping = self._get_reverse_mapping(self.cfg.lang_type)
         match = re.match(r"(.*?)\s*[x×]\s*(\d+)$", item_name, re.IGNORECASE)
         item_quantity = 0
 
@@ -725,7 +727,8 @@ class ShopAction(CustomAction):
 
         return min(parsed_item_price, default=0)
 
-    def _buy_item(self, context: Context, grid: dict, reserve_coin: int) -> bool:
+    @staticmethod
+    def _buy_item(context: Context, grid: dict, reserve_coin: int) -> bool:
         """执行普通商品购买（潜能特饮 / 音符）。
 
         将调用方传入的 reserve_coin 注入潜能选择节点，防止潜能选择把预留给强化的金币刷光。
@@ -751,13 +754,14 @@ class ShopAction(CustomAction):
         }
         result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
         if result and result.status.succeeded:
-            self.logger.debug(f"购买 {grid['item_name']} 成功")
+            logger.debug(f"购买 {grid['item_name']} 成功")
             return True
         else:
-            self.logger.error(f"购买 {grid['item_name']} 过程出现问题")
+            logger.error(f"购买 {grid['item_name']} 过程出现问题")
             return False
 
-    def _buy_assist_melody(self, context: Context, grid: dict) -> bool:
+    @staticmethod
+    def _buy_assist_melody(context: Context, grid: dict) -> bool:
         """执行协奏音符购买，走单独的协奏音符 pipeline。
 
         Args:
@@ -774,7 +778,7 @@ class ShopAction(CustomAction):
         }
         run_result = context.run_task("星塔_节点_商店_购买协奏音符_agent", override)
         if not(run_result and run_result.status.succeeded):
-            self.logger.error(f"点击协奏音符 {grid['item_name']} 过程出现问题")
+            logger.error(f"点击协奏音符 {grid['item_name']} 过程出现问题")
             return False
 
         image = context.tasker.controller.post_screencap().wait().get()
@@ -783,18 +787,18 @@ class ShopAction(CustomAction):
         if reco_detail and reco_detail.hit:
             run_result = context.run_task("星塔_节点_商店_购物_购买道具_确认购买_agent")
             if run_result and run_result.status.succeeded:
-                self.logger.debug(f"购买 {grid['item_name']} 成功")
+                logger.debug(f"购买 {grid['item_name']} 成功")
                 return True
             else:
-                self.logger.error(f"购买 {grid['item_name']} 过程出现问题")
+                logger.error(f"购买 {grid['item_name']} 过程出现问题")
                 return False
         else:
-            self.logger.debug("该音符不是协奏音符，关闭确认框")
+            logger.debug("该音符不是协奏音符，关闭确认框")
             run_result = context.run_task("星塔_节点_商店_购买协奏音符_退出购买_agent")
             if run_result and run_result.status.succeeded:
-                self.logger.debug(f"关闭购买协奏音符 {grid['item_name']} 成功")
+                logger.debug(f"关闭购买协奏音符 {grid['item_name']} 成功")
             else:
-                self.logger.error(f"关闭购买协奏音符 {grid['item_name']} 过程出现问题")
+                logger.error(f"关闭购买协奏音符 {grid['item_name']} 过程出现问题")
             return False
 
     @staticmethod
@@ -839,14 +843,14 @@ class ShopAction(CustomAction):
         image = self.image
         reco_detail = context.run_recognition("星塔_节点_商店_购物_识别可刷新次数_agent", image)
         if reco_detail and reco_detail.hit:
-            self.logger.debug(f"识别到刷新次数：{reco_detail.best_result.text}")
+            logger.debug(f"识别到刷新次数：{reco_detail.best_result.text}")
             return int(reco_detail.best_result.text)
 
-        self.logger.debug("刷新次数识别失败，将返回 0")
+        logger.debug("刷新次数识别失败，将返回 0")
         if reco_detail and reco_detail.all_results:
-            self.logger.debug(f"识别内容：{[r.text for r in reco_detail.all_results]}")
+            logger.debug(f"识别内容：{[r.text for r in reco_detail.all_results]}")
         else:
-            self.logger.debug("未识别到任何内容")
+            logger.debug("未识别到任何内容")
         return 0
 
     def _is_target_drink(self, grid: dict) -> bool:
@@ -862,7 +866,7 @@ class ShopAction(CustomAction):
         """
         if grid["item_name"] != "potential_drink":
             return False
-        return grid["discount"] <= self.drink_discount_threshold
+        return grid["discount"] <= self.cfg.drink_discount_threshold
 
     def _is_target_melody(self, grid: dict) -> bool:
         """判断格子是否为用户指定的目标音符。
@@ -875,12 +879,12 @@ class ShopAction(CustomAction):
         Returns:
             bool: 符合购买条件返回 True。
         """
-        if grid["item_name"] not in self.target_melodies:
+        if grid["item_name"] not in self.cfg.target_melodies:
             return False
         if grid["item_quantity"] == 5:
-            return grid["discount"] <= self.melody_5_discount_threshold
+            return grid["discount"] <= self.cfg.melody_5_discount_threshold
         if grid["item_quantity"] == 15:
-            return grid["discount"] <= self.melody_15_discount_threshold
+            return grid["discount"] <= self.cfg.melody_15_discount_threshold
         return False
 
     def _is_target_assist_melody(self, grid: dict) -> bool:
@@ -894,16 +898,16 @@ class ShopAction(CustomAction):
         Returns:
             bool: 符合购买条件返回 True。
         """
-        if not self.buy_assist_melody:
+        if not self.cfg.buy_assist_melody:
             return False
         if "melody" not in grid["item_name"]:
             return False
-        if grid["item_name"] in self.target_melodies:
+        if grid["item_name"] in self.cfg.target_melodies:
             return False
         if grid["item_quantity"] == 5:
-            return grid["discount"] <= self.melody_5_discount_threshold
+            return grid["discount"] <= self.cfg.melody_5_discount_threshold
         if grid["item_quantity"] == 15:
-            return grid["discount"] <= self.melody_15_discount_threshold
+            return grid["discount"] <= self.cfg.melody_15_discount_threshold
         return False
 
     def _mark_buy_plan(self, grids_info: list[dict]) -> None:
@@ -917,7 +921,7 @@ class ShopAction(CustomAction):
             grids_info: _get_grids_info() 返回的格子列表。
         """
         grids_info.sort(key=lambda g: g["item_price"])
-        for item_type in self.priority:
+        for item_type in self.cfg.priority:
             for grid in grids_info:
                 if grid["bought"]:
                     continue
@@ -959,7 +963,7 @@ class ShopAction(CustomAction):
             elif context.tasker.stopping:
                 return False
             else:
-                self.logger.debug(f"购买失败，跳过第{grid['grid_num']}个格子")
+                logger.debug(f"购买失败，跳过第{grid['grid_num']}个格子")
         return True
 
     def _execute_single_purchase(
@@ -981,37 +985,37 @@ class ShopAction(CustomAction):
             bool: 购买成功返回 True，失败或金币不足返回 False。
         """
         buy_type = grid["buy_type"]
-        item_display = self.ITEM_NAMES.get(grid["item_name"], {}).get(self.lang_type, ["?"])[0]
+        item_display = self.ITEM_NAMES.get(grid["item_name"], {}).get(self.cfg.lang_type, ["?"])[0]
 
         if buy_type == "normal":
-            usable = max(0, current_coin - self.reserve_coin)
+            usable = max(0, current_coin - self.cfg.reserve_coin)
             if usable < grid["item_price"]:
-                self.logger.debug(
+                logger.debug(
                     f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
                 )
                 return False
-            return self._buy_item(context, grid, self.reserve_coin)
+            return self._buy_item(context, grid, self.cfg.reserve_coin)
 
         elif buy_type == "assist_melody":
             if grid["checked"]:
-                self.logger.debug(f"跳过已检查的协奏音符 {item_display}")
+                logger.debug(f"跳过已检查的协奏音符 {item_display}")
                 return False
-            usable = max(0, current_coin - self.reserve_coin)
+            usable = max(0, current_coin - self.cfg.reserve_coin)
             if usable < grid["item_price"]:
-                self.logger.debug(
+                logger.debug(
                     f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
                 )
                 return False
             return self._buy_assist_melody(context, grid)
 
         elif buy_type == "dynamic_drink":
-            usable = max(0, current_coin - self.reserve_coin - self.dynamic_reserve)
+            usable = max(0, current_coin - self.cfg.reserve_coin - self.dynamic_reserve)
             if usable < grid["item_price"]:
-                self.logger.debug(
+                logger.debug(
                     f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
                 )
                 return False
-            return self._buy_item(context, grid, self.reserve_coin)
+            return self._buy_item(context, grid, self.cfg.reserve_coin)
 
         elif buy_type == "final_remainder":
             _, total_cost = _calculate_max_enhance(
@@ -1019,17 +1023,18 @@ class ShopAction(CustomAction):
             )
             usable = max(0, current_coin - total_cost)
             if usable < grid["item_price"]:
-                self.logger.debug(
+                logger.debug(
                     f"可用金币 {usable} 不足，跳过 {item_display}（{grid['item_price']}）"
                 )
                 return False
             return self._buy_item(context, grid, total_cost)
 
         else:
-            self.logger.error(f"未知的购买类型: {buy_type}")
+            logger.error(f"未知的购买类型: {buy_type}")
             return False
 
-    def _get_refresh_cost(self, context: Context) -> int:
+    @staticmethod
+    def _get_refresh_cost(context: Context) -> int:
         """识别当前刷新费用。
 
         Args:
@@ -1041,10 +1046,10 @@ class ShopAction(CustomAction):
         image = context.tasker.controller.post_screencap().wait().get()
         reco_detail = context.run_recognition("星塔_通用_识别刷新花费_agent", image)
         if reco_detail and reco_detail.hit:
-            self.logger.debug(f"识别到刷新费用：{[r.text for r in reco_detail.filtered_results]}")
+            logger.debug(f"识别到刷新费用：{[r.text for r in reco_detail.filtered_results]}")
             return int(reco_detail.best_result.text)
 
-        self.logger.error("无法识别刷新费用，返回 65535")
+        logger.error("无法识别刷新费用，返回 65535")
         return 65535
 
     def _should_refresh(self, context: Context) -> bool:
@@ -1059,30 +1064,30 @@ class ShopAction(CustomAction):
         Returns:
             bool: 满足刷新条件返回 True。
         """
-        usable = max(0, _get_current_coin(context) - self.reserve_coin)
+        usable = max(0, _get_current_coin(context) - self.cfg.reserve_coin)
 
-        if self.shop_type == "regular" and usable < self.regular_shop_refresh_threshold:
-            self.logger.info(f"可用金币 {usable} 未达到刷新标准 {self.regular_shop_refresh_threshold}，跳过刷新")
+        if self.cfg.shop_type == "regular" and usable < self.cfg.regular_shop_refresh_threshold:
+            logger.info(f"可用金币 {usable} 未达到刷新标准 {self.cfg.regular_shop_refresh_threshold}，跳过刷新")
             return False
 
         if self.refresh_remaining <= 0:
-            self.logger.info("刷新次数已用完")
+            logger.info("刷新次数已用完")
             return False
 
         refresh_cost = self._get_refresh_cost(context)
-        min_threshold = refresh_cost + self.min_buyable_price
+        min_threshold = refresh_cost + self.cfg.min_buyable_price
         if usable >= min_threshold:
-            if self.shop_type == "regular":
-                self.logger.info(
-                    f"可用金币 {usable} 达到商店刷新标准 {max(min_threshold, self.regular_shop_refresh_threshold)}，尝试刷新"
+            if self.cfg.shop_type == "regular":
+                logger.info(
+                    f"可用金币 {usable} 达到商店刷新标准 {max(min_threshold, self.cfg.regular_shop_refresh_threshold)}，尝试刷新"
                 )
-            elif self.shop_type == "final":
-                self.logger.info(
+            elif self.cfg.shop_type == "final":
+                logger.info(
                     f"可用金币 {usable} 达到最终商店刷新标准 {min_threshold}，尝试刷新"
                 )
             return True
 
-        self.logger.info(f"可用金币 {usable} 不足以刷新")
+        logger.info(f"可用金币 {usable} 不足以刷新")
         return False
 
     def _mark_full_price_buy_plan(self, grids_info: list[dict]) -> None:
@@ -1096,8 +1101,8 @@ class ShopAction(CustomAction):
             grids_info: 当前轮次的格子列表，复用第一轮识别结果。
         """
         refresh_remaining = self.refresh_remaining
-        self.dynamic_reserve = self.full_price_buy_reserve_base * (refresh_remaining + 1)
-        self.logger.debug(
+        self.dynamic_reserve = self.cfg.full_price_buy_reserve_base * (refresh_remaining + 1)
+        logger.debug(
             f"剩余刷新次数: {refresh_remaining}, 动态预留: {self.dynamic_reserve}"
         )
 
@@ -1169,10 +1174,6 @@ class ShopAction(CustomAction):
 @AgentServer.custom_action("enhance_action")
 class EnhanceAction(CustomAction):
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.logger = logger.get_logger(__name__)
-
     def run(
         self,
         context: Context,
@@ -1198,17 +1199,18 @@ class EnhanceAction(CustomAction):
         count, _ = _calculate_max_enhance(
             current_coin, current_cost, max_cost, params["initial_cost"]
         )
-        self.logger.debug(
+        logger.debug(
             f"最大强化金币: {max_cost}，强化递增金额: {params['initial_cost']}"
         )
-        self.logger.debug(
+        logger.debug(
             f"当前金币: {current_coin}，当前强化所需金币: {current_cost}，可强化次数: {count}"
         )
         for _ in range(count):
             context.run_task("星塔_节点_商店_点击强化_agent")
         return True
 
-    def _get_params(self, context: Context, node_name: str) -> dict:
+    @staticmethod
+    def _get_params(context: Context, node_name: str) -> dict:
         """从节点 attach 读取强化配置参数，缺失时返回安全默认值。
 
         Args:
@@ -1221,438 +1223,7 @@ class EnhanceAction(CustomAction):
         defaults = {"max_cost": 180, "initial_cost": 60}
         node_data = context.get_node_data(node_name)
         if not node_data:
-            self.logger.error("无法读取强化设置，将使用默认参数")
+            logger.error("无法读取强化设置，将使用默认参数")
             return defaults
         attach = node_data.get("attach", {})
         return {key: attach.get(key, default) for key, default in defaults.items()}
-
-
-@AgentServer.custom_action("ascension_preparation")
-class AscensionPreparation(CustomAction):
-
-    def __init__(self):
-        super().__init__()
-        self.logger = logger.get_logger(__name__)
-
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> bool:
-        """检查并导入预设文件，为爬塔流程做准备
-
-        Args:
-            context: 任务上下文。
-            argv: 自定义动作参数。
-
-        Returns:
-            bool: 成功时返回 True，失败时返回 False。
-        """
-
-        node_data = context.get_node_data(argv.node_name)
-        preset_path = Path(os.path.abspath(__file__)).parent.parent.parent / "presets"
-        full_path = ""
-
-        try:
-            preset_name = node_data["attach"]["preset_name"]
-
-            if not preset_name:
-                self.logger.debug("未提供预设作业，将使用默认选项")
-                return True
-
-            # 读取预设作业
-            full_path = (preset_path / preset_name).with_suffix(".json")
-            with open(full_path, "r", encoding="utf-8") as f:
-                presets = json.load(f)
-                priority_list = presets.get("priority_list", [])
-                preset_element = presets.get("element", "")
-                preset_melodies = presets.get("melodies", [])
-                preset_trekker_names = presets.get("trekker_names", [])
-                preset_potential_refresh = presets.get("potential_refresh", 0)
-
-        except FileNotFoundError:
-            self.logger.error(f"无法找到预设作业文件：{full_path}")
-            self.logger.error(f"请核实预设作业名字是否正确，或预设作业是否存在等")
-            return False
-        except json.decoder.JSONDecodeError as e:
-            self.logger.error(f"无法解析作业文件，错误信息：{e}")
-            self.logger.error("请核实json内容的格式是否正确")
-            context.tasker.post_stop()
-            return False
-
-        err = self._validate_priority_list(priority_list)
-        if err:
-            self.logger.error(f"潜能优先级设置校验失败：{err}")
-            context.tasker.post_stop()
-            return False
-
-        context.override_pipeline({
-            "星塔_节点_选择潜能_agent": {
-                "attach": {
-                    "priority_list": priority_list
-                }
-            }
-        })
-
-        if preset_element:
-            self.logger.info(f"从作业中检测到预设属性：{preset_element}，将覆盖选项中的属性塔选择")
-            preset_element = preset_element.lower()
-            match preset_element:
-                case "aqua" | "ventus" | "水" | "风" | "風":
-                    context.override_pipeline({
-                        "星塔_属性塔选择_agent": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
-                                    ]
-                                }
-                            }
-                        }
-                    })
-                case "ignis" | "umbra" | "火" | "暗" | "闇":
-                    context.override_pipeline({
-                        "星塔_属性塔选择_agent": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
-                                    ]
-                                }
-                            }
-                        }
-                    })
-                case "terra" | "lux" | "地" | "光":
-                    context.override_pipeline({
-                        "星塔_属性塔选择_agent": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
-                                    ]
-                                }
-                            }
-                        }
-                    })
-                case _:
-                    self.logger.error(f"检测到未知属性：{preset_element}，请核实属性名是否符合文档要求")
-                    context.tasker.post_stop()
-                    return False
-
-        if preset_trekker_names:
-            self.logger.info(f"从作业中检测到预设队伍：{preset_trekker_names}，爬塔前会自动选择该队伍")
-            context.override_pipeline({
-                "星塔_编队角色_选择队伍_agent": {
-                    "attach": {
-                        "trekker_names": preset_trekker_names
-                    }
-                }
-            })
-
-        if preset_potential_refresh:
-            self.logger.info(f"从作业中检测到预设潜能最大刷新次数：{preset_potential_refresh}，将覆盖选项设置")
-            context.override_pipeline({
-                "星塔_节点_选择潜能_agent": {
-                    "attach": {
-                        "max_refresh_count": preset_potential_refresh
-                    }
-                }
-            })
-
-        if preset_melodies:
-            self.logger.info(f"从作业中检测到预设音符：{preset_melodies}，爬塔时会买入以上音符")
-            node_data = context.get_node_data("星塔_节点_商店_购物_agent")
-            shop_attachments = node_data.get("attach", {})
-            for melody in preset_melodies:
-                melody = melody.lower()
-                if melody in shop_attachments:
-                    context.override_pipeline({
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                melody: True
-                            }
-                        }
-                    })
-                else:
-                    self.logger.error(f"导入音符：{melody} 失败，请核实音符名是否符合文档要求")
-                    context.tasker.post_stop()
-                    return False
-
-
-        self.logger.info(f"已导入预设作业：{preset_name}")
-        return True
-
-    @staticmethod
-    def _validate_priority_list(priority_list: object) -> Optional[str]:
-        """宽松校验 priority_list：仅校验关键字段与类型。
-
-        Args:
-            priority_list: 预设作业中的 priority_list 字段
-
-        Returns:
-            Optional[str]: 校验通过时返回 None，否则返回错误信息
-        """
-        if not isinstance(priority_list, list):
-            return f"priority_list 必须是 list，实际是 {type(priority_list).__name__}"
-
-        def _is_non_negative_int(value: object) -> bool:
-            if isinstance(value, bool):
-                return False
-            return isinstance(value, int) and value >= 0
-
-        def _is_positive_int(value: object) -> bool:
-            if isinstance(value, bool):
-                return False
-            return isinstance(value, int) and value > 0
-
-        def _validate_level_range(level_obj: dict, level_path: str) -> Optional[str]:
-            la = level_obj.get("level_at_least")
-            lm = level_obj.get("level_at_most")
-            if la is not None and not _is_non_negative_int(la):
-                return f"{level_path}.level_at_least 必须是非负整数"
-            if lm is not None and not _is_non_negative_int(lm):
-                return f"{level_path}.level_at_most 必须是非负整数"
-            if la is not None and lm is not None and la > lm:
-                return f"{level_path}.level_at_least 不能大于 level_at_most"
-            return None
-
-        def _validate_condition_item(cond_item: dict, cond_path: str) -> Optional[str]:
-            if not isinstance(cond_item, dict):
-                return f"{cond_path} 必须是 dict"
-
-            has_count = ("count_at_least" in cond_item) or ("count_at_most" in cond_item)
-            if has_count:
-                trekker = cond_item.get("trekker")
-                if not isinstance(trekker, str) or not trekker.strip():
-                    return f"{cond_path}.trekker 必须是非空字符串（数量条件必填）"
-
-                ca = cond_item.get("count_at_least")
-                cm = cond_item.get("count_at_most")
-                if ca is not None and not _is_non_negative_int(ca):
-                    return f"{cond_path}.count_at_least 必须是非负整数"
-                if cm is not None and not _is_non_negative_int(cm):
-                    return f"{cond_path}.count_at_most 必须是非负整数"
-                if ca is not None and cm is not None and ca > cm:
-                    return f"{cond_path}.count_at_least 不能大于 count_at_most"
-
-                return _validate_level_range(cond_item, cond_path)
-
-            if "potential" not in cond_item:
-                return f"{cond_path} 缺少 potential（等级条件必填）"
-            if not isinstance(cond_item["potential"], str) or not cond_item["potential"].strip():
-                return f"{cond_path}.potential 必须是非空字符串"
-
-            if "level_at_least" not in cond_item and "level_at_most" not in cond_item:
-                return f"{cond_path} 缺少 level_at_least / level_at_most（至少一个）"
-
-            return _validate_level_range(cond_item, cond_path)
-
-        for i, rule in enumerate(priority_list, start=1):
-            path = f"priority_list[{i}]"
-
-            if not isinstance(rule, dict):
-                return f"{path} 必须是 dict"
-
-            if "potential" not in rule:
-                return f"{path} 缺少必填字段 potential"
-
-            potential = rule["potential"]
-            if isinstance(potential, str):
-                if not potential.strip():
-                    return f"{path}.potential 不能为空字符串"
-            elif isinstance(potential, list):
-                if not potential:
-                    return f"{path}.potential 不能为空列表"
-                for j, name in enumerate(potential, start=1):
-                    if not isinstance(name, str) or not name.strip():
-                        return f"{path}.potential[{j}] 必须是非空字符串"
-            else:
-                return f"{path}.potential 必须是字符串或字符串列表"
-
-            if "trekker" in rule:
-                if not isinstance(rule["trekker"], str) or not rule["trekker"].strip():
-                    return f"{path}.trekker 必须是非空字符串"
-
-            if "level_span" in rule and not _is_positive_int(rule["level_span"]):
-                return f"{path}.level_span 必须是正整数"
-
-            if "max_level" in rule and not _is_positive_int(rule["max_level"]):
-                return f"{path}.max_level 必须是正整数"
-
-            if "refresh" in rule and not _is_non_negative_int(rule["refresh"]):
-                return f"{path}.refresh 必须是非负整数"
-
-            if "condition" in rule:
-                condition = rule["condition"]
-                if not isinstance(condition, list):
-                    return f"{path}.condition 必须是 list，不能是 {type(condition).__name__}"
-
-                for c_idx, branch in enumerate(condition, start=1):
-                    c_path = f"{path}.condition[{c_idx}]"
-                    if isinstance(branch, dict):
-                        err = _validate_condition_item(branch, c_path)
-                        if err:
-                            return err
-                    elif isinstance(branch, list):
-                        if not branch:
-                            return f"{c_path}（OR 分支）不能为空列表"
-                        for b_idx, item in enumerate(branch, start=1):
-                            err = _validate_condition_item(item, f"{c_path}[{b_idx}]")
-                            if err:
-                                return err
-                    else:
-                        return f"{c_path} 必须是 dict 或 list"
-
-        return None
-
-
-@AgentServer.custom_action("select_party")
-class SelectParty(CustomAction):
-
-    NAME_ROI = {
-        "main": [574, 500, 170, 55],
-        "sub1": [235, 466, 170, 55],
-        "sub2": [910, 466, 170, 55]
-    }
-
-    def __init__(self):
-        super().__init__()
-        self.logger = logger.get_logger(__name__)
-
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> bool:
-        """选择队伍
-
-        Args:
-            context: 任务上下文。
-            argv: 自定义动作参数。
-
-        Returns:
-            bool: 是否成功选择队伍。
-        """
-
-        node_data = context.get_node_data(argv.node_name)
-        if not node_data:
-            node_data = {}
-        attachment = node_data.get("attach", {})
-        trekker_names = attachment.get("trekker_names", {})
-        main_trekker_names = trekker_names.get("main", [])
-        sub_trekker_names = trekker_names.get("sub", [])
-
-        if not main_trekker_names or not sub_trekker_names:
-            return True
-
-        # 数据清洗
-        cleaned_main_trekker_names = [re.sub(r'\W', '', name) for name in main_trekker_names]
-        cleaned_sub_trekker_names = [re.sub(r'\W', '', name) for name in sub_trekker_names]
-
-        chars_to_remove = "ー"
-        table = str.maketrans("", "", chars_to_remove)
-        cleaned_main_trekker_names = [name.translate(table) for name in cleaned_main_trekker_names]
-        cleaned_sub_trekker_names = [name.translate(table) for name in cleaned_sub_trekker_names]
-
-        for p in range(6):
-            image = context.tasker.controller.post_screencap().wait().get()
-            self.logger.debug(f"开始识别第{p+1}个队伍")
-            reco_names = []
-            for position, roi in self.NAME_ROI.items():
-                self.logger.debug(f"开始识别{position}位置的旅人名称")
-                reco_name = self._recognize_trekker_name(context, roi, image)
-                cleaned_reco_name = re.sub(r'\W', '', reco_name)
-                cleaned_reco_name = cleaned_reco_name.translate(table)
-                if "main" in position and cleaned_reco_name in cleaned_main_trekker_names:
-                    reco_names.append(reco_name)
-                elif "sub" in position and cleaned_reco_name in cleaned_sub_trekker_names:
-                    reco_names.append(reco_name)
-            if len(reco_names) == 3:
-                self.logger.info(f"成功识别到队伍：{reco_names}")
-                return True
-            context.tasker.controller.post_click(1245, 345).wait()
-            time.sleep(1)
-
-        self.logger.error("没有识别到作业对应队伍，请检查旅人名称是否正确，或是否有现成作业的编队")
-        context.tasker.post_stop()
-        return False
-
-    def _recognize_trekker_name(self, context, roi, image=None):
-        """
-        识别旅人名称
-
-        Args:
-            context: 任务上下文。
-            roi: 识别区域。
-            image: 图片数据。
-
-        Returns:
-            str: 识别到的旅人名称。
-        """
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        reco_detail = context.run_recognition("星塔_编队角色_识别旅人名称_agent", image, {
-            "星塔_编队角色_识别旅人名称_agent": {
-                "recognition": {
-                    "param": {
-                        "roi": roi
-                    }
-                }
-            }
-        })
-        if reco_detail and reco_detail.hit:
-            self.logger.debug(f"识别到旅人名称：{[[r.text, r.score] for r in reco_detail.filtered_results]}")
-            return "".join(r.text for r in reco_detail.filtered_results)
-
-        if reco_detail and reco_detail.all_results:
-            self.logger.debug(f"没有识别到旅人名称")
-            self.logger.debug(f"识别到的结果：{[[r.text, r.score] for r in reco_detail.all_results]}")
-        else:
-            self.logger.error(f"识别旅人名称失败")
-
-        return ""
-
-
-@AgentServer.custom_action("ascension_loop")
-class AscensionLoop(CustomAction):
-
-    def __init__(self):
-        super().__init__()
-        self.logger = logger.get_logger(__name__)
-
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> bool:
-        """检查剩余循环次数，决定是否退出爬塔流程
-
-        Args:
-            context: 任务上下文。
-            argv: 自定义动作参数。
-
-        Returns:
-            bool: 返回 True。
-        """
-
-        node_data = context.get_node_data(argv.node_name)
-        if not node_data:
-            node_data = {}
-        attachment = node_data.get("attach", {})
-        loop_count = attachment.get("loop_count", 1)
-        loop_count -= 1
-        if loop_count > 0:
-            self.logger.info(f"完成一次爬塔，剩余爬塔次数：{loop_count}")
-            context.override_pipeline({
-                argv.node_name: {
-                    "attach": {
-                        "loop_count": loop_count
-                    }
-                }
-            })
-        else:
-            self.logger.info("爬塔已完成，回到主页")
-            context.override_next(argv.node_name, ["星塔_回到主页_agent"])
-
-        return True

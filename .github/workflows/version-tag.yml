@@ -7,6 +7,9 @@ on:
     paths:
       - 'assets/interface.json'
 
+permissions:
+  contents: write
+
 jobs:
   tag:
     runs-on: ubuntu-latest

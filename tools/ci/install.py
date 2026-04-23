@@ -69,6 +69,12 @@ def install_resource():
     interface["version"] = version
     interface["custom_title"] = f"星塔助手{version}"
 
+    # 创建文件提醒用户使用管理员权限运行
+
+    if sys.platform.startswith("win"):
+        with open(install_path / "用管理员身份运行喵.txt", "w", encoding="utf-8") as f:
+            pass
+
     with open(install_path / "interface.json", "w", encoding="utf-8") as f:
         json.dump(interface, f, ensure_ascii=False, indent=4)
 

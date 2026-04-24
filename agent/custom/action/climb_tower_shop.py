@@ -178,10 +178,9 @@ def check_shop_type(
 
 
 @dataclass
-class Parameters:
-    """商店层参数类"""
+class Data:
+    """商店层数据类"""
     # 商店设置
-    shop_type: str = "regular"
     lang_type: str = "cn"
     priority: list[str] = field(default_factory=lambda: ["drink", "melody"])
     drink_discount_threshold: float = 0.8
@@ -207,6 +206,7 @@ class Parameters:
     initial_cost: int = 60
     max_cost: int = 180
     # 动态参数
+    shop_type: str = "regular"
     current_coin: int = 0
     refresh_remaining: int = 0
     refresh_cost: int = 65535
@@ -281,38 +281,8 @@ class Parameters:
     def enhancement_count(self) -> int:
         count, _ = self._enhancement_data
         return count
-
-    def should_refresh(self) -> bool:
-        """判断当前是否满足刷新条件。
-
-        regular 商店额外检查可支配金币是否达到 regular_shop_refresh_threshold；
-        两种商店均需满足：刷新次数 > 0 且 可支配金币 ≥ 刷新费用 + min_buyable_price。
-
-        Returns:
-            bool: 满足刷新条件返回 True。
-        """
-        if self.refresh_remaining <= 0:
-            logger.info("刷新次数已用完")
-            return False
-
-        usable = max(0, self.current_coin - self.enhancement_cost)
-        min_threshold = self.refresh_cost + self.min_buyable_price
-        if self.shop_type == "regular":
-            threshold = max(min_threshold, self.regular_shop_refresh_threshold)
-        elif self.shop_type == "final":
-            threshold = min_threshold
-        else:
-            logger.error(f"未知商店类型 {self.shop_type}，本错误将导致无法执行刷新")
-            threshold = 65535
-
-        if usable >= threshold:
-            logger.info(f"可用金币 {usable} 达到商店刷新标准 {threshold}，尝试刷新")
-            return True
-
-        logger.info(f"可用金币 {usable} 未达到刷新标准 {threshold}，跳过刷新")
-        return False
     
-   
+
 @dataclass
 class GridInfo:
     """
@@ -386,38 +356,38 @@ class GridInfo:
 
         return 1.0
 
-    def get_reserved_coin(self, params: Parameters) -> int:
+    def get_reserved_coin(self, data: Data) -> int:
         """根据当前格子的 buy_type，计算需要预留多少钱
         Args:
-            params (Parameters): 用户策略参数。
+            data (Data): 用户策略数据。
 
         Returns:
             int: 预留金币数量。
         """
         if self.buy_type in ["normal", "assist_melody", "final_remainder"]:
-            return params.enhancement_cost
+            return data.enhancement_cost
         if self.buy_type == "dynamic_drink":
-            return params.enhancement_cost + params.dynamic_reserve
+            return data.enhancement_cost + data.dynamic_reserve
         logger.error(f"未知购买类型: {self.buy_type}，无法计算预留金币")
         return 0
 
-    def can_afford(self, params: Parameters) -> bool:
+    def can_afford(self, data: Data) -> bool:
         """判定当前格子的钱是否足够购买
         Args:
-            params (Parameters): 用户策略参数。
+            data (Data): 用户策略数据。
 
         Returns:
             bool: 如果当前格子的钱足够购买，返回 True；否则返回 False。
         """
-        reserve = self.get_reserved_coin(params)
-        return (params.current_coin - reserve) >= self.item_price
+        reserve = self.get_reserved_coin(data)
+        return (data.current_coin - reserve) >= self.item_price
 
-    def is_match_normal_buy_plan(self, item_type: str, params: Parameters) -> str:
+    def is_match_normal_buy_plan(self, item_type: str, data: Data) -> str:
         """判定当前格子是否符合正常购买方案条件
 
         Args:
             item_type (str): 商品类型，"drink" 或 "melody"。
-            params (Parameters): 用户策略参数。
+            data (Data): 用户策略数据。
 
         Returns:
             str: 如果符合正常购买方案，返回 "normal" 或 "assist_melody"；否则返回空字符串。
@@ -426,33 +396,33 @@ class GridInfo:
             return ""
 
         if item_type == "drink":
-            if self.item_name == "potential_drink" and self.discount <= params.drink_discount_threshold:
+            if self.item_name == "potential_drink" and self.discount <= data.drink_discount_threshold:
                 return "normal"
             return ""
 
         if item_type == "melody" and "melody" in self.item_name:
-            thresholds = {5: params.melody_5_discount_threshold, 15: params.melody_15_discount_threshold}
+            thresholds = {5: data.melody_5_discount_threshold, 15: data.melody_15_discount_threshold}
             discount_limit = thresholds.get(self.item_quantity)
 
             if discount_limit is None or self.discount > discount_limit:
                 return ""
 
-            if self.item_name in params.target_melodies:
+            if self.item_name in data.target_melodies:
                 return "normal"
 
-            if params.buy_assist_melody:
+            if data.buy_assist_melody:
                 return "assist_melody"
 
         return ""
         
         
-class GridManager:
+class ShopHandler:
     priority_counter: int = 1
 
-    def __init__(self, grids: list[GridInfo], context: Optional[Context] = None, params: Optional[Parameters] = None):
+    def __init__(self, grids: list[GridInfo], context: Optional[Context] = None, data: Optional[Data] = None):
         self._grids = grids
         self.context = context
-        self.params = params
+        self.data = data
 
     def __iter__(self):
         return iter(self._grids)
@@ -466,10 +436,10 @@ class GridManager:
     def __setitem__(self, index, value):
         self._grids[index] = value
 
-    def bind(self, context: Context, params: Parameters) -> Self:
+    def bind(self, context: Context, data: Data) -> Self:
         """将执行环境绑定到管家身上"""
         self.context = context
-        self.params = params
+        self.data = data
         return self
 
     def normal_buy_plan(self) -> Self:
@@ -485,15 +455,15 @@ class GridManager:
         self._grids.sort(key=lambda g: g.item_price)
 
         target_grids = []
-        for target_type in self.params.priority:
+        for target_type in self.data.priority:
             for grid in self._grids:
-                buy_type = grid.is_match_normal_buy_plan(target_type, self.params)
+                buy_type = grid.is_match_normal_buy_plan(target_type, self.data)
                 if buy_type:
                     grid.buy_type = buy_type
                     grid.buy_priority = self.__class__.priority_counter
                     self.__class__.priority_counter += 1
                     target_grids.append(grid)
-        return GridManager(target_grids, self.context, self.params)
+        return ShopHandler(target_grids, self.context, self.data)
 
     def high_price_drinks_buy_plan(self) -> Self:
         grids = sorted(
@@ -506,7 +476,7 @@ class GridManager:
             grid.buy_type = "dynamic_drink"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return GridManager(grids, self.context, self.params)
+        return ShopHandler(grids, self.context, self.data)
 
     def remaining_drinks_buy_plan(self) -> Self:
         grids = sorted(
@@ -519,7 +489,7 @@ class GridManager:
             grid.buy_type = "normal"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return GridManager(grids, self.context, self.params)
+        return ShopHandler(grids, self.context, self.data)
 
     def remainder_buy_plan(self) -> Self:
         grids = sorted(
@@ -531,7 +501,7 @@ class GridManager:
             grid.buy_type = "final_remainder"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return GridManager(grids, self.context, self.params)
+        return ShopHandler(grids, self.context, self.data)
 
     def buy(self) -> bool:
         """对实例中的所有格子依次执行购买操作，购买成功成标记 bought 为 True。
@@ -546,10 +516,10 @@ class GridManager:
             if self.context.tasker.stopping:
                 return False
 
-            self.params.current_coin = get_current_coin(self.context)
-            if not grid.can_afford(self.params):
-                reserved_coin = grid.get_reserved_coin(self.params)
-                logger.debug(f"当前金币 {self.params.current_coin}，预留给强化的金币 {reserved_coin}")
+            self.data.current_coin = get_current_coin(self.context)
+            if not grid.can_afford(self.data):
+                reserved_coin = grid.get_reserved_coin(self.data)
+                logger.debug(f"当前金币 {self.data.current_coin}，预留给强化的金币 {reserved_coin}")
                 logger.debug(f"需要金币 {grid.item_price}，购买类型 {grid.buy_type}")
                 logger.debug(f"金币不足，跳过 {grid.item_name}")
                 continue
@@ -586,7 +556,7 @@ class GridManager:
         Returns:
             bool: 购买任务成功返回 True。
         """
-        reserved_coin = grid.get_reserved_coin(self.params)
+        reserved_coin = grid.get_reserved_coin(self.data)
         override: dict = {
             "星塔_节点_商店_购物_购买道具_agent": {
                 "action": {"param": {"target": grid.price_roi}}
@@ -641,6 +611,36 @@ class GridManager:
             else:
                 logger.error(f"关闭购买协奏音符 {grid.item_name} 过程出现问题")
             return False
+
+    def should_refresh(self) -> bool:
+        """判断当前是否满足刷新条件。
+
+        regular 商店额外检查可支配金币是否达到 regular_shop_refresh_threshold；
+        两种商店均需满足：刷新次数 > 0 且 可支配金币 ≥ 刷新费用 + min_buyable_price。
+
+        Returns:
+            bool: 满足刷新条件返回 True。
+        """
+        if self.data.refresh_remaining <= 0:
+            logger.info("刷新次数已用完")
+            return False
+
+        usable = max(0, self.data.current_coin - self.data.enhancement_cost)
+        min_threshold = self.data.refresh_cost + self.data.min_buyable_price
+        if self.data.shop_type == "regular":
+            threshold = max(min_threshold, self.data.regular_shop_refresh_threshold)
+        elif self.data.shop_type == "final":
+            threshold = min_threshold
+        else:
+            logger.error(f"未知商店类型 {self.data.shop_type}，本错误将导致无法执行刷新")
+            threshold = 65535
+
+        if usable >= threshold:
+            logger.info(f"可用金币 {usable} 达到商店刷新标准 {threshold}，尝试刷新")
+            return True
+
+        logger.info(f"可用金币 {usable} 未达到刷新标准 {threshold}，跳过刷新")
+        return False
 
 
 @AgentServer.custom_action("shop_action")
@@ -806,41 +806,42 @@ class ShopAction(CustomAction):
         Returns:
             bool: 正常完成返回 True；用户中止返回 False。
         """
-        params = self._get_params(context, argv.node_name)
+        data = self._get_data(context, argv.node_name)
         logger.debug(
-            f"当前强化费用: {params.current_cost}, "
-            f"最大当前强化费用: {params.max_cost}, 初始强化费用: {params.initial_cost}"
+            f"当前强化费用: {data.current_cost}, "
+            f"最大当前强化费用: {data.max_cost}, 初始强化费用: {data.initial_cost}"
         )
-        logger.debug(f"商店类型: {params.shop_type}")
+        logger.debug(f"商店类型: {data.shop_type}")
 
         context.run_task("星塔_节点_商店_点击商店购物_agent")
 
         while True:
             image = context.tasker.controller.post_screencap().wait().get()
-            params.refresh_remaining = self._get_refresh_remaining(context, image)
-            params.refresh_cost = self._get_refresh_cost(context, image)
-            grids = self._get_grids(context, params, image)
+            data.refresh_remaining = self._get_refresh_remaining(context, image)
+            data.refresh_cost = self._get_refresh_cost(context, image)
+            grids = self._get_grids(context, data, image)
+            handler = ShopHandler(grids, context, data)
 
-            grids.normal_buy_plan().buy()
-            grids.high_price_drinks_buy_plan().buy()
+            handler.normal_buy_plan().buy()
+            handler.high_price_drinks_buy_plan().buy()
 
             if context.tasker.stopping:
                 return False
 
-            params.current_coin = get_current_coin(context)
-            if not params.should_refresh():
+            data.current_coin = get_current_coin(context)
+            if not handler.should_refresh():
                 break
             context.run_task("星塔_节点_商店_点击刷新_agent")
 
-        if params.shop_type == "final":
-            grids.remaining_drinks_buy_plan().buy()
-            grids.remainder_buy_plan().buy()
+        if data.shop_type == "final":
+            handler.remaining_drinks_buy_plan().buy()
+            handler.remainder_buy_plan().buy()
 
         context.run_task("星塔_节点_商店_购物_返回商店层_agent")
         return True
 
     @staticmethod
-    def _get_params(context: Context, node_name: str) -> Parameters:
+    def _get_data(context: Context, node_name: str) -> Data:
         """从节点 attach 读取商店配置参数，缺失时返回安全默认值。
 
         reserve_coin 由 EnhanceAction 节点的 max_cost 和 initial_cost 计算得出。
@@ -860,20 +861,20 @@ class ShopAction(CustomAction):
         # 商店参数
         node_data = context.get_node_data(node_name)
         attach = node_data.get("attach", {})
-        params = Parameters().get_from_dict(attach)
-        params.shop_type = check_shop_type(context, image)
+        data = Data().get_from_dict(attach)
+        data.shop_type = check_shop_type(context, image)
 
         # 强化参数
         enhance_node_data = context.get_node_data("星塔_节点_商店_强化_agent")
         enhance_attach = enhance_node_data.get("attach", {})
-        params.update_from_dict(enhance_attach)
+        data.update_from_dict(enhance_attach)
 
-        params.current_cost = get_enhancement_cost(context, image)
-        params.current_coin = get_current_coin(context, image)
+        data.current_cost = get_enhancement_cost(context, image)
+        data.current_coin = get_current_coin(context, image)
 
-        return params
+        return data
 
-    def _get_grids(self, context: Context, params: Parameters, image=None) -> GridManager:
+    def _get_grids(self, context: Context, data: Data, image=None) -> list[GridInfo]:
         """识别购物界面 8 个格子的道具信息。
 
         每个格子识别名称、数量、价格，计算折扣比值后组装为 GridInfo，
@@ -882,14 +883,14 @@ class ShopAction(CustomAction):
 
         Args:
             context: 任务上下文。
-            params: 商店配置参数。
+            data: 商店配置参数。
 
         Returns:
             GridManager: 格子信息列表，每个元素包含 grid_num、item_name、
-                item_quantity、item_price等字段。
+                item_quantity、item_price、display_name等字段。
         """
         grids_info = []
-        lang_type = params.lang_type
+        lang_type = data.lang_type
 
         for i, grid_roi in enumerate(self.GRID_ROIS):
             logger.debug(f"正在识别第 {i + 1} 个格子")
@@ -902,7 +903,7 @@ class ShopAction(CustomAction):
                     item_name=item_name,
                     item_quantity=item_quantity,
                     item_price=item_price,
-                    display_name=ShopAction.ITEM_NAMES.get(item_name, {}).get(params.lang_type, ["?"])[0]
+                    display_name=ShopAction.ITEM_NAMES.get(item_name, {}).get(data.lang_type, ["?"])[0]
                 ))
             else:
                 logger.error(
@@ -911,7 +912,7 @@ class ShopAction(CustomAction):
                 )
 
         logger.debug(f"道具列表: {grids_info}")
-        return GridManager(grids_info, context, params)
+        return grids_info
 
     def _get_single_grid_info(
         self,
@@ -1148,17 +1149,17 @@ class EnhanceAction(CustomAction):
         Returns:
             bool: 始终返回 True。
         """
-        params = self._get_params(context, argv.node_name)
+        data = self._get_data(context, argv.node_name)
 
-        logger.debug(f"最大强化金币: {params.max_cost}，强化递增金额: {params.initial_cost}")
-        logger.debug(f"当前金币: {params.current_coin}，当前强化所需金币: {params.current_cost}")
-        logger.debug(f"可强化次数: {params.enhancement_count}")
-        for _ in range(params.enhancement_count):
+        logger.debug(f"最大强化金币: {data.max_cost}，强化递增金额: {data.initial_cost}")
+        logger.debug(f"当前金币: {data.current_coin}，当前强化所需金币: {data.current_cost}")
+        logger.debug(f"可强化次数: {data.enhancement_count}")
+        for _ in range(data.enhancement_count):
             context.run_task("星塔_节点_商店_点击强化_agent")
         return True
 
     @staticmethod
-    def _get_params(context: Context, node_name: str) -> Parameters:
+    def _get_data(context: Context, node_name: str) -> Data:
         """从节点 attach 读取强化配置参数，缺失时返回安全默认值。
 
         Args:
@@ -1172,10 +1173,10 @@ class EnhanceAction(CustomAction):
         # 强化参数
         enhance_node_data = context.get_node_data(node_name)
         enhance_attach = enhance_node_data.get("attach", {})
-        params = Parameters().get_from_dict(enhance_attach)
+        data = Data().get_from_dict(enhance_attach)
 
-        params.current_cost = get_enhancement_cost(context, image)
-        params.current_coin = get_current_coin(context, image)
-        params.shop_type = check_shop_type(context, image)
+        data.current_cost = get_enhancement_cost(context, image)
+        data.current_coin = get_current_coin(context, image)
+        data.shop_type = check_shop_type(context, image)
 
-        return params
+        return data

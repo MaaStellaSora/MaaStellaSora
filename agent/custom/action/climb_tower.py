@@ -1103,7 +1103,7 @@ class ShopAction(CustomAction):
 
         drinks = sorted(
             [g for g in grids_info
-             if not g["bought"] and g["buy_type"] is None
+             if not g["bought"]
              and g["item_name"] == "potential_drink"],
             key=lambda g: g["item_price"],
         )
@@ -1123,7 +1123,7 @@ class ShopAction(CustomAction):
         """
         drinks = sorted(
             [g for g in grids_info
-             if not g["bought"] and g["buy_type"] is None
+             if not g["bought"]
              and g["item_name"] == "potential_drink"],
             key=lambda g: g["item_price"],
         )

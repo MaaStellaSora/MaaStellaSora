@@ -1,0 +1,76 @@
+{
+    "星塔_出发_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "出發"
+                ]
+            }
+        }
+    },
+    "星塔_星塔探索按钮_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "星塔探索"
+                ]
+            }
+        }
+    },
+    "星塔_进入星塔按钮_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "進入星塔"
+                ]
+            }
+        }
+    },
+    "星塔_快速战斗按钮_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "快速戰鬥"
+                ]
+            }
+        }
+    },
+    "星塔_回到未完成的星塔探索_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "確認"
+                ]
+            }
+        }
+    },
+    "星塔_编队角色_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "下",
+                    "步"
+                ]
+            }
+        }
+    },
+    "星塔_编队角色_点击下一步_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "下",
+                    "步"
+                ]
+            }
+        }
+    },
+    "星塔_编队秘纹_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "開始戰鬥"
+                ]
+            }
+        }
+    }
+}

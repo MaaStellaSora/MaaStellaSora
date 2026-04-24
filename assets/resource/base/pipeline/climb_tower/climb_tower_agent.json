@@ -183,10 +183,21 @@
       }
     },
     "next": [
-      "星塔_节点_进行对话选择_agent",
+      "星塔_节点_进行对话选择_新_agent",
       "星塔_节点_随便选择_agent"
     ],
     "post_wait_freeze": 100
+  },
+  "星塔_节点_进行对话选择_新_agent": {
+    "action": {
+      "type": "Click"
+    },
+    "recognition": {
+      "param": {
+        "custom_recognition": "quiz_recognition"
+      },
+      "type": "Custom"
+    }
   },
   "星塔_节点_进行对话选择_agent": {
     "action": {
@@ -195,7 +206,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "试试",
+          "就试试",
           "12点",
           "认真执行",
           "志存高远",
@@ -225,8 +236,7 @@
         ]
       },
       "type": "OCR"
-    },
-    "timeout": 1000
+    }
   },
   "星塔_节点_随便选择_agent": {
     "recognition": {

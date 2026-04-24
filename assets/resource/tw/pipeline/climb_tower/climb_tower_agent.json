@@ -1,0 +1,130 @@
+{
+    "星塔_节点_进行对话选择_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "就試試",
+                    "12點",
+                    "認真執行",
+                    "志存高遠",
+                    "總是如此",
+                    "^6個",
+                    "均衡飲食",
+                    "多吃蔬菜",
+                    "少久坐",
+                    "12個",
+                    "今朝有酒",
+                    "忠於慾望",
+                    "1024",
+                    "亮燈吧",
+                    "我傾聽所有",
+                    "互相幫助",
+                    "會贏的",
+                    "需要力量",
+                    "試一下吧",
+                    "隨心所欲",
+                    "合作無間"
+                ]
+            }
+        }
+    },
+    "星塔_节点_进入商店_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "商店購物"
+                ]
+            }
+        }
+    },
+    "星塔_节点_商店_购物_agent": {
+        "attach": {
+            "lang_type": "tw"
+        }
+    },
+    "星塔_节点_回到商店层_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "商店購物"
+                ]
+            }
+        }
+    },
+    "星塔_节点_商店_离开商店_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "上樓"
+                ]
+            }
+        }
+    },
+    "星塔_节点_商店_离开星塔_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "離開星塔"
+                ]
+            }
+        }
+    },
+    "星塔_保存记录_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "儲存紀錄"
+                ]
+            }
+        }
+    },
+    "星塔_确认_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "確認"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_默契提升_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "默契",
+                    "提升"
+                ]
+            }
+        }
+    },
+    "星塔_点击空白处关闭_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "點選空白",
+                    "處繼續",
+                    "處關閉"
+                ]
+            }
+        }
+    },
+    "星塔_回到难度选择界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "快速戰鬥"
+                ]
+            }
+        }
+    },
+    "星塔_回到出发界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "星塔探索"
+                ]
+            }
+        }
+    }
+}

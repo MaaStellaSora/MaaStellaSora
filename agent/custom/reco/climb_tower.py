@@ -1,455 +1,114 @@
 import re
 import time
+from dataclasses import dataclass, field
+from typing import Optional, Any, Self
+
+import numpy
 
 from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from utils import logger
+from utils import logger as logger_module
+logger = logger_module.get_logger("climb_tower_potential")
 
 
+MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
 
-@AgentServer.custom_recognition("choose_potential_recognition")
-class ChoosePotentialRecognition(CustomRecognition):
-
-    MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
-
-    POTENTIAL_ROIS = {
-        1: [
-            {
-                "core_potential": [530, 425, 220, 40],
-                "general_potential": [530, 395, 220, 40],
-                "general_potential_level": [530, 425, 220, 40],
-                "x_border": [470, 813]
-            }
-        ],
-        2: [
-            {
-                "core_potential": [358, 425, 220, 40],
-                "general_potential": [358, 395, 220, 40],
-                "general_potential_level": [358, 425, 220, 40],
-                "x_border": [0, 639]
-            },
-            {
-                "core_potential": [703, 425, 220, 40],
-                "general_potential": [703, 395, 220, 40],
-                "general_potential_level": [703, 425, 220, 40],
-                "x_border": [640, 1280]
-            }
-        ],
-        3: [
-            {
-                "core_potential": [187, 425, 220, 40],
-                "general_potential": [187, 395, 220, 40],
-                "general_potential_level": [187, 425, 220, 40],
-                "x_border": [0, 469]
-            },
-            {
-                "core_potential": [530, 425, 220, 40],
-                "general_potential": [530, 395, 220, 40],
-                "general_potential_level": [530, 425, 220, 40],
-                "x_border": [470, 813]
-            },
-            {
-                "core_potential": [875, 425, 220, 40],
-                "general_potential": [875, 395, 220, 40],
-                "general_potential_level": [875, 425, 220, 40],
-                "x_border": [814, 1280]
-            }
-        ]
-    }
-
-    def __init__(self):
-        super().__init__()
-        self.logger = logger.get_logger(__name__)
-        self.available_refresh_count: int = 0  # 可用刷新次数，每次 analyze 开始时重置，然后从 attach 中获取
-        self._refresh_count: int = 0  # 本次潜能选择的已刷新次数，每次 analyze 开始时重置
-        self.available_potential_num: int = 3  # 可选潜能卡片数量，每次 analyze 开始时重置
-        self.is_core = False # 是否为核心潜能
-
-    def analyze(
-            self,
-            context: Context,
-            argv: CustomRecognition.AnalyzeArg,
-    ) -> CustomRecognition.AnalyzeResult:
-        """自动选择潜能的主流程。
-
-        读取 attach 参数与已拥有潜能状态，识别当前三张潜能卡片，
-        根据自定义优先级列表选出最优潜能并返回其 box；
-        不满足条件时执行刷新，最终兜底识别系统推荐图标。
-        选择完成后将已拥有潜能状态写回节点 attach 持久化。
-
-        Args:
-            context: maa.context.Context
-            argv: CustomRecognition.AnalyzeArg，含当前截图与节点名
-
-        Returns:
-            CustomRecognition.AnalyzeResult: 命中区域为目标潜能卡片的 box
-        """
-        node_name = argv.node_name
-        attach = self._get_attachments(context, node_name)
-        self._refresh_count = 0
-        priority_list = self._parse_priority_raw_list(
-            attach["priority_list"],
-            attach["owned_potentials"],
-        )
-
-        self.available_refresh_count = 0
-        if self._is_refreshable(context, argv.image):
-            current_coin = self._get_current_coin(context, argv.image)
-            refresh_cost = self._get_refresh_cost(context, argv.image)
-            usable_coin = max(0, current_coin - attach["reserve_coin"])
-            affordable = usable_coin // refresh_cost if refresh_cost else 0
-            self.available_refresh_count = min(attach["max_refresh_count"], affordable)
-
-        if not priority_list:
-            self.is_core = self._check_core_potential(context, argv.image)
-            self.available_potential_num = self._get_available_potential_num(context, argv.image)
-            while True:
-                image = context.tasker.controller.post_screencap().wait().get()
-                target_box = self._get_recommended_box(context, image)
-                if target_box:
-                    self.logger.info("[潜能选择] 选择系统推荐")
-                    break
-                elif self.available_refresh_count > 0:
-                    self.logger.info("没有找到符合条件的潜能，尝试刷新")
-                    context.run_task("星塔_节点_选择潜能_点击刷新_agent")
-                    self.available_refresh_count -= 1
-                else:
-                    self.logger.info("[潜能选择] 识别系统推荐失败，选择默认潜能")
-                    target_box = [5, 710, 5, 5]
-                    break
-            return CustomRecognition.AnalyzeResult(box=target_box, detail={})
-
-        target_potential = None
-        target_trekker = None
-
-        while True:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-            reco_detail = context.run_recognition("星塔_节点_选择潜能_检测干扰文字_agent", image)
-            if reco_detail and reco_detail.hit:
-                self.logger.debug("识别到干扰文字，等待1秒")
-                time.sleep(1)
-                continue
-
-            self.is_core = self._check_core_potential(context, image)
-            self.available_potential_num = self._get_available_potential_num(context, image)
-            available = self._get_available_potentials(context, image)
-            result = self._select_best_potential(available, priority_list)
-
-            if result:
-                target_potential, target_trekker = result
-                break
-            if self.available_refresh_count > 0:
-                self.logger.info("没有找到符合条件的潜能，尝试刷新")
-                context.run_task("星塔_节点_选择潜能_点击刷新_agent")
-                self.available_refresh_count -= 1
-                self._refresh_count += 1
-            else:
-                self.logger.info("[潜能选择] 选择系统推荐")
-                break
-
-        if target_potential:
-            target_box = target_potential["box"]
-        else:
-            target_box = self._get_recommended_box(context, image)
-            if not target_box:
-                self.logger.info("[潜能选择] 识别系统推荐失败，选择默认潜能")
-                target_box = [5, 710, 5, 5]
-
-        owned = self._update_owned_potentials(
-            attach["owned_potentials"],
-            target_potential,
-            target_trekker,
-        )
-        self._save_state(context, node_name, owned)
-
-        return CustomRecognition.AnalyzeResult(box=target_box, detail={})
-
-    def _is_refreshable(self, context, image = None):
-        """
-            检查是否可刷新
-
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图
-
-            Returns:
-                bool: 是否可刷新
-        """
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        reco_detail = context.run_recognition("星塔_节点_选择潜能_点击刷新_agent", image)
-        if reco_detail and reco_detail.hit:
-            self.logger.debug(f"识别到刷新按钮")
-            return True
-        self.logger.debug(f"未识别到刷新按钮")
-        return False
-
-    def _get_current_coin(self, context, image=None, max_try=3):
-        """
-            检查当前金币
-
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图
-                max_try(int): 最大尝试次数
-
-            Returns:
-                int: 当前金币数量，识别失败时返回0
-        """
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        for _ in range(max_try):
-            reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
-            if reco_detail and reco_detail.hit:
-                self.logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
-                return int(reco_detail.best_result.text)
-
-            if reco_detail and reco_detail.all_results:
-                self.logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
-            else:
-                self.logger.debug("未识别到任何关于当前金币的内容")
-            self.logger.debug("等待1秒后重新识别")
-
-            # 失败时，等待1秒后重试
-            time.sleep(1)
-            image = context.tasker.controller.post_screencap().wait().get()
-
-            # 检查是否中断任务
-            if context.tasker.stopping:
-                return 0
-
-        self.logger.error("无法读取当前金币数量，将当作 0 金币处理")
-        return 0
-
-    def _get_refresh_cost(self, context, image=None):
-        """
-            检查刷新花费
-
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图
-
-            Returns:
-                int: 刷新花费，识别失败时返回65535
-        """
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        reco_detail = context.run_recognition("星塔_通用_识别刷新花费_agent", image)
-        if reco_detail and reco_detail.hit:
-            self.logger.debug(f"识别到刷新费用：{[r.text for r in reco_detail.filtered_results]}")
-            return int(reco_detail.best_result.text)
-
-        self.logger.error("无法识别刷新费用，将默认为无法刷新")
-        return 65535
-
-    def _get_available_potential_num(self, context, image=None):
-        """
-            检查可选潜能卡片数量
-
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图
-
-            Returns:
-                int: 可选潜能卡片数量，识别失败时返回1
-        """
-        if self.is_core:
-            self.logger.debug("核心潜能默认可选潜能数量为3")
-            return 3
-
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        reco_detail = context.run_recognition("星塔_节点_选择潜能_识别潜能数量_agent", image)
-        if reco_detail and reco_detail.hit:
-            self.logger.debug(f"识别到可选潜能数量：{len(reco_detail.filtered_results)}")
-            return len(reco_detail.filtered_results)
-
-        self.logger.error("无法识别可选潜能数量，将默认为3")
-        return 3
-
-    def _check_core_potential(self, context, image=None):
-        """
-            检查是否为核心潜能
-
-            Args:
-                context(Context): 上下文对象
-                image(nd.array): 截图
-
-            Returns:
-                bool: 是否为核心潜能
-        """
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
-
-        reco_detail = context.run_recognition(
-            "星塔_节点_选择潜能_识别核心潜能_agent", image
-        )
-
-        if reco_detail and reco_detail.hit:
-            self.logger.debug(f"识别到核心潜能")
-            return True
-        else:
-            return False
-
-    def _get_attachments(self, context: Context, node_name: str) -> dict:
-        """获取节点 attach 中的所有参数，缺失时返回安全默认值。
-
-        Args:
-            context: maa.context.Context
-            node_name: 当前节点名称，用于动态获取节点数据
-
-        Returns:
-            dict: 包含以下键的字典：
-                - max_refresh_count (int): 最大刷新次数，0 表示禁用
-                - reserve_coin (int): 预留金币，计算可用金币时需减去此值
-                - priority_list (list): 自定义优先级列表
-                - owned_potentials (dict): 已拥有潜能状态，按 trekker 分组
-        """
-        defaults = {
-            "max_refresh_count": 0,
-            "reserve_coin": 0,
-            "priority_list": [],
-            "owned_potentials": {},
+DEFAULT_POTENTIAL_LAYOUTS = {
+    1: [
+        {
+            "core_potential": [530, 425, 220, 40],
+            "general_potential": [530, 395, 220, 40],
+            "general_potential_level": [530, 425, 220, 40],
+            "x_border": [470, 813]
         }
-        node_data = context.get_node_data(node_name)
-        if not node_data:
-            self.logger.warning("get_node_data 返回 None，使用默认参数")
-            return defaults
-
-        attach = node_data.get("attach", {})
-        return {
-            "max_refresh_count": attach.get("max_refresh_count", 0),
-            "reserve_coin": attach.get("reserve_coin", 0),
-            "priority_list": attach.get("priority_list", []),
-            "owned_potentials": attach.get("owned_potentials", {}),
+    ],
+    2: [
+        {
+            "core_potential": [358, 425, 220, 40],
+            "general_potential": [358, 395, 220, 40],
+            "general_potential_level": [358, 425, 220, 40],
+            "x_border": [0, 639]
+        },
+        {
+            "core_potential": [703, 425, 220, 40],
+            "general_potential": [703, 395, 220, 40],
+            "general_potential_level": [703, 425, 220, 40],
+            "x_border": [640, 1280]
         }
+    ],
+    3: [
+        {
+            "core_potential": [187, 425, 220, 40],
+            "general_potential": [187, 395, 220, 40],
+            "general_potential_level": [187, 425, 220, 40],
+            "x_border": [0, 469]
+        },
+        {
+            "core_potential": [530, 425, 220, 40],
+            "general_potential": [530, 395, 220, 40],
+            "general_potential_level": [530, 425, 220, 40],
+            "x_border": [470, 813]
+        },
+        {
+            "core_potential": [875, 425, 220, 40],
+            "general_potential": [875, 395, 220, 40],
+            "general_potential_level": [875, 425, 220, 40],
+            "x_border": [814, 1280]
+        }
+    ]
+}
 
-    @staticmethod
-    def _parse_level_text(texts: list[str]) -> tuple[int, int]:
-        """解析 OCR 返回的等级数字结果集。
 
-        pipeline OCR 使用 \\d+ 匹配并剔除语言关键词，可能返回：
-            ["1"]       -> old=0, new=1  （新获得，只有新等级）
-            ["4", "5"]  -> old=4, new=5
-            ["45"]      -> old=4, new=5  （两位数粘连）
-        仅在游戏版本保持最大潜能等级小于10时有效。
+@dataclass(slots=True)
+class PotentialLayout:
+    core_potential: list[int]
+    general_potential: list[int]
+    general_potential_level: list[int]
+    x_border: list[int]
 
-        Args:
-            texts: OCR filtered_results 中各结果的 text 列表
+@dataclass(slots=True)
+class PotentialLayouts:
+    potential_layouts: dict[int, list[PotentialLayout]] = field(default_factory=lambda: {
+        count: [PotentialLayout(**l) for l in layouts]
+        for count, layouts in DEFAULT_POTENTIAL_LAYOUTS.items()
+    })
 
-        Returns:
-            tuple[int, int]: (old_level, new_level)，解析失败返回 (-1, -1)
-        """
-        numbers = []
-        for t in texts:
-            if len(t) == 2 and t.isdigit():
-                numbers.extend([int(t[0]), int(t[1])])
-            elif len(t) == 1 and t.isdigit():
-                numbers.append(int(t))
+    def __getitem__(self, key):
+        return self.potential_layouts[key]
 
-        if len(numbers) == 1:
-            return 0, numbers[0]
-        if len(numbers) == 2:
-            return numbers[0], numbers[1]
-        return -1, -1
+    def __iter__(self):
+        return iter(self.potential_layouts)
 
-    def _get_available_potentials(self, context: Context, image=None) -> list[dict]:
-        """获取当前待选的潜能卡片信息。
+    def items(self):
+        return self.potential_layouts.items()
 
-        Args:
-            context: maa.context.Context
-            image: 截图，为 None 时自动截图
+    def get(self, key, default=None):
+        return self.potential_layouts.get(key, default)
 
-        Returns:
-            list[dict]: 潜能列表，每个元素结构：
-                {
-                    "name": str,        # 潜能名称
-                    "old_level": int,   # 升级前等级，核心潜能为 0
-                    "new_level": int,   # 升级后等级，核心潜能为 0
-                    "is_core": bool,    # 是否为核心潜能
-                    "box": list,        # 卡片区域 [x, y, w, h]
-                }
-        """
-        if image is None:
-            image = context.tasker.controller.post_screencap().wait().get()
+@dataclass(slots=True, frozen=True)
+class Parameters:
+    max_refresh_count: int
+    reserved_coin: int
+    priority_list_raw: list[dict]
+    owned_potentials: dict
+    priority_list: list[dict] = field(init=False)
+    potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
+    selected_potential_offset: int = 35
 
-        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
-        select_potential_index = self._get_selected_potential_index(context, image)
-
-        available_potentials = []
-        for i, rois in enumerate(potential_rois):
-            name_roi = rois["core_potential"] if self.is_core else rois["general_potential"]
-            name_roi[1] = name_roi[1] - 35 if i == select_potential_index else name_roi[1] # 根据拿走按钮位置调整 y 坐标
-
-            reco_detail = context.run_recognition(
-                "星塔_节点_选择潜能_识别潜能名称_agent",
-                image,
-                {
-                    "星塔_节点_选择潜能_识别潜能名称_agent": {
-                        "recognition": {"param": {"roi": name_roi}}
-                    }
-                },
-            )
-            if reco_detail and reco_detail.hit:
-                self.logger.debug(f"识别第 {i + 1} 个潜能的名称：{reco_detail.filtered_results}")
-                potential_name = "".join(r.text for r in reco_detail.filtered_results)
-            else:
-                self.logger.error(f"无法识别第 {i + 1} 个潜能的名称")
-                potential_name = ""
-
-            if self.is_core:
-                available_potentials.append({
-                    "name": potential_name,
-                    "old_level": 0,
-                    "new_level": 0,
-                    "is_core": True,
-                    "box": rois["general_potential"],
-                })
-                continue
-
-            level_roi = rois["general_potential_level"]
-            level_roi[1] = level_roi[1] - 35 if i == select_potential_index else level_roi[1] # 根据拿走按钮位置调整 y 坐标
-            reco_detail = context.run_recognition(
-                "星塔_节点_选择潜能_识别潜能等级_agent",
-                image,
-                {
-                    "星塔_节点_选择潜能_识别潜能等级_agent": {
-                        "recognition": {"param": {"roi": level_roi}}
-                    }
-                },
-            )
-            if reco_detail and reco_detail.hit:
-                texts = [r.text for r in reco_detail.filtered_results]
-                old_level, new_level = self._parse_level_text(texts)
-                self.logger.debug(f"解析第 {i + 1} 个潜能的等级：{texts} -> {old_level}, {new_level}")
-                if old_level == -1:
-                    self.logger.warning(f"无法解析第 {i + 1} 个潜能的等级：{texts}")
-            else:
-                self.logger.error(f"无法识别第 {i + 1} 个潜能的等级")
-                old_level, new_level = -1, -1
-
-            available_potentials.append({
-                "name": potential_name,
-                "old_level": old_level,
-                "new_level": new_level,
-                "is_core": False,
-                "box": rois["general_potential"],
-            })
-
-        return available_potentials
+    def __post_init__(self):
+        parsed_list = self._parse_priority_raw_list(
+            self.priority_list_raw,
+            self.owned_potentials,
+        )
+        object.__setattr__(self, 'priority_list', parsed_list)
 
     @staticmethod
     def _parse_priority_raw_list(
         potential_priority_raw: list[dict],
         owned_potentials: dict,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """对原始 priority_list 进行初筛，过滤掉 condition 当前不满足的规则。
 
         排名使用原始 JSON 的 1-based 行号（index + 1），数值越小排名越高。
@@ -539,12 +198,509 @@ class ChoosePotentialRecognition(CustomRecognition):
                 "trekker": raw.get("trekker"),
                 "names": names,
                 "level_span": raw.get("level_span", 1),
-                "max_level": raw.get("max_level", ChoosePotentialRecognition.MAX_POTENTIAL_LEVEL),
+                "max_level": raw.get("max_level", MAX_POTENTIAL_LEVEL),
                 "refresh": raw.get("refresh", 0),
                 "priority": index + 1,
             })
 
         return valid_entries
+
+@dataclass(slots=True)
+class Potential:
+    index: int
+    box: list[int]
+    name: str = ""
+    old_level: int = 0
+    new_level: int = 0
+    recommended: bool = False
+    recommended_level: int = 0
+    rank: int = 0
+    sub_rank: int = 0
+    trekker: str = ""
+
+    @property
+    def level_span(self) -> int:
+        return self.new_level - self.old_level
+
+
+@dataclass(slots=True)
+class Data:
+    params: Parameters
+    current_coin: int = 0
+    refresh_cost: int = 0
+    potential_count: int = 0
+    core_potential: bool = False
+    # 需要根据刷新更新的数据
+    selected_potential_index: int = 1
+    potentials: list[Potential] = field(default_factory=lambda: [])
+    # 计数用数据
+    refresh_count: int = 0
+
+    @property
+    def refreshable(self):
+        return self.refresh_cost > 0
+
+    @property
+    def available_refreshes(self) -> int:
+        usable_coin = max(0, self.current_coin - self.params.reserved_coin)
+        affordable = usable_coin // self.refresh_cost if self.refreshable else 0
+        return min(self.params.max_refresh_count, affordable)
+
+    @property
+    def borders(self) -> list[list[int]]:
+        return [l.x_border for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def core_potential_name_rois(self) -> list[list[int]]:
+        return [l.core_potential for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def general_potential_name_rois(self) -> list[list[int]]:
+        return [l.general_potential for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def general_potential_level_rois(self) -> list[list[int]]:
+        return [l.general_potential_level for l in self.params.potential_layouts[self.potential_count]]
+
+
+class ScreenDataProcessor:
+    def __init__(self, context: Context):
+        self.context = context
+        self.image = None
+        self.max_try = 1
+
+    def screenshot(self):
+        self.image = self.context.tasker.controller.post_screencap().wait().get()
+
+    def refresh(self):
+        self.context.run_task("星塔_节点_选择潜能_点击刷新_agent")
+
+    def _base_recognition(self, mode, node_name, failed_return, roi=None, image=None, max_try=0) -> Any:
+        """
+        核心识别逻辑：支持 OCR 和 Template
+        识别失败时返回默认值
+
+        Args:
+            mode(str): 识别模式，"ocr"或"template"
+            node_name(str): 节点名称，用于识别结果的记录和返回
+            failed_return(any): 识别失败时的默认值
+            roi(tuple): 可选的ROI坐标，用于模板识别
+            image(numpy.ndarray): 可选的自定义图像，用于识别
+            max_try(int): 可选的最大重试次数，默认为1
+
+        Returns:
+            any: 识别到的结果，根据mode返回文本或坐标列表
+        """
+        if image is None:
+            if self.image is None:
+                self.image = self.context.tasker.controller.post_screencap().wait().get()
+            image = self.image
+
+        actual_max_try = max_try if max_try > 0 else self.max_try
+
+        pipeline_override = {node_name: {"recognition": {"param": {"roi": roi}}}} if roi else {}
+
+        try_count = 0
+        while True:
+            reco_detail = self.context.run_recognition(node_name, image, pipeline_override)
+
+            if reco_detail and reco_detail.hit:
+                if mode == "ocr":
+                    # OCR 逻辑：返回文本
+                    logger.debug(f"节点{node_name} OCR结果：{[(r.text, r.score) for r in reco_detail.filtered_results]}")
+                    results = sorted(reco_detail.filtered_results, key=lambda r: r.score, reverse=True)
+                    return [r.text for r in results]
+                else:
+                    # Template 逻辑：返回坐标列表
+                    logger.debug(f"节点{node_name} 模板结果：{[(r.box, r.score) for r in reco_detail.filtered_results]}")
+                    results = sorted(reco_detail.filtered_results, key=lambda r: r.score, reverse=True)
+                    return [r.box for r in results]
+
+            # 统一的日志记录
+            status = "未识别到有效结果" if reco_detail and reco_detail.all_results else "未识别到任何内容"
+            logger.debug(f"节点'{node_name}'{status}")
+
+            if self.context.tasker.stopping:
+                return failed_return
+
+            try_count += 1
+            if try_count >= actual_max_try:
+                break
+
+            logger.debug("等待1秒后重新识别")
+            time.sleep(1)
+            image = self.context.tasker.controller.post_screencap().wait().get()
+
+        logger.debug(f"无法识别节点'{node_name}'，返回默认值")
+        return failed_return
+
+    def _ocr(self, node_name, failed_return, **kwargs):
+        return self._base_recognition("ocr", node_name, failed_return, **kwargs)
+
+    def _template(self, node_name, failed_return, **kwargs):
+        return self._base_recognition("template", node_name, failed_return, **kwargs)
+
+    def get_current_coin(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
+        texts = self._ocr("星塔_通用_识别当前金币_agent", ["0"], image=image, max_try=max_try)
+        return int(texts[0])
+
+    def get_refresh_cost(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
+        texts = self._ocr("星塔_通用_识别刷新花费_agent", ["-1"], image=image, max_try=max_try)
+        return int(texts[0])
+
+    def check_core_potential(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> bool:
+        if self._template("星塔_节点_选择潜能_识别核心潜能_agent", [], image=image, max_try=max_try):
+            return True
+        return False
+
+    def get_potential_name(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> str:
+        node_name = "星塔_节点_选择潜能_识别潜能名称_agent"
+        texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        return texts[0]
+
+    def get_potential_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> list:
+        node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
+        texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        return texts
+
+    def check_item_list_visibility(self, max_try: int = 1) -> bool:
+        image = self.context.tasker.controller.post_screencap().wait().get()
+        return self._template("星塔_节点_选择潜能_检测干扰文字_agent", [], image=image, max_try=max_try)
+
+    def get_potential_count(
+            self,
+            core_potential: bool = False,
+            image: Optional[numpy.ndarray] = None,
+            max_try: int = 1
+    ) -> int:
+        """
+            检查可选潜能卡片数量
+
+            Args:
+                core_potential(bool): 是否为核心潜能，默认为False
+                image(nd.array): 截图
+                max_try(int): 可选的最大重试次数，默认为1
+
+            Returns:
+                int: 可选潜能卡片数量，识别失败时返回3
+        """
+        if core_potential:
+            return 3
+
+        node_name = "星塔_节点_选择潜能_识别潜能数量_agent"
+        failed_return = [1, 2, 3]
+        results = self._template(node_name, failed_return, image=image, max_try=max_try)
+        if results == failed_return:
+            logger.error("潜能数量识别失败，将默认为3个潜能")
+        return len(results)
+
+    def get_recommended_potential(
+            self,
+            borders: list[list],
+            image: Optional[numpy.ndarray] = None,
+            max_try: int = 1
+    ) -> list:
+        """
+        识别系统推荐图标，返回对应卡片的潜能序数列表。
+
+        推荐图标位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
+        x_border 区间来确定归属卡片。
+        识别失败时返回第一张卡片的 box 作为兜底。
+
+        Args:
+            borders: 可选潜能卡片区域列表，每个元素结构：[float, float],  # 卡片 x 轴边界（左闭右闭）
+            image: 截图
+            max_try: 可选的最大重试次数，默认为1
+
+        Returns:
+            list: 包含推荐潜能序数的列表
+        """
+        recommended_boxes = self._template(
+            "星塔_节点_选择潜能_识别推荐图标_agent",
+            [],
+            image=image,
+            max_try=max_try
+        )
+        hit_xs = [r[0] for r in recommended_boxes]
+        matched = [
+            i for x in hit_xs
+            for i, (low, high) in enumerate(borders)
+            if low <= x <= high
+        ]
+
+        if not matched:
+            logger.debug("推荐图标识别失败，有可能是没有推荐图标，也有可能是识别问题")
+        if len(matched) != len(hit_xs):
+            logger.error("推荐图标识别位置与潜能数量不匹配，潜能选择可能会出现问题")
+
+        return matched
+
+    def get_selected_potential_index(
+            self,
+            borders: list[list[int]],
+            image: Optional[numpy.ndarray] = None,
+            max_try: int = 1
+    ) -> int:
+        """识别拿走按钮，返回对应卡片的索引。
+
+        拿走按钮位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
+        x_border 区间（左闭右闭）来确定归属卡片。
+        识别失败时返回第一张卡片的索引 作为兜底。
+
+        Args:
+            borders(list): 可选潜能卡片的边界框，每个元素为一个列表，包含2个元素，分别是左闭右闭的x轴边界
+            image(numpy.ndarray): 截图
+            max_try(int): 可选的最大重试次数，默认为1
+
+        Returns:
+            int: 目标卡片索引，识别失败时返回0
+        """
+        result = self._template(
+            "星塔_节点_选择潜能_识别预选潜能位置_agent",
+            [],
+            image=image,
+            max_try=max_try
+        )
+
+        hit_x = result[0][0] if result else -1
+        matched = next((i for i, (low, high) in enumerate(borders) if low <= hit_x <= high), 1)
+
+        if not matched:
+            logger.error("拿走按钮识别失败，潜能选择可能会出现问题")
+
+        return matched
+
+
+class ChoosePotentialHandler:
+    def __init__(self, screen: ScreenDataProcessor, data: Data):
+        self.screen = screen
+        self.data = data
+
+    def _wait_for_item_list_gone(self):
+        while True:
+            if not self.screen.check_item_list_visibility():
+                logger.debug("识别到干扰文字，等待1秒")
+                time.sleep(1)
+            break
+
+    def _update_names(self):
+        rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois
+        adjusted_rois = self._get_adjusted_rois(rois)
+
+        for i, roi in enumerate(adjusted_rois):
+            self.data.potentials[i].name = self.screen.get_potential_name(roi)
+
+    def _update_levels(self):
+        if self.data.core_potential:
+            return
+
+        adjusted_rois = self._get_adjusted_rois(self.data.general_potential_level_rois)
+
+        for i, roi in enumerate(adjusted_rois):
+            texts = self.screen.get_potential_level(roi)
+            old, new = self._parse_level_text(texts)
+            self.data.potentials[i].old_level, self.data.potentials[i].new_level = old, new
+
+    def _update_recommended_potentials(self):
+        indices = self.screen.get_recommended_potential(self.data.borders)
+        for index in indices:
+            self.data.potentials[index].recommended = True
+
+    @staticmethod
+    def _parse_level_text(texts: list[str]) -> tuple[int, int]:
+        """解析 OCR 返回的等级数字结果集。
+
+        pipeline OCR 使用 \\d+ 匹配并剔除语言关键词，可能返回：
+            ["1"]       -> old=0, new=1  （新获得，只有新等级）
+            ["4", "5"]  -> old=4, new=5
+            ["45"]      -> old=4, new=5  （两位数粘连）
+        仅在游戏版本保持最大潜能等级小于10时有效。
+
+        Args:
+            texts: OCR filtered_results 中各结果的 text 列表
+
+        Returns:
+            tuple[int, int]: (old_level, new_level)，解析失败返回 (0, 0)
+        """
+        # 将 ["4", "5"] 或 ["45"] 统一转为 "45"
+        full_text = "".join(t for t in texts if t.isdigit())
+
+        if len(full_text) == 1:
+            return 0, int(full_text)
+        if len(full_text) >= 2:
+            # 取前两个数字处理粘连
+            return int(full_text[0]), int(full_text[1])
+        return 0, 0
+
+    def _get_adjusted_rois(self, base_rois: list[list[int]]) -> list[list[int]]:
+        """安全地获取偏移后的 ROI 副本，避免污染原始数据"""
+        selected_index = self.data.selected_potential_index
+        offset = self.data.params.selected_potential_offset
+
+        # 使用列表推导式创建副本并应用偏移
+        return [
+            [r[0], r[1] - offset, r[2], r[3]] if i == selected_index else list(r)
+            for i, r in enumerate(base_rois)
+        ]
+
+    def choose_default_potential(self):
+        # 1. 尝试取系统推荐潜能
+        valid_potentials = (p for p in self.data.potentials if p.recommended)
+        potential = max(valid_potentials, key=lambda p: p.level_span, default=None)
+        if potential:
+            return potential
+
+        # 2. 没有系统推荐潜能，选择之前抓过的潜能
+        valid_potentials = (p for p in self.data.potentials if p.old_level > 0)
+        potential = max(valid_potentials, key=lambda p: p.level_span, default=None)
+        if potential:
+            return potential
+
+        # 3. 都没有的话，放弃选择，系统选了哪张就哪张
+        return Potential(0, [5, 710, 5, 5])
+
+    def refresh(self):
+        self.screen.refresh()
+        self.data.refresh_count += 1
+
+    @property
+    def refreshable(self):
+        return self.data.refresh_count <self.data.available_refreshes
+
+
+class GameRecommendedHandler(ChoosePotentialHandler):
+    def __init__(self, screen: ScreenDataProcessor, data: Data):
+        super().__init__(screen, data)
+
+    def read_potentials_info(self) -> Self:
+        click_boxes = self.data.general_potential_name_rois
+        self.data.potentials = [Potential(i, click_boxes[i]) for i in range(self.data.potential_count)]
+
+        self._wait_for_item_list_gone()
+        self.screen.screenshot()
+        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.borders)
+
+        self._update_recommended_potentials()
+        self._update_names()
+        self._update_levels()
+
+        return self
+
+    def choose(self):
+        # 选择排名最高的潜能
+        best_potential = self.best_potential
+        if best_potential:
+            # 输出比较结果
+            if self.data.core_potential:
+                logger.info(f"[潜能选择] {best_potential.name} | 核心潜能 | 系统推荐")
+            else:
+                old = best_potential.old_level
+                new = best_potential.new_level
+                logger.info(f"[潜能选择] {best_potential.name} | 等级 {old}→{new} | 系统推荐")
+
+        return best_potential
+
+    @property
+    def best_potential(self) -> Potential | None:
+        valid_potentials = (p for p in self.data.potentials if p.rank >= 0 and p.recommended)
+        return min(valid_potentials, key=lambda p: (p.rank, -p.level_span), default=None)
+
+
+class AssistantPriorityHandler(ChoosePotentialHandler):
+    def __init__(self, screen, data):
+        super().__init__(screen, data)
+
+    def read_potentials_info(self) -> Self:
+        click_boxes = self.data.general_potential_name_rois
+        self.data.potentials = [Potential(i, click_boxes[i]) for i in range(self.data.potential_count)]
+
+        self._wait_for_item_list_gone()
+        self.screen.screenshot()
+        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.borders)
+
+        self._update_names()
+        self._update_levels()
+
+        return self
+
+    def choose(self):
+        # 获得所有潜能的排名
+        self._update_priority()
+
+        # 输出比较结果
+        for potential in self.data.potentials:
+            if self.data.core_potential:
+                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | 排名 {potential.rank}")
+            else:
+                old = potential.old_level
+                new = potential.new_level
+                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | 排名 {potential.rank}")
+
+        # 选择排名最高的潜能
+        best_potential = self.best_potential
+        if best_potential:
+            logger.info(f"[潜能选择] {best_potential.name}")
+
+        return best_potential
+
+    def _update_priority(self):
+        for potential in self.data.potentials:
+            rank, sub_rank, trekker = self._get_potential_priority(potential)
+            potential.rank = rank
+            potential.sub_rank = sub_rank
+            potential.trekker = trekker
+
+    def _get_potential_priority(
+        self,
+        potential: Potential,
+    ) -> tuple[int, int, str | None]:
+        """获取单个待选潜能在规则列表中的最高排名及其 trekker 归属。
+
+        遍历 priority_list，找到所有名称匹配且满足 level_span / max_level / refresh
+        条件的规则，返回排名数值最小（即优先级最高）的规则对应的排名与 trekker。
+
+        Args:
+            potential: 单个待选潜能，结构：
+                {"name": str, "old_level": int, "new_level": int, "box": list}
+
+        Returns:
+            tuple[int, int, str | None]: (rank, sub_rank, trekker)
+                rank 为匹配到的最小排名数值；无匹配时返回 -1
+                sub_rank 为命中的 potential 名称在该规则 names 列表中的下标；无匹配时返回 -1
+                trekker 为对应规则的归属角色；无匹配时返回空字符
+        """
+        priority_list = self.data.params.priority_list
+
+        best_entry = None
+        best_sub_rank = -1
+
+        for entry in priority_list:
+            # 1. 基础剪枝：优先级如果不更高，直接跳过
+            if best_entry and entry["priority"] >= best_entry["priority"]:
+                continue
+
+            # 2. 匹配名称并获取优先级排名
+            sub_rank = self._find_sub_rank(potential.name, entry["names"])
+            if sub_rank == -1:
+                continue
+
+            # 3. 验证其他规则是否通过
+            if not self._is_entry_valid(entry, potential):
+                continue
+
+            # 全部通过后，记录该行及副等级
+            best_entry = entry
+            best_sub_rank = sub_rank
+
+        if not best_entry:
+            best_entry = {"rank": -1, "trekker": ""}
+
+        return best_entry["rank"], best_sub_rank, best_entry["trekker"]
+
+    def _find_sub_rank(self, name: str, rule_names: list[str]) -> int:
+        """通过潜能名称获取最优排名数值"""
+        return next((i for i, r in enumerate(rule_names)
+                     if self._match_potential_name(name, r)), -1)
 
     @staticmethod
     def _match_potential_name(ocr_name: str, rule_name: str) -> bool:
@@ -574,236 +730,148 @@ class ChoosePotentialRecognition(CustomRecognition):
         cleaned_ocr = cleaned_ocr.translate(table)
         cleaned_rule = cleaned_rule.translate(table)
 
-        return cleaned_ocr in cleaned_rule or cleaned_rule in cleaned_ocr
+        return cleaned_ocr in cleaned_rule
 
-    def _get_potential_priority(
-        self,
-        potential_priority_list: list[dict],
-        potential: dict,
-    ) -> tuple[int, str | None, int]:
-        """获取单个待选潜能在规则列表中的最高排名及其 trekker 归属。
+    def _is_entry_valid(self, entry: dict, potential: Potential) -> bool:
+        """业务规则过滤器：方便未来随意扩展判定条件"""
+        # 核心潜能默认全部通过
+        if self.data.core_potential:
+            return True
 
-        遍历 priority_list，找到所有名称匹配且满足 level_span / max_level / refresh
-        条件的规则，返回排名数值最小（即优先级最高）的规则对应的排名与 trekker。
+        # 普通潜能，组合匹配规则
+        checks = [
+            potential.old_level < entry["max_level"],
+            potential.level_span >= entry["level_span"],
+            self.data.refresh_count >= entry["refresh"]
+        ]
+        return all(checks)
+
+    @property
+    def best_potential(self) -> Potential | None:
+        valid_potentials = (p for p in self.data.potentials if p.rank >= 0)
+        return min(valid_potentials, key=lambda p: (p.rank, p.sub_rank, -p.level_span), default=None)
+
+
+
+@AgentServer.custom_recognition("choose_potential_recognition")
+class ChoosePotentialRecognition(CustomRecognition):
+
+    def analyze(
+            self,
+            context: Context,
+            argv: CustomRecognition.AnalyzeArg,
+    ) -> CustomRecognition.AnalyzeResult:
+        """自动选择潜能的主流程。
+
+        读取 attach 参数与已拥有潜能状态，识别当前三张潜能卡片，
+        根据自定义优先级列表选出最优潜能并返回其 box；
+        不满足条件时执行刷新，最终兜底识别系统推荐图标。
+        选择完成后将已拥有潜能状态写回节点 attach 持久化。
 
         Args:
-            potential_priority_list: _parse_priority_raw_list 的返回值，每个元素结构：
-                {"trekker": str|None, "names": list, "level_span": int,
-                 "max_level": int, "refresh": int, "priority": int}
-            potential: 单个待选潜能，结构：
-                {"name": str, "old_level": int, "new_level": int, "is_core": bool, "box": list}
+            context: maa.context.Context
+            argv: CustomRecognition.AnalyzeArg，含当前截图与节点名
 
         Returns:
-            tuple[int, str | None, int]: (priority, trekker, name_order)
-                priority 为匹配到的最小排名数值；无匹配时返回 -1
-                trekker 为对应规则的归属角色；无匹配时返回 None
-                name_order 为命中的 potential 名称在该规则 names 列表中的下标；无匹配时返回 -1
+            CustomRecognition.AnalyzeResult: 命中区域为目标潜能卡片的 box
         """
-        name = potential["name"]
-        is_core = potential["is_core"]
-        old_level = potential["old_level"]
-        level_span = potential["new_level"] - old_level
+        node_name = argv.node_name
+        params = self._get_params(context, node_name)
+        data = Data(params=params)
+        screen = ScreenDataProcessor(context)
 
-        best_priority = -1
-        best_trekker = None
-        best_name_order = -1
+        # 获取只使用一次的数据
+        data.current_coin = screen.get_current_coin(argv.image)
+        data.refresh_cost = screen.get_refresh_cost(argv.image)
+        data.core_potential = screen.check_core_potential(argv.image)
+        data.potential_count = screen.get_potential_count(data.core_potential, argv.image)
 
-        if is_core:
-            for entry in potential_priority_list:
-                name_order = -1
-                for idx, rule_name in enumerate(entry["names"]):
-                    if self._match_potential_name(name, rule_name):
-                        name_order = idx
-                        break
-                if name_order == -1:
-                    continue
-                if best_priority == -1 or entry["priority"] < best_priority:
-                    best_priority = entry["priority"]
-                    best_trekker = entry["trekker"]
-                    best_name_order = name_order
+        # 加载相应的潜能处理类
+        if data.params.priority_list:
+            handler = AssistantPriorityHandler(screen, data)
         else:
-            for entry in potential_priority_list:
-                name_order = -1
-                for idx, rule_name in enumerate(entry["names"]):
-                    if self._match_potential_name(name, rule_name):
-                        name_order = idx
-                        break
-                if name_order == -1:
-                    continue
-                if old_level >= entry["max_level"]:
-                    continue
-                if level_span < entry["level_span"]:
-                    continue
-                if self._refresh_count < entry["refresh"]:
-                    continue
-                if best_priority == -1 or entry["priority"] < best_priority:
-                    best_priority = entry["priority"]
-                    best_trekker = entry["trekker"]
-                    best_name_order = name_order
+            handler = GameRecommendedHandler(screen, data)
 
-        return best_priority, best_trekker, best_name_order
-
-    def _select_best_potential(
-        self,
-        available: list[dict],
-        priority_list: list[dict],
-    ) -> tuple[dict, str | None] | None:
-        """从待选潜能中选出排名最高的一个，返回潜能与其 trekker 归属。
-
-        同时输出每个待选潜能的识别情况及最终选择的 info 日志。
-        若多个潜能匹配到同一条规则（potential 为列表且跨度相同），
-        按该规则 potential 列表中的顺序选择最靠前者。
-
-        Args:
-            available: _get_available_potentials 的返回值
-            priority_list: _parse_priority_raw_list 的返回值
-
-        Returns:
-            tuple[dict, str | None]: (potential, trekker) 若找到匹配规则的潜能；
-            None 若所有潜能均无匹配规则
-        """
-        candidates: list[tuple[dict, int, str | None, int]] = []
-        for potential in available:
-            priority, trekker, name_order = self._get_potential_priority(priority_list, potential)
-            rank_str = str(priority) if priority != -1 else "无"
-
-            if potential["is_core"]:
-                self.logger.info(f"[潜能识别] {potential['name']} | 核心潜能 | 排名 {rank_str}")
+        while True:
+            # 获取潜能数据，并选择潜能
+            potential = handler.read_potentials_info().choose()
+            if potential:
+                break
+            elif handler.refreshable:
+                logger.info("没有找到符合条件的潜能，尝试刷新")
+                handler.refresh()
             else:
-                old = potential["old_level"]
-                new = potential["new_level"]
-                self.logger.info(f"[潜能识别] {potential['name']} | 等级 {old}→{new} | 排名 {rank_str}")
+                logger.info("[潜能选择] 没有找到符合条件的潜能，将按照等级顺序选择")
+                potential = handler.choose_default_potential()
+                break
 
-            if priority != -1:
-                candidates.append((potential, priority, trekker, name_order))
+        owned = self._update_owned_potentials(
+            data.params.owned_potentials,
+            potential.name,
+            potential.new_level,
+            potential.trekker,
+        )
+        self._save_state(context, node_name, owned)
 
-        if not candidates:
-            return None
+        return CustomRecognition.AnalyzeResult(box=potential.box, detail={})
 
-        best_priority = min(p for _, p, _, _ in candidates)
-        top = [(pot, trek, order) for pot, p, trek, order in candidates if p == best_priority]
-
-        best_span = max(pot["new_level"] - pot["old_level"] for pot, _, _ in top)
-        top = [(pot, trek, order) for pot, trek, order in top if pot["new_level"] - pot["old_level"] == best_span]
-
-        if len(top) > 1:
-            best_name_order = min(order for _, _, order in top)
-            top = [(pot, trek, order) for pot, trek, order in top if order == best_name_order]
-
-        selected_potential, selected_trekker, _ = top[0]
-
-        self.logger.info(f"[潜能选择] {selected_potential['name']} | 排名 {best_priority}")
-        return selected_potential, selected_trekker
-
-    def _get_recommended_box(self, context: Context, image) -> list:
-        """识别系统推荐图标，返回对应卡片的 box。
-
-        推荐图标位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
-        x_border 区间（左开右开）来确定归属卡片。
-        识别失败时返回第一张卡片的 box 作为兜底。
+    @staticmethod
+    def _get_params(context: Context, node_name: str) -> Parameters:
+        """获取节点 attach 中的所有参数，缺失时返回安全默认值。
 
         Args:
             context: maa.context.Context
-            image: 截图
+            node_name: 当前节点名称，用于动态获取节点数据
 
         Returns:
-            list: 目标卡片区域 [x, y, w, h]
+            Parameters: 包含以下属性的实例：
+                - max_refresh_count (int): 最大刷新次数，0 表示禁用
+                - reserved_coin (int): 预留金币，计算可用金币时需减去此值
+                - priority_list (list): 自定义优先级列表
+                - owned_potentials (dict): 已拥有潜能状态，按 trekker 分组
         """
-        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
-        reco_detail = context.run_recognition(
-            "星塔_节点_选择潜能_识别推荐图标_agent", image
-        )
-        if reco_detail and reco_detail.hit:
-            hit_x = reco_detail.best_result.box[0]
-            matched = []
-            for i, r in enumerate(potential_rois):
-                if r["x_border"][0] <= hit_x <= r["x_border"][1]:
-                    matched = r
-                    break
-            if matched:
-                return matched["general_potential"]
 
-        self.logger.debug("推荐图标识别失败，有可能是没有推荐图标，也有可能是识别问题")
-        return []
+        node_data = context.get_node_data(node_name)
+        attach = node_data.get("attach", {})
+        params = Parameters(**attach)
+        return params
 
-    def _get_selected_potential_index(self, context: Context, image) -> int:
-        """识别拿走按钮，返回对应卡片的索引。
-
-        拿走按钮位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
-        x_border 区间（左开右开）来确定归属卡片。
-        识别失败时返回第一张卡片的索引 作为兜底。
-
-        Args:
-            context: maa.context.Context
-            image: 截图
-
-        Returns:
-            int: 目标卡片索引
-        """
-        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
-        reco_detail = context.run_recognition(
-            "星塔_节点_选择潜能_识别预选潜能位置_agent", image
-        )
-        if reco_detail and reco_detail.hit:
-            hit_x = reco_detail.best_result.box[0]
-            matched_index = 0
-            for i, r in enumerate(potential_rois):
-                if r["x_border"][0] <= hit_x <= r["x_border"][1]:
-                    matched_index = i
-                    break
-            return matched_index
-
-        self.logger.error("拿走按钮识别失败，将会导致识别出现问题")
-        return 0
-
-    def _get_first_box(self) -> list:
-        """返回第一张卡片的 box。
-
-        Returns:
-            list: 目标卡片区域 [x, y, w, h]
-        """
-        potential_rois = self.POTENTIAL_ROIS[self.available_potential_num]
-        return potential_rois[0]["general_potential"]
-
+    @staticmethod
     def _update_owned_potentials(
-        self,
         owned: dict,
-        potential: dict | None,
-        trekker: str | None,
+        potential_name: str,
+        new_level: int,
+        trekker: str,
     ) -> dict:
         """将本次选中的潜能写入 owned_potentials 对应的 trekker 分组。
 
         Args:
             owned: 当前 owned_potentials 字典，按 trekker 分组
-            potential: 本次选中的潜能（含 name, new_level）；为 None 时不更新
-            trekker: 归属角色名；为 None 时写入 "unknown" 分组
+            potential_name: 本次选中的潜能名称
+            new_level: 本次选中的潜能等级
+            trekker: 归属角色名
 
         Returns:
             dict: 更新后的 owned_potentials
         """
-        if potential is None:
+        if not potential_name:
             return owned
 
-        name = potential["name"]
-        new_level = potential["new_level"]
-
-        if new_level == -1:
-            self.logger.warning(f"潜能 {name} 等级解析失败，将默认为1级")
+        if new_level <= 0:
+            logger.debug(f"潜能 {potential_name} 等级解析失败，将默认为1级")
             new_level = 1
 
-        group = trekker if trekker else "unknown"
         if not trekker:
-            self.logger.debug(
-                f"潜能 {name} 无所属旅人，将默认为unknown"
-            )
+            logger.debug(f"潜能 {potential_name} 无所属旅人，将默认为unknown")
+            trekker = "unknown"
 
-        if group not in owned:
-            owned[group] = {}
-        owned[group][name] = new_level
+        if trekker not in owned:
+            owned[trekker] = {}
+        owned[trekker][potential_name] = new_level
         return owned
 
+    @staticmethod
     def _save_state(
-        self,
         context: Context,
         node_name: str,
         owned: dict,
@@ -820,4 +888,4 @@ class ChoosePotentialRecognition(CustomRecognition):
         new_attach = {"owned_potentials": owned}
         success = context.override_pipeline({node_name: {"attach": new_attach}})
         if not success:
-            self.logger.error("保存当前拥有潜能失败，自定义潜能优先级可能无法正常工作")
+            logger.error("保存当前拥有潜能失败，自定义潜能优先级可能无法正常工作")

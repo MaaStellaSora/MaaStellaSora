@@ -90,7 +90,7 @@
     "attach": {
       "priority_list": [],
       "max_refresh_count": 2,
-      "reserve_coin": 0,
+      "reserved_coin": 0,
       "owned_potentials": {}
     },
     "post_wait_freeze": 100,

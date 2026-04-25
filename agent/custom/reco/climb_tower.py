@@ -21,6 +21,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential": [530, 425, 220, 40],
             "general_potential": [530, 395, 220, 40],
             "general_potential_level": [530, 425, 220, 40],
+            "recommended_level": [670, 165, 140, 50],
             "x_border": [470, 813]
         }
     ],
@@ -29,12 +30,14 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential": [358, 425, 220, 40],
             "general_potential": [358, 395, 220, 40],
             "general_potential_level": [358, 425, 220, 40],
+            "recommended_level": [490, 165, 140, 50],
             "x_border": [0, 639]
         },
         {
             "core_potential": [703, 425, 220, 40],
             "general_potential": [703, 395, 220, 40],
             "general_potential_level": [703, 425, 220, 40],
+            "recommended_level": [840, 165, 140, 50],
             "x_border": [640, 1280]
         }
     ],
@@ -43,18 +46,21 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential": [187, 425, 220, 40],
             "general_potential": [187, 395, 220, 40],
             "general_potential_level": [187, 425, 220, 40],
+            "recommended_level":[320, 165, 140, 50],
             "x_border": [0, 469]
         },
         {
             "core_potential": [530, 425, 220, 40],
             "general_potential": [530, 395, 220, 40],
             "general_potential_level": [530, 425, 220, 40],
+            "recommended_level": [670, 165, 140, 50],
             "x_border": [470, 813]
         },
         {
             "core_potential": [875, 425, 220, 40],
             "general_potential": [875, 395, 220, 40],
             "general_potential_level": [875, 425, 220, 40],
+            "recommended_level":[1010, 165, 140, 50],
             "x_border": [814, 1280]
         }
     ]
@@ -66,6 +72,7 @@ class PotentialLayout:
     core_potential: list[int]
     general_potential: list[int]
     general_potential_level: list[int]
+    recommended_level: list[int]
     x_border: list[int]
 
 @dataclass(slots=True)
@@ -91,15 +98,14 @@ class PotentialLayouts:
 class Parameters:
     max_refresh_count: int
     reserved_coin: int
-    priority_list_raw: list[dict]
+    priority_list: list[dict]
     owned_potentials: dict
-    priority_list: list[dict] = field(init=False)
     potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
     selected_potential_offset: int = 35
 
     def __post_init__(self):
         parsed_list = self._parse_priority_raw_list(
-            self.priority_list_raw,
+            self.priority_list,
             self.owned_potentials,
         )
         object.__setattr__(self, 'priority_list', parsed_list)
@@ -262,6 +268,10 @@ class Data:
     def general_potential_level_rois(self) -> list[list[int]]:
         return [l.general_potential_level for l in self.params.potential_layouts[self.potential_count]]
 
+    @property
+    def recommended_level_rois(self) -> list[list[int]]:
+        return [l.recommended_level for l in self.params.potential_layouts[self.potential_count]]
+
 
 class ScreenDataProcessor:
     def __init__(self, context: Context):
@@ -331,7 +341,7 @@ class ScreenDataProcessor:
             time.sleep(1)
             image = self.context.tasker.controller.post_screencap().wait().get()
 
-        logger.debug(f"无法识别节点'{node_name}'，返回默认值")
+        logger.debug(f"无法识别节点'{node_name}'，返回默认值 {failed_return}")
         return failed_return
 
     def _ocr(self, node_name, failed_return, **kwargs):
@@ -362,6 +372,11 @@ class ScreenDataProcessor:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
         texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
         return texts
+
+    def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
+        node_name = "星塔_节点_选择潜能_识别推荐等级_agent"
+        texts = self._ocr(node_name, ["0"], roi=roi, image=image, max_try=max_try)
+        return int(texts[0])
 
     def check_item_list_visibility(self, max_try: int = 1) -> bool:
         image = self.context.tasker.controller.post_screencap().wait().get()
@@ -455,18 +470,19 @@ class ScreenDataProcessor:
         Returns:
             int: 目标卡片索引，识别失败时返回0
         """
-        result = self._template(
+        result_boxes = self._template(
             "星塔_节点_选择潜能_识别预选潜能位置_agent",
             [],
             image=image,
             max_try=max_try
         )
 
-        hit_x = result[0][0] if result else -1
-        matched = next((i for i, (low, high) in enumerate(borders) if low <= hit_x <= high), 1)
+        hit_x = result_boxes[0][0] if result_boxes else -1
+        matched = next((i for i, (low, high) in enumerate(borders) if low <= hit_x <= high), None)
 
-        if not matched:
+        if matched is None:
             logger.error("拿走按钮识别失败，潜能选择可能会出现问题")
+            matched = 0
 
         return matched
 
@@ -478,9 +494,10 @@ class ChoosePotentialHandler:
 
     def _wait_for_item_list_gone(self):
         while True:
-            if not self.screen.check_item_list_visibility():
+            if self.screen.check_item_list_visibility():
                 logger.debug("识别到干扰文字，等待1秒")
                 time.sleep(1)
+                continue
             break
 
     def _update_names(self):
@@ -502,9 +519,12 @@ class ChoosePotentialHandler:
             self.data.potentials[i].old_level, self.data.potentials[i].new_level = old, new
 
     def _update_recommended_potentials(self):
+        adjusted_rois = self._get_adjusted_rois(self.data.recommended_level_rois)
         indices = self.screen.get_recommended_potential(self.data.borders)
         for index in indices:
+            roi = adjusted_rois[index]
             self.data.potentials[index].recommended = True
+            self.data.potentials[index].recommended_level = self.screen.get_recommend_level(roi)
 
     @staticmethod
     def _parse_level_text(texts: list[str]) -> tuple[int, int]:
@@ -607,7 +627,7 @@ class GameRecommendedHandler(ChoosePotentialHandler):
 
 
 class AssistantPriorityHandler(ChoosePotentialHandler):
-    def __init__(self, screen, data):
+    def __init__(self, screen: ScreenDataProcessor, data: Data):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
@@ -805,6 +825,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 potential = handler.choose_default_potential()
                 break
 
+        # 更新已拥有潜能状态
         owned = self._update_owned_potentials(
             data.params.owned_potentials,
             potential.name,
@@ -858,11 +879,11 @@ class ChoosePotentialRecognition(CustomRecognition):
             return owned
 
         if new_level <= 0:
-            logger.debug(f"潜能 {potential_name} 等级解析失败，将默认为1级")
+            logger.debug(f"保存潜能 {potential_name} 时发现等级低于1，将默认为1级")
             new_level = 1
 
         if not trekker:
-            logger.debug(f"潜能 {potential_name} 无所属旅人，将默认为unknown")
+            logger.debug(f"保存潜能 {potential_name} 时发现无所属旅人，将默认为unknown")
             trekker = "unknown"
 
         if trekker not in owned:

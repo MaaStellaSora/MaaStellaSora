@@ -412,6 +412,24 @@
       "type": "OCR"
     }
   },
+  "星塔_节点_选择潜能_识别推荐等级_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "\\d+"
+        ],
+        "replace": [
+          [
+            "\\D",
+            ""
+          ]
+        ],
+        "threshold": 0.6,
+        "roi": [840, 165, 140, 50]
+      },
+      "type": "OCR"
+    }
+  },
   "星塔_节点_选择潜能_识别推荐图标_agent": {
     "recognition": {
       "param": {
@@ -435,7 +453,8 @@
           569,
           996,
           84
-        ]
+        ],
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     }

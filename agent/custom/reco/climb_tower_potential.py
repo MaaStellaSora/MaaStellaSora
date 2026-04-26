@@ -622,12 +622,13 @@ class GameRecommendedHandler(ChoosePotentialHandler):
     @property
     def best_potential(self) -> Potential | None:
         """
-        筛选出最好的系统推荐潜能
-        目前规则：
-            >升级间距大于等于3级且推荐等级大于等于3级的新卡
-            >拥有推荐标记的已抓过的卡
-            >升级间距刚好等于推荐等级的新卡
-            >升级间距2级且推荐等级大于2级的新卡
+        通过优先级列表，筛选出最好的系统推荐潜能。每一条规则都必须带有筛选推荐潜能的条件
+        目前优先级规则：
+            >升级间距>=3级且推荐等级>=3级的新潜能
+            >拥有推荐标记的已抓潜能或核心潜能
+            >升级间距=推荐等级的新潜能
+            >升级间距=2级且推荐等级>2级的新潜能
+            >其他推荐潜能
         筛选成功后，按照等级跨度降序、推荐等级降序、旧等级降序来排序，取得想要的潜能
 
         Returns:
@@ -635,9 +636,10 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         """
         priority_rules = [
             lambda p: p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
-            lambda p: p.old_level > 0 and p.recommended,
-            lambda p: p.old_level == 0 and p.recommended_level > 0 and p.recommended_level - p.level_span == 0,
+            lambda p: (p.old_level > 0 or self.data.core_potential) and p.recommended,
+            lambda p: p.old_level == 0 and p.recommended and p.recommended_level - p.level_span == 0,
             lambda p: p.old_level == 0 and p.level_span == 2 and p.recommended_level > 2,
+            lambda p: p.recommended
         ]
 
         for rule in priority_rules:

@@ -319,7 +319,7 @@ class Data:
 
     @property
     def refreshable(self):
-        return self.refresh_cost > 0
+        return self.refresh_cost >= 0
 
     @property
     def available_refreshes(self) -> int:

@@ -140,8 +140,7 @@ def calculate_max_enhance(
             current_enhancement_cost += increment
             pay_count += 1
 
-    return pay_count + free_count - paid_step, total_cost
-
+    return pay_count + free_count, total_cost
 
 def check_shop_type(
     context: Context,
@@ -265,21 +264,23 @@ class Data:
             return 65535
 
     @property
-    def _enhancement_data(self) -> tuple[int, int]:
-        if self.shop_type == "regular":
-            max_cost = self.max_cost
-        else:
-            max_cost = 65535
-        return calculate_max_enhance(self.current_coin, self.current_cost, max_cost, self.initial_cost)
+    def enhancement_cost(self) -> int:
+        _, coin = calculate_max_enhance(self.current_coin, self.current_cost, self.max_cost, self.initial_cost)
+        return coin
 
     @property
-    def enhancement_cost(self) -> int:
-        _, coin = self._enhancement_data
+    def greedy_enhancement_cost(self) -> int:
+        _, coin = calculate_max_enhance(self.current_coin, self.current_cost, 65535, self.initial_cost)
         return coin
 
     @property
     def enhancement_count(self) -> int:
-        count, _ = self._enhancement_data
+        count, _ = calculate_max_enhance(self.current_coin, self.current_cost, self.max_cost, self.initial_cost)
+        return count
+
+    @property
+    def greedy_enhancement_count(self) -> int:
+        count, _ = calculate_max_enhance(self.current_coin, self.current_cost, 65535, self.initial_cost)
         return count
     
 
@@ -364,10 +365,12 @@ class GridInfo:
         Returns:
             int: 预留金币数量。
         """
-        if self.buy_type in ["normal", "assist_melody", "final_remainder"]:
+        if self.buy_type in ["normal", "assist_melody"]:
             return data.enhancement_cost
         if self.buy_type == "dynamic_drink":
             return data.enhancement_cost + data.dynamic_reserve
+        if self.buy_type == "final_remainder":
+            return data.greedy_enhancement_cost
         logger.error(f"未知购买类型: {self.buy_type}，无法计算预留金币")
         return 0
 
@@ -562,7 +565,7 @@ class ShopHandler:
                 "action": {"param": {"target": grid.price_roi}}
             },
             "星塔_节点_选择潜能_agent": {
-                "attach": {"reserve_coin": reserved_coin}
+                "attach": {"reserved_coin": reserved_coin}
             },
         }
         result = self.context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
@@ -1150,11 +1153,12 @@ class EnhanceAction(CustomAction):
             bool: 始终返回 True。
         """
         data = self._get_data(context, argv.node_name)
+        count = data.enhancement_count if data.shop_type == "regular" else data.greedy_enhancement_count
 
         logger.debug(f"最大强化金币: {data.max_cost}，强化递增金额: {data.initial_cost}")
         logger.debug(f"当前金币: {data.current_coin}，当前强化所需金币: {data.current_cost}")
-        logger.debug(f"可强化次数: {data.enhancement_count}")
-        for _ in range(data.enhancement_count):
+        logger.debug(f"可强化次数: {count}")
+        for _ in range(count):
             context.run_task("星塔_节点_商店_点击强化_agent")
         return True
 

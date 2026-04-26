@@ -142,7 +142,7 @@ def _calculate_max_enhance(
             current_enhancement_cost += increment
             pay_count += 1
 
-    return pay_count + free_count - paid_step, total_cost
+    return pay_count + free_count, total_cost
 
 
 def _check_shop_type(

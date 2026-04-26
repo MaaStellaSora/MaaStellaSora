@@ -10,7 +10,7 @@ from maa.custom_action import CustomAction
 from maa.context import Context
 
 from utils import logger as logger_module
-logger = logger_module.get_logger("climb_tower_action")
+logger = logger_module.get_logger("climb_tower_shop")
 
 
 def get_current_coin(

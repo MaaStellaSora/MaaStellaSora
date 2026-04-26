@@ -424,8 +424,7 @@
             ""
           ]
         ],
-        "threshold": 0.6,
-        "roi": [840, 165, 140, 50]
+        "threshold": 0.6
       },
       "type": "OCR"
     }

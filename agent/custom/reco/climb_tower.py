@@ -69,10 +69,10 @@ DEFAULT_POTENTIAL_LAYOUTS = {
 
 @dataclass(slots=True)
 class PotentialLayout:
-    core_potential: list[int]
-    general_potential: list[int]
-    general_potential_level: list[int]
-    recommended_level: list[int]
+    core_potential_roi: list[int]
+    general_potential_roi: list[int]
+    general_potential_level_roi: list[int]
+    recommended_level_roi: list[int]
     x_border: list[int]
 
 @dataclass(slots=True)
@@ -220,8 +220,8 @@ class Potential:
     new_level: int = 0
     recommended: bool = False
     recommended_level: int = 0
-    rank: int = 0
-    sub_rank: int = 0
+    rank: int = -1
+    sub_rank: int = -1
     trekker: str = ""
 
     @property
@@ -258,19 +258,19 @@ class Data:
 
     @property
     def core_potential_name_rois(self) -> list[list[int]]:
-        return [l.core_potential for l in self.params.potential_layouts[self.potential_count]]
+        return [l.core_potential_roi for l in self.params.potential_layouts[self.potential_count]]
 
     @property
     def general_potential_name_rois(self) -> list[list[int]]:
-        return [l.general_potential for l in self.params.potential_layouts[self.potential_count]]
+        return [l.general_potential_roi for l in self.params.potential_layouts[self.potential_count]]
 
     @property
     def general_potential_level_rois(self) -> list[list[int]]:
-        return [l.general_potential_level for l in self.params.potential_layouts[self.potential_count]]
+        return [l.general_potential_level_roi for l in self.params.potential_layouts[self.potential_count]]
 
     @property
     def recommended_level_rois(self) -> list[list[int]]:
-        return [l.recommended_level for l in self.params.potential_layouts[self.potential_count]]
+        return [l.recommended_level_roi for l in self.params.potential_layouts[self.potential_count]]
 
 
 class ScreenDataProcessor:
@@ -564,19 +564,18 @@ class ChoosePotentialHandler:
         ]
 
     def choose_default_potential(self):
-        # 1. 尝试取系统推荐潜能
-        valid_potentials = (p for p in self.data.potentials if p.recommended)
-        potential = max(valid_potentials, key=lambda p: p.level_span, default=None)
-        if potential:
-            return potential
+        priority_rules = [
+            lambda p: p.recommended, # 1. 尝试取系统推荐潜能
+            lambda p: p.old_level > 0 # 2. 没有系统推荐潜能，选择之前抓过的潜能
+        ]
 
-        # 2. 没有系统推荐潜能，选择之前抓过的潜能
-        valid_potentials = (p for p in self.data.potentials if p.old_level > 0)
-        potential = max(valid_potentials, key=lambda p: p.level_span, default=None)
-        if potential:
-            return potential
+        for rule in priority_rules:
+            candidates = [p for p in self.data.potentials if rule(p)]
+            if candidates:
+                # 按照等级跨度降序、推荐等级降序、旧等级降序来排序，选择最优的潜能
+                return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)
 
-        # 3. 都没有的话，放弃选择，系统选了哪张就哪张
+        # 都没有的话，放弃选择，系统选了哪张就哪张
         return Potential(0, [5, 710, 5, 5])
 
     def refresh(self):
@@ -622,8 +621,31 @@ class GameRecommendedHandler(ChoosePotentialHandler):
 
     @property
     def best_potential(self) -> Potential | None:
-        valid_potentials = (p for p in self.data.potentials if p.rank >= 0 and p.recommended)
-        return min(valid_potentials, key=lambda p: (p.rank, -p.level_span), default=None)
+        """
+        筛选出最好的系统推荐潜能
+        目前规则：
+            >升级间距大于等于3级且推荐等级大于等于3级的新卡
+            >拥有推荐标记的已抓过的卡
+            >升级间距刚好等于推荐等级的新卡
+            >升级间距2级且推荐等级大于2级的新卡
+        筛选成功后，按照等级跨度降序、推荐等级降序、旧等级降序来排序，取得想要的潜能
+
+        Returns:
+            Potential | None: 最好的系统推荐潜能，若没有则返回 None
+        """
+        priority_rules = [
+            lambda p: p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
+            lambda p: p.old_level > 0 and p.recommended,
+            lambda p: p.old_level == 0 and p.recommended_level > 0 and p.recommended_level - p.level_span == 0,
+            lambda p: p.old_level == 0 and p.level_span == 2 and p.recommended_level > 2,
+        ]
+
+        for rule in priority_rules:
+            candidates = [p for p in self.data.potentials if rule(p)]
+            if candidates:
+                return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)
+
+        return None
 
 
 class AssistantPriorityHandler(ChoosePotentialHandler):
@@ -727,7 +749,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
         """比较 OCR 识别的潜能名称与规则中的潜能名称是否匹配。
 
         OCR 可能产生前后漏字或噪声字符，因此先清洗两边字符串（去除非 Unicode
-        字母数字字符），再用双向 in 检查，覆盖前后漏字的情况。
+        字母数字字符），再用 in 检查，覆盖前后漏字的情况。
 
         中间漏字或错字无法处理，属于 OCR 识别质量问题。
 
@@ -768,8 +790,9 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
     @property
     def best_potential(self) -> Potential | None:
+        """按照排名升序、等级跨度降序、副排名升序三个维度，筛选出最好的潜能"""
         valid_potentials = (p for p in self.data.potentials if p.rank >= 0)
-        return min(valid_potentials, key=lambda p: (p.rank, p.sub_rank, -p.level_span), default=None)
+        return min(valid_potentials, key=lambda p: (p.rank, -p.level_span, p.sub_rank), default=None)
 
 
 
@@ -821,18 +844,19 @@ class ChoosePotentialRecognition(CustomRecognition):
                 logger.info("没有找到符合条件的潜能，尝试刷新")
                 handler.refresh()
             else:
-                logger.info("[潜能选择] 没有找到符合条件的潜能，将按照等级顺序选择")
+                logger.info("[潜能选择] 没有找到符合条件的潜能，将按照默认顺序选择")
                 potential = handler.choose_default_potential()
                 break
 
-        # 更新已拥有潜能状态
-        owned = self._update_owned_potentials(
-            data.params.owned_potentials,
-            potential.name,
-            potential.new_level,
-            potential.trekker,
-        )
-        self._save_state(context, node_name, owned)
+        # 如果使用星塔助手优先级模块，更新已拥有潜能记录
+        if data.params.priority_list:
+            owned = self._update_owned_potentials(
+                data.params.owned_potentials,
+                potential.name,
+                potential.new_level,
+                potential.trekker,
+            )
+            self._save_state(context, node_name, owned)
 
         return CustomRecognition.AnalyzeResult(box=potential.box, detail={})
 
@@ -879,11 +903,11 @@ class ChoosePotentialRecognition(CustomRecognition):
             return owned
 
         if new_level <= 0:
-            logger.debug(f"保存潜能 {potential_name} 时发现等级低于1，将默认为1级")
+            logger.debug(f"备份潜能 {potential_name} 时发现等级低于1，将默认为1级")
             new_level = 1
 
         if not trekker:
-            logger.debug(f"保存潜能 {potential_name} 时发现无所属旅人，将默认为unknown")
+            logger.debug(f"备份潜能 {potential_name} 时发现无所属旅人，将默认为unknown")
             trekker = "unknown"
 
         if trekker not in owned:

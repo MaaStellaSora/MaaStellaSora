@@ -18,55 +18,55 @@ MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段�
 DEFAULT_POTENTIAL_LAYOUTS = {
     1: [
         {
-            "core_potential": [530, 425, 220, 40],
-            "general_potential": [530, 395, 220, 40],
-            "general_potential_level": [530, 425, 220, 40],
-            "recommended_level": [670, 165, 140, 50],
-            "border": [470, 0, 343, 720],
+            "core_potential_roi": [530, 425, 220, 40],
+            "general_potential_roi": [530, 395, 220, 40],
+            "general_potential_level_roi": [530, 425, 220, 40],
+            "recommended_level_roi": [670, 165, 140, 50],
+            "potential_roi": [470, 0, 343, 720],
             "x_border": [470, 813]
         }
     ],
     2: [
         {
-            "core_potential": [358, 425, 220, 40],
-            "general_potential": [358, 395, 220, 40],
-            "general_potential_level": [358, 425, 220, 40],
-            "recommended_level": [490, 165, 140, 50],
-            "border": [0, 0, 639, 720],
+            "core_potential_roi": [358, 425, 220, 40],
+            "general_potential_roi": [358, 395, 220, 40],
+            "general_potential_level_roi": [358, 425, 220, 40],
+            "recommended_level_roi": [490, 165, 140, 50],
+            "potential_roi": [0, 0, 639, 720],
             "x_border": [0, 639]
         },
         {
-            "core_potential": [703, 425, 220, 40],
-            "general_potential": [703, 395, 220, 40],
-            "general_potential_level": [703, 425, 220, 40],
-            "recommended_level": [840, 165, 140, 50],
-            "border": [640, 0, 640, 720],
+            "core_potential_roi": [703, 425, 220, 40],
+            "general_potential_roi": [703, 395, 220, 40],
+            "general_potential_level_roi": [703, 425, 220, 40],
+            "recommended_level_roi": [840, 165, 140, 50],
+            "potential_roi": [640, 0, 640, 720],
             "x_border": [640, 1280]
         }
     ],
     3: [
         {
-            "core_potential": [187, 425, 220, 40],
-            "general_potential": [187, 395, 220, 40],
-            "general_potential_level": [187, 425, 220, 40],
-            "recommended_level":[320, 165, 140, 50],
-            "border": [0, 0, 469, 720],
+            "core_potential_roi": [187, 425, 220, 40],
+            "general_potential_roi": [187, 395, 220, 40],
+            "general_potential_level_roi": [187, 425, 220, 40],
+            "recommended_level_roi":[320, 165, 140, 50],
+            "potential_roi": [0, 0, 469, 720],
             "x_border": [0, 469]
         },
         {
-            "core_potential": [530, 425, 220, 40],
-            "general_potential": [530, 395, 220, 40],
-            "general_potential_level": [530, 425, 220, 40],
-            "recommended_level": [670, 165, 140, 50],
-            "border": [470, 0, 343, 720],
+            "core_potential_roi": [530, 425, 220, 40],
+            "general_potential_roi": [530, 395, 220, 40],
+            "general_potential_level_roi": [530, 425, 220, 40],
+            "recommended_level_roi": [670, 165, 140, 50],
+            "potential_roi": [470, 0, 343, 720],
             "x_border": [470, 813]
         },
         {
-            "core_potential": [875, 425, 220, 40],
-            "general_potential": [875, 395, 220, 40],
-            "general_potential_level": [875, 425, 220, 40],
-            "recommended_level":[1010, 165, 140, 50],
-            "border": [814, 0, 466, 720],
+            "core_potential_roi": [875, 425, 220, 40],
+            "general_potential_roi": [875, 395, 220, 40],
+            "general_potential_level_roi": [875, 425, 220, 40],
+            "recommended_level_roi":[1010, 165, 140, 50],
+            "potential_roi": [814, 0, 466, 720],
             "x_border": [814, 1280]
         }
     ]
@@ -79,7 +79,7 @@ class PotentialLayout:
     general_potential_roi: list[int]
     general_potential_level_roi: list[int]
     recommended_level_roi: list[int]
-    border: list[int]
+    potential_roi: list[int]
     x_border: list[int]
 
 @dataclass(slots=True)
@@ -241,8 +241,8 @@ class Potential:
         return self.layout.general_potential_roi
 
     @property
-    def border(self) -> list[int]:
-        return self.layout.border
+    def potential_roi(self) -> list[int]:
+        return self.layout.potential_roi
 
     @property
     def x_border(self) -> list[int]:
@@ -287,7 +287,7 @@ class Potential:
         return old, new
 
     def _get_recommended_data(self, screen: "ScreenDataProcessor", data: "Data") -> tuple[bool, int]:
-        roi = self.border
+        roi = self.potential_roi
         adjusted_roi = [self._get_adjusted_roi(roi, data.params.selected_potential_offset)]
         recommended = True if screen.check_potential_recommended(adjusted_roi) else False
         if not recommended:
@@ -328,8 +328,8 @@ class Data:
         return min(self.params.max_refresh_count, affordable)
 
     @property
-    def borders(self) -> list[list[int]]:
-        return [l.border for l in self.params.potential_layouts[self.potential_count]]
+    def potential_rois(self) -> list[list[int]]:
+        return [l.potential_roi for l in self.params.potential_layouts[self.potential_count]]
 
     @property
     def x_borders(self) -> list[list[int]]:
@@ -695,7 +695,7 @@ class ChoosePotentialHandler:
             general_potential_roi=[5, 710, 5, 5],
             general_potential_level_roi=[5, 710, 5, 5],
             recommended_level_roi=[5, 710, 5, 5],
-            border=[5, 710, 5, 5],
+            potential_roi=[5, 710, 5, 5],
             x_border=[5, 5]
         ))
         return potential

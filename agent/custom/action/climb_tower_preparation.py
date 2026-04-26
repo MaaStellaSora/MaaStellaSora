@@ -70,7 +70,8 @@ class AscensionPreparation(CustomAction):
         context.override_pipeline({
             "星塔_节点_选择潜能_agent": {
                 "attach": {
-                    "priority_list": priority_list
+                    "priority_list": priority_list,
+                    "owned_potentials": {}
                 }
             }
         })

@@ -22,6 +22,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential": [530, 395, 220, 40],
             "general_potential_level": [530, 425, 220, 40],
             "recommended_level": [670, 165, 140, 50],
+            "border": [470, 0, 343, 720],
             "x_border": [470, 813]
         }
     ],
@@ -31,6 +32,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential": [358, 395, 220, 40],
             "general_potential_level": [358, 425, 220, 40],
             "recommended_level": [490, 165, 140, 50],
+            "border": [0, 0, 639, 720],
             "x_border": [0, 639]
         },
         {
@@ -38,6 +40,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential": [703, 395, 220, 40],
             "general_potential_level": [703, 425, 220, 40],
             "recommended_level": [840, 165, 140, 50],
+            "border": [640, 0, 640, 720],
             "x_border": [640, 1280]
         }
     ],
@@ -47,6 +50,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential": [187, 395, 220, 40],
             "general_potential_level": [187, 425, 220, 40],
             "recommended_level":[320, 165, 140, 50],
+            "border": [0, 0, 469, 720],
             "x_border": [0, 469]
         },
         {
@@ -54,6 +58,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential": [530, 395, 220, 40],
             "general_potential_level": [530, 425, 220, 40],
             "recommended_level": [670, 165, 140, 50],
+            "border": [470, 0, 343, 720],
             "x_border": [470, 813]
         },
         {
@@ -61,6 +66,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential": [875, 395, 220, 40],
             "general_potential_level": [875, 425, 220, 40],
             "recommended_level":[1010, 165, 140, 50],
+            "border": [814, 0, 466, 720],
             "x_border": [814, 1280]
         }
     ]
@@ -73,6 +79,7 @@ class PotentialLayout:
     general_potential_roi: list[int]
     general_potential_level_roi: list[int]
     recommended_level_roi: list[int]
+    border: list[int]
     x_border: list[int]
 
 @dataclass(slots=True)
@@ -213,8 +220,8 @@ class Parameters:
 
 @dataclass(slots=True)
 class Potential:
-    index: int
-    box: list[int]
+    layout: PotentialLayout
+    core: bool = False
     name: str = ""
     old_level: int = 0
     new_level: int = 0
@@ -223,10 +230,78 @@ class Potential:
     rank: int = -1
     sub_rank: int = -1
     trekker: str = ""
+    selected: bool = False
 
     @property
     def level_span(self) -> int:
         return self.new_level - self.old_level
+
+    @property
+    def box(self) -> list[int]:
+        return self.layout.general_potential_roi
+
+    @property
+    def border(self) -> list[int]:
+        return self.layout.border
+
+    @property
+    def x_border(self) -> list[int]:
+        return self.layout.x_border
+
+    @property
+    def core_potential_name_roi(self) -> list[int]:
+        return self.layout.core_potential_roi
+
+    @property
+    def general_potential_name_roi(self) -> list[int]:
+        return self.layout.general_potential_roi
+
+    @property
+    def general_potential_level_roi(self) -> list[int]:
+        return self.layout.general_potential_level_roi
+
+    @property
+    def recommended_level_roi(self) -> list[int]:
+        return self.layout.recommended_level_roi
+
+    def update(self, screen: "ScreenDataProcessor", data: "Data"):
+        # 更新核心潜能
+        if data.core_potential:
+            self.core = True
+
+        # 更新潜能数据
+        self.name = self._get_name(screen, data)
+        self.old_level, self.new_level = self._get_level(screen, data)
+        self.recommended, self.recommended_level = self._get_recommended_data(screen, data)
+
+    def _get_name(self, screen: "ScreenDataProcessor", data: "Data") -> str:
+        roi = self.core_potential_name_roi if self.core else self.general_potential_name_roi
+        adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
+        return screen.get_potential_name(adjusted_roi)
+
+    def _get_level(self, screen: "ScreenDataProcessor", data: "Data") -> tuple[int, int]:
+        if self.core:
+            return 0, 1
+        adjusted_roi = self._get_adjusted_roi(self.general_potential_level_roi, data.params.selected_potential_offset)
+        old, new = screen.get_potential_level(adjusted_roi)
+        return old, new
+
+    def _get_recommended_data(self, screen: "ScreenDataProcessor", data: "Data") -> tuple[bool, int]:
+        roi = self.border
+        adjusted_roi = [self._get_adjusted_roi(roi, data.params.selected_potential_offset)]
+        recommended = True if screen.check_potential_recommended(adjusted_roi) else False
+        if not recommended:
+            return False, 0
+        if recommended and data.core_potential:
+            return True, 1
+        roi = self.recommended_level_roi
+        adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
+        level = screen.get_recommend_level(adjusted_roi)
+        return recommended, level
+
+    def _get_adjusted_roi(self, roi, offset) -> list[int]:
+            return [roi[0], max(0, roi[1] - offset) if self.selected else roi[1], roi[2], roi[3]]
+
 
 
 @dataclass(slots=True)
@@ -254,6 +329,10 @@ class Data:
 
     @property
     def borders(self) -> list[list[int]]:
+        return [l.border for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def x_borders(self) -> list[list[int]]:
         return [l.x_border for l in self.params.potential_layouts[self.potential_count]]
 
     @property
@@ -368,10 +447,42 @@ class ScreenDataProcessor:
         texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
         return texts[0]
 
-    def get_potential_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> list:
+    def get_potential_level(
+            self,
+            roi: list[int],
+            image: Optional[numpy.ndarray] = None,
+            max_try: int = 1
+    ) -> tuple[int, int]:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
         texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
-        return texts
+        parsed_texts = self._parse_level_text(texts)
+        return parsed_texts
+
+    @staticmethod
+    def _parse_level_text(texts: list[str]) -> tuple[int, int]:
+        """解析 OCR 返回的等级数字结果集。
+
+        pipeline OCR 使用 \\d+ 匹配并剔除语言关键词，可能返回：
+            ["1"]       -> old=0, new=1  （新获得，只有新等级）
+            ["4", "5"]  -> old=4, new=5
+            ["45"]      -> old=4, new=5  （两位数粘连）
+        仅在游戏版本保持最大潜能等级小于10时有效。
+
+        Args:
+            texts: OCR filtered_results 中各结果的 text 列表
+
+        Returns:
+            tuple[int, int]: (old_level, new_level)，解析失败返回 (0, 0)
+        """
+        # 将 ["4", "5"] 或 ["45"] 统一转为 "45"
+        full_text = "".join(t for t in texts if t.isdigit())
+
+        if len(full_text) == 1:
+            return 0, int(full_text)
+        if len(full_text) >= 2:
+            # 取前两个数字处理粘连
+            return int(full_text[0]), int(full_text[1])
+        return 0, 0
 
     def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
         node_name = "星塔_节点_选择潜能_识别推荐等级_agent"
@@ -450,6 +561,18 @@ class ScreenDataProcessor:
 
         return matched
 
+    def check_potential_recommended(
+            self,
+            roi: list[list],
+            image: Optional[numpy.ndarray] = None,
+            max_try: int = 1
+    ) -> bool:
+        node_name = "星塔_节点_选择潜能_识别推荐图标_agent"
+        recommended_boxes = self._template(node_name, [], roi=roi, image=image, max_try=max_try)
+        if recommended_boxes:
+            return True
+        return False
+
     def get_selected_potential_index(
             self,
             borders: list[list[int]],
@@ -500,6 +623,12 @@ class ChoosePotentialHandler:
                 continue
             break
 
+    def initialize_potentials(self):
+        potential_layouts = self.data.params.potential_layouts[self.data.potential_count]
+        return [
+            Potential(potential_layouts[i]) for i in range(self.data.potential_count)
+        ]
+
     def _update_names(self):
         rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois
         adjusted_rois = self._get_adjusted_rois(rois)
@@ -514,43 +643,16 @@ class ChoosePotentialHandler:
         adjusted_rois = self._get_adjusted_rois(self.data.general_potential_level_rois)
 
         for i, roi in enumerate(adjusted_rois):
-            texts = self.screen.get_potential_level(roi)
-            old, new = self._parse_level_text(texts)
+            old, new = self.screen.get_potential_level(roi)
             self.data.potentials[i].old_level, self.data.potentials[i].new_level = old, new
 
     def _update_recommended_potentials(self):
         adjusted_rois = self._get_adjusted_rois(self.data.recommended_level_rois)
-        indices = self.screen.get_recommended_potential(self.data.borders)
+        indices = self.screen.get_recommended_potential(self.data.x_borders)
         for index in indices:
             roi = adjusted_rois[index]
             self.data.potentials[index].recommended = True
             self.data.potentials[index].recommended_level = self.screen.get_recommend_level(roi)
-
-    @staticmethod
-    def _parse_level_text(texts: list[str]) -> tuple[int, int]:
-        """解析 OCR 返回的等级数字结果集。
-
-        pipeline OCR 使用 \\d+ 匹配并剔除语言关键词，可能返回：
-            ["1"]       -> old=0, new=1  （新获得，只有新等级）
-            ["4", "5"]  -> old=4, new=5
-            ["45"]      -> old=4, new=5  （两位数粘连）
-        仅在游戏版本保持最大潜能等级小于10时有效。
-
-        Args:
-            texts: OCR filtered_results 中各结果的 text 列表
-
-        Returns:
-            tuple[int, int]: (old_level, new_level)，解析失败返回 (0, 0)
-        """
-        # 将 ["4", "5"] 或 ["45"] 统一转为 "45"
-        full_text = "".join(t for t in texts if t.isdigit())
-
-        if len(full_text) == 1:
-            return 0, int(full_text)
-        if len(full_text) >= 2:
-            # 取前两个数字处理粘连
-            return int(full_text[0]), int(full_text[1])
-        return 0, 0
 
     def _get_adjusted_rois(self, base_rois: list[list[int]]) -> list[list[int]]:
         """安全地获取偏移后的 ROI 副本，避免污染原始数据"""
@@ -559,7 +661,7 @@ class ChoosePotentialHandler:
 
         # 使用列表推导式创建副本并应用偏移
         return [
-            [r[0], r[1] - offset, r[2], r[3]] if i == selected_index else list(r)
+            [r[0], max(0, r[1] - offset), r[2], r[3]] if i == selected_index else list(r)
             for i, r in enumerate(base_rois)
         ]
 
@@ -576,7 +678,7 @@ class ChoosePotentialHandler:
                 return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)
 
         # 都没有的话，放弃选择，系统选了哪张就哪张
-        return Potential(0, [5, 710, 5, 5])
+        return self._dummy_potential
 
     def refresh(self):
         self.screen.refresh()
@@ -586,18 +688,29 @@ class ChoosePotentialHandler:
     def refreshable(self):
         return self.data.refresh_count <self.data.available_refreshes
 
+    @property
+    def _dummy_potential(self):
+        potential = Potential(PotentialLayout(
+            core_potential_roi=[5, 710, 5, 5],
+            general_potential_roi=[5, 710, 5, 5],
+            general_potential_level_roi=[5, 710, 5, 5],
+            recommended_level_roi=[5, 710, 5, 5],
+            border=[5, 710, 5, 5],
+            x_border=[5, 5]
+        ))
+        return potential
+
 
 class GameRecommendedHandler(ChoosePotentialHandler):
     def __init__(self, screen: ScreenDataProcessor, data: Data):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
-        click_boxes = self.data.general_potential_name_rois
-        self.data.potentials = [Potential(i, click_boxes[i]) for i in range(self.data.potential_count)]
+        self.data.potentials = self.initialize_potentials()
 
         self._wait_for_item_list_gone()
         self.screen.screenshot()
-        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.borders)
+        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
 
         self._update_recommended_potentials()
         self._update_names()
@@ -655,12 +768,11 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
-        click_boxes = self.data.general_potential_name_rois
-        self.data.potentials = [Potential(i, click_boxes[i]) for i in range(self.data.potential_count)]
+        self.data.potentials = self.initialize_potentials()
 
         self._wait_for_item_list_gone()
         self.screen.screenshot()
-        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.borders)
+        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
 
         self._update_names()
         self._update_levels()

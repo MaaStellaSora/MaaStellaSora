@@ -91,7 +91,8 @@
       "priority_list": [],
       "max_refresh_count": 2,
       "reserved_coin": 0,
-      "owned_potentials": {}
+      "owned_potentials": {},
+      "chooser": "tower_8"
     },
     "post_wait_freeze": 100,
     "timeout": 2000

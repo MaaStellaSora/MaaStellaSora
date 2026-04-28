@@ -107,6 +107,7 @@ class Parameters:
     reserved_coin: int
     priority_list: list[dict]
     owned_potentials: dict
+    chooser: str
     potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
     selected_potential_offset: int = 35
 
@@ -677,7 +678,7 @@ class ChoosePotentialHandler:
             for i, r in enumerate(base_rois)
         ]
 
-    def choose_default_potential(self):
+    def choose_fallback_potential(self):
         priority_rules = [
             lambda p: p.recommended, # 1. 尝试取系统推荐潜能
             lambda p: p.old_level > 0 # 2. 没有系统推荐潜能，选择之前抓过的潜能
@@ -699,6 +700,11 @@ class ChoosePotentialHandler:
     @property
     def refreshable(self):
         return self.data.refresh_count <self.data.available_refreshes
+
+    @property
+    def _default_potential(self):
+        potential = next((p for p in self.data.potentials if p.selected), None)
+        return potential
 
     @property
     def _dummy_potential(self):
@@ -726,10 +732,7 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         self._update_names()
         self._update_levels()
 
-        return self
-
-    def choose(self):
-        # 输出当前潜能列表
+        # 输出当前潜能列表到日志
         for potential in self.data.potentials:
             if self.data.core_potential:
                 logger.info(f"[潜能识别] {potential.name} | 核心潜能 | 系统推荐")
@@ -738,18 +741,30 @@ class GameRecommendedHandler(ChoosePotentialHandler):
                 new = potential.new_level
                 print_recommended_level = f"{potential.recommended_level}级" if potential.recommended_level > 0 else ""
                 logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | 系统推荐{print_recommended_level}")
-        # 选择最佳潜能
-        best_potential = self.best_potential
+
+        return self
+
+    def choose(self):
+        # 根据参数选择潜能选择器
+        if self.data.params.chooser == "tower_8":
+            best_potential = self.tower_8_chooser()
+        elif self.data.params.chooser == "default":
+            best_potential = self._default_potential
+        else:
+            best_potential = self.choose_fallback_potential()
+
         if best_potential:
             logger.info(f"[潜能选择] {best_potential.name}")
 
         return best_potential
 
-    @property
-    def best_potential(self) -> Potential | None:
+    def tower_8_chooser(self) -> Potential | None:
         """
-        通过优先级列表，筛选出最好的系统推荐潜能。每一条规则都必须带有筛选推荐潜能的条件
-        目前优先级规则：
+        塔8专用策略
+        分为两种情况：
+            刷新次数未到最大刷新次数时，使用贪婪策略
+            刷新次数达到最大刷新次数时，使用兜底策略
+        目前优先级规则（测试中，因为在不断调整，可能会跟代码不一样）：
             >升级间距>=3级且推荐等级>=3级的新潜能
             >拥有推荐标记的已抓潜能或核心潜能
             >升级间距=推荐等级的新潜能
@@ -760,13 +775,16 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         Returns:
             Potential | None: 最好的系统推荐潜能，若没有则返回 None
         """
-        priority_rules = [
-            lambda p: p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
-            lambda p: (p.old_level > 0 or self.data.core_potential) and p.recommended,
-            lambda p: p.old_level == 0 and p.recommended and p.recommended_level - p.level_span == 0,
-            lambda p: p.old_level == 0 and p.level_span == 2 and p.recommended_level > 2,
-            lambda p: p.recommended
-        ]
+        if self.data.refresh_count < self.data.available_refreshes:
+            priority_rules = [
+                lambda p: p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
+                lambda p: (p.old_level > 0 or self.data.core_potential) and p.recommended,
+                lambda p: p.old_level == 0 and p.recommended and p.recommended_level - p.level_span == 0,
+                lambda p: p.old_level == 0 and p.level_span == 2 and p.recommended_level > 2,
+                lambda p: p.recommended
+            ]
+        else:
+            priority_rules = []
 
         for rule in priority_rules:
             candidates = [p for p in self.data.potentials if rule(p)]
@@ -969,8 +987,8 @@ class ChoosePotentialRecognition(CustomRecognition):
                 logger.info("没有找到符合条件的潜能，尝试刷新")
                 handler.refresh()
             else:
-                logger.info("[潜能选择] 没有找到符合条件的潜能，将按照默认顺序选择")
-                potential = handler.choose_default_potential()
+                logger.info("[潜能选择] 没有找到符合条件的潜能，将按照保底顺序选择")
+                potential = handler.choose_fallback_potential()
                 break
 
         # 如果使用星塔助手优先级模块，更新已拥有潜能记录

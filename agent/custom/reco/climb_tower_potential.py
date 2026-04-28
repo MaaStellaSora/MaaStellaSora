@@ -591,7 +591,7 @@ class ScreenDataProcessor:
             max_try(int): 可选的最大重试次数，默认为1
 
         Returns:
-            int: 目标卡片索引，识别失败时返回0
+            int: 目标卡片索引，识别失败时返回0。这里的索引是0-based的，适合给list使用。
         """
         result_boxes = self._template(
             "星塔_节点_选择潜能_识别预选潜能位置_agent",
@@ -624,10 +624,19 @@ class ChoosePotentialHandler:
             break
 
     def initialize_potentials(self):
+        # 初始化Potential对象，并储存到list中
         potential_layouts = self.data.params.potential_layouts[self.data.potential_count]
-        return [
-            Potential(potential_layouts[i]) for i in range(self.data.potential_count)
-        ]
+        potentials = [Potential(potential_layouts[i]) for i in range(self.data.potential_count)]
+
+        # 给潜能的selected、core字段赋值
+        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
+        for i, p in enumerate(potentials):
+            if i == self.data.selected_potential_index:
+                p.selected = True
+            if self.data.core_potential:
+                p.core = True
+
+        return potentials
 
     def _update_names(self):
         rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois
@@ -706,11 +715,9 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
-        self.data.potentials = self.initialize_potentials()
-
         self._wait_for_item_list_gone()
         self.screen.screenshot()
-        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
+        self.data.potentials = self.initialize_potentials()
 
         self._update_recommended_potentials()
         self._update_names()
@@ -719,16 +726,18 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         return self
 
     def choose(self):
-        # 选择排名最高的潜能
+        # 输出当前潜能列表
+        for potential in self.data.potentials:
+            if self.data.core_potential:
+                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | {'系统推荐' if potential.core else '无'}")
+            else:
+                old = potential.old_level
+                new = potential.new_level
+                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | {'系统推荐' if potential.core else '无'}")
+        # 选择最佳潜能
         best_potential = self.best_potential
         if best_potential:
-            # 输出比较结果
-            if self.data.core_potential:
-                logger.info(f"[潜能选择] {best_potential.name} | 核心潜能 | 系统推荐")
-            else:
-                old = best_potential.old_level
-                new = best_potential.new_level
-                logger.info(f"[潜能选择] {best_potential.name} | 等级 {old}→{new} | 系统推荐")
+            logger.info(f"[潜能选择] {best_potential.name} ")
 
         return best_potential
 
@@ -768,11 +777,9 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
-        self.data.potentials = self.initialize_potentials()
-
         self._wait_for_item_list_gone()
         self.screen.screenshot()
-        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
+        self.data.potentials = self.initialize_potentials()
 
         self._update_names()
         self._update_levels()

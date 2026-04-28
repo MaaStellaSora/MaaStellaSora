@@ -661,7 +661,10 @@ class ChoosePotentialHandler:
         for index in indices:
             roi = adjusted_rois[index]
             self.data.potentials[index].recommended = True
-            self.data.potentials[index].recommended_level = self.screen.get_recommend_level(roi)
+            if self.data.core_potential:
+                self.data.potentials[index].recommended_level = 1
+            else:
+                self.data.potentials[index].recommended_level = self.screen.get_recommend_level(roi)
 
     def _get_adjusted_rois(self, base_rois: list[list[int]]) -> list[list[int]]:
         """安全地获取偏移后的 ROI 副本，避免污染原始数据"""
@@ -729,15 +732,16 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         # 输出当前潜能列表
         for potential in self.data.potentials:
             if self.data.core_potential:
-                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | {'系统推荐' if potential.core else '无'}")
+                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | 系统推荐")
             else:
                 old = potential.old_level
                 new = potential.new_level
-                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | {'系统推荐' if potential.core else '无'}")
+                print_recommended_level = f"{potential.recommended_level}级" if potential.recommended_level > 0 else ""
+                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | 系统推荐{print_recommended_level}")
         # 选择最佳潜能
         best_potential = self.best_potential
         if best_potential:
-            logger.info(f"[潜能选择] {best_potential.name} ")
+            logger.info(f"[潜能选择] {best_potential.name}")
 
         return best_potential
 

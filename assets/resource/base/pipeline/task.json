@@ -50,6 +50,8 @@
     "next": [
       "任务_领取任务"
     ],
+    "repeat": 2,
+    "repeat_delay": 1000,
     "post_delay": 500
   },
   "任务_一键领取": {

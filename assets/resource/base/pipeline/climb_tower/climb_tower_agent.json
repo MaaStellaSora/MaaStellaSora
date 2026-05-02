@@ -75,14 +75,11 @@
     "timeout": 5000
   },
   "星塔_节点_选择潜能_agent": {
-    "recognition": {
+    "action": {
       "type": "Custom",
       "param": {
-        "custom_recognition": "choose_potential_recognition"
+        "custom_action": "choose_potential_action"
       }
-    },
-    "action": {
-      "type": "Click"
     },
     "next": [
       "星塔_节点_选择潜能_拿走_agent"
@@ -90,8 +87,11 @@
     "attach": {
       "priority_list": [],
       "max_refresh_count": 2,
-      "reserve_coin": 0,
-      "owned_potentials": {}
+      "reserved_coin": 0,
+      "owned_potentials": {},
+      // "default+"表示在推荐图标基础上还会根据其他信息筛选，"json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
+      "handler": "default+",
+      "chooser": "tower_8"
     },
     "post_wait_freeze": 100,
     "timeout": 2000

@@ -403,6 +403,27 @@
         ],
         "replace": [
           [
+            "\\+\\d",
+            ""
+          ],
+          [
+            "\\D",
+            ""
+          ]
+        ],
+        "threshold": 0.6
+      },
+      "type": "OCR"
+    }
+  },
+  "星塔_节点_选择潜能_识别推荐等级_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "\\d+"
+        ],
+        "replace": [
+          [
             "\\D",
             ""
           ]
@@ -434,7 +455,8 @@
           569,
           996,
           84
-        ]
+        ],
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     }
@@ -456,6 +478,12 @@
       },
       "type": "TemplateMatch"
     }
+  },
+  "星塔_节点_选择潜能_点击潜能_agent": {
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 100
   },
   "星塔_节点_选择潜能_点击刷新_agent": {
     "recognition": {

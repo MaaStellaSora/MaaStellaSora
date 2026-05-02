@@ -3,7 +3,7 @@ from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
 from utils import logger as logger_module
-logger = logger_module.get_logger("quiz_recognition")
+logger = logger_module.get_logger("climb_tower_quiz")
 
 
 @AgentServer.custom_recognition("quiz_recognition")

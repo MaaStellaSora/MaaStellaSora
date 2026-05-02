@@ -107,6 +107,7 @@ class Parameters:
     reserved_coin: int
     priority_list: list[dict]
     owned_potentials: dict
+    handler: str
     chooser: str
     potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
     selected_potential_offset: int = 35
@@ -222,10 +223,11 @@ class Parameters:
 @dataclass(slots=True)
 class Potential:
     layout: PotentialLayout
+    index: int = -1
     core: bool = False
     name: str = ""
-    old_level: int = 0
-    new_level: int = 0
+    old_level: int = -1
+    new_level: int = -1
     recommended: bool = False
     recommended_level: int = 0
     rank: int = -1
@@ -319,13 +321,17 @@ class Data:
     refresh_count: int = 0
 
     @property
-    def refreshable(self):
+    def refresh_botton(self) -> bool:
         return self.refresh_cost >= 0
 
     @property
-    def available_refreshes(self) -> int:
+    def refreshable(self) -> bool:
+        return self.refresh_count < self.refresh_limit
+
+    @property
+    def refresh_limit(self) -> int:
         usable_coin = max(0, self.current_coin - self.params.reserved_coin)
-        affordable = usable_coin // self.refresh_cost if self.refreshable else 0
+        affordable = usable_coin // self.refresh_cost if self.refresh_botton else 0
         return min(self.params.max_refresh_count, affordable)
 
     @property
@@ -483,7 +489,8 @@ class ScreenDataProcessor:
         if len(full_text) >= 2:
             # 取前两个数字处理粘连
             return int(full_text[0]), int(full_text[1])
-        return 0, 0
+        logger.warning(f"无法解析潜能等级（识别到的等级文本: {full_text}）")
+        return -1, -1
 
     def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
         node_name = "星塔_节点_选择潜能_识别推荐等级_agent"
@@ -602,7 +609,7 @@ class ScreenDataProcessor:
         )
 
         hit_x = result_boxes[0][0] if result_boxes else -1
-        matched = next((i for i, (low, high) in enumerate(borders) if low <= hit_x <= high), None)
+        matched = next(i for i, (low, high) in enumerate(borders) if low <= hit_x <= high)
 
         if matched is None:
             logger.error("拿走按钮识别失败，潜能选择可能会出现问题")
@@ -632,12 +639,30 @@ class ChoosePotentialHandler:
         # 给潜能的selected、core字段赋值
         self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
         for i, p in enumerate(potentials):
+            p.index = i
             if i == self.data.selected_potential_index:
                 p.selected = True
             if self.data.core_potential:
                 p.core = True
 
         return potentials
+
+    def read_potentials_info(self) -> Self:
+        """最原始的潜能信息识别器，仅识别推荐图标"""
+        self._wait_for_item_list_gone()
+        self.screen.screenshot()
+        self.data.potentials = self.initialize_potentials()
+
+        self._update_recommended_potentials()
+
+        return self
+
+    def choose(self) -> Potential | None:
+        """最原始的潜能选择，仅靠推荐图标选择潜能"""
+        potential = next((p for p in self.data.potentials if p.recommended), None)
+        if potential:
+            logger.info(f"[潜能选择] 推荐潜能")
+        return potential
 
     def _update_names(self):
         rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois
@@ -698,12 +723,8 @@ class ChoosePotentialHandler:
         self.data.refresh_count += 1
 
     @property
-    def refreshable(self):
-        return self.data.refresh_count <self.data.available_refreshes
-
-    @property
     def _default_potential(self):
-        potential = next((p for p in self.data.potentials if p.selected), None)
+        potential = next(p for p in self.data.potentials if p.selected)
         return potential
 
     @property
@@ -734,17 +755,17 @@ class GameRecommendedHandler(ChoosePotentialHandler):
 
         # 输出当前潜能列表到日志
         for potential in self.data.potentials:
+            recommended_output = f"系统推荐{potential.recommended_level}级" if potential.recommended_level > 0 else "无"
             if self.data.core_potential:
-                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | 系统推荐")
+                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | {recommended_output}")
             else:
                 old = potential.old_level
                 new = potential.new_level
-                print_recommended_level = f"{potential.recommended_level}级" if potential.recommended_level > 0 else ""
-                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | 系统推荐{print_recommended_level}")
+                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | {recommended_output}")
 
         return self
 
-    def choose(self):
+    def choose(self) -> Potential | None:
         # 根据参数选择潜能选择器
         if self.data.params.chooser == "tower_8":
             best_potential = self.tower_8_chooser()
@@ -761,30 +782,39 @@ class GameRecommendedHandler(ChoosePotentialHandler):
     def tower_8_chooser(self) -> Potential | None:
         """
         塔8专用策略
-        分为两种情况：
+        分为几种情况：
+            核心潜能选择时，直接选择推荐潜能
             刷新次数未到最大刷新次数时，使用贪婪策略
-            刷新次数达到最大刷新次数时，使用兜底策略
+            刷新次数达到最大刷新次数时，或者是强化时，使用兜底策略
         目前优先级规则（测试中，因为在不断调整，可能会跟代码不一样）：
             >升级间距>=3级且推荐等级>=3级的新潜能
-            >拥有推荐标记的已抓潜能或核心潜能
-            >升级间距=推荐等级的新潜能
-            >升级间距=2级且推荐等级>2级的新潜能
-            >其他推荐潜能
+            >推荐等级为6级的已抓潜能
+            >新等级=推荐等级的推荐潜能
+            >新等级>=推荐等级的推荐潜能
+            >牌池有两张以上已抓潜能时，直接选择推荐潜能
         筛选成功后，按照等级跨度降序、推荐等级降序、旧等级降序来排序，取得想要的潜能
 
         Returns:
             Potential | None: 最好的系统推荐潜能，若没有则返回 None
         """
-        if self.data.refresh_count < self.data.available_refreshes:
+        if self.data.core_potential:
             priority_rules = [
-                lambda p: p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
-                lambda p: (p.old_level > 0 or self.data.core_potential) and p.recommended,
-                lambda p: p.old_level == 0 and p.recommended and p.recommended_level - p.level_span == 0,
-                lambda p: p.old_level == 0 and p.level_span == 2 and p.recommended_level > 2,
                 lambda p: p.recommended
             ]
+        elif self.data.refreshable:
+            old_potentials_count = sum(1 for p in self.data.potentials if p.old_level > 0)
+            priority_rules = [
+                lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
+                lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
+                lambda p: p.recommended and p.recommended_level == p.new_level,
+                lambda p: p.recommended and p.new_level >= p.recommended_level,
+                lambda p: p.recommended and old_potentials_count >= 2,
+            ]
         else:
-            priority_rules = []
+            priority_rules = [
+                lambda p: p.recommended,
+                lambda p: p.old_level > 0
+            ]
 
         for rule in priority_rules:
             candidates = [p for p in self.data.potentials if rule(p)]
@@ -973,17 +1003,19 @@ class ChoosePotentialRecognition(CustomRecognition):
         data.potential_count = screen.get_potential_count(data.core_potential, argv.image)
 
         # 加载相应的潜能处理类
-        if data.params.priority_list:
+        if data.params.handler == "json":
             handler = AssistantPriorityHandler(screen, data)
-        else:
+        elif data.params.handler == "default+":
             handler = GameRecommendedHandler(screen, data)
+        else: # default
+            handler = ChoosePotentialHandler(screen, data)
 
         while True:
             # 获取潜能数据，并选择潜能
             potential = handler.read_potentials_info().choose()
             if potential:
                 break
-            elif handler.refreshable:
+            elif data.refreshable:
                 logger.info("没有找到符合条件的潜能，尝试刷新")
                 handler.refresh()
             else:
@@ -992,7 +1024,7 @@ class ChoosePotentialRecognition(CustomRecognition):
                 break
 
         # 如果使用星塔助手优先级模块，更新已拥有潜能记录
-        if data.params.priority_list:
+        if data.params.handler == "json":
             owned = self._update_owned_potentials(
                 data.params.owned_potentials,
                 potential.name,

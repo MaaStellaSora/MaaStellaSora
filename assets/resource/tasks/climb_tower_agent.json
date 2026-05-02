@@ -129,12 +129,40 @@
             "default_case": "游戏内置",
             "cases": [
                 {
-                    "name": "游戏内置",
-                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）"
+                    "name": "游戏内置预设作业",
+                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default"
+                            }
+                        }
+                    }
                 },
                 {
-                    "name": "星塔助手预设作业",
-                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "name": "游戏内置预设作业+（测试中）",
+                    "description": "在推荐图标基础上还会读取其他信息进行优先级选择",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default+"
+                            }
+                        }
+                    },
+                    "option": [
+                        "新版爬塔_潜能选择策略"
+                    ]
+                },
+                {
+                    "name": "自定义json作业",
+                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手自定义预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "json"
+                            }
+                        }
+                    },
                     "option": [
                         "新版爬塔_星塔助手预设作业_cn"
                     ]
@@ -151,14 +179,42 @@
             "default_case": "游戏内置",
             "cases": [
                 {
-                    "name": "游戏内置",
-                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）"
+                    "name": "游戏内置预设作业",
+                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default"
+                            }
+                        }
+                    }
                 },
                 {
-                    "name": "星塔助手预设作业",
-                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "name": "游戏内置预设作业+（测试中）",
+                    "description": "在推荐图标基础上还会读取其他信息进行优先级选择",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default+"
+                            }
+                        }
+                    },
                     "option": [
-                        "新版爬塔_星塔助手预设作业_tw"
+                        "新版爬塔_潜能选择策略"
+                    ]
+                },
+                {
+                    "name": "自定义json作业",
+                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手自定义预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "json"
+                            }
+                        }
+                    },
+                    "option": [
+                        "新版爬塔_星塔助手预设作业_cn"
                     ]
                 }
             ]
@@ -173,14 +229,42 @@
             "default_case": "游戏内置",
             "cases": [
                 {
-                    "name": "游戏内置",
-                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）"
+                    "name": "游戏内置预设作业",
+                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default"
+                            }
+                        }
+                    }
                 },
                 {
-                    "name": "星塔助手预设作业",
-                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "name": "游戏内置预设作业+（测试中）",
+                    "description": "在推荐图标基础上还会读取其他信息进行优先级选择",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default+"
+                            }
+                        }
+                    },
                     "option": [
-                        "新版爬塔_星塔助手预设作业_en"
+                        "新版爬塔_潜能选择策略"
+                    ]
+                },
+                {
+                    "name": "自定义json作业",
+                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手自定义预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "json"
+                            }
+                        }
+                    },
+                    "option": [
+                        "新版爬塔_星塔助手预设作业_cn"
                     ]
                 }
             ]
@@ -195,15 +279,61 @@
             "default_case": "游戏内置",
             "cases": [
                 {
-                    "name": "游戏内置",
-                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）"
+                    "name": "游戏内置预设作业",
+                    "description": "只会选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default"
+                            }
+                        }
+                    }
                 },
                 {
-                    "name": "星塔助手预设作业",
-                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "name": "游戏内置预设作业+（测试中）",
+                    "description": "在推荐图标基础上还会读取其他信息进行优先级选择",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "default+"
+                            }
+                        }
+                    },
                     "option": [
-                        "新版爬塔_星塔助手预设作业_jp"
+                        "新版爬塔_潜能选择策略"
                     ]
+                },
+                {
+                    "name": "自定义json作业",
+                    "description": "半周年后，由于游戏更新内置作业功能，星塔助手自定义预设作业已停止更新，仅供深度自动化爱好者研究使用",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "handler": "json"
+                            }
+                        }
+                    },
+                    "option": [
+                        "新版爬塔_星塔助手预设作业_cn"
+                    ]
+                }
+            ]
+        },
+        "新版爬塔_潜能选择策略": {
+            "type": "select",
+            "label": "潜能选择策略",
+            "default_case": "塔8",
+            "cases": [
+                {
+                    "name": "塔8",
+                    "description": "基于塔8的环境的选择策略",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "chooser": "tower_8"
+                            }
+                        }
+                    }
                 }
             ]
         },

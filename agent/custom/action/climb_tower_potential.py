@@ -6,7 +6,7 @@ from typing import Optional, Any, Self
 import numpy
 
 from maa.agent.agent_server import AgentServer
-from maa.custom_recognition import CustomRecognition
+from maa.custom_action import CustomAction
 from maa.context import Context
 
 from utils import logger as logger_module
@@ -371,6 +371,22 @@ class ScreenDataProcessor:
     def refresh(self):
         self.context.run_task("星塔_节点_选择潜能_点击刷新_agent")
 
+    def click(self, box: list[int]) -> bool:
+        """点击指定box"""
+        pipeline_override = {
+            "星塔_节点_选择潜能_点击潜能_agent": {
+                "action": {
+                    "param": {
+                        "target": box
+                    }
+                }
+            }
+        }
+        run_result = self.context.run_task("星塔_节点_选择潜能_点击潜能_agent", pipeline_override)
+        if run_result and run_result.status.succeeded:
+            return True
+        return False
+
     def _base_recognition(self, mode, node_name, failed_return, roi=None, image=None, max_try=0) -> Any:
         """
         核心识别逻辑：支持 OCR 和 Template
@@ -664,6 +680,12 @@ class ChoosePotentialHandler:
             logger.info(f"[潜能选择] 推荐潜能")
         return potential
 
+    def pick(self, potential: Potential) -> bool:
+        """点击潜能卡片"""
+        if potential.selected:
+            return True
+        return self.screen.click(potential.box)
+
     def _update_names(self):
         rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois
         adjusted_rois = self._get_adjusted_rois(rois)
@@ -716,7 +738,7 @@ class ChoosePotentialHandler:
                 return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)
 
         # 都没有的话，放弃选择，系统选了哪张就哪张
-        return self._dummy_potential
+        return self._default_potential
 
     def refresh(self):
         self.screen.refresh()
@@ -969,14 +991,14 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
 
 
-@AgentServer.custom_recognition("choose_potential_recognition")
-class ChoosePotentialRecognition(CustomRecognition):
+@AgentServer.custom_action("choose_potential_action")
+class ChoosePotentialAction(CustomAction):
 
-    def analyze(
-            self,
-            context: Context,
-            argv: CustomRecognition.AnalyzeArg,
-    ) -> CustomRecognition.AnalyzeResult:
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
         """自动选择潜能的主流程。
 
         读取 attach 参数与已拥有潜能状态，识别当前三张潜能卡片，
@@ -986,10 +1008,10 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         Args:
             context: maa.context.Context
-            argv: CustomRecognition.AnalyzeArg，含当前截图与节点名
+            argv: CustomAction.RunArg，含当前截图与节点名
 
         Returns:
-            CustomRecognition.AnalyzeResult: 命中区域为目标潜能卡片的 box
+            bool: 返回 True
         """
         node_name = argv.node_name
         params = self._get_params(context, node_name)
@@ -997,10 +1019,11 @@ class ChoosePotentialRecognition(CustomRecognition):
         screen = ScreenDataProcessor(context)
 
         # 获取只使用一次的数据
-        data.current_coin = screen.get_current_coin(argv.image)
-        data.refresh_cost = screen.get_refresh_cost(argv.image)
-        data.core_potential = screen.check_core_potential(argv.image)
-        data.potential_count = screen.get_potential_count(data.core_potential, argv.image)
+        image = context.tasker.controller.post_screencap().wait().get()
+        data.current_coin = screen.get_current_coin(image)
+        data.refresh_cost = screen.get_refresh_cost(image)
+        data.core_potential = screen.check_core_potential(image)
+        data.potential_count = screen.get_potential_count(data.core_potential, image)
 
         # 加载相应的潜能处理类
         if data.params.handler == "json":
@@ -1023,6 +1046,11 @@ class ChoosePotentialRecognition(CustomRecognition):
                 potential = handler.choose_fallback_potential()
                 break
 
+        # 点击潜能
+        click_result = handler.pick(potential)
+        if not click_result:
+            logger.error(f"点击潜能失败")
+
         # 如果使用星塔助手优先级模块，更新已拥有潜能记录
         if data.params.handler == "json":
             owned = self._update_owned_potentials(
@@ -1033,7 +1061,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             )
             self._save_state(context, node_name, owned)
 
-        return CustomRecognition.AnalyzeResult(box=potential.box, detail={})
+        return CustomAction.RunResult(success=True)
 
     @staticmethod
     def _get_params(context: Context, node_name: str) -> Parameters:

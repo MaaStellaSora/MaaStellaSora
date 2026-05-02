@@ -75,14 +75,11 @@
     "timeout": 5000
   },
   "星塔_节点_选择潜能_agent": {
-    "recognition": {
+    "action": {
       "type": "Custom",
       "param": {
-        "custom_recognition": "choose_potential_recognition"
+        "custom_action": "choose_potential_action"
       }
-    },
-    "action": {
-      "type": "Click"
     },
     "next": [
       "星塔_节点_选择潜能_拿走_agent"

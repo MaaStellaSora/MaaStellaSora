@@ -150,7 +150,9 @@
                         }
                     },
                     "option": [
-                        "新版爬塔_潜能选择策略"
+                        "新版爬塔_潜能选择策略",
+                        "新版爬塔_潜能抓取失败次数阈值",
+                        "新版爬塔_潜能抓取数阈值"
                     ]
                 },
                 {
@@ -200,7 +202,9 @@
                         }
                     },
                     "option": [
-                        "新版爬塔_潜能选择策略"
+                        "新版爬塔_潜能选择策略",
+                        "新版爬塔_潜能抓取失败次数阈值",
+                        "新版爬塔_潜能抓取数阈值"
                     ]
                 },
                 {
@@ -214,7 +218,7 @@
                         }
                     },
                     "option": [
-                        "新版爬塔_星塔助手预设作业_cn"
+                        "新版爬塔_星塔助手预设作业_tw"
                     ]
                 }
             ]
@@ -250,7 +254,9 @@
                         }
                     },
                     "option": [
-                        "新版爬塔_潜能选择策略"
+                        "新版爬塔_潜能选择策略",
+                        "新版爬塔_潜能抓取失败次数阈值",
+                        "新版爬塔_潜能抓取数阈值"
                     ]
                 },
                 {
@@ -264,7 +270,7 @@
                         }
                     },
                     "option": [
-                        "新版爬塔_星塔助手预设作业_cn"
+                        "新版爬塔_星塔助手预设作业_en"
                     ]
                 }
             ]
@@ -300,7 +306,9 @@
                         }
                     },
                     "option": [
-                        "新版爬塔_潜能选择策略"
+                        "新版爬塔_潜能选择策略",
+                        "新版爬塔_潜能抓取失败次数阈值",
+                        "新版爬塔_潜能抓取数阈值"
                     ]
                 },
                 {
@@ -314,7 +322,7 @@
                         }
                     },
                     "option": [
-                        "新版爬塔_星塔助手预设作业_cn"
+                        "新版爬塔_星塔助手预设作业_jp"
                     ]
                 }
             ]
@@ -325,17 +333,68 @@
             "default_case": "塔8",
             "cases": [
                 {
-                    "name": "塔8",
-                    "description": "基于塔8的环境的选择策略",
+                    "name": "塔8(均衡)",
+                    "description": "基于塔8环境的选择策略，会尽量选择初始等级3级的推荐潜能",
                     "pipeline_override": {
                         "星塔_节点_选择潜能_agent": {
                             "attach": {
-                                "chooser": "tower_8"
+                                "chooser": "tower_8_balance"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "塔8(激进)",
+                    "description": "基于塔8环境的选择策略，会尽量选择初始等级3级、推荐等级2以上的推荐潜能",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "chooser": "tower_8_aggressive"
                             }
                         }
                     }
                 }
             ]
+        },
+        "新版爬塔_潜能抓取失败次数阈值": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "潜能抓取失败次数阈值",
+                    "description": "在用光刷新也抓不到推荐潜能时会算作抓取失败<br>抓取失败达到该阈值后，不会使用刷新",
+                    "pipeline_type": "int",
+                    "default": "2",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入潜能抓取失败次数阈值"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_选择潜能_agent": {
+                    "attach": {
+                        "max_failed_count": "{潜能抓取失败次数阈值}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_潜能抓取数阈值": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "潜能抓取数阈值",
+                    "description": "抓取潜能数量达到该阈值后，不会使用刷新<br>使用该设置可以预防后期过度刷新的问题",
+                    "pipeline_type": "int",
+                    "default": "999",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入潜能抓取数阈值"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_选择潜能_agent": {
+                    "attach": {
+                        "max_potential_count": "{潜能抓取数阈值}"
+                    }
+                }
+            }
         },
         "新版爬塔_潜能最大刷新次数": {
             "type": "input",
@@ -343,7 +402,7 @@
                 {
                     "name": "潜能最大刷新次数",
                     "pipeline_type": "int",
-                    "default": "2",
+                    "default": "4",
                     "verify": "^\\d+$",
                     "pattern_msg": "请输入潜能最大刷新次数"
                 }
@@ -558,13 +617,15 @@
             "type": "select",
             "label": "潜能特饮折扣",
             "description": "买入不高于该折扣的潜能特饮，除非符合动态溢购情况或离开最终商店前",
-            "default_case": "8折",
+            "default_case": "潜能特饮折扣_8折",
             "cases": [
                 {
-                    "name": "全价"
+                    "name": "潜能特饮折扣_全价",
+                    "label": "全价"
                 },
                 {
-                    "name": "8折",
+                    "name": "潜能特饮折扣_8折",
+                    "label": "8折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -577,7 +638,8 @@
                     ]
                 },
                 {
-                    "name": "5折",
+                    "name": "潜能特饮折扣_5折",
+                    "label": "5折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -617,10 +679,12 @@
             "default_case": "全价",
             "cases": [
                 {
-                    "name": "全价"
+                    "name": "5个音符折扣_全价",
+                    "label": "全价"
                 },
                 {
-                    "name": "8折",
+                    "name": "5个音符折扣_8折",
+                    "label": "8折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -630,7 +694,8 @@
                     }
                 },
                 {
-                    "name": "5折",
+                    "name": "5个音符折扣_5折",
+                    "label": "5折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -645,13 +710,15 @@
             "type": "select",
             "label": "15个音符折扣",
             "description": "买入不高于该折扣的音符",
-            "default_case": "5折",
+            "default_case": "15个音符折扣_5折",
             "cases": [
                 {
-                    "name": "全价"
+                    "name": "15个音符折扣_全价",
+                    "label": "全价"
                 },
                 {
-                    "name": "8折",
+                    "name": "15个音符折扣_8折",
+                    "label": "8折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -661,7 +728,8 @@
                     }
                 },
                 {
-                    "name": "5折",
+                    "name": "15个音符折扣_5折",
+                    "label": "5折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {

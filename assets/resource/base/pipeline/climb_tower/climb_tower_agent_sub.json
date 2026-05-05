@@ -308,7 +308,8 @@
     "next": [
       "星塔_节点_商店_强化_回到商店层_agent",
       "[JumpBack]星塔_节点_选择潜能_agent"
-    ]
+    ],
+    "timeout": 5000
   },
   "星塔_节点_商店_强化_回到商店层_agent": {
     "recognition": {

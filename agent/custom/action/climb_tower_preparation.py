@@ -30,6 +30,7 @@ class AscensionPreparation(CustomAction):
             bool: 成功时返回 True，失败时返回 False。
         """
 
+        # 导入json作业参数
         node_data = context.get_node_data(argv.node_name)
         preset_path = Path(os.path.abspath(__file__)).parent.parent.parent / "presets"
         full_path = ""
@@ -70,8 +71,7 @@ class AscensionPreparation(CustomAction):
         context.override_pipeline({
             "星塔_节点_选择潜能_agent": {
                 "attach": {
-                    "priority_list": priority_list,
-                    "owned_potentials": {}
+                    "priority_list": priority_list
                 }
             }
         })

@@ -2,6 +2,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
+from custom.action import climb_tower_potential
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_loop")
 
@@ -22,7 +23,10 @@ class AscensionLoop(CustomAction):
         Returns:
             bool: 返回 True。
         """
+        # 重置潜能状态
+        climb_tower_potential.State.reset()
 
+        # 更新循环次数，并判断是否继续爬塔
         node_data = context.get_node_data(argv.node_name)
         if not node_data:
             node_data = {}

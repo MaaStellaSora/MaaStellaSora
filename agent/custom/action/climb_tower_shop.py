@@ -565,7 +565,10 @@ class ShopHandler:
                 "action": {"param": {"target": grid.price_roi}}
             },
             "星塔_节点_选择潜能_agent": {
-                "attach": {"reserved_coin": reserved_coin}
+                "attach": {
+                    "reserved_coin": reserved_coin,
+                    "trigger_type": "drink"
+                }
             },
         }
         result = self.context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
@@ -1158,8 +1161,20 @@ class EnhanceAction(CustomAction):
         logger.debug(f"最大强化金币: {data.max_cost}，强化递增金额: {data.initial_cost}")
         logger.debug(f"当前金币: {data.current_coin}，当前强化所需金币: {data.current_cost}")
         logger.debug(f"可强化次数: {count}")
+
+        pipeline_override = {
+            "星塔_节点_选择潜能_agent": {
+                "attach": {
+                    "trigger_type": "enhance"
+                }
+            }
+        }
+
         for _ in range(count):
-            context.run_task("星塔_节点_商店_点击强化_agent")
+            run_result = context.run_task("星塔_节点_商店_点击强化_agent", pipeline_override)
+            if not (run_result and run_result.status.succeeded):
+                logger.warning("强化失败，可能已经没有潜能可以强化")
+            logger.debug("强化成功")
         return True
 
     @staticmethod

@@ -86,10 +86,13 @@
     ],
     "attach": {
       "priority_list": [],
-      "max_refresh_count": 2,
+      "max_refresh_count": 4,
       "reserved_coin": 0,
-      "owned_potentials": {},
-      // "default+"表示在推荐图标基础上还会根据其他信息筛选，"json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
+      "max_failed_count": 2,
+      "max_potential_count": 70,
+      // 触发潜能选择的类型，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
+      "trigger_type": "default",
+      // 潜能处理方式，"default+"表示在推荐图标基础上还会根据其他信息筛选，"json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
       "handler": "default+",
       "chooser": "tower_8"
     },

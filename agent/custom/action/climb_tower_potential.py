@@ -72,6 +72,18 @@ DEFAULT_POTENTIAL_LAYOUTS = {
     ]
 }
 
+class State:
+    failed_count: int = 0
+    high_level_span_count: int = 0
+    potential_count: int = 0
+    owned_potentials: dict = {}
+
+    @classmethod
+    def reset(cls):
+        cls.failed_count = 0
+        cls.high_level_span_count = 0
+        cls.potential_count = 0
+        cls.owned_potentials.clear()
 
 @dataclass(slots=True)
 class PotentialLayout:
@@ -103,19 +115,22 @@ class PotentialLayouts:
 
 @dataclass(slots=True)
 class Parameters:
+    trigger_type: str
     max_refresh_count: int
     reserved_coin: int
     priority_list: list[dict]
-    owned_potentials: dict
     handler: str
     chooser: str
+    max_failed_count: int
+    max_potential_count: int
+    # 自带默认值的参数
     potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
     selected_potential_offset: int = 35
 
     def __post_init__(self):
         parsed_list = self._parse_priority_raw_list(
             self.priority_list,
-            self.owned_potentials,
+            State.owned_potentials,
         )
         object.__setattr__(self, 'priority_list', parsed_list)
 
@@ -660,6 +675,8 @@ class ChoosePotentialHandler:
                 p.selected = True
             if self.data.core_potential:
                 p.core = True
+                p.old_level = 0
+                p.new_level = 1
 
         return potentials
 
@@ -789,7 +806,7 @@ class GameRecommendedHandler(ChoosePotentialHandler):
 
     def choose(self) -> Potential | None:
         # 根据参数选择潜能选择器
-        if self.data.params.chooser == "tower_8":
+        if self.data.params.chooser.startswith("tower_8"):
             best_potential = self.tower_8_chooser()
         elif self.data.params.chooser == "default":
             best_potential = self._default_potential
@@ -797,7 +814,9 @@ class GameRecommendedHandler(ChoosePotentialHandler):
             best_potential = self.choose_fallback_potential()
 
         if best_potential:
+            State.potential_count += best_potential.level_span
             logger.info(f"[潜能选择] {best_potential.name}")
+            logger.info(f"当前潜能数：{State.potential_count}/{self.data.params.max_potential_count}")
 
         return best_potential
 
@@ -809,41 +828,84 @@ class GameRecommendedHandler(ChoosePotentialHandler):
             刷新次数未到最大刷新次数时，使用贪婪策略
             刷新次数达到最大刷新次数时，或者是强化时，使用兜底策略
         目前优先级规则（测试中，因为在不断调整，可能会跟代码不一样）：
-            >升级间距>=3级且推荐等级>=3级的新潜能
+            >升级间距>=3级且推荐等级>=2级的新潜能
+            >获得10次心花怒放后，升级间距>=2级且推荐等级>=1级的新潜能
             >推荐等级为6级的已抓潜能
             >新等级=推荐等级的推荐潜能
             >新等级>=推荐等级的推荐潜能
-            >牌池有两张以上已抓潜能时，直接选择推荐潜能
         筛选成功后，按照等级跨度降序、推荐等级降序、旧等级降序来排序，取得想要的潜能
 
         Returns:
             Potential | None: 最好的系统推荐潜能，若没有则返回 None
         """
+        target_p = None
+
         if self.data.core_potential:
             priority_rules = [
                 lambda p: p.recommended
             ]
-        elif self.data.refreshable:
+        elif (self.data.refreshable
+              and State.failed_count < self.data.params.max_failed_count
+              and State.potential_count < self.data.params.max_potential_count
+              ):
             old_potentials_count = sum(1 for p in self.data.potentials if p.old_level > 0)
-            priority_rules = [
-                lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
-                lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
-                lambda p: p.recommended and p.recommended_level == p.new_level,
-                lambda p: p.recommended and p.new_level >= p.recommended_level,
-                lambda p: p.recommended and old_potentials_count >= 2,
-            ]
+            if self.data.params.chooser.endswith("aggressive"):
+                # 贪婪策略
+                priority_rules = [
+                    # 升级间距 >= 3级 且 推荐等级 >= 2级 的新潜能
+                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 2,
+                    # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
+                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
+                               and State.high_level_span_count >= 10),
+                    # 推荐等级为6级的已抓潜能
+                    lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
+                    # 新等级 = 推荐等级的新潜能
+                    lambda p: p.recommended and p.recommended_level == p.new_level and p.new_level == 1,
+                    # 已抓潜能 >= 2 时，选择已抓推荐潜能
+                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2,
+                ]
+            else:
+                # 均衡策略
+                priority_rules = [
+                    # 升级间距 >= 3级 且 推荐等级 >= 3级 的新潜能
+                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
+                    # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
+                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
+                               and State.high_level_span_count >= 10),
+                    # 推荐等级为6级的已抓潜能
+                    lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
+                    # 新等级 = 推荐等级的推荐潜能
+                    lambda p: p.recommended and p.recommended_level == p.new_level,
+                    # 新等级 >= 推荐等级的推荐潜能
+                    lambda p: p.recommended and p.new_level >= p.recommended_level,
+                    # 已抓潜能 >= 2 时，选择已抓推荐潜能
+                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2
+                ]
         else:
             priority_rules = [
                 lambda p: p.recommended,
-                lambda p: p.old_level > 0
+                lambda p: p.old_level > 0,
+                lambda p: p.old_level == 0
             ]
 
         for rule in priority_rules:
             candidates = [p for p in self.data.potentials if rule(p)]
             if candidates:
-                return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)
+                target_p = max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level))
+                break
 
-        return None
+        # 抓到高等级跨度新潜能时计数+1
+        if target_p and target_p.old_level == 0 and target_p.level_span >= 2:
+            State.high_level_span_count += 1
+            logger.info(f"心花怒放计数 {State.high_level_span_count}/10")
+
+        # 抓不到想要的潜能时，失败计数+1
+        if (not self.data.refreshable and self.data.params.trigger_type != "enhance"
+                and (target_p is None or not target_p.recommended)):
+            State.failed_count += 1
+            logger.debug(f"抓不到想要的潜能，目前失败次数： {State.failed_count}")
+
+        return target_p
 
 
 class AssistantPriorityHandler(ChoosePotentialHandler):
@@ -1054,15 +1116,15 @@ class ChoosePotentialAction(CustomAction):
         if not click_result:
             logger.error(f"点击潜能失败")
 
-        # 如果使用星塔助手优先级模块，更新已拥有潜能记录
+        # 回写参数
         if data.params.handler == "json":
             owned = self._update_owned_potentials(
-                data.params.owned_potentials,
+                State.owned_potentials,
                 potential.name,
                 potential.new_level,
                 potential.trekker,
             )
-            self._save_state(context, node_name, owned)
+            State.owned_potentials = owned
 
         return CustomAction.RunResult(success=True)
 
@@ -1081,7 +1143,6 @@ class ChoosePotentialAction(CustomAction):
                 - priority_list (list): 自定义优先级列表
                 - owned_potentials (dict): 已拥有潜能状态，按 trekker 分组
         """
-
         node_data = context.get_node_data(node_name)
         attach = node_data.get("attach", {})
         params = Parameters(**attach)
@@ -1120,23 +1181,3 @@ class ChoosePotentialAction(CustomAction):
             owned[trekker] = {}
         owned[trekker][potential_name] = new_level
         return owned
-
-    @staticmethod
-    def _save_state(
-        context: Context,
-        node_name: str,
-        owned: dict,
-    ) -> None:
-        """将更新后的 owned_potentials 写回节点 attach，通过 override_pipeline 持久化。
-
-        写回失败时记录 ERROR 日志，不中断流程（本次状态丢失）。
-
-        Args:
-            context: maa.context.Context
-            node_name: 当前节点名称
-            owned: 更新后的 owned_potentials
-        """
-        new_attach = {"owned_potentials": owned}
-        success = context.override_pipeline({node_name: {"attach": new_attach}})
-        if not success:
-            logger.error("保存当前拥有潜能失败，自定义潜能优先级可能无法正常工作")

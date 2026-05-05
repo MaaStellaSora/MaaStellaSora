@@ -101,7 +101,7 @@ class PotentialLayouts:
     def get(self, key, default=None):
         return self.potential_layouts.get(key, default)
 
-@dataclass(slots=True, frozen=True)
+@dataclass(slots=True)
 class Parameters:
     max_refresh_count: int
     reserved_coin: int
@@ -866,12 +866,13 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
         # 输出比较结果
         for potential in self.data.potentials:
+            print_rank = potential.rank + 1 if potential.rank >= 0 else "无"
             if self.data.core_potential:
-                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | 排名 {potential.rank}")
+                logger.info(f"[潜能识别] {potential.name} | 核心潜能 | 排名 {print_rank}")
             else:
                 old = potential.old_level
                 new = potential.new_level
-                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | 排名 {potential.rank}")
+                logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | 排名 {print_rank}")
 
         # 选择排名最高的潜能
         best_potential = self.best_potential
@@ -902,16 +903,17 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
         Returns:
             tuple[int, int, str | None]: (rank, sub_rank, trekker)
-                rank 为匹配到的最小排名数值；无匹配时返回 -1
+                rank 为匹配到的最小排名数值； rank 从 0 开始。无匹配时返回 -1
                 sub_rank 为命中的 potential 名称在该规则 names 列表中的下标；无匹配时返回 -1
                 trekker 为对应规则的归属角色；无匹配时返回空字符
         """
         priority_list = self.data.params.priority_list
 
         best_entry = None
+        best_rank = -1
         best_sub_rank = -1
 
-        for entry in priority_list:
+        for rank, entry in enumerate(priority_list):
             # 1. 基础剪枝：优先级如果不更高，直接跳过
             if best_entry and entry["priority"] >= best_entry["priority"]:
                 continue
@@ -927,12 +929,13 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
             # 全部通过后，记录该行及副等级
             best_entry = entry
+            best_rank = rank
             best_sub_rank = sub_rank
 
         if not best_entry:
-            best_entry = {"rank": -1, "trekker": ""}
+            best_entry = {"trekker": ""}
 
-        return best_entry["rank"], best_sub_rank, best_entry["trekker"]
+        return best_rank, best_sub_rank, best_entry["trekker"]
 
     def _find_sub_rank(self, name: str, rule_names: list[str]) -> int:
         """通过潜能名称获取最优排名数值"""

@@ -1,0 +1,64 @@
+{
+    "星塔_节点_商店_点击商店购物_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Purchase at the shop"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_购买道具_确认购买_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Purchase"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_点击强化_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Enhance"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_强化_回到商店层_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Purchase at the shop"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购买协奏音符_检查确认框_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Purchase"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购买协奏音符_核实协奏_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Relevant",
+                    "Harmony",
+                    "Skills"
+                ]
+            },
+            "type": "OCR"
+        }
+    }
+}

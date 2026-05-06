@@ -1,0 +1,44 @@
+{
+  "战斗_出发": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Go"
+        ],
+        "roi": [
+          1022,
+          551,
+          259,
+          169
+        ]
+      }
+    }
+  },
+  "战斗_快速战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Quick Battle"
+        ]
+      }
+    }
+  },
+  "战斗_悬赏试炼": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Bounty Trial"
+        ]
+      }
+    }
+  },
+  "战斗_试炼出发": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Go"
+        ]
+      }
+    }
+  }
+}

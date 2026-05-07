@@ -75,6 +75,7 @@
           150,
           60
         ],
+        "threshold": 0.6,
         "order_by": "Horizontal"
       },
       "type": "OCR"
@@ -572,6 +573,29 @@
     "next": [
       "星塔_节点_商店_购物_购买道具_确认购买_agent"
     ]
+  },
+  "星塔_节点_商店_购买协奏音符_核实数量_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "\\d+"
+        ],
+        "replace": [
+          [
+            "\\D",
+            ""
+          ]
+        ],
+        "roi": [
+          820,
+          275,
+          90,
+          38
+        ],
+        "threshold": 0.6
+      },
+      "type": "OCR"
+    }
   },
   "星塔_节点_商店_购买协奏音符_退出购买_agent": {
     "recognition": {

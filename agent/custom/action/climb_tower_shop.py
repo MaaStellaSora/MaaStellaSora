@@ -1,5 +1,4 @@
 import re
-import time
 from dataclasses import dataclass, field, fields
 from typing import Optional, Any, Self
 
@@ -15,40 +14,29 @@ logger = logger_module.get_logger("climb_tower_shop")
 
 def get_current_coin(
     context: Context,
-    image: Optional[numpy.ndarray] = None,
-    max_try: int = 3,
+    image: Optional[numpy.ndarray] = None
 ) -> int:
     """获取当前金币数量。
 
     Args:
         context: 任务上下文。
         image: 截图，为 None 时自动截图。
-        max_try: 最大重试次数。
 
     Returns:
         int: 当前金币数量，识别失败时返回 0。
     """
-
     if image is None:
         image = context.tasker.controller.post_screencap().wait().get()
 
-    for _ in range(max_try):
-        reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
-        if reco_detail and reco_detail.hit:
-            logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
-            return int(reco_detail.filtered_results[-1].text)
+    reco_detail = context.run_recognition("星塔_通用_识别当前金币_agent", image)
+    if reco_detail and reco_detail.hit:
+        logger.debug(f"识别到当前金币：{[r.text for r in reco_detail.filtered_results]}")
+        return int(reco_detail.filtered_results[-1].text)
 
-        if reco_detail and reco_detail.all_results:
-            logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
-        else:
-            logger.debug("未识别到任何关于当前金币的内容")
-        logger.debug("等待1秒后重新识别")
-
-        if context.tasker.stopping:
-            return 0
-
-        time.sleep(1)
-        image = context.tasker.controller.post_screencap().wait().get()
+    if reco_detail and reco_detail.all_results:
+        logger.debug(f"识别当前金币结果：{[r.text for r in reco_detail.all_results]}")
+    else:
+        logger.debug("未识别到任何关于当前金币的内容")
 
     logger.error("无法读取当前金币数量，将当作 0 金币处理")
     return 0
@@ -70,26 +58,17 @@ def get_enhancement_cost(
     if image is None:
         image = context.tasker.controller.post_screencap().wait().get()
 
-    for _ in range(3):
-        reco_detail = context.run_recognition("星塔_节点_商店_识别强化所需金币_agent", image)
-        if reco_detail and reco_detail.hit:
-            logger.debug(f"识别到强化所需金币：{reco_detail.best_result.text}")
-            return int(reco_detail.best_result.text)
+    reco_detail = context.run_recognition("星塔_节点_商店_识别强化所需金币_agent", image)
+    if reco_detail and reco_detail.hit:
+        logger.debug(f"识别到强化所需金币：{reco_detail.best_result.text}")
+        return int(reco_detail.best_result.text)
 
-        if reco_detail and reco_detail.all_results:
-            logger.debug(
-                f"识别强化所需金币结果：{[r.text for r in reco_detail.all_results]}"
-            )
-        else:
-            logger.debug("未识别到任何关于强化金币的内容")
-
-        if context.tasker.stopping:
-            return 65535
-
-        logger.debug("等待1秒后重试")
-        time.sleep(1)
-
-        image = context.tasker.controller.post_screencap().wait().get()
+    if reco_detail and reco_detail.all_results:
+        logger.debug(
+            f"识别强化所需金币结果：{[r.text for r in reco_detail.all_results]}"
+        )
+    else:
+        logger.debug("未识别到任何关于强化金币的内容")
 
     logger.error("无法读取当前强化所需金币数量")
     return 65535
@@ -158,22 +137,46 @@ def check_shop_type(
     if image is None:
         image = context.tasker.controller.post_screencap().wait().get()
 
-    for _ in range(3):
-        reco_detail = context.run_recognition("星塔_节点_商店_离开商店_agent", image)
-        if reco_detail and reco_detail.hit:
-            return "regular"
+    reco_detail = context.run_recognition("星塔_节点_商店_离开商店_agent", image)
+    if reco_detail and reco_detail.hit:
+        return "regular"
 
-        reco_detail = context.run_recognition("星塔_节点_商店_离开星塔_agent", image)
-        if reco_detail and reco_detail.hit:
-            return "final"
-
-        if context.tasker.stopping:
-            return ""
-
-        time.sleep(1)
-        image = context.tasker.controller.post_screencap().wait().get()
+    reco_detail = context.run_recognition("星塔_节点_商店_离开星塔_agent", image)
+    if reco_detail and reco_detail.hit:
+        return "final"
 
     return ""
+
+def is_assist_skill_unlocked(
+    context: Context,
+    image: Optional[numpy.ndarray] = None,
+) -> bool:
+    """检查协奏技能是否已解锁。
+
+    Args:
+        context: 任务上下文。
+        image: 截图，为 None 时自动截图。
+
+    Returns:
+        bool: 是否已解锁。
+    """
+    lv0_melody = (10, 15)
+
+    if image is None:
+        image = context.tasker.controller.post_screencap().wait().get()
+
+    reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实数量_agent", image)
+    if reco_detail and reco_detail.hit:
+        text = reco_detail.best_result.text
+        current_melody = int(text[:-2])
+        required_melody = int(text[-2:])
+        logger.debug(f"识别到的现有音符数量：{current_melody}，协奏技能升级要求数量：{required_melody}")
+        if required_melody in lv0_melody and current_melody < required_melody:
+            # 协奏技能未解锁
+            # 需要升级要求音符数量为 lv0_melody 中的值
+            # 且当前音符数量小于升级要求数量
+            return False
+    return True
 
 
 @dataclass
@@ -186,6 +189,8 @@ class Data:
     melody_5_discount_threshold: float = 1.0
     melody_15_discount_threshold: float = 0.5
     buy_assist_melody: bool = False
+    buy_assist_before_unlock: bool = False
+    buy_assist_at_final_only: bool = False
     regular_shop_refresh_threshold: int = 1500
     full_price_buy_reserve_base: int = 500
     melody_of_aqua: bool = False
@@ -413,7 +418,10 @@ class GridInfo:
             if self.item_name in data.target_melodies:
                 return "normal"
 
-            if data.buy_assist_melody:
+            if data.buy_assist_melody and not data.buy_assist_at_final_only:
+                return "assist_melody"
+
+            if data.buy_assist_melody and data.buy_assist_at_final_only and data.shop_type == "final":
                 return "assist_melody"
 
         return ""
@@ -598,24 +606,36 @@ class ShopHandler:
             logger.error(f"点击协奏音符 {grid.item_name} 过程出现问题")
             return False
 
+        # 开始验证协奏音符
+        passed = True
         image = self.context.tasker.controller.post_screencap().wait().get()
+        # 验证是否是协奏音符
         reco_detail = self.context.run_recognition("星塔_节点_商店_购买协奏音符_核实协奏_agent", image)
+        if not(reco_detail and reco_detail.hit):
+            logger.debug("该音符不是协奏音符")
+            passed = False
+        # 验证协奏技能是否解锁
+        elif self.data.buy_assist_before_unlock and is_assist_skill_unlocked(self.context, image):
+            logger.debug("协奏技能已解锁，无需购买")
+            passed = False
+
+        # 如果没有通过验证，关闭确认框
         grid.checked = True
-        if reco_detail and reco_detail.hit:
-            run_result = self.context.run_task("星塔_节点_商店_购物_购买道具_确认购买_agent")
-            if run_result and run_result.status.succeeded:
-                logger.debug(f"购买 {grid.item_name} 成功")
-                return True
-            else:
-                logger.error(f"购买 {grid.item_name} 过程出现问题")
-                return False
-        else:
-            logger.debug("该音符不是协奏音符，关闭确认框")
+        if not passed:
             run_result = self.context.run_task("星塔_节点_商店_购买协奏音符_退出购买_agent")
             if run_result and run_result.status.succeeded:
                 logger.debug(f"关闭购买协奏音符 {grid.item_name} 成功")
             else:
                 logger.error(f"关闭购买协奏音符 {grid.item_name} 过程出现问题")
+            return False
+
+        # 通过验证，确认购买
+        run_result = self.context.run_task("星塔_节点_商店_购物_购买道具_确认购买_agent")
+        if run_result and run_result.status.succeeded:
+            logger.debug(f"购买 {grid.item_name} 成功")
+            return True
+        else:
+            logger.error(f"购买 {grid.item_name} 过程出现问题")
             return False
 
     def should_refresh(self) -> bool:

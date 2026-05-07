@@ -415,25 +415,55 @@
         "新版爬塔_商店_购买音符策略": {
             "type": "select",
             "label": "购买音符策略",
-            "default_case": "激活协奏",
+            "default_case": "仅激活1级协奏",
             "cases": [
                 {
                     "name": "无",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "buy_assist_melody": false
+                                "buy_assist_melody": false,
+                                "buy_assist_before_unlock": false,
+                                "buy_assist_at_final_only": false
                             }
                         }
                     }
                 },
                 {
                     "name": "激活协奏",
-                    "description": "只买与协奏有关的音符",
+                    "description": "只买与协奏有关的音符（需要符合折扣要求）",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "buy_assist_melody": true
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": false,
+                                "buy_assist_at_final_only": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "仅激活1级协奏",
+                    "description": "只买与协奏有关的音符，且协奏技能到达1级后不再购买（需要符合折扣要求）",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": true,
+                                "buy_assist_at_final_only": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "仅在最终商店激活1级协奏",
+                    "description": "只在最终商店购买与协奏有关的音符，且协奏技能到达1级后不再购买（需要符合折扣要求）",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": true,
+                                "buy_assist_at_final_only": true
                             }
                         }
                     }
@@ -443,7 +473,7 @@
         "新版爬塔_商店_其他音符策略": {
             "type": "checkbox",
             "label": "其他音符策略",
-            "description": "这里勾选的会与上面的音符策略同时生效",
+            "description": "这里勾选的音符，只要符合折扣要求就会购买",
             "cases": [
                 {
                     "name": "水之音",

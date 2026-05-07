@@ -19,7 +19,7 @@
           210,
           85
         ],
-        "threshold": 0.9
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     },
@@ -39,7 +39,7 @@
           550,
           468
         ],
-        "threshold": 0.9
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     },

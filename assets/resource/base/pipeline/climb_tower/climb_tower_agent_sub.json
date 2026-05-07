@@ -44,15 +44,15 @@
     "recognition": {
       "param": {
         "template": [
-          "ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
+          "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
         ],
         "roi": [
-          210,
-          168,
-          550,
-          468
+          105,
+          15,
+          70,
+          47
         ],
-        "threshold": 0.9
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     }
@@ -392,6 +392,7 @@
           220,
           60
         ],
+        "threshold": 0.6,
         "order_by": "Vertical"
       },
       "type": "OCR"

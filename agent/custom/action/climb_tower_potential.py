@@ -903,7 +903,7 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         if (not self.data.refreshable and self.data.params.trigger_type != "enhance"
                 and (target_p is None or not target_p.recommended)):
             State.failed_count += 1
-            logger.debug(f"抓不到想要的潜能，目前失败次数： {State.failed_count}")
+            logger.info(f"抓不到想要的潜能，失败次数： {State.failed_count}/{self.data.params.max_failed_count}")
 
         return target_p
 

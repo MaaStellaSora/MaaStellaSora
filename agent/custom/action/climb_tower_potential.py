@@ -18,8 +18,8 @@ MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段�
 DEFAULT_POTENTIAL_LAYOUTS = {
     1: [
         {
-            "core_potential_roi": [530, 425, 220, 40],
-            "general_potential_roi": [530, 395, 220, 40],
+            "core_potential_roi": [530, 405, 220, 60],
+            "general_potential_roi": [530, 375, 220, 60],
             "general_potential_level_roi": [530, 425, 220, 40],
             "recommended_level_roi": [670, 165, 140, 50],
             "potential_roi": [470, 0, 343, 720],
@@ -28,16 +28,16 @@ DEFAULT_POTENTIAL_LAYOUTS = {
     ],
     2: [
         {
-            "core_potential_roi": [358, 425, 220, 40],
-            "general_potential_roi": [358, 395, 220, 40],
+            "core_potential_roi": [358, 405, 220, 60],
+            "general_potential_roi": [358, 375, 220, 60],
             "general_potential_level_roi": [358, 425, 220, 40],
             "recommended_level_roi": [490, 165, 140, 50],
             "potential_roi": [0, 0, 639, 720],
             "x_border": [0, 639]
         },
         {
-            "core_potential_roi": [703, 425, 220, 40],
-            "general_potential_roi": [703, 395, 220, 40],
+            "core_potential_roi": [703, 405, 220, 60],
+            "general_potential_roi": [703, 375, 220, 60],
             "general_potential_level_roi": [703, 425, 220, 40],
             "recommended_level_roi": [840, 165, 140, 50],
             "potential_roi": [640, 0, 640, 720],
@@ -46,24 +46,24 @@ DEFAULT_POTENTIAL_LAYOUTS = {
     ],
     3: [
         {
-            "core_potential_roi": [187, 425, 220, 40],
-            "general_potential_roi": [187, 395, 220, 40],
+            "core_potential_roi": [187, 405, 220, 60],
+            "general_potential_roi": [187, 375, 220, 60],
             "general_potential_level_roi": [187, 425, 220, 40],
             "recommended_level_roi":[320, 165, 140, 50],
             "potential_roi": [0, 0, 469, 720],
             "x_border": [0, 469]
         },
         {
-            "core_potential_roi": [530, 425, 220, 40],
-            "general_potential_roi": [530, 395, 220, 40],
+            "core_potential_roi": [530, 405, 220, 60],
+            "general_potential_roi": [530, 375, 220, 60],
             "general_potential_level_roi": [530, 425, 220, 40],
             "recommended_level_roi": [670, 165, 140, 50],
             "potential_roi": [470, 0, 343, 720],
             "x_border": [470, 813]
         },
         {
-            "core_potential_roi": [875, 425, 220, 40],
-            "general_potential_roi": [875, 395, 220, 40],
+            "core_potential_roi": [875, 405, 220, 60],
+            "general_potential_roi": [875, 375, 220, 60],
             "general_potential_level_roi": [875, 425, 220, 40],
             "recommended_level_roi":[1010, 165, 140, 50],
             "potential_roi": [814, 0, 466, 720],
@@ -483,7 +483,7 @@ class ScreenDataProcessor:
     def get_potential_name(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> str:
         node_name = "星塔_节点_选择潜能_识别潜能名称_agent"
         texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
-        return texts[0]
+        return " ".join(texts)
 
     def get_potential_level(
             self,

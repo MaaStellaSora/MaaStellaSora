@@ -621,7 +621,14 @@
             "cases": [
                 {
                     "name": "潜能特饮折扣_全价",
-                    "label": "全价"
+                    "label": "全价",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "full_price_buy_reserve_base": 0
+                            }
+                        }
+                    }
                 },
                 {
                     "name": "潜能特饮折扣_8折",

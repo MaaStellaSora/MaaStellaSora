@@ -1,0 +1,344 @@
+{
+    "task": [
+        {
+            "name": "悬赏试炼快速战斗",
+            "entry": "战斗_入口",
+            "description": "自动前往悬赏试炼页面，并且对指定关卡进行快速战斗",
+            "option": [
+                "悬赏试炼关卡",
+                "选择悬赏试炼难度",
+                "悬赏试炼消耗所有干劲"
+            ]
+        }
+    ],
+    "option": {
+        "悬赏试炼关卡": {
+            "type": "select",
+            "label": "选择悬赏试炼类型",
+            "description": "选择要快速战斗的悬赏试炼关卡",
+            "default_case": "基础试炼",
+            "cases": [
+                {
+                    "name": "基础试炼",
+                    "label": "基础试炼",
+                    "description": "获取经验素材及朵拉",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/basic_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "晋升试炼-怪诞舞者",
+                    "label": "晋升试炼-怪诞舞者",
+                    "description": "获取素材突破旅人及密纹等级，升级旅人能力",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/tier_up_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/tier_up_trial_1.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "晋升试炼-终宵萤辉",
+                    "label": "晋升试炼-终宵萤辉",
+                    "description": "获取素材突破旅人及密纹等级，升级旅人能力",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/tier_up_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/tier_up_trial_2.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "晋升试炼-热嘟噜噗男爵",
+                    "label": "晋升试炼-热嘟噜噗男爵",
+                    "description": "获取素材突破旅人及密纹等级，升级旅人能力",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/tier_up_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/tier_up_trial_3.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "技巧试炼-节奏游戏卡带",
+                    "label": "技巧试炼-节奏游戏卡带",
+                    "description": "获得提升技能的卡带",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/skill_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/skill_trial_1.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "技巧试炼-射击游戏卡带",
+                    "label": "技巧试炼-射击游戏卡带",
+                    "description": "获得提升技能的卡带",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/skill_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/skill_trial_2.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "技巧试炼-格斗游戏卡带",
+                    "label": "技巧试炼-格斗游戏卡带",
+                    "description": "获得提升技能的卡带",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/skill_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/skill_trial_3.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "纹章试炼-好市民点数",
+                    "label": "纹章试炼-好市民点数",
+                    "description": "获得纹章激活素材",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/emblem_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/emblem_trial_1.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "纹章试炼-协会贡献证",
+                    "label": "纹章试炼-协会贡献证",
+                    "description": "获得纹章激活素材",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/emblem_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/emblem_trial_2.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "纹章试炼-恩赐消费券",
+                    "label": "纹章试炼-恩赐消费券",
+                    "description": "获得纹章激活素材",
+                    "pipeline_override": {
+                        "战斗_选择试炼": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/emblem_trial.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "战斗_选择试炼子菜单": {
+                            "enabled": true,
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "fight/emblem_trial_3.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "选择悬赏试炼难度": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "难度",
+                    "pipeline_type": "string",
+                    "default": "1",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入难度",
+                    "description": "请输入难度"
+                }
+            ],
+            "pipeline_override": {
+                "战斗_选择难度": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "(难度|難度|難易度|Difficulty){难度}(?!\\d)"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Action.Succeeded": "选择难度_{难度}"
+                    }
+                }
+            }
+        },
+        "悬赏试炼消耗所有干劲": {
+            "type": "switch",
+            "label": "消耗所有干劲",
+            "description": "开启此项后，将无视输入的次数，直接消耗所有干劲",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "option": [
+                        "自定义快速作战次数"
+                    ]
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "战斗_快速战斗": {
+                            "next": [
+                                "通用_消耗所有干劲"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

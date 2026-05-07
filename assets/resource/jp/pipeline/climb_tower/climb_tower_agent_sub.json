@@ -3,7 +3,8 @@
         "recognition": {
             "param": {
                 "expected": [
-                    "コンビニ"
+                    "コンビニで",
+                    "買い物する"
                 ]
             },
             "type": "OCR"
@@ -33,7 +34,8 @@
         "recognition": {
             "param": {
                 "expected": [
-                    "コンビニ"
+                    "コンビニで",
+                    "買い物する"
                 ]
             },
             "type": "OCR"

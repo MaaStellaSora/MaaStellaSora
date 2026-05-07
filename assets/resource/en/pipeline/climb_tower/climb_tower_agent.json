@@ -23,6 +23,12 @@
                     "Can I play it",
                     "Anywhere my heart leads",
                     "We are Kindred spirits"
+                ],
+                "replace": [
+                    [
+                        "''",
+                        "'"
+                    ]
                 ]
             },
             "type": "OCR"
@@ -58,7 +64,7 @@
             "type": "OCR",
             "param": {
                 "expected": [
-                    "let's go up"
+                    "go up"
                 ]
             }
         }

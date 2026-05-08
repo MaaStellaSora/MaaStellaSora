@@ -49,11 +49,11 @@
     "post_wait_freezes": 2000,
     "recognition": {
       "param": {
-        "expected": [
-          "心链"
+        "template": [
+          "Invite/heartlink.png"
         ]
       },
-      "type": "OCR"
+      "type": "TemplateMatch"
     }
   },
   "心链_点击邮寄": {

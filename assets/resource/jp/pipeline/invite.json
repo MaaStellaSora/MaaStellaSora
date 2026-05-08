@@ -14,15 +14,6 @@
       }
     }
   },
-  "邀约_打开心链": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "コチ"
-        ]
-      }
-    }
-  },
   "邀约_前往邀约": {
     "recognition": {
       "param": {

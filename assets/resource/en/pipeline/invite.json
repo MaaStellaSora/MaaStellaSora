@@ -3,16 +3,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "Heartlink"
-        ]
-      }
-    }
-  },
-  "邀约_打开心链": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "Heartlink"
+          "Invite"
         ]
       }
     }
@@ -58,7 +49,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "Never Mind"
+          "Never mind"
         ]
       }
     }

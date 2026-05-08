@@ -124,7 +124,7 @@
                 "官服"
             ],
             "type": "select",
-            "label": "预设类型",
+            "label": "潜能选择模式",
             "default_case": "系统推荐",
             "cases": [
                 {
@@ -175,7 +175,7 @@
                 "台服"
             ],
             "type": "select",
-            "label": "预设类型",
+            "label": "潜能选择模式",
             "default_case": "系统推荐",
             "cases": [
                 {
@@ -226,7 +226,7 @@
                 "国际服"
             ],
             "type": "select",
-            "label": "预设类型",
+            "label": "潜能选择模式",
             "default_case": "系统推荐",
             "cases": [
                 {
@@ -277,8 +277,7 @@
                 "日服"
             ],
             "type": "select",
-            "label": "预设作业类型",
-            "description": "选择预设作业类型，默认为系统推荐",
+            "label": "潜能选择模式",
             "default_case": "系统推荐",
             "cases": [
                 {

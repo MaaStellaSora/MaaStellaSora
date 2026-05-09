@@ -186,7 +186,7 @@
       },
       "type": "OCR"
     },
-    "post_wait_freezes": 100
+    "post_wait_freezes": 500
   },
   "战斗_选择难度": {
     "action": {

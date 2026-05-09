@@ -6,7 +6,7 @@
             "description": "自动前往悬赏试炼页面，并且对指定关卡进行快速战斗",
             "option": [
                 "悬赏试炼关卡",
-                "选择悬赏试炼难度",
+                "悬赏试炼跳过难度选择",
                 "悬赏试炼消耗所有干劲"
             ]
         }
@@ -284,6 +284,34 @@
                                 },
                                 "type": "TemplateMatch"
                             }
+                        }
+                    }
+                }
+            ]
+        },
+        "悬赏试炼跳过难度选择": {
+            "type": "switch",
+            "label": "跳过难度选择",
+            "description": "系统默认是哪个难度就是哪个难度",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "option": [
+                        "选择悬赏试炼难度"
+                    ]
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "战斗_试炼出发": {
+                            "next": [
+                                "战斗_快速战斗",
+                                {
+                                    "jump_back": true,
+                                    "name": "战斗_选择试炼子菜单"
+                                }
+                            ]
                         }
                     }
                 }

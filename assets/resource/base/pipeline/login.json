@@ -146,12 +146,6 @@
         "template": [
           "login.png",
           "login_2.png"
-        ],
-        "roi": [
-          0,
-          360,
-          1280,
-          360
         ]
       },
       "type": "TemplateMatch"
@@ -212,6 +206,12 @@
         "template": [
           "login.png",
           "login_2.png"
+        ],
+        "roi": [
+          0,
+          360,
+          1280,
+          360
         ]
       },
       "type": "TemplateMatch"

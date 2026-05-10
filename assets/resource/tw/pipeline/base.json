@@ -19,5 +19,17 @@
         ]
       }
     }
+  },
+  "通用_重启游戏_err": {
+    "action": {
+      "type": "StopApp",
+      "param": {
+        "package": "com.Stargazer.StellaSora"
+      }
+    },
+    "post_delay": 5000,
+    "next": [
+      "登录_登录"
+    ]
   }
 }

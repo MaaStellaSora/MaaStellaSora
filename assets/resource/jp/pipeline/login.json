@@ -26,5 +26,14 @@
                 ]
             }
         }
+    },
+    "登录_启动游戏": {
+        "action": {
+            "type": "StartApp",
+            "param": {
+                "package": "com.YoStarJP.StellaSora"
+            }
+        },
+        "post_delay": 20000
     }
 }

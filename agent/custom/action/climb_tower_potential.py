@@ -435,7 +435,7 @@ class ScreenDataProcessor:
                 if mode == "ocr":
                     # OCR 逻辑：返回文本
                     logger.debug(f"节点{node_name} OCR结果：{[(r.text, r.score) for r in reco_detail.filtered_results]}")
-                    results = sorted(reco_detail.filtered_results, key=lambda r: r.score, reverse=True)
+                    results = reco_detail.filtered_results
                     return [r.text for r in results]
                 else:
                     # Template 逻辑：返回坐标列表
@@ -520,7 +520,7 @@ class ScreenDataProcessor:
         if len(full_text) >= 2:
             # 取前两个数字处理粘连
             return int(full_text[0]), int(full_text[1])
-        logger.warning(f"无法解析潜能等级（识别到的等级文本: {full_text}）")
+        logger.warning(f"无法解析潜能等级（识别到的等级文本: {texts}）")
         return -1, -1
 
     def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
@@ -530,7 +530,7 @@ class ScreenDataProcessor:
 
     def check_item_list_visibility(self, max_try: int = 1) -> bool:
         image = self.context.tasker.controller.post_screencap().wait().get()
-        return self._template("星塔_节点_选择潜能_检测干扰文字_agent", [], image=image, max_try=max_try)
+        return self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], image=image, max_try=max_try)
 
     def get_potential_count(
             self,

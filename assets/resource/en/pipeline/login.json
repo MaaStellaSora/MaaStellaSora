@@ -32,8 +32,6 @@
             "param": {
                 "package": "com.YoStarEN.StellaSora"
             }
-        },
-        "post_delay": 10000,
-        "max_hit": 5
+        }
     }
 }

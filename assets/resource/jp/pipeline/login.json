@@ -33,8 +33,6 @@
             "param": {
                 "package": "com.YoStarJP.StellaSora"
             }
-        },
-        "post_delay": 10000,
-        "max_hit": 5
+        }
     }
 }

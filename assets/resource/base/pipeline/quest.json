@@ -61,7 +61,7 @@
       "Node.Action.Succeeded": "前往委托"
     },
     "next": [
-        "委托_一键领取"
+      "委托_一键领取"
     ],
     "on_error": [
       "通用_返回主页"
@@ -90,7 +90,11 @@
         "jump_back": true,
         "name": "委托_跳过"
       },
-      "委托_再次派遣"
+      "委托_再次派遣",
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
+      }
     ],
     "recognition": {
       "param": {

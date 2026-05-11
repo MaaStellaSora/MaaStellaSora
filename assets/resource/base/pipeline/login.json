@@ -31,6 +31,10 @@
       {
         "jump_back": true,
         "name": "登录_点击文字"
+      },
+      {
+        "jump_back": true,
+        "name": "登录_通用签到"
       }
     ],
     "post_delay": 2000
@@ -106,6 +110,10 @@
       {
         "jump_back": true,
         "name": "登录_点击文字"
+      },
+      {
+        "jump_back": true,
+        "name": "登录_通用签到"
       }
     ],
     "post_delay": 500,
@@ -125,6 +133,10 @@
       {
         "jump_back": true,
         "name": "登录_确认下载资源"
+      },
+      {
+        "jump_back": true,
+        "name": "登录_启动游戏"
       }
     ],
     "timeout": 120000
@@ -228,5 +240,31 @@
       },
       "type": "OCR"
     }
+  },
+  "登录_启动游戏": {
+    "action": {
+      "type": "StartApp",
+      "param": {
+        "package": "com.RoamingStar.StellaSora"
+      }
+    },
+    "post_delay": 10000,
+    "max_hit": 5
+  },
+  "登录_通用签到": {
+    "action": {
+      "param": {
+        "target": [
+          640,
+          700
+        ]
+      },
+      "type": "Click"
+    },
+    "recognition": {
+      "type": "DirectHit"
+    },
+    "post_delay": 2000,
+    "max_hit": 10
   }
 }

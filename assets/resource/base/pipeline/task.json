@@ -60,7 +60,11 @@
       "type": "Click"
     },
     "next": [
-      "通用_点击空白处继续"
+      "通用_点击空白处继续",
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
+      }
     ],
     "recognition": {
       "param": {
@@ -173,7 +177,11 @@
       "type": "Click"
     },
     "next": [
-      "通用_点击空白处继续"
+      "通用_点击空白处继续",
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
+      }
     ],
     "recognition": {
       "param": {

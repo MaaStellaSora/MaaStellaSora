@@ -60,7 +60,11 @@
       "Node.Action.Starting": "点击开始战斗"
     },
     "next": [
-      "活动_确认"
+      "活动_确认",
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
+      }
     ],
     "recognition": {
       "param": {
@@ -70,6 +74,35 @@
       },
       "type": "OCR"
     }
+  },
+  "活动_关闭升级界面": {
+    "action": {
+      "param": {
+        "target": [
+          640,
+          700
+        ]
+      },
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Action.Starting": "正在关闭升级界面"
+    },
+    "recognition": {
+      "param": {
+        "roi": [
+          187,
+          302,
+          578,
+          132
+        ],
+        "expected": [
+          "权限等级"
+        ]
+      },
+      "type": "OCR"
+    },
+    "post_delay": 1000
   },
   "活动_打开活动": {
     "action": {
@@ -164,7 +197,11 @@
       "Node.Action.Succeeded": "正在点击确认"
     },
     "next": [
-      "通用_返回主页"
+      "通用_返回主页",
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
+      }
     ],
     "recognition": {
       "param": {
@@ -189,14 +226,38 @@
           "1-2"
         ],
         "replace": [
-          ["Ⅰ", "I"],
-          ["Ⅱ", "II"],
-          ["Ⅲ", "III"],
-          ["Ⅳ", "IV"],
-          ["Ⅴ", "V"],
-          ["Ⅵ", "VI"],
-          ["Ⅶ", "VII"],
-          ["Ⅷ", "VIII"]
+          [
+            "Ⅰ",
+            "I"
+          ],
+          [
+            "Ⅱ",
+            "II"
+          ],
+          [
+            "Ⅲ",
+            "III"
+          ],
+          [
+            "Ⅳ",
+            "IV"
+          ],
+          [
+            "Ⅴ",
+            "V"
+          ],
+          [
+            "Ⅵ",
+            "VI"
+          ],
+          [
+            "Ⅶ",
+            "VII"
+          ],
+          [
+            "Ⅷ",
+            "VIII"
+          ]
         ]
       },
       "type": "OCR"

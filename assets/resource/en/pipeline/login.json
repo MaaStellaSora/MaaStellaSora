@@ -10,9 +10,9 @@
         "recognition": {
             "param": {
                 "expected": [
-                  "Claimable",
-                  "Items Obtained",
-                  "Select anywhere to start"
+                    "Claimable",
+                    "Items Obtained",
+                    "Select anywhere to start"
                 ]
             }
         }
@@ -21,9 +21,19 @@
         "recognition": {
             "param": {
                 "expected": [
-                  "Select anywhere to start"
+                    "Select anywhere to start"
                 ]
             }
         }
+    },
+    "登录_启动游戏": {
+        "action": {
+            "type": "StartApp",
+            "param": {
+                "package": "com.YoStarEN.StellaSora"
+            }
+        },
+        "post_delay": 10000,
+        "max_hit": 5
     }
 }

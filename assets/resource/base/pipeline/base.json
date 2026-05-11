@@ -312,58 +312,5 @@
       },
       "type": "TemplateMatch"
     }
-  },
-  "通用_返回主页_err": {
-    "next": [
-      "通用_主页标记",
-      {
-        "jump_back": true,
-        "name": "通用_返回主页按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_返回按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_关闭心链按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_点击空白处"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_关闭公告按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "签到_关闭按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_关闭活动公告按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "月卡_领取"
-      }
-    ],
-    "timeout": 10000,
-    "on_error": [
-      "通用_重启游戏_err"
-    ]
-  },
-  "通用_重启游戏_err": {
-    "action": {
-      "type": "StopApp",
-      "param": {
-        "package": "com.RoamingStar.StellaSora"
-      }
-    },
-    "post_delay": 5000,
-    "next": [
-      "登录_登录"
-    ]
   }
 }

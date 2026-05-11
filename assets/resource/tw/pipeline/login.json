@@ -20,12 +20,13 @@
     }
   },
   "登录_启动游戏": {
-      "action": {
-        "type": "StartApp",
-        "param": {
-          "package": "com.Stargazer.StellaSora"
-        }
-      },
-      "post_delay": 20000
+    "action": {
+      "type": "StartApp",
+      "param": {
+        "package": "com.Stargazer.StellaSora"
+      }
+    },
+    "post_delay": 10000,
+    "max_hit": 5
   }
 }

@@ -12,7 +12,7 @@ on:
 jobs:
   mirrorchyan:
     runs-on: macos-latest
-    if: ${{ github.repository_owner == 'SodaCodeSave' }}
+    if: ${{ github.repository_owner == 'MaaStellaSora' }}
 
     steps:
       - id: uploading
@@ -21,7 +21,7 @@ jobs:
           mirrorchyan_rid: SSAH
           version_name: ${{ inputs.tag }}
 
-          owner: SodaCodeSave
-          repo: StellaSora-Auto-Helper
+          owner: MaaStellaSora
+          repo: MaaStellaSora
           github_token: ${{ secrets.GITHUB_TOKEN }}
           upload_token: ${{ secrets.MirrorChyanUploadToken }}

@@ -12,7 +12,7 @@ on:
 jobs:
   mirrorchyan:
     runs-on: macos-latest
-    if: ${{ github.repository_owner == 'SodaCodeSave' }}
+    if: ${{ github.repository_owner == 'MaaStellaSora' }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,7 +29,7 @@ jobs:
           os: ${{ matrix.os }}
           arch: ${{ matrix.arch }}
 
-          owner: SodaCodeSave
-          repo: StellaSora-Auto-Helper
+          owner: MaaStellaSora
+          repo: MaaStellaSora
           github_token: ${{ secrets.GITHUB_TOKEN }}
           upload_token: ${{ secrets.MirrorChyanUploadToken }}

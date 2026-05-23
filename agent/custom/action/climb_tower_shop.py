@@ -171,10 +171,17 @@ def is_assist_skill_unlocked(
         current_melody = int(text[:-2])
         required_melody = int(text[-2:])
         logger.debug(f"识别到的现有音符数量：{current_melody}，协奏技能升级要求数量：{required_melody}")
+        # 解决OCR把音符图标识别为数字5的问题
+        if 50 <= current_melody < 60:
+            reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实红色_agent", image)
+            if reco_detail and reco_detail.hit:
+                logger.debug(f"识别到音符数量可能有问题，修正当前音符数量为当前识别值-50")
+                current_melody -= 50
+
+        # 协奏技能未解锁，需要符合：
+        # 1. 升级要求音符数量为 lv0_melody 中的值
+        # 2. 且当前音符数量小于升级要求数量
         if required_melody in lv0_melody and current_melody < required_melody:
-            # 协奏技能未解锁
-            # 需要升级要求音符数量为 lv0_melody 中的值
-            # 且当前音符数量小于升级要求数量
             return False
     return True
 

@@ -1,0 +1,47 @@
+{
+  "活动_开启快速战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Quick Battle"
+        ]
+      }
+    }
+  },
+  "活动_开始战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Start Battle"
+        ]
+      }
+    }
+  },
+  "活动_点击活动战斗关卡": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "BATTLE STAGE"
+        ]
+      }
+    }
+  },
+  "活动_选择活动难度": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Normal"
+        ]
+      }
+    }
+  },
+  "活动_确认": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Confirm"
+        ]
+      }
+    }
+  }
+}

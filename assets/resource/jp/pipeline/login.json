@@ -10,10 +10,10 @@
         "recognition": {
             "param": {
                 "expected": [
-                  "受取可能",
-                  "獲得",
-                  "アイテム",
-                  "TAP TO START"
+                    "受取可能",
+                    "獲得",
+                    "アイテム",
+                    "TAP TO START"
                 ]
             }
         }
@@ -22,8 +22,16 @@
         "recognition": {
             "param": {
                 "expected": [
-                  "TAP TO START"
+                    "TAP TO START"
                 ]
+            }
+        }
+    },
+    "登录_启动游戏": {
+        "action": {
+            "type": "StartApp",
+            "param": {
+                "package": "com.YoStarJP.StellaSora"
             }
         }
     }

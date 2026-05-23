@@ -1,13 +1,4 @@
 {
-  "心链_打开心链": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "コチ"
-        ]
-      }
-    }
-  },
   "心链_点击邮寄": {
     "recognition": {
       "param": {

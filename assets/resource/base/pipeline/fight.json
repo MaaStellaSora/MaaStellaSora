@@ -46,7 +46,6 @@
     "next": [
       "战斗_悬赏试炼"
     ],
-    "pre_wait_freezes": 500,
     "recognition": {
       "param": {
         "expected": [
@@ -77,6 +76,12 @@
       "param": {
         "expected": [
           "快速战斗"
+        ],
+        "roi": [
+          750,
+          600,
+          530,
+          120
         ]
       },
       "type": "OCR"
@@ -90,7 +95,6 @@
     "focus": {
       "Node.Action.Succeeded": "进入悬赏试炼"
     },
-    "pre_wait_freezes": 500,
     "next": [
       "战斗_选择试炼"
     ],
@@ -98,10 +102,18 @@
       "param": {
         "expected": [
           "悬赏试炼"
+        ],
+        "roi": [
+          920,
+          160,
+          230,
+          185
         ]
       },
       "type": "OCR"
-    }
+    },
+    "pre_wait_freezes": 100,
+    "post_wait_freezes": 100
   },
   "战斗_试炼出发": {
     "action": {
@@ -111,8 +123,7 @@
     "focus": {
       "Node.Action.Succeeded": "进入试炼出发"
     },
-    "pre_wait_freezes": 500,
-    "post_delay": 1000,
+    "post_wait_freezes": 100,
     "next": [
       "战斗_选择难度",
       {
@@ -137,11 +148,18 @@
     "focus": {
       "Node.Action.Succeeded": "进入对应试炼"
     },
-    "post_delay": 2000,
     "next": [
       "战斗_试炼出发"
     ],
-    "pre_wait_freezes": 500,
+    "post_wait_freezes": {
+      "time": 200,
+      "target": [
+        650,
+        550,
+        630,
+        170
+      ]
+    },
     "recognition": {
       "param": {
         "template": [
@@ -160,7 +178,6 @@
     "focus": {
       "Node.Action.Succeeded": "进入试炼子菜单"
     },
-    "pre_wait_freezes": 500,
     "recognition": {
       "param": {
         "expected": [
@@ -168,7 +185,8 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "post_wait_freezes": 500
   },
   "战斗_选择难度": {
     "action": {

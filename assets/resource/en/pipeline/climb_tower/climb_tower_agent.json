@@ -1,0 +1,159 @@
+{
+    "星塔_节点_进行对话选择_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Just a try",
+                    "Twelve o'clock",
+                    "follow it through",
+                    "aims high",
+                    "always three options",
+                    "6?",
+                    "more veg things",
+                    "sit too long",
+                    "12?",
+                    "Carpe diem",
+                    "governed by desire",
+                    "1024",
+                    "light it up",
+                    "I'll listen to anything",
+                    "I'm willing to pay for this",
+                    "Victory beckons",
+                    "Get stronger",
+                    "Can I play it",
+                    "Anywhere my heart leads",
+                    "We are Kindred spirits"
+                ],
+                "replace": [
+                    [
+                        "''",
+                        "'"
+                    ]
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_进入商店_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Purchase at the shop"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_购物_agent": {
+        "attach": {
+            "lang_type": "en"
+        }
+    },
+    "星塔_节点_回到商店层_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Purchase at the shop"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_节点_商店_离开商店_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "go up"
+                ]
+            }
+        }
+    },
+    "星塔_节点_商店_离开星塔_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "Leave Monolith"
+                ]
+            }
+        }
+    },
+    "星塔_保存记录_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "Save Record"
+                ]
+            }
+        }
+    },
+    "星塔_默契提升_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Affinity",
+                    "Level Up"
+                ],
+                "roi": [
+                    0,
+                    0,
+                    1280,
+                    720
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_点击空白处关闭_agent": {
+        "action": {
+            "type": "Click"
+        },
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Select anywhere",
+                    "continue"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_回到难度选择界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Quick Battle"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_回到出发界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Ascension"
+                ]
+            },
+            "type": "OCR"
+        }
+    },
+    "星塔_确认_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Confirm"
+                ],
+                "roi": [
+                    500,
+                    425,
+                    352,
+                    143
+                ]
+            },
+            "type": "OCR"
+        }
+    }
+}

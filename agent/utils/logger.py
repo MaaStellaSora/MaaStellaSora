@@ -1,7 +1,3 @@
-import logging
-import os
-from datetime import datetime
-
 """
 一个基于MFAAvalonia格式的控制台日志输出功能
 
@@ -11,10 +7,14 @@ from datetime import datetime
     logger = get_logger(__name__)
     logger.info("这是一条信息")
 
-    # 开启调试模式
+    # 开启调试模式，调试模式会在项目根目录下的 debug/agent 目录下创建日志文件
     debug_mode()
     logger.debug("这是调试信息")
 """
+
+import logging
+from datetime import datetime
+from pathlib import Path
 
 
 class UIPureTextFormatter(logging.Formatter):
@@ -37,7 +37,7 @@ _initialized_loggers: set[str] = set()
 
 # 全局调试模式状态及日志文件路径，确保后续新建logger也能感知
 _debug_mode_enabled: bool = False
-_debug_log_file: str | None = None
+_debug_log_file: Path | None = None
 
 
 def get_logger(name: str = "my_app") -> logging.Logger:
@@ -84,7 +84,7 @@ def get_logger(name: str = "my_app") -> logging.Logger:
     return logger
 
 
-def _apply_debug_to_logger(logger: logging.Logger, log_file: str) -> None:
+def _apply_debug_to_logger(logger: logging.Logger, log_file: Path) -> None:
     """
     对单个logger应用调试模式：添加独立的文件处理器并将所有handler级别设为DEBUG。
 
@@ -99,7 +99,7 @@ def _apply_debug_to_logger(logger: logging.Logger, log_file: str) -> None:
     has_file_handler = any(isinstance(h, logging.FileHandler) for h in logger.handlers)
     if not has_file_handler:
         # 修复：每个logger使用独立的FileHandler实例
-        file_handler = logging.FileHandler(log_file, encoding="utf-8")
+        file_handler = logging.FileHandler(str(log_file), encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
 
         file_fmt = "%(asctime)s|%(name)s|%(levelname)s|%(message)s"
@@ -118,16 +118,16 @@ def debug_mode() -> None:
     """
     开启调试模式：
     - 将所有已创建logger的handler级别设置为DEBUG
-    - 为每个logger添加独立的文件处理器，将日志保存到 debug/agent_debug/{年-月-日}.log
+    - 为每个logger添加独立的文件处理器，将日志保存到 debug/agent/{年-月-日}.log
     - 记录全局状态，确保之后新建的logger也自动应用调试模式
     """
     global _debug_mode_enabled, _debug_log_file
 
     # 基于文件自身位置推算项目根目录（/agent/utils/logger.py -> 上两级）
-    log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "debug", "agent")
-    os.makedirs(log_dir, exist_ok=True)
+    log_dir = Path(__file__).resolve().parents[2] / "debug" / "agent"
+    log_dir.mkdir(parents=True, exist_ok=True)
 
-    log_file = os.path.join(log_dir, f"{datetime.now().strftime('%Y-%m-%d')}.log")
+    log_file = log_dir / f"{datetime.now().strftime('%Y-%m-%d')}.log"
 
     # 记录全局状态，供后续 get_logger() 使用
     _debug_mode_enabled = True

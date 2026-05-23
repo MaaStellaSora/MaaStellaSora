@@ -18,5 +18,13 @@
         ]
       }
     }
+  },
+  "登录_启动游戏": {
+    "action": {
+      "type": "StartApp",
+      "param": {
+        "package": "com.Stargazer.StellaSora"
+      }
+    }
   }
 }

@@ -178,27 +178,6 @@
       "type": "OCR"
     }
   },
-  "心链_打开心链": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Recognition.Starting": "正在打开心链"
-    },
-    "next": [
-      "心链_点击邮寄"
-    ],
-    "post_wait_freezes": 2000,
-    "recognition": {
-      "param": {
-        "expected": [
-          "心鏈"
-        ]
-      },
-      "type": "OCR"
-    }
-  },
   "心链_点击邮寄": {
     "action": {
       "param": {},

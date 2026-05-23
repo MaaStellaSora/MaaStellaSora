@@ -19,7 +19,7 @@
           210,
           85
         ],
-        "threshold": 0.9
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     },
@@ -39,7 +39,7 @@
           550,
           468
         ],
-        "threshold": 0.9
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     },
@@ -75,23 +75,26 @@
     "timeout": 5000
   },
   "星塔_节点_选择潜能_agent": {
-    "recognition": {
+    "action": {
       "type": "Custom",
       "param": {
-        "custom_recognition": "choose_potential_recognition"
+        "custom_action": "choose_potential_action"
       }
-    },
-    "action": {
-      "type": "Click"
     },
     "next": [
       "星塔_节点_选择潜能_拿走_agent"
     ],
     "attach": {
       "priority_list": [],
-      "max_refresh_count": 2,
-      "reserve_coin": 0,
-      "owned_potentials": {}
+      "max_refresh_count": 4,
+      "reserved_coin": 0,
+      "max_failed_count": 2,
+      "max_potential_count": 70,
+      // 触发潜能选择的类型，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
+      "trigger_type": "default",
+      // 潜能处理方式，"default+"表示在推荐图标基础上还会根据其他信息筛选，"json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
+      "handler": "default+",
+      "chooser": "tower_8"
     },
     "post_wait_freeze": 100,
     "timeout": 2000
@@ -264,10 +267,10 @@
           "商店购物"
         ],
         "roi": [
-          395,
-          243,
-          338,
-          98
+          350,
+          250,
+          580,
+          330
         ]
       },
       "type": "OCR"
@@ -299,6 +302,8 @@
       "regular_shop_refresh_threshold": 1500,
       "full_price_buy_reserve_base": 500,
       "buy_assist_melody": true,
+      "buy_assist_before_unlock": true,
+      "buy_assist_at_final_only": false,
       "melody_of_aqua": false,
       "melody_of_ignis": false,
       "melody_of_terra": false,
@@ -342,10 +347,10 @@
           "商店购物"
         ],
         "roi": [
-          395,
-          243,
-          338,
-          98
+          350,
+          250,
+          580,
+          330
         ]
       },
       "type": "OCR"
@@ -378,10 +383,10 @@
           "上楼"
         ],
         "roi": [
-          421,
-          487,
-          287,
-          59
+          350,
+          350,
+          580,
+          210
         ]
       }
     },
@@ -400,10 +405,10 @@
           "离开星塔"
         ],
         "roi": [
-          421,
-          487,
-          287,
-          59
+          350,
+          350,
+          580,
+          210
         ]
       }
     },
@@ -524,10 +529,10 @@
           "快速战斗"
         ],
         "roi": [
-          850,
-          631,
-          94,
-          39
+          790,
+          620,
+          222,
+          65
         ]
       },
       "type": "OCR"

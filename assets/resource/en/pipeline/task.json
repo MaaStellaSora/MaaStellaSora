@@ -1,0 +1,29 @@
+{
+  "任务_今日事务": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Daily Affairs"
+        ]
+      }
+    }
+  },
+  "任务_每周事务": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Weekly Affairs"
+        ]
+      }
+    }
+  },
+  "任务_魔王养成": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Tyrant Growth"
+        ]
+      }
+    }
+  }
+}

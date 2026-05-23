@@ -1,0 +1,90 @@
+{
+  "邀约_主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Invite"
+        ]
+      }
+    }
+  },
+  "邀约_前往邀约": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Invite"
+        ]
+      }
+    }
+  },
+  "邀约_已回到邀约界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Invite"
+        ]
+      }
+    }
+  },
+  "邀约_地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select"
+        ]
+      }
+    }
+  },
+  "邀约_点击空白": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere",
+          "Continue"
+        ]
+      }
+    }
+  },
+  "邀约_还是算了": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Never mind"
+        ]
+      }
+    }
+  },
+  "邀约_送出礼物": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Send Gift"
+        ]
+      }
+    }
+  },
+  "邀约_送礼": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Send Gift"
+        ]
+      }
+    }
+  },
+  "邀约_默契提升": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Level Up"
+        ],
+        "roi": [
+          0,
+          0,
+          1280,
+          720
+        ]
+      }
+    }
+  }
+}

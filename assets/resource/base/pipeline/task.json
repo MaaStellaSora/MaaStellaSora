@@ -50,6 +50,8 @@
     "next": [
       "任务_领取任务"
     ],
+    "repeat": 2,
+    "repeat_delay": 1000,
     "post_delay": 500
   },
   "任务_一键领取": {
@@ -58,7 +60,11 @@
       "type": "Click"
     },
     "next": [
-      "通用_点击空白处继续"
+      "通用_点击空白处继续",
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
+      }
     ],
     "recognition": {
       "param": {
@@ -171,7 +177,11 @@
       "type": "Click"
     },
     "next": [
-      "通用_点击空白处继续"
+      "通用_点击空白处继续",
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
+      }
     ],
     "recognition": {
       "param": {

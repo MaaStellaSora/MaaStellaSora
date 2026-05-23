@@ -29,11 +29,11 @@
     ],
     "recognition": {
       "param": {
-        "expected": [
-          "心链"
+        "template": [
+          "Invite/heartlink.png"
         ]
       },
-      "type": "OCR"
+      "type": "TemplateMatch"
     }
   },
   "邀约_开始邀约": {
@@ -203,8 +203,8 @@
         "roi": [
           82,
           128,
-          65,
-          38
+          70,
+          40
         ]
       },
       "type": "OCR"

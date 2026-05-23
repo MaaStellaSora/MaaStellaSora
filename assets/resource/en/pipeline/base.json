@@ -1,0 +1,37 @@
+{
+  "通用_一键领取": {
+    "recognition": {
+      "param": {
+        "threshold": 0.9
+      }
+    }
+  },
+  "通用_点击空白处继续": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere to continue"
+        ]
+      }
+    }
+  },
+  "通用_点击空白处": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere"
+        ]
+      }
+    }
+  },
+  "月卡_领取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Select anywhere",
+          "continue"
+        ]
+      }
+    }
+  }
+}

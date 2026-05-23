@@ -29,7 +29,8 @@
     },
     "next": [
       "[JumpBack]采购_前往采购",
-      "[JumpBack]采购_前往商城"
+      "[JumpBack]采购_前往商城",
+      "采购_任务完成"
     ],
     "timeout": 3000
   },
@@ -98,5 +99,10 @@
       "type": "TemplateMatch"
     },
     "pre_delay": 1000 // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
+  },
+  "采购_任务完成": {
+    "action": {
+      "type": "DoNothing"
+    }
   }
 }

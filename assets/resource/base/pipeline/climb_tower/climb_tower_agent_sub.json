@@ -620,5 +620,16 @@
       "星塔_节点_商店_进入购物界面_agent"
     ],
     "post_wait_freezes": 100
+  },
+  "星塔_节点_进行对话选择_寻找650金币选项_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "650"
+        ],
+        "threshold": 0.6
+      },
+      "type": "OCR"
+    }
   }
 }

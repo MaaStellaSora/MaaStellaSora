@@ -1,6 +1,8 @@
+import numpy as np
 from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
+from maa.define import Rect
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_quiz")
@@ -21,6 +23,7 @@ class QuizRecognition(CustomRecognition):
         answer_count = 0
         default_box = [0, 0, 0, 0]
 
+        # 根据选项数量定位roi
         reco_result = context.run_recognition("星塔_节点_随便选择_agent", argv.image)
         if reco_result and reco_result.hit:
             answer_count = len(reco_result.filtered_results)
@@ -29,7 +32,25 @@ class QuizRecognition(CustomRecognition):
         if not answer_count or answer_count not in self.ROIS:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
+        # 寻找最佳答案
         roi = self.ROIS[answer_count]
+        result_box = self._get_best_answer(context, argv.image, roi)
+        if result_box:
+            return CustomRecognition.AnalyzeResult(box=result_box, detail={})
+
+        # 寻找赌 650 金币的答案
+        result_box = self._get_650_answer(context, argv.image, roi)
+        if result_box:
+            return CustomRecognition.AnalyzeResult(box=result_box, detail={})
+
+        # 兜底，选择第一个选项
+        logger.info(f"[问题选择] 选择第一个选项")
+        # from utils.image_handler import save_image
+        # save_image(argv.image, f"未知选项")
+        return CustomRecognition.AnalyzeResult(box=default_box, detail={})
+
+    @staticmethod
+    def _get_best_answer(context: Context, image: np.ndarray, roi: list) -> Rect | None:
         pipeline_override = {"星塔_节点_进行对话选择_agent":
             {
                  "recognition": {
@@ -41,14 +62,40 @@ class QuizRecognition(CustomRecognition):
         }
         reco_result = context.run_recognition(
             "星塔_节点_进行对话选择_agent",
-            argv.image,
+            image,
             pipeline_override=pipeline_override
         )
         if reco_result and reco_result.hit:
             target_text = reco_result.best_result.text
             target_box = reco_result.best_result.box
             logger.info(f"[问题选择] 选择答案：{target_text}")
-            return CustomRecognition.AnalyzeResult(box=target_box, detail={})
-        else:
-            logger.info(f"[问题选择] 选择第一个选项")
-            return CustomRecognition.AnalyzeResult(box=default_box, detail={})
+            return target_box
+
+        return None
+
+    @staticmethod
+    def _get_650_answer(context: Context, image: np.ndarray, roi: list) -> list | None:
+        pipeline_override = {"星塔_节点_进行对话选择_agent":
+            {
+                 "recognition": {
+                     "param": {
+                         "roi": roi
+                     }
+                }
+            }
+        }
+        reco_result = context.run_recognition(
+            "星塔_节点_进行对话选择_寻找650金币选项_agent",
+            image,
+            pipeline_override=pipeline_override
+        )
+        if reco_result and reco_result.hit:
+            target_text = reco_result.best_result.text
+            target_box = reco_result.best_result.box
+            logger.info(f"[问题选择] 选择650金币的选项")
+            logger.debug(target_text)
+
+            fixed_box = [target_box[0], target_box[1]-30, target_box[2]-100, target_box[3]]
+            return fixed_box
+
+        return None

@@ -493,8 +493,8 @@ class ScreenDataProcessor:
     ) -> tuple[int, int]:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
         texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
-        levels = self._parse_level_text(texts)
-        return levels
+        parsed_texts = self._parse_level_text(texts)
+        return parsed_texts
 
     @staticmethod
     def _parse_level_text(texts: list[str]) -> tuple[int, int]:
@@ -823,8 +823,17 @@ class GameRecommendedHandler(ChoosePotentialHandler):
     def tower_8_chooser(self) -> Potential | None:
         """
         塔8专用策略
-        简单来说就是优先抓取推荐等级6的潜能
-        未满级牌过多时，尽量先过牌，然后再考虑新牌
+        分为几种情况：
+            核心潜能选择时，直接选择推荐潜能
+            刷新次数未到最大刷新次数时，使用贪婪策略
+            刷新次数达到最大刷新次数时，或者是强化时，使用兜底策略
+        目前优先级规则（测试中，因为在不断调整，可能会跟代码不一样）：
+            >升级间距>=3级且推荐等级>=2级的新潜能
+            >获得10次心花怒放后，升级间距>=2级且推荐等级>=1级的新潜能
+            >推荐等级为6级的已抓潜能
+            >新等级=推荐等级的推荐潜能
+            >新等级>=推荐等级的推荐潜能
+        筛选成功后，按照等级跨度降序、推荐等级降序、旧等级降序来排序，取得想要的潜能
 
         Returns:
             Potential | None: 最好的系统推荐潜能，若没有则返回 None
@@ -841,34 +850,36 @@ class GameRecommendedHandler(ChoosePotentialHandler):
               ):
             old_potentials_count = sum(1 for p in self.data.potentials if p.old_level > 0)
             if self.data.params.chooser.endswith("aggressive"):
-                # 贪婪策略（尽量把3级的心花怒放用在推荐等级6的潜能中）
+                # 贪婪策略
                 priority_rules = [
-                    # 升级间距 >= 3级 且 推荐等级 = 6级 的新潜能
-                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level == 6,
+                    # 升级间距 >= 3级 且 推荐等级 >= 2级 的新潜能
+                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 2,
                     # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
                     lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
                                and State.high_level_span_count >= 10),
                     # 推荐等级为6级的已抓潜能
                     lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
-                    # 获得10次心花怒放后，选择已抓推荐潜能
-                    lambda p: p.recommended and p.old_level > 0 and State.high_level_span_count >= 10,
+                    # 新等级 = 推荐等级的新潜能
+                    lambda p: p.recommended and p.recommended_level == p.new_level and p.new_level == 1,
                     # 已抓潜能 >= 2 时，选择已抓推荐潜能
                     lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2,
                 ]
             else:
-                # 均衡策略（3级的心花怒放用在推荐等级>=2的潜能中）
+                # 均衡策略
                 priority_rules = [
-                    # 升级间距 >= 3级 且 推荐等级 >= 2级 的新潜能
-                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 2,
-                    # 获得10次心花怒放后，升级间距 >= 2级 的推荐新潜能
-                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2
+                    # 升级间距 >= 3级 且 推荐等级 >= 3级 的新潜能
+                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
+                    # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
+                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
                                and State.high_level_span_count >= 10),
                     # 推荐等级为6级的已抓潜能
                     lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
-                    # 获得10次心花怒放后，选择已抓推荐潜能
-                    lambda p: p.recommended and p.old_level > 0 and State.high_level_span_count >= 10,
+                    # 新等级 = 推荐等级的推荐潜能
+                    lambda p: p.recommended and p.recommended_level == p.new_level,
+                    # 新等级 >= 推荐等级的推荐潜能
+                    lambda p: p.recommended and p.new_level >= p.recommended_level,
                     # 已抓潜能 >= 2 时，选择已抓推荐潜能
-                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2,
+                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2
                 ]
         else:
             priority_rules = [

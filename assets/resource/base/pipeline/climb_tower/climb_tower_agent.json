@@ -236,7 +236,8 @@
           196,
           585,
           452
-        ]
+        ],
+        "order_by": "Expected"
       },
       "type": "OCR"
     }

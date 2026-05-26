@@ -95,7 +95,7 @@ class QuizRecognition(CustomRecognition):
             logger.info(f"[问题选择] 选择650金币的选项")
             logger.debug(target_text)
 
-            fixed_box = [target_box[0], target_box[1]-30, target_box[2]-100, target_box[3]]
+            fixed_box = [target_box[0], target_box[1]-55, target_box[2]-100, target_box[3]]
             return fixed_box
 
         return None

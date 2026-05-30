@@ -29,7 +29,13 @@ class QuizRecognition(CustomRecognition):
             answer_count = len(reco_result.filtered_results)
             default_box = reco_result.best_result.box
 
+        if answer_count == 1:
+            # 有时候因为不够金币导致只有部分选项生效
+            logger.warning(f"[问题选择] 只检测到1个有效选项，选择该选项")
+            return CustomRecognition.AnalyzeResult(box=default_box, detail={})
+
         if not answer_count or answer_count not in self.ROIS:
+            logger.error(f"[问题选择] 检测选项个数出现问题")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 寻找最佳答案

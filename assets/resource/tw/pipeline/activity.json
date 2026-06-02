@@ -1,4 +1,14 @@
 {
+  "活动_等待活动界面静止": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "戰鬥關卡"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
   "活动_选择活动难度": {
     "recognition": {
       "param": {

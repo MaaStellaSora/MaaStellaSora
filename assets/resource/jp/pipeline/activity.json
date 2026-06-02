@@ -17,6 +17,15 @@
       }
     }
   },
+  "活动_等待活动界面静止": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "バトル"
+        ]
+      }
+    }
+  },
   "活动_点击活动战斗关卡": {
     "recognition": {
       "param": {

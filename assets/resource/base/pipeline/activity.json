@@ -113,7 +113,7 @@
       "Node.Action.Starting": "正在打开活动"
     },
     "next": [
-      "活动_点击活动战斗关卡"
+      "活动_等待活动界面静止"
     ],
     "recognition": {
       "param": {
@@ -123,6 +123,22 @@
       },
       "type": "TemplateMatch"
     }
+  },
+  "活动_等待活动界面静止": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "战斗关卡"
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "活动_点击活动战斗关卡"
+    ],
+    "post_wait_freezes": 500,
+    "pre_delay": 0,
+    "post_delay": 0
   },
   "活动_添加战斗次数": {
     "action": {
@@ -166,7 +182,7 @@
       },
       "type": "OCR"
     },
-    "pre_wait_freezes": 500,
+    "pre_delay": 0,
     "post_wait_freezes": 200
   },
   "活动_选择活动难度": {

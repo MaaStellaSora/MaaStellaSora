@@ -44,6 +44,6 @@ class AscensionLoop(CustomAction):
             })
         else:
             logger.info("爬塔已完成，回到主页")
-            context.override_next(argv.node_name, ["星塔_回到主页_agent"])
+            context.override_next(argv.node_name, ["通用_返回主页"])
 
         return True

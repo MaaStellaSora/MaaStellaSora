@@ -417,10 +417,8 @@
       "type": "Click"
     },
     "next": [
-      "星塔_回到难度选择界面_agent",
-      "星塔_回到出发界面_agent",
+      "星塔_保存记录_agent",
       "[JumpBack]星塔_确认_agent",
-      "[JumpBack]星塔_保存记录_agent",
       "[JumpBack]星塔_点击空白处关闭_agent",
       "[JumpBack]星塔_默契提升_agent"
     ]
@@ -444,7 +442,10 @@
       "type": "Click"
     },
     "next": [
-      "星塔_确认_agent"
+      "星塔_回到难度选择界面_agent",
+      "星塔_回到出发界面_agent",
+      "星塔_回到主页_agent",
+      "[JumpBack]星塔_确认_agent"
     ]
   },
   "星塔_确认_agent": {
@@ -517,7 +518,8 @@
     },
     "next": [
       "星塔_快速战斗按钮_agent",
-      "星塔_星塔探索按钮_agent"
+      "星塔_星塔探索按钮_agent",
+      "星塔_出发_agent"
     ],
     "attach": {
       "loop_count": 1
@@ -562,9 +564,22 @@
     ]
   },
   "星塔_回到主页_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "menu.png"
+        ],
+        "roi": [
+          1180,
+          0,
+          100,
+          80
+        ]
+      },
+      "type": "TemplateMatch"
+    },
     "next": [
-      "通用_主页标记",
-      "[JumpBack]通用_返回主页"
+      "星塔_循环用节点_agent"
     ]
   }
 }

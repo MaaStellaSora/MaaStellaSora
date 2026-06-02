@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import time
 from dataclasses import dataclass, field
@@ -13,7 +15,157 @@ from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential")
 
 
+# region 常量 ===============================================================
+
 MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
+
+
+# endregion 常量 ===============================================================
+
+# region 跨节点储存的状态类 ===============================================================
+
+@dataclass(slots=True)
+class OwnedPotential:
+    name: str
+    level: int
+    recommended_level: int
+    trekker: str = "unknown"
+    core: bool = False
+
+    @property
+    def max_level(self) -> int:
+        """潜能等级上限"""
+        return 1 if self.core else MAX_POTENTIAL_LEVEL
+
+    @property
+    def unfinished(self) -> bool:
+        """是否未满级"""
+        return self.level < self.max_level
+
+@dataclass(slots=True)
+class OwnedPotentials:
+    potentials: list[OwnedPotential] = field(default_factory=list)
+
+    def save(self, potential: Potential, *, fuzzy: bool = False) -> None:
+        """将选中的潜能保存到OwnedPotentials中，如果已存在则更新等级和名字"""
+        if not potential.name:
+            return
+
+        trekker = potential.trekker or "unknown"
+        level = max(potential.new_level, 1)
+        core = potential.core
+
+        # 先查找潜能是否已存在，如果存在则更新等级和名字
+        existed = self.find(potential.name, trekker=trekker, core=core, fuzzy=fuzzy)
+        if existed:
+            # 防止 OCR 识别失败导致等级倒退，所以至少按照原等级+1处理
+            existed.level = min(existed.max_level, max(existed.level + 1, level))
+            # 使用更长的名字，因为更长的名字更接近原名
+            existed.name = self._longer_name(existed.name, potential.name)
+            return
+
+        # 不存在，就添加到list中
+        self.potentials.append(OwnedPotential(
+            name=potential.name,
+            level=level,
+            recommended_level=potential.recommended_level,
+            trekker=trekker,
+            core=core,
+        ))
+
+    def find(
+        self,
+        name: str,
+        *,
+        trekker: str | None = None,
+        core: bool | None = None,
+        fuzzy: bool = False,
+    ) -> OwnedPotential | None:
+        """查找是否已拥有该潜能"""
+        for item in self.potentials:
+            if trekker is not None and item.trekker != trekker:
+                continue
+            if core is not None and item.core != core:
+                continue
+            if self._match(item.name, name, fuzzy=fuzzy):
+                return item
+        return None
+
+    def find_level(
+        self,
+        name: str,
+        *,
+        trekker: str | None = None,
+        core: bool | None = None,
+        fuzzy: bool = False,
+    ) -> int:
+        """查找已拥有的某潜能的等级，如果不存在则返回0"""
+        item = self.find(name, trekker=trekker, core=core, fuzzy=fuzzy)
+        return item.level if item else 0
+
+    def count(
+        self,
+        trekker: str | list,
+        *,
+        level_at_least: int | None = None,
+        level_at_most: int | None = None,
+        unfinished_only: bool = False,
+    ) -> int:
+        """统计符合条件的潜能的数量"""
+        if isinstance(trekker, str):
+            trekker = (trekker,)
+
+        return sum(
+            1 for potential in self.potentials
+            if potential.trekker in trekker
+            and (level_at_least is None or potential.level >= level_at_least)
+            and (level_at_most is None or potential.level <= level_at_most)
+            and (not unfinished_only or potential.unfinished)
+        )
+
+    @staticmethod
+    def _match(a: str, b: str, *, fuzzy: bool) -> bool:
+        """
+        判断两个字符串是否匹配。
+        Args:
+            a: 第一个字符串
+            b: 第二个字符串
+            fuzzy: 是否开启模糊匹配（只对前后有漏的情况进行识别，中间有漏无法处理）
+
+        Returns:
+            bool: 是否匹配成功
+        """
+        if not fuzzy:
+            return a == b
+
+        # 简单处理日语的长音符号，中文的一不处理是因为会出现重名
+        a = re.sub(r"\W", "", a).replace("ー", "")
+        b = re.sub(r"\W", "", b).replace("ー", "")
+
+        # 需要排除空字符串然后再判断包含关系
+        return bool(a and b and (a in b or b in a))
+
+    @staticmethod
+    def _longer_name(old: str, new: str) -> str:
+        """一般来讲，更长的名称更接近原名"""
+        return new if len(new) > len(old) else old
+
+class State:
+    failed_count: int = 0
+    high_level_span_count: int = 0
+    potential_count: int = 0
+    owned_potentials: OwnedPotentials = OwnedPotentials()
+
+    @classmethod
+    def reset(cls):
+        cls.failed_count = 0
+        cls.high_level_span_count = 0
+        cls.potential_count = 0
+        cls.owned_potentials = OwnedPotentials()
+
+# endregion 跨节点储存的状态类 ===============================================================
+
+# region 潜能选择界面布局类 ===============================================================
 
 DEFAULT_POTENTIAL_LAYOUTS = {
     1: [
@@ -72,19 +224,6 @@ DEFAULT_POTENTIAL_LAYOUTS = {
     ]
 }
 
-class State:
-    failed_count: int = 0
-    high_level_span_count: int = 0
-    potential_count: int = 0
-    owned_potentials: dict = {}
-
-    @classmethod
-    def reset(cls):
-        cls.failed_count = 0
-        cls.high_level_span_count = 0
-        cls.potential_count = 0
-        cls.owned_potentials.clear()
-
 @dataclass(slots=True)
 class PotentialLayout:
     core_potential_roi: list[int]
@@ -113,6 +252,11 @@ class PotentialLayouts:
     def get(self, key, default=None):
         return self.potential_layouts.get(key, default)
 
+
+# endregion 潜能选择界面布局类 ===============================================================
+
+# region 节点参数类 ===============================================================
+
 @dataclass(slots=True)
 class Parameters:
     trigger_type: str
@@ -137,7 +281,7 @@ class Parameters:
     @staticmethod
     def _parse_priority_raw_list(
         potential_priority_raw: list[dict],
-        owned_potentials: dict,
+        owned_potentials: OwnedPotentials,
     ) -> list[dict[str, Any]]:
         """对原始 priority_list 进行初筛，过滤掉 condition 当前不满足的规则。
 
@@ -154,8 +298,7 @@ class Parameters:
                     "refresh": int,         # 可选，默认 0，已刷新次数必须 >= 该值规则才生效
                     "condition": list       # 可选，生效条件，元素为 dict 时 AND，为 list 时 OR
                 }
-            owned_potentials: 已拥有潜能状态，按 trekker 分组，结构：
-                {"花原": {"飞花乱坠": 1}, "unknown": {"盛大尾奏": 1}}
+            owned_potentials: 已拥有潜能状态。
 
         Returns:
             list[dict]: 通过初筛的规则列表，每个元素结构：
@@ -168,29 +311,25 @@ class Parameters:
                     "priority": int         # 原始 JSON 的 1-based 行号，越小排名越高
                 }
         """
-        owned_map: dict[str, int] = {}
-        for _p in owned_potentials.values():
-            owned_map.update(_p)
-
         def _check_single_condition(item: dict) -> bool:
             """检查单个 condition 子项是否满足。"""
             if "count_at_least" in item or "count_at_most" in item:
-                potentials = owned_potentials.get(item["trekker"], {})
                 level_min = item.get("level_at_least")
                 level_max = item.get("level_at_most")
-                if level_min is not None or level_max is not None:
-                    potentials = {
-                        name: level for name, level in potentials.items()
-                        if (level_min is None or level >= level_min)
-                        and (level_max is None or level <= level_max)
-                    }
-                count = len(potentials)
+                count = owned_potentials.count(
+                    item["trekker"],
+                    level_at_least=level_min,
+                    level_at_most=level_max,
+                )
                 if "count_at_least" in item and count < item["count_at_least"]:
                     return False
                 if "count_at_most" in item and count > item["count_at_most"]:
                     return False
                 return True
-            current = owned_map.get(item["potential"], 0)
+            current = owned_potentials.find_level(
+                item["potential"],
+                trekker=item.get("trekker"),
+            )
             min_ok = current >= item["level_at_least"] if "level_at_least" in item else True
             max_ok = current <= item["level_at_most"] if "level_at_most" in item else True
             return min_ok and max_ok
@@ -282,7 +421,7 @@ class Potential:
     def recommended_level_roi(self) -> list[int]:
         return self.layout.recommended_level_roi
 
-    def update(self, screen: "ScreenDataProcessor", data: "Data"):
+    def update(self, screen: ScreenDataProcessor, data: Data):
         # 更新核心潜能
         if data.core_potential:
             self.core = True
@@ -292,19 +431,19 @@ class Potential:
         self.old_level, self.new_level = self._get_level(screen, data)
         self.recommended, self.recommended_level = self._get_recommended_data(screen, data)
 
-    def _get_name(self, screen: "ScreenDataProcessor", data: "Data") -> str:
+    def _get_name(self, screen: ScreenDataProcessor, data: Data) -> str:
         roi = self.core_potential_name_roi if self.core else self.general_potential_name_roi
         adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
         return screen.get_potential_name(adjusted_roi)
 
-    def _get_level(self, screen: "ScreenDataProcessor", data: "Data") -> tuple[int, int]:
+    def _get_level(self, screen: ScreenDataProcessor, data: Data) -> tuple[int, int]:
         if self.core:
             return 0, 1
         adjusted_roi = self._get_adjusted_roi(self.general_potential_level_roi, data.params.selected_potential_offset)
         old, new = screen.get_potential_level(adjusted_roi)
         return old, new
 
-    def _get_recommended_data(self, screen: "ScreenDataProcessor", data: "Data") -> tuple[bool, int]:
+    def _get_recommended_data(self, screen: ScreenDataProcessor, data: Data) -> tuple[bool, int]:
         roi = self.potential_roi
         adjusted_roi = [self._get_adjusted_roi(roi, data.params.selected_potential_offset)]
         recommended = True if screen.check_potential_recommended(adjusted_roi) else False
@@ -321,6 +460,9 @@ class Potential:
             return [roi[0], max(0, roi[1] - offset) if self.selected else roi[1], roi[2], roi[3]]
 
 
+# endregion 节点参数类 ===============================================================
+
+# region 统筹所有数据的类（包括节点参数） ===============================================================
 
 @dataclass(slots=True)
 class Data:
@@ -373,6 +515,10 @@ class Data:
     def recommended_level_rois(self) -> list[list[int]]:
         return [l.recommended_level_roi for l in self.params.potential_layouts[self.potential_count]]
 
+
+# endregion 统筹所有数据的类（包括节点参数） ===============================================================
+
+# region 使用maa与屏幕交互类 ===============================================================
 
 class ScreenDataProcessor:
     def __init__(self, context: Context):
@@ -651,6 +797,10 @@ class ScreenDataProcessor:
         return matched
 
 
+# endregion 使用maa与屏幕交互类 ===============================================================
+
+# region 潜能选择核心逻辑类 ===============================================================
+
 class ChoosePotentialHandler:
     def __init__(self, screen: ScreenDataProcessor, data: Data):
         self.screen = screen
@@ -782,6 +932,10 @@ class ChoosePotentialHandler:
         ))
         return potential
 
+
+# endregion 潜能选择核心逻辑类 ===============================================================
+
+# region 潜能选择子类：系统推荐潜能+选择策略 ===============================================================
 
 class GameRecommendedHandler(ChoosePotentialHandler):
     def __init__(self, screen: ScreenDataProcessor, data: Data):
@@ -921,6 +1075,10 @@ class GameRecommendedHandler(ChoosePotentialHandler):
 
         return target_p
 
+
+# endregion 潜能选择子类：系统推荐潜能+选择策略 ===============================================================
+
+# region 潜能选择子类：json优先级选择 ===============================================================
 
 class AssistantPriorityHandler(ChoosePotentialHandler):
     def __init__(self, screen: ScreenDataProcessor, data: Data):
@@ -1069,6 +1227,9 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
         return min(valid_potentials, key=lambda p: (p.rank, -p.level_span, p.sub_rank), default=None)
 
 
+# endregion 潜能选择子类：json优先级选择 ===============================================================
+
+# region 主函数 ===============================================================
 
 @AgentServer.custom_action("choose_potential_action")
 class ChoosePotentialAction(CustomAction):
@@ -1130,15 +1291,11 @@ class ChoosePotentialAction(CustomAction):
         if not click_result:
             logger.error(f"点击潜能失败")
 
-        # 回写参数
-        if data.params.handler == "json":
-            owned = self._update_owned_potentials(
-                State.owned_potentials,
-                potential.name,
-                potential.new_level,
-                potential.trekker,
-            )
-            State.owned_potentials = owned
+        # 保存已选潜能数据到状态类中
+        State.owned_potentials.save(
+            potential,
+            fuzzy=data.params.handler == "default+",
+        )
 
         return CustomAction.RunResult(success=True)
 
@@ -1162,36 +1319,5 @@ class ChoosePotentialAction(CustomAction):
         params = Parameters(**attach)
         return params
 
-    @staticmethod
-    def _update_owned_potentials(
-        owned: dict,
-        potential_name: str,
-        new_level: int,
-        trekker: str,
-    ) -> dict:
-        """将本次选中的潜能写入 owned_potentials 对应的 trekker 分组。
 
-        Args:
-            owned: 当前 owned_potentials 字典，按 trekker 分组
-            potential_name: 本次选中的潜能名称
-            new_level: 本次选中的潜能等级
-            trekker: 归属角色名
-
-        Returns:
-            dict: 更新后的 owned_potentials
-        """
-        if not potential_name:
-            return owned
-
-        if new_level <= 0:
-            logger.debug(f"备份潜能 {potential_name} 时发现等级低于1，将默认为1级")
-            new_level = 1
-
-        if not trekker:
-            logger.debug(f"备份潜能 {potential_name} 时发现无所属旅人，将默认为unknown")
-            trekker = "unknown"
-
-        if trekker not in owned:
-            owned[trekker] = {}
-        owned[trekker][potential_name] = new_level
-        return owned
+# endregion 主函数 ===============================================================

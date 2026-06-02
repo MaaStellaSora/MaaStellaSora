@@ -118,9 +118,8 @@
     "recognition": {
       "param": {
         "template": [
-          "activity.png"
-        ],
-        "threshold": 0.9
+          "activity/banner.png"
+        ]
       },
       "type": "TemplateMatch"
     }

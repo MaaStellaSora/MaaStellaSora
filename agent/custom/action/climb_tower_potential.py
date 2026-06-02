@@ -827,86 +827,96 @@ class GameRecommendedHandler(ChoosePotentialHandler):
     def tower_8_chooser(self) -> Potential | None:
         """
         塔8专用策略
-        分为几种情况：
-            核心潜能选择时，直接选择推荐潜能
-            刷新次数未到最大刷新次数时，使用贪婪策略
-            刷新次数达到最大刷新次数时，或者是强化时，使用兜底策略
-        目前优先级规则（测试中，因为在不断调整，可能会跟代码不一样）：
-            >升级间距>=3级且推荐等级>=2级的新潜能
-            >获得10次心花怒放后，升级间距>=2级且推荐等级>=1级的新潜能
-            >推荐等级为6级的已抓潜能
-            >新等级=推荐等级的推荐潜能
-            >新等级>=推荐等级的推荐潜能
-        筛选成功后，按照等级跨度降序、推荐等级降序、旧等级降序来排序，取得想要的潜能
+        简单来说就是优先抓取推荐等级6的潜能
+        未满级牌过多时，尽量先过牌，然后再考虑新牌
 
         Returns:
             Potential | None: 最好的系统推荐潜能，若没有则返回 None
         """
-        target_p = None
+        # ================= 1. 规则库定义 =================
+        # 定义基础条件，避免 lambda 重复编写
+        old_potentials_count = sum(1 for p in self.data.potentials if p.old_level > 0)
+        has_10_high_spans = State.high_level_span_count >= 10
 
+        def is_valid_new_potential(p, min_span, min_recommended_lvl):
+            return (p.recommended and p.old_level == 0
+                    and p.level_span >= min_span and p.recommended_level >= min_recommended_lvl)
+
+        def is_valid_old_potential(p, min_recommended_lvl=0):
+            return (p.recommended and p.old_level > 0
+                    and (min_recommended_lvl == 0 or p.recommended_level == min_recommended_lvl))
+
+        strategy = "aggressive" if self.data.params.chooser.endswith("aggressive") else "balanced"
+
+        strategy_rules = {
+            "aggressive": [
+                # 升级间距 >= 3级 且 推荐等级 = 6级 的新潜能
+                lambda p: is_valid_new_potential(p, min_span=3, min_recommended_lvl=6),
+                # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
+                lambda p: has_10_high_spans and is_valid_new_potential(p, min_span=2, min_recommended_lvl=1),
+                # 推荐等级为6级的已抓潜能
+                lambda p: is_valid_old_potential(p, min_recommended_lvl=6),
+                # 获得10次心花怒放后，选择已抓推荐潜能
+                lambda p: has_10_high_spans and is_valid_old_potential(p),
+                # 已抓潜能 >= 2 时，选择已抓推荐潜能
+                lambda p: old_potentials_count >= 2 and is_valid_old_potential(p),
+            ],
+            "balanced": [
+                # 升级间距 >= 3级 且 推荐等级 >= 2级 的新潜能
+                lambda p: is_valid_new_potential(p, min_span=3, min_recommended_lvl=2),
+                # 获得10次心花怒放后，升级间距 >= 2级 的推荐新潜能
+                lambda p: has_10_high_spans and is_valid_new_potential(p, min_span=2, min_recommended_lvl=1),
+                # 推荐等级为6级的已抓潜能
+                lambda p: is_valid_old_potential(p, min_recommended_lvl=6),
+                # 获得10次心花怒放后，选择已抓推荐潜能
+                lambda p: has_10_high_spans and is_valid_old_potential(p),
+                # 已抓潜能 >= 2 时，选择已抓推荐潜能
+                lambda p: old_potentials_count >= 2 and is_valid_old_potential(p),
+                # 已抓潜能 >= 2 时，选择升级间距 >= 2级 且 推荐等级 >= 2级 的新潜能
+                lambda p: old_potentials_count >= 2 and is_valid_new_potential(p, min_span=2, min_recommended_lvl=2),
+            ]
+        }
+
+        # ================= 2. 匹配优先级规则 =================
+        # 核心潜能，不能刷新，直接选择推荐潜能
         if self.data.core_potential:
             priority_rules = [
                 lambda p: p.recommended
             ]
-        elif (self.data.refreshable
-              and State.failed_count < self.data.params.max_failed_count
-              and State.potential_count < self.data.params.max_potential_count
-              ):
-            old_potentials_count = sum(1 for p in self.data.potentials if p.old_level > 0)
-            if self.data.params.chooser.endswith("aggressive"):
-                # 贪婪策略
-                priority_rules = [
-                    # 升级间距 >= 3级 且 推荐等级 >= 2级 的新潜能
-                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 2,
-                    # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
-                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
-                               and State.high_level_span_count >= 10),
-                    # 推荐等级为6级的已抓潜能
-                    lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
-                    # 新等级 = 推荐等级的新潜能
-                    lambda p: p.recommended and p.recommended_level == p.new_level and p.new_level == 1,
-                    # 已抓潜能 >= 2 时，选择已抓推荐潜能
-                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2,
-                ]
-            else:
-                # 均衡策略
-                priority_rules = [
-                    # 升级间距 >= 3级 且 推荐等级 >= 3级 的新潜能
-                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
-                    # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
-                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
-                               and State.high_level_span_count >= 10),
-                    # 推荐等级为6级的已抓潜能
-                    lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
-                    # 新等级 = 推荐等级的推荐潜能
-                    lambda p: p.recommended and p.recommended_level == p.new_level,
-                    # 新等级 >= 推荐等级的推荐潜能
-                    lambda p: p.recommended and p.new_level >= p.recommended_level,
-                    # 已抓潜能 >= 2 时，选择已抓推荐潜能
-                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2
-                ]
-        else:
+        # 其他不能刷新的情况，直接选择兜底潜能（除了游戏内的强化，还有星塔助手选项中的失败次数、潜能数量到达阈值后也是使用这个策略）
+        elif (not self.data.refresh_botton
+              or State.failed_count >= self.data.params.max_failed_count
+              or State.potential_count >= self.data.params.max_potential_count):
             priority_rules = [
                 lambda p: p.recommended,
                 lambda p: p.old_level > 0,
                 lambda p: p.old_level == 0
             ]
+        # 可以刷新的情况，根据参数进行选择策略
+        # 贪婪策略：尽量把3级的心花怒放用在推荐等级6的潜能中
+        # 均衡策略：3级的心花怒放用在推荐等级>=2的潜能中
+        else:
+            priority_rules = strategy_rules[strategy]
 
+        # ================= 3. 核心查找逻辑 =================
+        target_p = None
         for rule in priority_rules:
             candidates = [p for p in self.data.potentials if rule(p)]
             if candidates:
                 target_p = max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level))
                 break
 
+        # ================= 4. 状态更新与兜底 =================
         # 抓到高等级跨度新潜能时计数+1
         if target_p and target_p.old_level == 0 and target_p.level_span >= 3:
             State.high_level_span_count += 1
             logger.info(f"3级心花怒放计数 {State.high_level_span_count}/10")
 
-        # 抓不到想要的潜能时，失败计数+1
-        if (not self.data.refreshable and self.data.params.trigger_type != "enhance"
-                and (target_p is None or not target_p.recommended)):
+        # 抓不到想要的潜能、有刷新按钮但刷新次数用完、且失败计数还没到达最大次数时，失败计数+1，并选择兜底潜能
+        if (target_p is None and self.data.refresh_botton and not self.data.refreshable
+                and State.failed_count < self.data.params.max_failed_count):
             State.failed_count += 1
+            target_p = self.choose_fallback_potential()
             logger.info(f"抓不到想要的潜能，失败次数： {State.failed_count}/{self.data.params.max_failed_count}")
 
         return target_p

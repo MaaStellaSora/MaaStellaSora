@@ -1143,7 +1143,7 @@ class ShopAction(CustomAction):
             logger.debug(f"识别到刷新费用：{[r.text for r in reco_detail.filtered_results]}")
             return int(reco_detail.best_result.text)
 
-        logger.error("无法识别刷新费用，返回 65535")
+        logger.debug("无法识别刷新费用，可能是刷新用完，也有可能识别错误。返回 65535")
         return 65535
 
     def _get_reverse_mapping(self, lang_type: str) -> dict[str, str]:

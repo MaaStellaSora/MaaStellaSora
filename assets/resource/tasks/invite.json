@@ -22,31 +22,31 @@
                     "name": "1号",
                     "pipeline_type": "string",
                     "default": "希娅",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
                 },
                 {
                     "name": "2号",
                     "pipeline_type": "string",
-                    "default": "",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
+                    "default": "雾语",
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
                 },
                 {
                     "name": "3号",
                     "pipeline_type": "string",
-                    "default": "",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
+                    "default": "苍兰",
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
                 },
                 {
                     "name": "4号",
                     "pipeline_type": "string",
-                    "default": "",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
+                    "default": "冬香",
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
                 },
                 {
                     "name": "5号",
                     "pipeline_type": "string",
-                    "default": "",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请留空"
+                    "default": "夏花",
+                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
                 }
             ],
             "pipeline_override": {

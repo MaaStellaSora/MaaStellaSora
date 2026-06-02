@@ -32,7 +32,7 @@ class InviteAuto(CustomAction):
                 return True
 
             trekker_name, choose_gift = self._get_trekker_info(context, node)
-            if not trekker_name:
+            if not trekker_name or trekker_name in ("x", "X"):
                 self.logger.debug(f"节点'{node}'的邀约对象为空，跳过")
                 continue
 

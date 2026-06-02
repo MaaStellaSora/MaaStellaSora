@@ -206,7 +206,10 @@
     ]
   },
   "登录_等待下载": {
-    "post_delay": 2000
+    // 先默认等待15分钟，后续考虑做个选项给用户自定义
+    "pre_delay": 0,
+    "post_delay": 2000,
+    "max_hit": 27000
   },
   "登录_下载完成_图片": {
     "recognition": {
@@ -223,7 +226,9 @@
         ]
       },
       "type": "TemplateMatch"
-    }
+    },
+    "pre_delay": 0,
+    "post_delay": 0
   },
   "登录_下载完成_文字": {
     "recognition": {
@@ -239,7 +244,9 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "pre_delay": 0,
+    "post_delay": 0
   },
   "登录_启动游戏": {
     "action": {

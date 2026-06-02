@@ -303,8 +303,7 @@
                     },
                     "option": [
                         "新版爬塔_潜能选择策略",
-                        "新版爬塔_潜能抓取失败次数阈值",
-                        "新版爬塔_潜能抓取数阈值"
+                        "新版爬塔_潜能抓取倾向",
                     ]
                 },
                 {
@@ -329,68 +328,70 @@
             "default_case": "塔8(均衡)",
             "cases": [
                 {
-                    "name": "塔8(均衡)",
-                    "description": "基于塔8环境的选择策略，会尽量选择初始等级3级的推荐潜能",
+                    "name": "塔8(宽松)",
+                    "description": "基于塔8环境的选择策略，挑选要求较低",
                     "pipeline_override": {
                         "星塔_节点_选择潜能_agent": {
                             "attach": {
-                                "chooser": "tower_8_balance"
+                                "chooser": "tower_8",
+                                "tower_8_strategy": "conservative"
                             }
                         }
                     }
                 },
                 {
-                    "name": "塔8(激进)",
-                    "description": "基于塔8环境的选择策略，会尽量选择初始等级3级、推荐等级2以上的推荐潜能",
+                    "name": "塔8(均衡)",
+                    "description": "基于塔8环境的选择策略，挑选要求适中",
                     "pipeline_override": {
                         "星塔_节点_选择潜能_agent": {
                             "attach": {
-                                "chooser": "tower_8_aggressive"
+                                "chooser": "tower_8",
+                                "tower_8_strategy": "balanced"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "塔8(严格)",
+                    "description": "基于塔8环境的选择策略，挑选要求较高",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "chooser": "tower_8",
+                                "tower_8_strategy": "aggressive"
                             }
                         }
                     }
                 }
             ]
         },
-        "新版爬塔_潜能抓取失败次数阈值": {
-            "type": "input",
-            "inputs": [
+        "新版爬塔_潜能抓取倾向": {
+            "type": "select",
+            "label": "潜能抓取倾向",
+            "description": "在包里拥有较多未满级潜能时，选择优先升级旧潜能还是优先抓取新潜能",
+            "default_case": "升级旧潜能",
+            "cases": [
                 {
-                    "name": "潜能抓取失败次数阈值",
-                    "description": "在用光刷新也抓不到推荐潜能时会算作抓取失败<br>抓取失败达到该阈值后，不会使用刷新",
-                    "pipeline_type": "int",
-                    "default": "2",
-                    "verify": "^\\d+$",
-                    "pattern_msg": "请输入潜能抓取失败次数阈值"
-                }
-            ],
-            "pipeline_override": {
-                "星塔_节点_选择潜能_agent": {
-                    "attach": {
-                        "max_failed_count": "{潜能抓取失败次数阈值}"
+                    "name": "升级旧潜能",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "tower_8_capacity_strategy": "normal"
+                            }
+                        }
                     }
-                }
-            }
-        },
-        "新版爬塔_潜能抓取数阈值": {
-            "type": "input",
-            "inputs": [
+                },
                 {
-                    "name": "潜能抓取数阈值",
-                    "description": "抓取潜能数量达到该阈值后，不会使用刷新<br>使用该设置可以预防后期过度刷新的问题",
-                    "pipeline_type": "int",
-                    "default": "999",
-                    "verify": "^\\d+$",
-                    "pattern_msg": "请输入潜能抓取数阈值"
-                }
-            ],
-            "pipeline_override": {
-                "星塔_节点_选择潜能_agent": {
-                    "attach": {
-                        "max_potential_count": "{潜能抓取数阈值}"
+                    "name": "抓取新潜能",
+                    "pipeline_override": {
+                        "星塔_节点_选择潜能_agent": {
+                            "attach": {
+                                "tower_8_capacity_strategy": "greedy"
+                            }
+                        }
                     }
-                }
-            }
+                },
+            ]
         },
         "新版爬塔_潜能最大刷新次数": {
             "type": "input",
@@ -398,7 +399,7 @@
                 {
                     "name": "潜能最大刷新次数",
                     "pipeline_type": "int",
-                    "default": "4",
+                    "default": "2",
                     "verify": "^\\d+$",
                     "pattern_msg": "请输入潜能最大刷新次数"
                 }

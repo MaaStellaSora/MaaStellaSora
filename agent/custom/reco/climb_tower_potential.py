@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Optional, Any, Self
+from math import comb
 
 import numpy
 
@@ -38,13 +39,24 @@ class OwnedPotential:
         return 1 if self.core else MAX_POTENTIAL_LEVEL
 
     @property
-    def unfinished(self) -> bool:
-        """是否未满级"""
-        return self.level < self.max_level
+    def owned(self) -> bool:
+        """是否已持有"""
+        return self.level > 0
+
+    @property
+    def recommended(self) -> bool:
+        """是否为推荐潜能"""
+        return self.recommended_level > 0
 
 @dataclass(slots=True)
 class OwnedPotentials:
     potentials: list[OwnedPotential] = field(default_factory=list)
+
+    def __iter__(self):
+        return iter(self.potentials)
+
+    def __len__(self):
+        return len(self.potentials)
 
     def save(self, potential: Potential, *, fuzzy: bool = False) -> None:
         """将选中的潜能保存到OwnedPotentials中，如果已存在则更新等级和名字"""
@@ -60,6 +72,7 @@ class OwnedPotentials:
         if existed:
             # 防止 OCR 识别失败导致等级倒退，所以至少按照原等级+1处理
             existed.level = min(existed.max_level, max(existed.level + 1, level))
+            existed.recommended_level = max(existed.recommended_level, potential.recommended_level)
             # 使用更长的名字，因为更长的名字更接近原名
             existed.name = self._longer_name(existed.name, potential.name)
             return
@@ -82,13 +95,14 @@ class OwnedPotentials:
         fuzzy: bool = False,
     ) -> OwnedPotential | None:
         """查找是否已拥有该潜能"""
-        for item in self.potentials:
-            if trekker is not None and item.trekker != trekker:
+        # TODO: 增加difflib匹配
+        for p in self.potentials:
+            if trekker is not None and p.trekker != trekker:
                 continue
-            if core is not None and item.core != core:
+            if core is not None and p.core != core:
                 continue
-            if self._match(item.name, name, fuzzy=fuzzy):
-                return item
+            if self._match(p.name, name, fuzzy=fuzzy):
+                return p
         return None
 
     def find_level(
@@ -96,20 +110,34 @@ class OwnedPotentials:
         name: str,
         *,
         trekker: str | None = None,
-        core: bool | None = None,
         fuzzy: bool = False,
     ) -> int:
         """查找已拥有的某潜能的等级，如果不存在则返回0"""
-        item = self.find(name, trekker=trekker, core=core, fuzzy=fuzzy)
-        return item.level if item else 0
+        owned_potential = self.find(name, trekker=trekker, fuzzy=fuzzy)
+        return owned_potential.level if owned_potential else 0
+
+    def find_recommended_level(
+        self,
+        name: str,
+        *,
+        trekker: str | None = None,
+        fuzzy: bool = False,
+    ) -> int:
+        """查找已拥有的某潜能的推荐等级，如果不存在则返回0"""
+        owned_potential = self.find(name, trekker=trekker, fuzzy=fuzzy)
+        return owned_potential.recommended_level if owned_potential else 0
 
     def count(
         self,
-        trekker: str | list,
         *,
+        trekker: str | list = None,
         level_at_least: int | None = None,
         level_at_most: int | None = None,
-        unfinished_only: bool = False,
+        recommended_level_at_least: int | None = None,
+        recommended_level_at_most: int | None = None,
+        include_core: bool = False,
+        incomplete_only: bool = False,
+        leveling_only: bool = False
     ) -> int:
         """统计符合条件的潜能的数量"""
         if isinstance(trekker, str):
@@ -117,10 +145,14 @@ class OwnedPotentials:
 
         return sum(
             1 for potential in self.potentials
-            if potential.trekker in trekker
+            if (trekker is None or potential.trekker in trekker)
             and (level_at_least is None or potential.level >= level_at_least)
             and (level_at_most is None or potential.level <= level_at_most)
-            and (not unfinished_only or potential.unfinished)
+            and (recommended_level_at_least is None or potential.recommended_level >= recommended_level_at_least)
+            and (recommended_level_at_most is None or potential.recommended_level <= recommended_level_at_most)
+            and (include_core or not potential.core)
+            and (not incomplete_only or potential.level < potential.recommended_level)
+            and (not leveling_only or potential.level < potential.max_level)
         )
 
     @staticmethod
@@ -130,19 +162,24 @@ class OwnedPotentials:
         Args:
             a: 第一个字符串
             b: 第二个字符串
-            fuzzy: 是否开启模糊匹配（只对前后有漏的情况进行识别，中间有漏无法处理）
+            fuzzy: 是否开启模糊匹配（通过in方法匹配，只能处理前后有漏的情况）
 
         Returns:
             bool: 是否匹配成功
         """
+        # 处理特殊符号
+        a = re.sub(r"\W", "", a)
+        b = re.sub(r"\W", "", b)
+
+        # 精确匹配
         if not fuzzy:
             return a == b
 
         # 简单处理日语的长音符号，中文的一不处理是因为会出现重名
-        a = re.sub(r"\W", "", a).replace("ー", "")
-        b = re.sub(r"\W", "", b).replace("ー", "")
+        a = a.replace("ー", "")
+        b = b.replace("ー", "")
 
-        # 需要排除空字符串然后再判断包含关系
+        # 通过in进行模糊匹配，需要排除空字符串然后再判断包含关系
         return bool(a and b and (a in b or b in a))
 
     @staticmethod
@@ -150,10 +187,13 @@ class OwnedPotentials:
         """一般来讲，更长的名称更接近原名"""
         return new if len(new) > len(old) else old
 
+
 class State:
     failed_count: int = 0
     high_level_span_count: int = 0
-    potential_count: int = 0
+    enhance_high_level_span_count: int = 0
+    potentials_level_count: int = 0
+    main_trekker: str = ""
     trekker_images: list[numpy.ndarray] = []
     owned_potentials: OwnedPotentials = OwnedPotentials()
 
@@ -161,7 +201,9 @@ class State:
     def reset(cls):
         cls.failed_count = 0
         cls.high_level_span_count = 0
-        cls.potential_count = 0
+        cls.enhance_high_level_span_count = 0
+        cls.potentials_level_count = 0
+        cls.main_trekker = ""
         cls.trekker_images.clear()
         cls.owned_potentials = OwnedPotentials()
 
@@ -274,8 +316,8 @@ class Parameters:
     priority_list: list[dict]
     handler: str
     chooser: str
-    max_failed_count: int
-    max_potential_count: int
+    tower_8_strategy: str
+    tower_8_capacity_strategy: str
     # 自带默认值的参数
     potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
     selected_potential_offset: int = 35
@@ -326,7 +368,7 @@ class Parameters:
                 level_min = item.get("level_at_least")
                 level_max = item.get("level_at_most")
                 count = owned_potentials.count(
-                    item["trekker"],
+                    trekker=item["trekker"],
                     level_at_least=level_min,
                     level_at_most=level_max,
                 )
@@ -452,11 +494,13 @@ class Potential:
     old_level: int = -1
     new_level: int = -1
     recommended: bool = False
-    recommended_level: int = 0
-    rank: int = -1
-    sub_rank: int = -1
+    recommended_level: int = -1
     trekker: str = ""
     selected: bool = False
+    # 自定义参数
+    rank: int = -1
+    sub_rank: int = -1
+    score: int = 0
 
     @property
     def level_span(self) -> int:
@@ -902,6 +946,12 @@ class ChoosePotentialHandler:
             return True
         return self.screen.click_potential(potential.box)
 
+    def dummy_potential(self, **kwargs) -> Potential:
+        """返回一个虚拟的潜能对象"""
+        potential_layout = self.data.params.potential_layouts[1][0]
+        base_potential = Potential(layout=potential_layout)
+        return replace(base_potential, **kwargs)
+
     def _update_names(self):
         rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois
         adjusted_rois = self._get_adjusted_rois(rois)
@@ -919,6 +969,7 @@ class ChoosePotentialHandler:
             old, new = self.screen.get_potential_level(roi)
             self.data.potentials[i].old_level, self.data.potentials[i].new_level = old, new
 
+            # TODO: 测试用
             if old == -1 and new == -1:
                 from utils.image_handler import save_image
                 save_image(self.screen.image, f"第{i}个潜能等级识别失败_{roi}")
@@ -1026,113 +1077,224 @@ class GameRecommendedHandler(ChoosePotentialHandler):
                 new = potential.new_level
                 logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | {recommended_output}")
 
+            # TODO: 测试用
+            logger.debug(f"所属旅人 {potential.trekker} | 潜能数 {State.owned_potentials.count(trekker=potential.trekker)}")
+        if not self.data.core_potential:
+            p_counts = [State.owned_potentials.count(trekker=t) for t in ["0", "1", "2"]]
+            p_leveling_counts = [State.owned_potentials.count(trekker=t, leveling_only=True) for t in ["0", "1", "2"]]
+            logger.debug(f"当前分别持有潜能 {p_counts}，未满级潜能 {p_leveling_counts}")
+
         return self
 
     def choose(self) -> Potential | None:
         # 根据参数选择潜能选择器
         if self.data.params.chooser.startswith("tower_8"):
             best_potential = self.tower_8_chooser()
-        elif self.data.params.chooser == "default":
-            best_potential = self._default_potential
         else:
             best_potential = self.choose_fallback_potential()
 
         if best_potential:
-            State.potential_count += best_potential.level_span
             logger.info(f"[潜能选择] {best_potential.name}")
-            logger.info(f"当前潜能数：{State.potential_count}/{self.data.params.max_potential_count}")
 
         return best_potential
 
     def tower_8_chooser(self) -> Potential | None:
         """
-        塔8专用策略
-        分为几种情况：
-            核心潜能选择时，直接选择推荐潜能
-            刷新次数未到最大刷新次数时，使用贪婪策略
-            刷新次数达到最大刷新次数时，或者是强化时，使用兜底策略
-        目前优先级规则（测试中，因为在不断调整，可能会跟代码不一样）：
-            >升级间距>=3级且推荐等级>=2级的新潜能
-            >获得10次心花怒放后，升级间距>=2级且推荐等级>=1级的新潜能
-            >推荐等级为6级的已抓潜能
-            >新等级=推荐等级的推荐潜能
-            >新等级>=推荐等级的推荐潜能
-        筛选成功后，按照等级跨度降序、推荐等级降序、旧等级降序来排序，取得想要的潜能
+        塔8专用策略，采用打分制
+        根据用户设置的最大刷新次数以及刷新分数阈值，判断是否需要刷新
 
         Returns:
             Potential | None: 最好的系统推荐潜能，若没有则返回 None
         """
-        target_p = None
 
+        # 核心潜能选择，直接选择推荐潜能，如没有则选择默认潜能
         if self.data.core_potential:
-            priority_rules = [
-                lambda p: p.recommended
-            ]
-        elif (self.data.refreshable
-              and State.failed_count < self.data.params.max_failed_count
-              and State.potential_count < self.data.params.max_potential_count
-              ):
-            old_potentials_count = sum(1 for p in self.data.potentials if p.old_level > 0)
-            if self.data.params.chooser.endswith("aggressive"):
-                # 贪婪策略
-                priority_rules = [
-                    # 升级间距 >= 3级 且 推荐等级 >= 2级 的新潜能
-                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 2,
-                    # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
-                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
-                               and State.high_level_span_count >= 10),
-                    # 推荐等级为6级的已抓潜能
-                    lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
-                    # 新等级 = 推荐等级的新潜能
-                    lambda p: p.recommended and p.recommended_level == p.new_level and p.new_level == 1,
-                    # 已抓潜能 >= 2 时，选择已抓推荐潜能
-                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2,
-                ]
-            else:
-                # 均衡策略
-                priority_rules = [
-                    # 升级间距 >= 3级 且 推荐等级 >= 3级 的新潜能
-                    lambda p: p.recommended and p.old_level == 0 and p.level_span >= 3 and p.recommended_level >= 3,
-                    # 获得10次心花怒放后，升级间距 >= 2级 且 推荐等级 >= 1级 的新潜能
-                    lambda p: (p.recommended and p.old_level == 0 and p.level_span >= 2 and p.recommended_level >= 1
-                               and State.high_level_span_count >= 10),
-                    # 推荐等级为6级的已抓潜能
-                    lambda p: p.recommended and p.old_level > 0 and p.recommended_level == 6,
-                    # 新等级 = 推荐等级的推荐潜能
-                    lambda p: p.recommended and p.recommended_level == p.new_level,
-                    # 新等级 >= 推荐等级的推荐潜能
-                    lambda p: p.recommended and p.new_level >= p.recommended_level,
-                    # 已抓潜能 >= 2 时，选择已抓推荐潜能
-                    lambda p: p.recommended and p.old_level > 0 and old_potentials_count >= 2
-                ]
+            best_potential = max(
+                (p for p in self.data.potentials if p.recommended),
+                key=lambda p: p.recommended_level,
+                default=self._default_potential,
+            )
+            self._tower_8_record(best_potential)
+            return best_potential
+
+        # 打分
+        for p in self.data.potentials:
+            p.score = self._tower_8_score(p)
+
+        # 取得最优潜能
+        best_potential = max(
+            self.data.potentials,
+            key=lambda p: (
+                p.score,
+                p.level_span,
+                p.recommended_level,
+                p.old_level,
+            ),
+        )
+
+        # 不能刷：强化潜能、金币不足、刷新次数用尽等，直接选当前最优。
+        if not self.data.refresh_botton or not self.data.refreshable:
+            self._tower_8_record(best_potential)
+            return best_potential
+
+        # 当前牌到达刷新分数阈值，直接选当前最优，否则返回 None 让外层刷新。
+        score_threshold = self._tower_8_threshold()
+        logger.debug(f"当前最优牌 {best_potential.name} 得分 {best_potential.score}，阈值 {score_threshold}")
+        if best_potential.score >= score_threshold:
+            self._tower_8_record(best_potential)
+            return best_potential
+
+        return None
+
+    def _tower_8_score(self, p: Potential | OwnedPotential, *, level_span: int = 0) -> int | float:
+        """
+        塔8专用潜能打分核心函数，满分为100分
+        由于还没摸透潜能抽取规则，所以只能使用平均概率的方法去计算
+        默认目标为6+5+5=16个潜能
+        """
+        # 已获得潜能可能需要从保存的State类中获得推荐等级
+        if isinstance(p, Potential) and p.old_level > 0 and not p.recommended:
+            p.recommended_level = State.owned_potentials.find_recommended_level(p.name, trekker=p.trekker, fuzzy=True)
+            p.recommended = True if p.recommended_level >= 0 else False
+        # 传入OwnedPotential对象时，需要设置等级跨度，然后转为Potential对象处理
+        if isinstance(p, OwnedPotential):
+            if level_span == 0:
+                logger.warning("传入OwnedPotential对象时未设置等级跨度，将默认为1")
+                level_span = 1
+            new_level = p.level + level_span
+            recommended = True if p.recommended_level > 0 else False
+            p = self.dummy_potential(
+                name=p.name, trekker=p.trekker, old_level=p.level, new_level=new_level, recommended=recommended,
+                recommended_level=p.recommended_level, core=p.core
+            )
+
+        # 取得有效升级量，只有在升级到推荐等级上面才是有效升级
+        effective_gain = max(0, min(p.new_level, p.recommended_level) - min(p.old_level, p.recommended_level))
+
+        if p.old_level == 0:
+            # 新潜能
+            # 在辉光的奇迹buff没用完的情况下，新潜能升级量为3是100分，2是66分，1是33分，0是0分
+            # 在辉光的奇迹buff用完的情况下，新潜能升级量为2是100分，1是50分，0是0分
+            max_recommended_level = 3 if State.high_level_span_count < 10 else 2
+            score = effective_gain / max_recommended_level * 100
         else:
-            priority_rules = [
-                lambda p: p.recommended,
-                lambda p: p.old_level > 0,
-                lambda p: p.old_level == 0
-            ]
+            # 老潜能，通过已保有潜能种类数打分
+            score = min(16, State.owned_potentials.count()) / 16 * 100
+            # 根据已有等级，对分数进行修正
+            score = score * (p.new_level / 6 * effective_gain)
+            # TODO: 如果所有潜能都获得了且满足推荐等级，则需要把非推荐潜能的分数提高
+            # TODO: 辉光的奇迹用在推荐等级2以下的潜能是否减分
 
-        for rule in priority_rules:
-            candidates = [p for p in self.data.potentials if rule(p)]
-            if candidates:
-                target_p = max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level))
-                break
+        return round(score, 2)
 
-        # 抓到高等级跨度新潜能时计数+1
-        if target_p and target_p.old_level == 0 and target_p.level_span >= 3:
-            State.high_level_span_count += 1
-            logger.info(f"3级心花怒放计数 {State.high_level_span_count}/10")
+    def _tower_8_threshold(self) -> int | float:
+        """
+        塔8专用刷新阈值计算函数
+        由于还没摸透潜能抽取规则，所以暂时只能使用平均概率的方法去计算
+        然后通过用户设置的激进程度去调整
+        默认目标为6+5+5=16个6级潜能
+        """
+        # 1. 统计新潜能的种类数
+        trekkers = ["0", "1", "2"]
+        owned_stats = {
+            t: {
+                "total": State.owned_potentials.count(trekker=t),
+                "leveling": State.owned_potentials.count(trekker=t, leveling_only=True)
+            }
+            for t in trekkers
+        }
+        new_potential_counts = [
+            0 if stats["total"] >= 5 and stats["leveling"] >= 3
+            else (12 - stats["total"])
+            for stats in owned_stats.values()
+        ]
+        new_potential_count = sum(new_potential_counts)
 
-        # 抓不到想要的潜能时，失败计数+1
-        if (not self.data.refreshable and self.data.params.trigger_type != "enhance"
-                and (target_p is None or not target_p.recommended)):
-            State.failed_count += 1
-            logger.info(f"抓不到想要的潜能，失败次数： {State.failed_count}/{self.data.params.max_failed_count}")
+        if new_potential_count == 0:
+            return 0
 
-        return target_p
+        # 2. 计算新旧潜能的期望分数
+        new_potential_scores = self._calculate_new_potential_scores(new_potential_count)
+        old_potential_scores = self._calculate_old_potential_scores()
+        potential_scores = new_potential_scores + old_potential_scores
+
+        # 3. 计算特定潜能在3次抽取中成为最佳潜能的期望分数
+        if len(potential_scores) <= 3: # 卡池只剩3个潜能代表当前显示的3个跟刷新后的3个会一模一样，不需要刷新
+            return 0
+        potential_scores.sort()
+        potential_count = len(potential_scores)
+        expected_score = sum(
+            potential_scores[i] * comb(i, 2) / comb(potential_count, 3)
+            for i in range(2, potential_count)
+        )
+
+        # 4. 把刷新价值量化为潜能抽取的期望分数
+        refresh_cost_prop = self.data.refresh_cost / 160
+        refresh_cost_score = expected_score * refresh_cost_prop
+
+        # 5. 通过用户设置的刷新次数压力，调整刷新分数阈值
+        pressure = 1
+        threshold = expected_score - refresh_cost_score - (pressure * self.data.refresh_count)
+
+        return round(threshold, 2)
+
+    def _calculate_new_potential_scores(self, new_potential_count: int) -> list[int | float]:
+        """计算所有新潜能的总期望分数"""
+        # 新潜能等级概率权重: Lv1(80%), Lv2(10%), Lv3(10%)
+        level_weights = [(1, 0.8), (2, 0.1), (3, 0.1)] if State.high_level_span_count < 10 else [(1, 0.8), (2, 0.2)]
+
+        recommended_score = sum(
+            self._tower_8_score(self.dummy_potential(old_level=0, new_level=lv, recommended_level=6)) * weight
+            for lv, weight in level_weights
+        )
+        # 由于6/5的硬上限限制，所以即使拿到了垃圾潜能，也只能当作拿到推荐潜能算
+        new_recommended_potential_count = max(0, 16 - State.owned_potentials.count())
+        # 计算期望分数
+        recommended_scores = [recommended_score for _ in range(new_recommended_potential_count)]
+        unrecommended_scores = [0 for _ in range(new_potential_count - new_recommended_potential_count)]
+
+        return recommended_scores + unrecommended_scores
+
+    def _calculate_old_potential_scores(self) -> list[int | float]:
+        """计算所有已有潜能升一级的总分数"""
+        return [
+            self._tower_8_score(p, level_span=1)
+            for p in State.owned_potentials
+            if not p.core and p.level < 6
+        ]
+
+    @staticmethod
+    def _tower_8_record(p: Potential) -> None:
+        State.potentials_level_count += p.level_span
+        logger.info(f"潜能计数 {State.potentials_level_count}")
+        if not p.core:
+            if p.old_level == 0 and p.level_span >= 3:
+                State.high_level_span_count += 1
+                logger.info(f"辉光的奇迹计数 {State.high_level_span_count}/10")
+
+            if p.old_level > 0 and p.level_span == 2:
+                State.enhance_high_level_span_count += 1
+                logger.info(f"潜能飞升计数 {State.enhance_high_level_span_count}/5")
 
 
 # endregion 潜能选择子类：系统推荐潜能+选择策略 ===============================================================
+
+# region 潜能选择子类：系统推荐潜能+扫描背包+选择策略 ===============================================================
+
+class RecommendationPlusBagScanHandler(GameRecommendedHandler):
+    def __init__(self, screen: ScreenDataProcessor, data: Data):
+        super().__init__(screen, data)
+
+    # def _tower_8_score(self, p: Potential) -> int:
+    # 因为能获得整体情况，所以还需要考虑下面问题
+    # 还得考虑潜能到达旅人上限的问题，以保证推荐潜能数超过普通上限的情况打分偏向于能够突破上限
+    # 推荐等级越高分数越高的修正
+
+    # def _tower_8_threshold(self, threshold: int) -> int:
+    # 这个可能不用调整思路，但需要把默认16种潜能改为整个潜能库的概率计算
+
+
+# endregion 潜能选择子类：系统推荐潜能+扫描背包+选择策略 ===============================================================
 
 # region 潜能选择子类：json优先级选择 ===============================================================
 
@@ -1315,7 +1477,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         screen = ScreenDataProcessor(context)
 
         # 获取只使用一次的数据
-        image = context.tasker.controller.cached_image
+        image = argv.image
         data.current_coin = screen.get_current_coin(image)
         data.refresh_cost = screen.get_refresh_cost(image)
         data.core_potential = screen.check_core_potential(image)
@@ -1326,6 +1488,8 @@ class ChoosePotentialRecognition(CustomRecognition):
             handler = AssistantPriorityHandler(screen, data)
         elif data.params.handler == "default+":
             handler = GameRecommendedHandler(screen, data)
+        elif data.params.handler == "default++":
+            handler = RecommendationPlusBagScanHandler(screen, data)
         else: # default
             handler = ChoosePotentialHandler(screen, data)
 
@@ -1350,7 +1514,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         # 保存已选潜能数据到状态类中
         State.owned_potentials.save(
             potential,
-            fuzzy=data.params.handler == "default+",
+            fuzzy=data.params.handler in {"default+", "default++"},
         )
 
         return CustomRecognition.AnalyzeResult(box=potential.box, detail={})

@@ -380,6 +380,9 @@ class ScreenDataProcessor:
         self.image = None
         self.max_try = 1
 
+    def load_last_screenshot(self):
+        self.image = self.context.tasker.controller.cached_image
+
     def screenshot(self):
         self.image = self.context.tasker.controller.post_screencap().wait().get()
 
@@ -493,8 +496,8 @@ class ScreenDataProcessor:
     ) -> tuple[int, int]:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
         texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
-        parsed_texts = self._parse_level_text(texts)
-        return parsed_texts
+        levels = self._parse_level_text(texts)
+        return levels
 
     @staticmethod
     def _parse_level_text(texts: list[str]) -> tuple[int, int]:
@@ -529,8 +532,7 @@ class ScreenDataProcessor:
         return int(texts[0])
 
     def check_item_list_visibility(self, max_try: int = 1) -> bool:
-        image = self.context.tasker.controller.post_screencap().wait().get()
-        return self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], image=image, max_try=max_try)
+        return self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], max_try=max_try)
 
     def get_potential_count(
             self,
@@ -655,10 +657,12 @@ class ChoosePotentialHandler:
         self.data = data
 
     def _wait_for_item_list_gone(self):
+        self.screen.load_last_screenshot()
         while True:
             if self.screen.check_item_list_visibility():
                 logger.debug("识别到干扰文字，等待1秒")
                 time.sleep(1)
+                self.screen.screenshot()
                 continue
             break
 
@@ -1084,7 +1088,7 @@ class ChoosePotentialAction(CustomAction):
         screen = ScreenDataProcessor(context)
 
         # 获取只使用一次的数据
-        image = context.tasker.controller.post_screencap().wait().get()
+        image = context.tasker.controller.cached_image
         data.current_coin = screen.get_current_coin(image)
         data.refresh_cost = screen.get_refresh_cost(image)
         data.core_potential = screen.check_core_potential(image)

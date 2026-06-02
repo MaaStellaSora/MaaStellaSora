@@ -261,13 +261,13 @@ class Data:
             prices.append(
                 ShopAction.ITEM_STANDARD_PRICES["potential_drink"] * self.drink_discount_threshold
             )
-        if "melody" in self.priority and (self.target_melodies or self.buy_assist_melody):
-            prices.append(
-                ShopAction.ITEM_STANDARD_PRICES["melody_5"] * self.melody_5_discount_threshold
-            )
-            prices.append(
-                ShopAction.ITEM_STANDARD_PRICES["melody_15"] * self.melody_15_discount_threshold
-            )
+        # if "melody" in self.priority and (self.target_melodies or self.buy_assist_melody):
+        #     prices.append(
+        #         ShopAction.ITEM_STANDARD_PRICES["melody_5"] * self.melody_5_discount_threshold
+        #     )
+        #     prices.append(
+        #         ShopAction.ITEM_STANDARD_PRICES["melody_15"] * self.melody_15_discount_threshold
+        #     )
 
         if prices:
             return int(min(prices))

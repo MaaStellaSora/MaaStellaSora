@@ -448,6 +448,18 @@
       "type": "TemplateMatch"
     }
   },
+  "星塔_节点_选择潜能_识别旅人_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/test.png"
+        ],
+        "roi": [663, 172, 60, 60],
+        "threshold": 0.9
+      },
+      "type": "TemplateMatch"
+    }
+  },
   "星塔_节点_选择潜能_识别预选潜能位置_agent": {
     "recognition": {
       "param": {

@@ -551,7 +551,9 @@ class ScreenDataProcessor:
             return True
         return False
 
-    def _base_recognition(self, mode, node_name, failed_return, roi=None, image=None, max_try=0) -> Any:
+    def _base_recognition(
+            self, mode, node_name, failed_return, *, roi=None, image=None, template=None, max_try=0
+    ) -> Any:
         """
         核心识别逻辑：支持 OCR 和 Template
         识别失败时返回默认值
@@ -562,6 +564,7 @@ class ScreenDataProcessor:
             failed_return(any): 识别失败时的默认值
             roi(tuple): 可选的ROI坐标，用于模板识别
             image(numpy.ndarray): 可选的自定义图像，用于识别
+            template(str): 可选的模板名称，用于模板识别
             max_try(int): 可选的最大重试次数，默认为1
 
         Returns:
@@ -574,7 +577,12 @@ class ScreenDataProcessor:
 
         actual_max_try = max_try if max_try > 0 else self.max_try
 
-        pipeline_override = {node_name: {"recognition": {"param": {"roi": roi}}}} if roi else {}
+        params = {}
+        if roi:
+            params["roi"] = roi
+        if template and mode == "template":
+            params["template"] = template
+        pipeline_override = {node_name: {"recognition": {"param": params}}} if params else {}
 
         try_count = 0
         while True:
@@ -582,12 +590,14 @@ class ScreenDataProcessor:
 
             if reco_detail and reco_detail.hit:
                 if mode == "ocr":
-                    # OCR 逻辑：返回文本
-                    logger.debug(f"节点{node_name} OCR结果：{[(r.text, r.score) for r in reco_detail.filtered_results]}")
+                    # OCR 逻辑：返回文本列表，包含坐标和分数
+                    logger.debug(
+                        f"节点{node_name} OCR结果：{[(r.text, r.box, r.score) for r in reco_detail.filtered_results]}"
+                    )
                     results = reco_detail.filtered_results
-                    return [r.text for r in results]
+                    return [(r.text, r.box) for r in results]
                 else:
-                    # Template 逻辑：返回坐标列表
+                    # Template 逻辑：返回坐标列表，包含分数
                     logger.debug(f"节点{node_name} 模板结果：{[(r.box, r.score) for r in reco_detail.filtered_results]}")
                     results = sorted(reco_detail.filtered_results, key=lambda r: r.score, reverse=True)
                     return [r.box for r in results]
@@ -610,19 +620,19 @@ class ScreenDataProcessor:
         logger.debug(f"无法识别节点'{node_name}'，返回默认值 {failed_return}")
         return failed_return
 
-    def _ocr(self, node_name, failed_return, **kwargs):
+    def _ocr(self, node_name, failed_return, **kwargs) -> list[tuple[str, list[int]]]:
         return self._base_recognition("ocr", node_name, failed_return, **kwargs)
 
-    def _template(self, node_name, failed_return, **kwargs):
+    def _template(self, node_name, failed_return, **kwargs) -> list[list[int]]:
         return self._base_recognition("template", node_name, failed_return, **kwargs)
 
     def get_current_coin(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
-        texts = self._ocr("星塔_通用_识别当前金币_agent", ["0"], image=image, max_try=max_try)
-        return int(texts[0])
+        ocr_results = self._ocr("星塔_通用_识别当前金币_agent", ["0"], image=image, max_try=max_try)
+        return int(ocr_results[0][0])
 
     def get_refresh_cost(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
-        texts = self._ocr("星塔_通用_识别刷新花费_agent", ["-1"], image=image, max_try=max_try)
-        return int(texts[0])
+        ocr_results = self._ocr("星塔_通用_识别刷新花费_agent", ["-1"], image=image, max_try=max_try)
+        return int(ocr_results[0][0])
 
     def check_core_potential(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> bool:
         if self._template("星塔_节点_选择潜能_识别核心潜能_agent", [], image=image, max_try=max_try):
@@ -631,8 +641,8 @@ class ScreenDataProcessor:
 
     def get_potential_name(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> str:
         node_name = "星塔_节点_选择潜能_识别潜能名称_agent"
-        texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
-        return " ".join(texts)
+        ocr_results = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        return " ".join([t for t, _ in ocr_results])
 
     def get_potential_level(
             self,
@@ -641,8 +651,8 @@ class ScreenDataProcessor:
             max_try: int = 1
     ) -> tuple[int, int]:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
-        texts = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
-        levels = self._parse_level_text(texts)
+        ocr_results = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        levels = self._parse_level_text([t for t, _ in ocr_results])
         return levels
 
     @staticmethod
@@ -674,11 +684,12 @@ class ScreenDataProcessor:
 
     def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
         node_name = "星塔_节点_选择潜能_识别推荐等级_agent"
-        texts = self._ocr(node_name, ["0"], roi=roi, image=image, max_try=max_try)
-        return int(texts[0])
+        ocr_results = self._ocr(node_name, ["0"], roi=roi, image=image, max_try=max_try)
+        return int(ocr_results[0][0])
 
     def check_item_list_visibility(self, max_try: int = 1) -> bool:
-        return self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], max_try=max_try)
+        ocr_results = self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], max_try=max_try)
+        return len(ocr_results) == 0
 
     def get_potential_count(
             self,

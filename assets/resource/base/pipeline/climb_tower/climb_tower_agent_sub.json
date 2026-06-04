@@ -387,12 +387,6 @@
         "expected": [
           ".+"
         ],
-        "roi": [
-          187,
-          370,
-          220,
-          60
-        ],
         "threshold": 0.6,
         "order_by": "Vertical"
       },
@@ -454,7 +448,12 @@
         "template": [
           "ClimbTower_agent/test.png"
         ],
-        "roi": [663, 172, 60, 60],
+        "roi": [
+          663,
+          172,
+          60,
+          60
+        ],
         "threshold": 0.9
       },
       "type": "TemplateMatch"
@@ -668,5 +667,167 @@
       },
       "type": "OCR"
     }
+  },
+  "星塔_进入背包界面_agent": {
+    "next": [
+      "星塔_背包_核实背包界面_agent",
+      "[JumpBack]星塔_点击背包_agent"
+    ]
+  },
+  "星塔_背包_核实背包界面_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "星塔背包"
+        ],
+        "roi": [
+          0,
+          0,
+          360,
+          80
+        ]
+      },
+      "post_wait_freezes": 100
+    }
+  },
+  "星塔_点击背包_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
+        ],
+        "roi": [
+          0,
+          0,
+          210,
+          85
+        ],
+        "threshold": 0.8
+      },
+      "type": "TemplateMatch"
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "星塔_背包_潜能标记_agent": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "ClimbTower_agent/潜能标记.png"
+        ],
+        "order_by": "Vertical"
+      }
+    }
+  },
+  "星塔_背包_通用潜能标记_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "通用$"
+        ],
+        "order_by": "Vertical"
+      }
+    }
+  },
+  "星塔_背包_识别推荐潜能_agent": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "ClimbTower_agent/背包_推荐图标_未获得.png"
+        ]
+      }
+    }
+  },
+  "星塔_背包_识别潜能名称_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          ".+"
+        ],
+        "replace": [
+          [
+            "^\\D$",
+            ""
+          ],
+          [
+            "未获得",
+            ""
+          ],
+          [
+            "未獲得",
+            ""
+          ]
+        ],
+        "threshold": 0.6,
+        "order_by": "Length"
+      }
+    }
+  },
+  "星塔_背包_识别潜能等级_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "^\\d$"
+        ],
+        "threshold": 0.6,
+        "order_by": "Vertical"
+      }
+    }
+  },
+  "星塔_背包_识别推荐等级_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "^\\d$"
+        ],
+        "threshold": 0.6,
+        "order_by": "Vertical"
+      }
+    }
+  },
+  "星塔_背包_识别核心潜能_agent": {
+    "recognition": {
+      "type": "ColorMatch",
+      "param": {
+        "lower": [
+          160,
+          40,
+          120
+        ],
+        "upper": [
+          170,
+          50,
+          130
+        ],
+        "count": 50,
+        "connect": true
+      }
+    }
+  },
+  "星塔_背包_向下滑动_agent": {
+    "action": {
+      "param": {
+        "begin": [
+          270,
+          706
+        ],
+        "end": [
+          270,
+          224
+        ],
+        "duration": 800,
+        "end_hold": 500
+      },
+      "type": "Swipe"
+    },
+    "post_wait_freezes": 500
   }
 }

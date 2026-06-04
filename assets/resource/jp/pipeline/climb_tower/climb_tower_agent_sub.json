@@ -62,5 +62,23 @@
             },
             "type": "OCR"
         }
+    },
+    "星塔_背包_核实背包界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "バッグ"
+                ]
+            }
+        }
+    },
+    "星塔_背包_通用潜能标记_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "汎用素質"
+                ]
+            }
+        }
     }
 }

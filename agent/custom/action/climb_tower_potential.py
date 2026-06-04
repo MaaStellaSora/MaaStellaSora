@@ -552,7 +552,7 @@ class ScreenDataProcessor:
     def refresh(self):
         self.context.run_task("星塔_节点_选择潜能_点击刷新_agent")
 
-    def click(self, box: list[int]) -> bool:
+    def click_potential(self, box: list[int]) -> bool:
         """点击指定box"""
         pipeline_override = {
             "星塔_节点_选择潜能_点击潜能_agent": {
@@ -576,7 +576,7 @@ class ScreenDataProcessor:
         识别失败时返回默认值
 
         Args:
-            mode(str): 识别模式，"ocr"或"template"
+            mode(str): 识别模式，"ocr"或"template"或"color"
             node_name(str): 节点名称，用于识别结果的记录和返回
             failed_return(any): 识别失败时的默认值
             roi(tuple): 可选的ROI坐标，用于模板识别
@@ -613,6 +613,9 @@ class ScreenDataProcessor:
                     )
                     results = reco_detail.filtered_results
                     return [(r.text, r.box) for r in results]
+                elif mode == "color":
+                    # Color 逻辑：返回布尔结果
+                    return True if reco_detail.filtered_results else False
                 else:
                     # Template 逻辑：返回坐标列表，包含分数
                     logger.debug(f"节点{node_name} 模板结果：{[(r.box, r.score) for r in reco_detail.filtered_results]}")
@@ -642,6 +645,9 @@ class ScreenDataProcessor:
 
     def _template(self, node_name, failed_return, **kwargs) -> list[list[int]]:
         return self._base_recognition("template", node_name, failed_return, **kwargs)
+
+    def _color(self, node_name, **kwargs) -> bool:
+        return self._base_recognition("color", node_name, False, **kwargs)
 
     def get_current_coin(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
         ocr_results = self._ocr("星塔_通用_识别当前金币_agent", ["0"], image=image, max_try=max_try)
@@ -894,7 +900,7 @@ class ChoosePotentialHandler:
         """点击潜能卡片"""
         if potential.selected:
             return True
-        return self.screen.click(potential.box)
+        return self.screen.click_potential(potential.box)
 
     def _update_names(self):
         rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois

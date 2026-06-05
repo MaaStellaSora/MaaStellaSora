@@ -75,11 +75,14 @@
     "timeout": 5000
   },
   "星塔_节点_选择潜能_agent": {
-    "action": {
+    "recognition": {
       "type": "Custom",
       "param": {
-        "custom_action": "choose_potential_action"
+        "custom_recognition": "choose_potential_recognition"
       }
+    },
+    "action": {
+      "type": "DoNothing" // 因为设置为recognition方便debug，但实际操作不一定会点击，所以交给识别函数点击了
     },
     "next": [
       "星塔_节点_选择潜能_拿走_agent"

@@ -1,8 +1,10 @@
 import time
 
+from maa.agent.agent_server import AgentServer
+from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from custom.action import climb_tower_potential
+from custom.reco import climb_tower_potential
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_bag")
 
@@ -214,3 +216,18 @@ class PotentialReader:
                           for y in (y1, y2) for col in range(5)]
         return potential_rois, level_rois, recommend_rois
 
+
+
+@AgentServer.custom_recognition("bag_test_recognition")
+class PotentialBagTestRecognition(CustomRecognition):
+
+    def analyze(
+        self,
+        context: Context,
+        argv: CustomRecognition.AnalyzeArg,
+    ) -> CustomRecognition.AnalyzeResult:
+        """测试用recognition"""
+        reader = PotentialReader(context)
+        print(reader.read_potentials())
+
+        return CustomRecognition.AnalyzeResult(box=[1, 1, 1, 1], detail={})

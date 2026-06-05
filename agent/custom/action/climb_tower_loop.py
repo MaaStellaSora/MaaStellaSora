@@ -2,7 +2,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
-from custom.action import climb_tower_potential
+from custom.reco import climb_tower_potential
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_loop")
 

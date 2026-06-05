@@ -8,7 +8,7 @@ from typing import Optional, Any, Self
 import numpy
 
 from maa.agent.agent_server import AgentServer
-from maa.custom_action import CustomAction
+from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
 from utils import logger as logger_module
@@ -919,6 +919,10 @@ class ChoosePotentialHandler:
             old, new = self.screen.get_potential_level(roi)
             self.data.potentials[i].old_level, self.data.potentials[i].new_level = old, new
 
+            if old == -1 and new == -1:
+                from utils.image_handler import save_image
+                save_image(self.screen.image, f"第{i}个潜能等级识别失败_{roi}")
+
     def _update_recommended_potentials(self):
         adjusted_rois = self._get_adjusted_rois(self.data.recommended_level_rois)
         indices = self.screen.get_recommended_potential(self.data.x_borders)
@@ -1293,14 +1297,14 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
 # region 主函数 ===============================================================
 
-@AgentServer.custom_action("choose_potential_action")
-class ChoosePotentialAction(CustomAction):
+@AgentServer.custom_recognition("choose_potential_recognition")
+class ChoosePotentialRecognition(CustomRecognition):
 
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> CustomAction.RunResult:
+    def analyze(
+            self,
+            context: Context,
+            argv: CustomRecognition.AnalyzeArg,
+    ) -> CustomRecognition.AnalyzeResult:
         """自动选择潜能的主流程。
 
         读取 attach 参数与已拥有潜能状态，识别当前三张潜能卡片，
@@ -1359,7 +1363,7 @@ class ChoosePotentialAction(CustomAction):
             fuzzy=data.params.handler == "default+",
         )
 
-        return CustomAction.RunResult(success=True)
+        return CustomRecognition.AnalyzeResult(box=potential.box, detail={})
 
     @staticmethod
     def _get_params(context: Context, node_name: str) -> Parameters:

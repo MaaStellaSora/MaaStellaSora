@@ -154,6 +154,7 @@ class State:
     failed_count: int = 0
     high_level_span_count: int = 0
     potential_count: int = 0
+    trekker_images: list[numpy.ndarray] = []
     owned_potentials: OwnedPotentials = OwnedPotentials()
 
     @classmethod
@@ -161,6 +162,7 @@ class State:
         cls.failed_count = 0
         cls.high_level_span_count = 0
         cls.potential_count = 0
+        cls.trekker_images.clear()
         cls.owned_potentials = OwnedPotentials()
 
 # endregion 跨节点储存的状态类 ===============================================================
@@ -175,6 +177,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [530, 425, 220, 40],
             "recommended_level_roi": [670, 165, 140, 50],
             "potential_roi": [470, 0, 343, 720],
+            "trekker_roi": [500, 182, 40, 40],
             "x_border": [470, 813]
         }
     ],
@@ -185,6 +188,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [358, 425, 220, 40],
             "recommended_level_roi": [490, 165, 140, 50],
             "potential_roi": [0, 0, 639, 720],
+            "trekker_roi": [329, 182, 40, 40],
             "x_border": [0, 639]
         },
         {
@@ -193,6 +197,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [703, 425, 220, 40],
             "recommended_level_roi": [840, 165, 140, 50],
             "potential_roi": [640, 0, 640, 720],
+            "trekker_roi": [673, 182, 40, 40],
             "x_border": [640, 1280]
         }
     ],
@@ -203,6 +208,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [187, 425, 220, 40],
             "recommended_level_roi":[320, 165, 140, 50],
             "potential_roi": [0, 0, 469, 720],
+            "trekker_roi": [156, 182, 40, 40],
             "x_border": [0, 469]
         },
         {
@@ -211,6 +217,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [530, 425, 220, 40],
             "recommended_level_roi": [670, 165, 140, 50],
             "potential_roi": [470, 0, 343, 720],
+            "trekker_roi": [500, 182, 40, 40],
             "x_border": [470, 813]
         },
         {
@@ -219,6 +226,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [875, 425, 220, 40],
             "recommended_level_roi":[1010, 165, 140, 50],
             "potential_roi": [814, 0, 466, 720],
+            "trekker_roi": [844, 182, 40, 40],
             "x_border": [814, 1280]
         }
     ]
@@ -231,6 +239,7 @@ class PotentialLayout:
     general_potential_level_roi: list[int]
     recommended_level_roi: list[int]
     potential_roi: list[int]
+    trekker_roi: list[int]
     x_border: list[int]
 
 @dataclass(slots=True)
@@ -374,6 +383,66 @@ class Parameters:
 
         return valid_entries
 
+
+# endregion 节点参数类 ===============================================================
+
+# region 统筹所有数据的类（包括节点参数） ===============================================================
+
+@dataclass(slots=True)
+class Data:
+    params: Parameters
+    current_coin: int = 0
+    refresh_cost: int = 0
+    potential_count: int = 0
+    core_potential: bool = False
+    # 需要根据刷新更新的数据
+    selected_potential_index: int = 1
+    potentials: list[Potential] = field(default_factory=lambda: [])
+    # 计数用数据
+    refresh_count: int = 0
+
+    @property
+    def refresh_botton(self) -> bool:
+        return self.refresh_cost >= 0
+
+    @property
+    def refreshable(self) -> bool:
+        return self.refresh_count < self.refresh_limit
+
+    @property
+    def refresh_limit(self) -> int:
+        usable_coin = max(0, self.current_coin - self.params.reserved_coin)
+        affordable = usable_coin // self.refresh_cost if self.refresh_botton else 0
+        return min(self.params.max_refresh_count, affordable)
+
+    @property
+    def potential_rois(self) -> list[list[int]]:
+        return [l.potential_roi for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def x_borders(self) -> list[list[int]]:
+        return [l.x_border for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def core_potential_name_rois(self) -> list[list[int]]:
+        return [l.core_potential_roi for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def general_potential_name_rois(self) -> list[list[int]]:
+        return [l.general_potential_roi for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def general_potential_level_rois(self) -> list[list[int]]:
+        return [l.general_potential_level_roi for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def recommended_level_rois(self) -> list[list[int]]:
+        return [l.recommended_level_roi for l in self.params.potential_layouts[self.potential_count]]
+
+    @property
+    def trekker_rois(self) -> list[list[int]]:
+        return [l.trekker_roi for l in self.params.potential_layouts[self.potential_count]]
+
 @dataclass(slots=True)
 class Potential:
     layout: PotentialLayout
@@ -460,61 +529,6 @@ class Potential:
             return [roi[0], max(0, roi[1] - offset) if self.selected else roi[1], roi[2], roi[3]]
 
 
-# endregion 节点参数类 ===============================================================
-
-# region 统筹所有数据的类（包括节点参数） ===============================================================
-
-@dataclass(slots=True)
-class Data:
-    params: Parameters
-    current_coin: int = 0
-    refresh_cost: int = 0
-    potential_count: int = 0
-    core_potential: bool = False
-    # 需要根据刷新更新的数据
-    selected_potential_index: int = 1
-    potentials: list[Potential] = field(default_factory=lambda: [])
-    # 计数用数据
-    refresh_count: int = 0
-
-    @property
-    def refresh_botton(self) -> bool:
-        return self.refresh_cost >= 0
-
-    @property
-    def refreshable(self) -> bool:
-        return self.refresh_count < self.refresh_limit
-
-    @property
-    def refresh_limit(self) -> int:
-        usable_coin = max(0, self.current_coin - self.params.reserved_coin)
-        affordable = usable_coin // self.refresh_cost if self.refresh_botton else 0
-        return min(self.params.max_refresh_count, affordable)
-
-    @property
-    def potential_rois(self) -> list[list[int]]:
-        return [l.potential_roi for l in self.params.potential_layouts[self.potential_count]]
-
-    @property
-    def x_borders(self) -> list[list[int]]:
-        return [l.x_border for l in self.params.potential_layouts[self.potential_count]]
-
-    @property
-    def core_potential_name_rois(self) -> list[list[int]]:
-        return [l.core_potential_roi for l in self.params.potential_layouts[self.potential_count]]
-
-    @property
-    def general_potential_name_rois(self) -> list[list[int]]:
-        return [l.general_potential_roi for l in self.params.potential_layouts[self.potential_count]]
-
-    @property
-    def general_potential_level_rois(self) -> list[list[int]]:
-        return [l.general_potential_level_roi for l in self.params.potential_layouts[self.potential_count]]
-
-    @property
-    def recommended_level_rois(self) -> list[list[int]]:
-        return [l.recommended_level_roi for l in self.params.potential_layouts[self.potential_count]]
-
 
 # endregion 统筹所有数据的类（包括节点参数） ===============================================================
 
@@ -532,10 +546,13 @@ class ScreenDataProcessor:
     def screenshot(self):
         self.image = self.context.tasker.controller.post_screencap().wait().get()
 
+    def crop_screenshot(self, roi: list[int]) -> numpy.ndarray:
+        return self.image[roi[1]:roi[1] + roi[3], roi[0]:roi[0] + roi[2]]
+
     def refresh(self):
         self.context.run_task("星塔_节点_选择潜能_点击刷新_agent")
 
-    def click(self, box: list[int]) -> bool:
+    def click_potential(self, box: list[int]) -> bool:
         """点击指定box"""
         pipeline_override = {
             "星塔_节点_选择潜能_点击潜能_agent": {
@@ -559,7 +576,7 @@ class ScreenDataProcessor:
         识别失败时返回默认值
 
         Args:
-            mode(str): 识别模式，"ocr"或"template"
+            mode(str): 识别模式，"ocr"或"template"或"color"
             node_name(str): 节点名称，用于识别结果的记录和返回
             failed_return(any): 识别失败时的默认值
             roi(tuple): 可选的ROI坐标，用于模板识别
@@ -596,6 +613,9 @@ class ScreenDataProcessor:
                     )
                     results = reco_detail.filtered_results
                     return [(r.text, r.box) for r in results]
+                elif mode == "color":
+                    # Color 逻辑：返回布尔结果
+                    return True if reco_detail.filtered_results else False
                 else:
                     # Template 逻辑：返回坐标列表，包含分数
                     logger.debug(f"节点{node_name} 模板结果：{[(r.box, r.score) for r in reco_detail.filtered_results]}")
@@ -626,12 +646,15 @@ class ScreenDataProcessor:
     def _template(self, node_name, failed_return, **kwargs) -> list[list[int]]:
         return self._base_recognition("template", node_name, failed_return, **kwargs)
 
+    def _color(self, node_name, **kwargs) -> bool:
+        return self._base_recognition("color", node_name, False, **kwargs)
+
     def get_current_coin(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
-        ocr_results = self._ocr("星塔_通用_识别当前金币_agent", ["0"], image=image, max_try=max_try)
+        ocr_results = self._ocr("星塔_通用_识别当前金币_agent", [["0"]], image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
     def get_refresh_cost(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
-        ocr_results = self._ocr("星塔_通用_识别刷新花费_agent", ["-1"], image=image, max_try=max_try)
+        ocr_results = self._ocr("星塔_通用_识别刷新花费_agent", [["-1"]], image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
     def check_core_potential(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> bool:
@@ -641,7 +664,7 @@ class ScreenDataProcessor:
 
     def get_potential_name(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> str:
         node_name = "星塔_节点_选择潜能_识别潜能名称_agent"
-        ocr_results = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        ocr_results = self._ocr(node_name, [["", []]], roi=roi, image=image, max_try=max_try)
         return " ".join([t for t, _ in ocr_results])
 
     def get_potential_level(
@@ -651,7 +674,7 @@ class ScreenDataProcessor:
             max_try: int = 1
     ) -> tuple[int, int]:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
-        ocr_results = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        ocr_results = self._ocr(node_name, [["", []]], roi=roi, image=image, max_try=max_try)
         levels = self._parse_level_text([t for t, _ in ocr_results])
         return levels
 
@@ -684,12 +707,12 @@ class ScreenDataProcessor:
 
     def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
         node_name = "星塔_节点_选择潜能_识别推荐等级_agent"
-        ocr_results = self._ocr(node_name, ["0"], roi=roi, image=image, max_try=max_try)
+        ocr_results = self._ocr(node_name, [["0"]], roi=roi, image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
     def check_item_list_visibility(self, max_try: int = 1) -> bool:
         ocr_results = self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], max_try=max_try)
-        return len(ocr_results) == 0
+        return len(ocr_results) != 0
 
     def get_potential_count(
             self,
@@ -807,8 +830,19 @@ class ScreenDataProcessor:
 
         return matched
 
+    def match_trekker(self, trekker_image: numpy.ndarray, roi: list[int]) -> bool:
+        """匹配旅人"""
+        self.context.override_image("trekker_image", trekker_image)
+        reco_results = self._template(
+            "星塔_节点_选择潜能_识别旅人_agent",
+            [],
+            template="trekker_image",
+            roi=roi
+        )
+        return len(reco_results) != 0
 
-# endregion 使用maa与屏幕交互类 ===============================================================
+
+# endregion 使用maa与屏幕交互类 ==============================================================
 
 # region 潜能选择核心逻辑类 ===============================================================
 
@@ -866,7 +900,7 @@ class ChoosePotentialHandler:
         """点击潜能卡片"""
         if potential.selected:
             return True
-        return self.screen.click(potential.box)
+        return self.screen.click_potential(potential.box)
 
     def _update_names(self):
         rois = self.data.core_potential_name_rois if self.data.core_potential else self.data.general_potential_name_rois
@@ -896,6 +930,26 @@ class ChoosePotentialHandler:
             else:
                 self.data.potentials[index].recommended_level = self.screen.get_recommend_level(roi)
 
+    def _update_trekkers(self):
+        save_rois = self._get_adjusted_rois(self.data.trekker_rois)
+        expanded_rois = self._expand_rois(save_rois)
+        # 先根据State.trekker_images识别旅人，根据识别到的信息返回index给Potential的trekker字段
+        for potential_i, roi in enumerate(expanded_rois):
+            for trekker_i, trekker_image in enumerate(State.trekker_images):
+                if self.screen.match_trekker(trekker_image, roi):
+                    self.data.potentials[potential_i].trekker = str(trekker_i)
+                    break
+
+            # 识别不到时，截图保存到State中，并返回新的index给Potential的trekker字段
+            if not self.data.potentials[potential_i].trekker:
+                cropped_image = self.screen.crop_screenshot(save_rois[potential_i])
+                State.trekker_images.append(cropped_image)
+                self.data.potentials[potential_i].trekker = str(len(State.trekker_images) - 1)
+
+            # 如果trekker_images超过3个，输出错误日志
+            if len(State.trekker_images) > 3:
+                logger.error("识别到超过3种旅人，后续潜能判断将会出现问题")
+
     def _get_adjusted_rois(self, base_rois: list[list[int]]) -> list[list[int]]:
         """安全地获取偏移后的 ROI 副本，避免污染原始数据"""
         selected_index = self.data.selected_potential_index
@@ -905,6 +959,14 @@ class ChoosePotentialHandler:
         return [
             [r[0], max(0, r[1] - offset), r[2], r[3]] if i == selected_index else list(r)
             for i, r in enumerate(base_rois)
+        ]
+
+    @staticmethod
+    def _expand_rois(base_rois: list[list[int]], px: int = 15) -> list[list[int]]:
+        """扩展ROI"""
+        return [
+            [r[0] - px, r[1] - px, r[2] + px * 2, r[3] + px * 2]
+            for r in base_rois
         ]
 
     def choose_fallback_potential(self):
@@ -931,18 +993,6 @@ class ChoosePotentialHandler:
         potential = next(p for p in self.data.potentials if p.selected)
         return potential
 
-    @property
-    def _dummy_potential(self):
-        potential = Potential(PotentialLayout(
-            core_potential_roi=[5, 710, 5, 5],
-            general_potential_roi=[5, 710, 5, 5],
-            general_potential_level_roi=[5, 710, 5, 5],
-            recommended_level_roi=[5, 710, 5, 5],
-            potential_roi=[5, 710, 5, 5],
-            x_border=[5, 5]
-        ))
-        return potential
-
 
 # endregion 潜能选择核心逻辑类 ===============================================================
 
@@ -960,6 +1010,7 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         self._update_recommended_potentials()
         self._update_names()
         self._update_levels()
+        self._update_trekkers()
 
         # 输出当前潜能列表到日志
         for potential in self.data.potentials:

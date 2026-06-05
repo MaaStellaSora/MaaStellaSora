@@ -154,7 +154,7 @@ class State:
     failed_count: int = 0
     high_level_span_count: int = 0
     potential_count: int = 0
-    trekker_images: list[numpy.ndarray] = field(default_factory=list)
+    trekker_images: list[numpy.ndarray] = []
     owned_potentials: OwnedPotentials = OwnedPotentials()
 
     @classmethod
@@ -650,11 +650,11 @@ class ScreenDataProcessor:
         return self._base_recognition("color", node_name, False, **kwargs)
 
     def get_current_coin(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
-        ocr_results = self._ocr("星塔_通用_识别当前金币_agent", ["0"], image=image, max_try=max_try)
+        ocr_results = self._ocr("星塔_通用_识别当前金币_agent", [["0"]], image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
     def get_refresh_cost(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
-        ocr_results = self._ocr("星塔_通用_识别刷新花费_agent", ["-1"], image=image, max_try=max_try)
+        ocr_results = self._ocr("星塔_通用_识别刷新花费_agent", [["-1"]], image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
     def check_core_potential(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> bool:
@@ -664,7 +664,7 @@ class ScreenDataProcessor:
 
     def get_potential_name(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> str:
         node_name = "星塔_节点_选择潜能_识别潜能名称_agent"
-        ocr_results = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        ocr_results = self._ocr(node_name, [["", []]], roi=roi, image=image, max_try=max_try)
         return " ".join([t for t, _ in ocr_results])
 
     def get_potential_level(
@@ -674,7 +674,7 @@ class ScreenDataProcessor:
             max_try: int = 1
     ) -> tuple[int, int]:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
-        ocr_results = self._ocr(node_name, [""], roi=roi, image=image, max_try=max_try)
+        ocr_results = self._ocr(node_name, [["", []]], roi=roi, image=image, max_try=max_try)
         levels = self._parse_level_text([t for t, _ in ocr_results])
         return levels
 
@@ -707,12 +707,12 @@ class ScreenDataProcessor:
 
     def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
         node_name = "星塔_节点_选择潜能_识别推荐等级_agent"
-        ocr_results = self._ocr(node_name, ["0"], roi=roi, image=image, max_try=max_try)
+        ocr_results = self._ocr(node_name, [["0"]], roi=roi, image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
     def check_item_list_visibility(self, max_try: int = 1) -> bool:
         ocr_results = self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], max_try=max_try)
-        return len(ocr_results) == 0
+        return len(ocr_results) != 0
 
     def get_potential_count(
             self,
@@ -934,7 +934,7 @@ class ChoosePotentialHandler:
         save_rois = self._get_adjusted_rois(self.data.trekker_rois)
         expanded_rois = self._expand_rois(save_rois)
         # 先根据State.trekker_images识别旅人，根据识别到的信息返回index给Potential的trekker字段
-        for potential_i, roi in expanded_rois:
+        for potential_i, roi in enumerate(expanded_rois):
             for trekker_i, trekker_image in enumerate(State.trekker_images):
                 if self.screen.match_trekker(trekker_image, roi):
                     self.data.potentials[potential_i].trekker = str(trekker_i)

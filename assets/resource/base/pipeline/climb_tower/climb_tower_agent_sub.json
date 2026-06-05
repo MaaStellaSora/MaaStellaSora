@@ -829,5 +829,13 @@
       "type": "Swipe"
     },
     "post_wait_freezes": 500
+  },
+  "星塔_测试用节点_agent": {
+    "recognition": {
+      "type": "Custom",
+      "param": {
+        "custom_recognition": "bag_test_recognition"
+      }
+    }
   }
 }

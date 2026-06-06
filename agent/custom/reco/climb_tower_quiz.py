@@ -51,20 +51,21 @@ class QuizRecognition(CustomRecognition):
 
         # 兜底，选择第一个选项
         logger.info(f"[问题选择] 选择第一个选项")
-        # from utils.image_handler import save_image
-        # save_image(argv.image, f"未知选项")
+        from utils.image_handler import save_image
+        save_image(argv.image, f"未知选项")
         return CustomRecognition.AnalyzeResult(box=default_box, detail={})
 
     @staticmethod
     def _get_best_answer(context: Context, image: np.ndarray, roi: list) -> Rect | None:
-        pipeline_override = {"星塔_节点_进行对话选择_agent":
-            {
-                 "recognition": {
-                     "param": {
-                         "roi": roi
-                     }
+        pipeline_override = {
+            "星塔_节点_进行对话选择_agent":
+                {
+                     "recognition": {
+                         "param": {
+                             "roi": roi
+                         }
+                    }
                 }
-            }
         }
         reco_result = context.run_recognition(
             "星塔_节点_进行对话选择_agent",
@@ -81,14 +82,15 @@ class QuizRecognition(CustomRecognition):
 
     @staticmethod
     def _get_650_answer(context: Context, image: np.ndarray, roi: list) -> list | None:
-        pipeline_override = {"星塔_节点_进行对话选择_agent":
-            {
-                 "recognition": {
-                     "param": {
-                         "roi": roi
-                     }
+        pipeline_override = {
+            "星塔_节点_进行对话选择_寻找650金币选项_agent":
+                {
+                     "recognition": {
+                         "param": {
+                             "roi": roi
+                         }
+                    }
                 }
-            }
         }
         reco_result = context.run_recognition(
             "星塔_节点_进行对话选择_寻找650金币选项_agent",

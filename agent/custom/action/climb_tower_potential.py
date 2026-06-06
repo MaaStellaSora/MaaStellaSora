@@ -895,9 +895,9 @@ class GameRecommendedHandler(ChoosePotentialHandler):
                 break
 
         # 抓到高等级跨度新潜能时计数+1
-        if target_p and target_p.old_level == 0 and target_p.level_span >= 2:
+        if target_p and target_p.old_level == 0 and target_p.level_span >= 3:
             State.high_level_span_count += 1
-            logger.info(f"心花怒放计数 {State.high_level_span_count}/10")
+            logger.info(f"3级心花怒放计数 {State.high_level_span_count}/10")
 
         # 抓不到想要的潜能时，失败计数+1
         if (not self.data.refreshable and self.data.params.trigger_type != "enhance"

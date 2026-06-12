@@ -21,7 +21,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "BATTLE STAGE"
+          "(?i)battle stage"
         ]
       }
     }
@@ -30,7 +30,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "BATTLE STAGE"
+          "(?i)battle stage"
         ]
       }
     }

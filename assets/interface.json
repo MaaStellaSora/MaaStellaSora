@@ -23,24 +23,21 @@
             "name": "桌面端",
             "type": "Win32",
             "win32": {
-                "class_regex": ".*",
-                "window_regex": "xtlr|StellaSora",
+                "class_regex": "UnityWndClass",
+                "window_regex": "xtlr|星塔旅人|ステラソラ|StellaSora",
                 "screencap": "FramePool",
                 "mouse": "SendMessageWithCursorPos",
                 "keyboard": "SendMessageWithCursorPos"
-            }
+            },
+            "permission_required": true
         },
         {
             "name": "安卓端",
-            "type": "Adb",
-            "display_short_side": 720
+            "type": "Adb"
         },
         {
             "name": "PlayCover",
-            "type": "PlayCover",
-            "playcover": {
-                "uuid": "maa.playcover"
-            }
+            "type": "PlayCover"
         }
     ],
     "resource": [

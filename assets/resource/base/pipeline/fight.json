@@ -85,7 +85,8 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "post_wait_freezes": 100
   },
   "战斗_悬赏试炼": {
     "action": {

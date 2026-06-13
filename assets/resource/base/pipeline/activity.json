@@ -49,7 +49,8 @@
         ]
       },
       "type": "OCR"
-    }
+    },
+    "post_wait_freezes": 100
   },
   "活动_开始战斗": {
     "action": {

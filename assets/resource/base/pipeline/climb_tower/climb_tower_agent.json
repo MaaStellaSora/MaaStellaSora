@@ -89,7 +89,7 @@
     ],
     "attach": {
       "priority_list": [],
-      "max_refresh_count": 2,
+      "max_refresh_count": 5,
       "reserved_coin": 0,
       // 触发潜能选择的类型↓，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
       "trigger_type": "default",

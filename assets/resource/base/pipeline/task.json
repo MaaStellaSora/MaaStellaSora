@@ -60,11 +60,7 @@
       "type": "Click"
     },
     "next": [
-      "通用_点击空白处继续",
-      {
-        "jump_back": true,
-        "name": "活动_关闭升级界面"
-      }
+      "通用_点击空白处继续"
     ],
     "recognition": {
       "param": {
@@ -96,6 +92,10 @@
       {
         "jump_back": true,
         "name": "任务_领取额外奖励"
+      },
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
       },
       "通用_返回主页"
     ],
@@ -130,6 +130,10 @@
       {
         "jump_back": true,
         "name": "任务_领取额外奖励"
+      },
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
       },
       "任务_魔王养成"
     ],
@@ -177,11 +181,7 @@
       "type": "Click"
     },
     "next": [
-      "通用_点击空白处继续",
-      {
-        "jump_back": true,
-        "name": "活动_关闭升级界面"
-      }
+      "通用_点击空白处继续"
     ],
     "recognition": {
       "param": {
@@ -214,6 +214,10 @@
       {
         "jump_back": true,
         "name": "任务_领取额外奖励"
+      },
+      {
+        "jump_back": true,
+        "name": "活动_关闭升级界面"
       },
       "任务_今日事务"
     ],

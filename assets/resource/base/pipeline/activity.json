@@ -168,7 +168,14 @@
   },
   "活动_点击活动战斗关卡": {
     "action": {
-      "param": {},
+      "param": {
+        "target_offset": [
+          0,
+          0,
+          0,
+          -20
+        ]
+      },
       "type": "Click"
     },
     "next": [

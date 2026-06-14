@@ -137,7 +137,10 @@
     "next": [
       "活动_点击活动战斗关卡"
     ],
-    "post_wait_freezes": 500,
+    "post_wait_freezes": {
+      "time": 500,
+      "timeout": 5000
+    },
     "pre_delay": 0,
     "post_delay": 0
   },

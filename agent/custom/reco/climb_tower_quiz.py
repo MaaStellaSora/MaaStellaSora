@@ -51,8 +51,8 @@ class QuizRecognition(CustomRecognition):
 
         # 兜底，选择第一个选项
         logger.info(f"[问题选择] 选择第一个选项")
-        from utils.image_handler import save_image
-        save_image(argv.image, f"未知选项")
+        # from utils.image_handler import save_image
+        # save_image(argv.image, f"未知选项")
         return CustomRecognition.AnalyzeResult(box=default_box, detail={})
 
     @staticmethod

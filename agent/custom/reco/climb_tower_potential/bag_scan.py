@@ -4,7 +4,8 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from custom.reco import climb_tower_potential
+from custom.reco.climb_tower_potential.ui import UIInteractor
+from custom.reco.climb_tower_potential.state import OwnedPotential
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_bag")
 
@@ -34,7 +35,7 @@ TREKKER_W = 200
 TREKKER_H = 23 + TREKKER_Y_OFFSET * 2
 
 
-class ScreenBagDataProcessor(climb_tower_potential.ScreenDataProcessor):
+class BagUIInteractor(UIInteractor):
     def __init__(self, context: Context):
         super().__init__(context)
         self.image_reverse = None
@@ -131,15 +132,15 @@ class ScreenBagDataProcessor(climb_tower_potential.ScreenDataProcessor):
 class PotentialReader:
     def __init__(self, context: Context):
         self.context = context
-        self.screen = ScreenBagDataProcessor(context)
+        self.screen = BagUIInteractor(context)
 
-    def read_potentials(self) -> list[climb_tower_potential.OwnedPotential]:
+    def read_potentials(self) -> list[OwnedPotential]:
         """读取背包中的所有潜能"""
         # 先打开背包，确认处于背包状态
         self.screen.open_bag()
 
         # 初始化潜能列表
-        potentials: list[climb_tower_potential.OwnedPotential] = []
+        potentials: list[OwnedPotential] = []
 
         # 然后开始读取循环
         for i in range(3):
@@ -211,11 +212,11 @@ class PotentialReader:
             core_potential_rois: list[list[int]],
             level_rois: list[list[int]],
             recommend_rois: list[list[int]]
-    ) -> list[climb_tower_potential.OwnedPotential]:
+    ) -> list[OwnedPotential]:
         """读取潜能"""
         potentials = []
         for i, roi in enumerate(potential_rois):
-            potential = climb_tower_potential.OwnedPotential("", 0, 0)
+            potential = OwnedPotential("", 0, 0)
             # 读取潜能名称
             potential.name = self.screen.get_potential_name_from_bag(roi)
             if not potential.name:

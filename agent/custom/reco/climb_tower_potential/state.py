@@ -1,9 +1,13 @@
 import re
+from difflib import SequenceMatcher
+from typing import Literal
 from dataclasses import dataclass, field
 
 import numpy
 
 from custom.reco.climb_tower_potential.data import MAX_POTENTIAL_LEVEL, Potential
+from custom.reco.climb_tower_potential.handler_default import ChoosePotentialHandler
+from custom.reco.climb_tower_potential.handler_json import AssistantPriorityHandler
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_state")
 
@@ -41,7 +45,7 @@ class OwnedPotentials:
     def __len__(self):
         return len(self.potentials)
 
-    def save(self, potential: Potential, *, fuzzy: bool = False) -> None:
+    def save(self, potential: Potential, *, handler: ChoosePotentialHandler) -> None:
         """将选中的潜能保存到OwnedPotentials中，如果已存在则更新等级和名字"""
         if not potential.name:
             return
@@ -50,8 +54,17 @@ class OwnedPotentials:
         level = max(potential.new_level, 1)
         core = potential.core
 
-        # 先查找潜能是否已存在，如果存在则更新等级和名字
-        existed = self.find(potential.name, trekker=trekker, core=core, fuzzy=fuzzy)
+        # 先查找潜能是否已存在
+        if isinstance(handler, AssistantPriorityHandler):
+            existed = self.find(potential.name, mode="EXACT", trekker=trekker, core=core)
+        else:
+            if potential.old_level >= 1:
+                existed = self.find(potential.name, mode="FUZZY", trekker=trekker, core=core, threshold=0.75)
+            elif potential.old_level == -1:
+                existed = self.find(potential.name, mode="CONTAINS", trekker=trekker, core=core)
+            else:
+                existed = None
+        # 如果存在则更新等级和名字
         if existed:
             # 防止 OCR 识别失败导致等级倒退，所以至少按照原等级+1处理
             existed.level = min(existed.max_level, max(existed.level + 1, level))
@@ -73,18 +86,47 @@ class OwnedPotentials:
         self,
         name: str,
         *,
+        mode: Literal["EXACT", "CONTAINS", "FUZZY"],
         trekker: str | None = None,
         core: bool | None = None,
-        fuzzy: bool = False,
+        threshold: float = 0
     ) -> OwnedPotential | None:
-        """查找是否已拥有该潜能"""
-        # TODO: 增加difflib匹配
+        """
+        查找是否已拥有该潜能
+
+        Args:
+            name: 潜能名称
+            mode: 模式， "EXACT"、"CONTAINS" 或 "FUZZY"
+                "EXACT"：精确匹配，只有当名称完全匹配时才返回潜能
+                "CONTAINS"：包含匹配，当名称有一方包含另一方时返回潜能
+                "FUZZY"：模糊匹配，返回相似度最高的潜能，支持通过阈值限制
+            trekker: 指定旅人名称（这里的旅人是代码内部名称，不一定是旅人真实名称）
+            core: 指定是否为核心潜能
+            threshold: 指定相似度阈值（仅对"FUZZY"模式有效）
+
+        Returns:
+            OwnedPotential | None: 如果找到则返回该潜能，否则返回None
+        """
+        # 模糊匹配
+        if mode == "FUZZY":
+            results = max(
+                (
+                    (score, p) for p in self.potentials
+                    if (score := self._fuzzy_match(name, p.name)) >= threshold
+                ),
+                key=lambda p: p[0],
+                default=None
+            )
+            return results[1] if results else None
+
+        # 普通匹配
+        contains_mode = mode == "CONTAINS"
         for p in self.potentials:
             if trekker is not None and p.trekker != trekker:
                 continue
             if core is not None and p.core != core:
                 continue
-            if self._match(p.name, name, fuzzy=fuzzy):
+            if self._match(p.name, name, contains_mode=contains_mode):
                 return p
         return None
 
@@ -92,22 +134,24 @@ class OwnedPotentials:
         self,
         name: str,
         *,
+        mode: Literal["EXACT", "CONTAINS", "FUZZY"],
         trekker: str | None = None,
-        fuzzy: bool = False,
+        fuzzy_threshold: float = 0,
     ) -> int:
         """查找已拥有的某潜能的等级，如果不存在则返回0"""
-        owned_potential = self.find(name, trekker=trekker, fuzzy=fuzzy)
+        owned_potential = self.find(name, mode=mode, trekker=trekker, threshold=fuzzy_threshold)
         return owned_potential.level if owned_potential else 0
 
     def find_recommended_level(
         self,
         name: str,
         *,
+        mode: Literal["EXACT", "CONTAINS", "FUZZY"],
         trekker: str | None = None,
-        fuzzy: bool = False,
+        fuzzy_threshold: float = 0,
     ) -> int:
         """查找已拥有的某潜能的推荐等级，如果不存在则返回0"""
-        owned_potential = self.find(name, trekker=trekker, fuzzy=fuzzy)
+        owned_potential = self.find(name, mode=mode, trekker=trekker, threshold=fuzzy_threshold)
         return owned_potential.recommended_level if owned_potential else 0
 
     def count(
@@ -139,13 +183,13 @@ class OwnedPotentials:
         )
 
     @staticmethod
-    def _match(a: str, b: str, *, fuzzy: bool) -> bool:
+    def _match(a: str, b: str, *, contains_mode: bool) -> bool:
         """
         判断两个字符串是否匹配。
         Args:
             a: 第一个字符串
             b: 第二个字符串
-            fuzzy: 是否开启模糊匹配（通过in方法匹配，只能处理前后有漏的情况）
+            contains_mode: 是否使用包含匹配模式
 
         Returns:
             bool: 是否匹配成功
@@ -155,15 +199,31 @@ class OwnedPotentials:
         b = re.sub(r"\W", "", b)
 
         # 精确匹配
-        if not fuzzy:
+        if not contains_mode:
             return a == b
 
         # 简单处理日语的长音符号，中文的一不处理是因为会出现重名
         a = a.replace("ー", "")
         b = b.replace("ー", "")
 
-        # 通过in进行模糊匹配，需要排除空字符串然后再判断包含关系
+        # 通过in进行包含匹配，需要排除空字符串然后再判断包含关系
         return bool(a and b and (a in b or b in a))
+
+    @staticmethod
+    def _fuzzy_match(a: str, b: str) -> float:
+        """
+        计算两个字符串的相似度。
+        Args:
+            a: 第一个字符串
+            b: 第二个字符串
+
+        Returns:
+            float: 字符串相似度，范围为[0, 1]
+        """
+        # 处理特殊符号
+        a = re.sub(r"\W", "", a)
+        b = re.sub(r"\W", "", b)
+        return SequenceMatcher(None, a, b).ratio()
 
     @staticmethod
     def _longer_name(old: str, new: str) -> str:

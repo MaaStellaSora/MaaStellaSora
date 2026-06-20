@@ -77,10 +77,11 @@ class ChoosePotentialRecognition(CustomRecognition):
             logger.error(f"点击潜能失败")
 
         # 保存已选潜能数据到状态类中
-        State.owned_potentials.save(
-            potential,
-            fuzzy=data.params.handler in {"default+", "default++"},
-        )
+        if isinstance(handler, (AssistantPriorityHandler, RecommendationHandler)):
+            State.owned_potentials.save(
+                potential,
+                handler=handler,
+            )
 
         return CustomRecognition.AnalyzeResult(box=potential.box, detail={})
 

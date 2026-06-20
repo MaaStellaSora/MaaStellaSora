@@ -110,7 +110,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         # 已获得潜能可能需要从保存的State类中获得推荐等级
         if isinstance(p, Potential) and p.old_level > 0 and not p.recommended:
-            p.recommended_level = State.owned_potentials.find_recommended_level(p.name, trekker=p.trekker, fuzzy=True)
+            p.recommended_level = State.owned_potentials.find_recommended_level(p.name, mode="FUZZY", trekker=p.trekker)
             p.recommended = True if p.recommended_level >= 0 else False
         # 传入OwnedPotential对象时，需要设置等级跨度，然后转为Potential对象处理
         if isinstance(p, OwnedPotential):

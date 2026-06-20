@@ -208,6 +208,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                 return True
             current = owned_potentials.find_level(
                 item["potential"],
+                mode="EXACT",
                 trekker=item.get("trekker"),
             )
             min_ok = current >= item["level_at_least"] if "level_at_least" in item else True

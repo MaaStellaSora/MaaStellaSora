@@ -2,15 +2,17 @@ import time
 from typing import Self
 from dataclasses import replace
 
-from custom.reco.climb_tower_potential.data import Data, Potential
-from custom.reco.climb_tower_potential.ui import UIInteractor
-from custom.reco.climb_tower_potential.state import State
+from .data import Data, Potential
+from .ui import UIInteractor
+from .state import State
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_default")
 
 
 class ChoosePotentialHandler:
+    HANDLER_TYPE = "default"
+
     def __init__(self, screen: UIInteractor, data: Data):
         self.screen = screen
         self.data = data

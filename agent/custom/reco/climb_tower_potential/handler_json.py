@@ -1,16 +1,18 @@
 import re
 from typing import Any, Self
 
-from custom.reco.climb_tower_potential.state import State, OwnedPotentials
-from custom.reco.climb_tower_potential.data import MAX_POTENTIAL_LEVEL, Data, Potential
-from custom.reco.climb_tower_potential.ui import UIInteractor
-from custom.reco.climb_tower_potential.handler_default import ChoosePotentialHandler
+from .state import State, OwnedPotentials
+from .data import MAX_POTENTIAL_LEVEL, Data, Potential
+from .ui import UIInteractor
+from .handler_default import ChoosePotentialHandler
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_json")
 
 
 class AssistantPriorityHandler(ChoosePotentialHandler):
+    HANDLER_TYPE = "json"
+
     def __init__(self, screen: UIInteractor, data: Data):
         super().__init__(screen, data)
 

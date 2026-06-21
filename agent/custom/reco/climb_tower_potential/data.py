@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from custom.reco.climb_tower_potential.ui import UIInteractor
+from .ui import UIInteractor
 
 
 # region 常量 ===============================================================

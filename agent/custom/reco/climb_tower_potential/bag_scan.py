@@ -4,8 +4,9 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from custom.reco.climb_tower_potential.ui import UIInteractor
-from custom.reco.climb_tower_potential.state import OwnedPotential
+from .ui import UIInteractor
+from .state import OwnedPotential
+
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_bag")
 

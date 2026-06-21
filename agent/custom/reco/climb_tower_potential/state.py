@@ -5,9 +5,8 @@ from dataclasses import dataclass, field
 
 import numpy
 
-from custom.reco.climb_tower_potential.data import MAX_POTENTIAL_LEVEL, Potential
-from custom.reco.climb_tower_potential.handler_default import ChoosePotentialHandler
-from custom.reco.climb_tower_potential.handler_json import AssistantPriorityHandler
+from .data import MAX_POTENTIAL_LEVEL, Potential
+
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_state")
 
@@ -45,7 +44,7 @@ class OwnedPotentials:
     def __len__(self):
         return len(self.potentials)
 
-    def save(self, potential: Potential, *, handler: ChoosePotentialHandler) -> None:
+    def save(self, potential: Potential, *, handler: str) -> None:
         """将选中的潜能保存到OwnedPotentials中，如果已存在则更新等级和名字"""
         if not potential.name:
             return
@@ -55,7 +54,7 @@ class OwnedPotentials:
         core = potential.core
 
         # 先查找潜能是否已存在
-        if isinstance(handler, AssistantPriorityHandler):
+        if handler == "json":
             existed = self.find(potential.name, mode="EXACT", trekker=trekker, core=core)
         else:
             if potential.old_level >= 1:

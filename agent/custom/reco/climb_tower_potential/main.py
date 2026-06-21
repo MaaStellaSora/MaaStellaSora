@@ -4,12 +4,13 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from custom.reco.climb_tower_potential.data import Data, Parameters
-from custom.reco.climb_tower_potential.state import State
-from custom.reco.climb_tower_potential.ui import UIInteractor
-from custom.reco.climb_tower_potential.handler_default import ChoosePotentialHandler
-from custom.reco.climb_tower_potential.handler_preset import RecommendationHandler, RecommendationPlusBagScanHandler
-from custom.reco.climb_tower_potential.handler_json import AssistantPriorityHandler
+from .data import Data, Parameters
+from .state import State
+from .ui import UIInteractor
+from .handler_default import ChoosePotentialHandler
+from .handler_preset import RecommendationHandler, RecommendationPlusBagScanHandler
+from .handler_json import AssistantPriorityHandler
+
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential")
 
@@ -80,7 +81,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         if isinstance(handler, (AssistantPriorityHandler, RecommendationHandler)):
             State.owned_potentials.save(
                 potential,
-                handler=handler,
+                handler=handler.HANDLER_TYPE,
             )
 
         return CustomRecognition.AnalyzeResult(box=potential.box, detail={})

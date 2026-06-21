@@ -1,16 +1,18 @@
 from math import comb
 from typing import Self
 
-from custom.reco.climb_tower_potential.state import State, OwnedPotential
-from custom.reco.climb_tower_potential.data import Data, Potential
-from custom.reco.climb_tower_potential.ui import UIInteractor
-from custom.reco.climb_tower_potential.handler_default import ChoosePotentialHandler
+from .state import State, OwnedPotential
+from .data import Data, Potential
+from .ui import UIInteractor
+from .handler_default import ChoosePotentialHandler
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_preset")
 
 
 class RecommendationHandler(ChoosePotentialHandler):
+    HANDLER_TYPE = "preset"
+
     def __init__(self, screen: UIInteractor, data: Data):
         super().__init__(screen, data)
 

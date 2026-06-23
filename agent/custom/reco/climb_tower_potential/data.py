@@ -16,12 +16,20 @@ class Parameters:
     reserved_coin: int
     priority_list: list[dict]
     handler: str
-    chooser: str
-    tower_8_strategy: str
-    tower_8_capacity_strategy: str
+    environment: str
+    threshold_coef_str: str
+    threshold_decay_str: str
     # 自带默认值的参数
     potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
     selected_potential_offset: int = 35
+
+    @property
+    def threshold_coef(self) -> float:
+        return float(self.threshold_coef_str)
+
+    @property
+    def threshold_decay(self) -> float:
+        return float(self.threshold_decay_str)
 
 DEFAULT_POTENTIAL_LAYOUTS = {
     1: [
@@ -127,13 +135,13 @@ class Data:
     refresh_cost: int = 0
     potential_count: int = 0
     core_potential: bool = False
+    # 不需要根据刷新更新的数据
+    threshold: float = -1.0
     # 需要根据刷新更新的数据
     selected_potential_index: int = 1
     potentials: list[Potential] = field(default_factory=lambda: [])
-    # 计数用数据
-    refresh_count: int = 0
-    # json匹配用数据
-    parsed_priority_list: list[dict] = field(default_factory=lambda: [])
+    refresh_count: int = 0 # 刷新次数
+    parsed_priority_list: list[dict] = field(default_factory=lambda: []) # json匹配用数据
 
     @property
     def refresh_botton(self) -> bool:

@@ -46,7 +46,7 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     def choose(self) -> Potential | None:
         # 根据参数选择潜能选择器
-        if self.data.params.chooser.startswith("tower_8"):
+        if self.data.params.environment.startswith("tower_8"):
             best_potential = self.tower_8_chooser()
         else:
             best_potential = self.choose_fallback_potential()
@@ -95,10 +95,14 @@ class RecommendationHandler(ChoosePotentialHandler):
             self._tower_8_record(best_potential)
             return best_potential
 
+        # 计算刷新阈值
+        if self.data.threshold < 0.0:
+            self.data.threshold = self._tower_8_threshold()
+        threshold = self.data.threshold - (self.data.params.threshold_decay * self.data.refresh_count)
+
         # 当前牌到达刷新分数阈值，直接选当前最优，否则返回 None 让外层刷新。
-        score_threshold = self._tower_8_threshold()
-        logger.debug(f"当前最优牌 {best_potential.name} 得分 {best_potential.score}，阈值 {score_threshold}")
-        if best_potential.score >= score_threshold:
+        logger.debug(f"当前最优牌 {best_potential.name} 得分 {best_potential.score}，阈值 {threshold}")
+        if best_potential.score >= threshold:
             self._tower_8_record(best_potential)
             return best_potential
 
@@ -145,6 +149,7 @@ class RecommendationHandler(ChoosePotentialHandler):
 
         return round(score, 2)
 
+    # TODO: 研究抽取规则，然后重构
     def _tower_8_threshold(self) -> int | float:
         """
         塔8专用刷新阈值计算函数
@@ -187,14 +192,10 @@ class RecommendationHandler(ChoosePotentialHandler):
         )
 
         # 4. 把刷新价值量化为潜能抽取的期望分数
-        refresh_cost_prop = self.data.refresh_cost / 160
-        refresh_cost_score = expected_score * refresh_cost_prop
+        # 该系数由潜能特饮价格抽象而来，如果潜能特饮平均买入价格为160，那么一次潜能抽取的转换系数为160/200=0.8
+        threshold = expected_score * self.data.params.threshold_coef
 
-        # 5. 通过用户设置的刷新次数压力，调整刷新分数阈值
-        pressure = 1
-        threshold = expected_score - refresh_cost_score - (pressure * self.data.refresh_count)
-
-        return round(threshold, 2)
+        return round(max(0.0, min(100.0, threshold)), 2)
 
     def _calculate_new_potential_scores(self, new_potential_count: int) -> list[int | float]:
         """计算所有新潜能的总期望分数"""
@@ -240,6 +241,7 @@ class RecommendationPlusBagScanHandler(RecommendationHandler):
     def __init__(self, screen: UIInteractor, data: Data):
         super().__init__(screen, data)
 
+    # TODO：
     # def _tower_8_score(self, p: Potential) -> int:
     # 因为能获得整体情况，所以还需要考虑下面问题
     # 还得考虑潜能到达旅人上限的问题，以保证推荐潜能数超过普通上限的情况打分偏向于能够突破上限

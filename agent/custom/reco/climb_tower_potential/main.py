@@ -52,9 +52,9 @@ class ChoosePotentialRecognition(CustomRecognition):
         # 加载相应的潜能处理类
         if data.params.handler == "json":
             handler = AssistantPriorityHandler(screen, data)
-        elif data.params.handler == "default+":
+        elif data.params.handler == "preset":
             handler = RecommendationHandler(screen, data)
-        elif data.params.handler == "default++":
+        elif data.params.handler == "preset+bag":
             handler = RecommendationPlusBagScanHandler(screen, data)
         else: # default
             handler = ChoosePotentialHandler(screen, data)

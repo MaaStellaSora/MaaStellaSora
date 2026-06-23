@@ -93,17 +93,18 @@
       "reserved_coin": 0,
       // 触发潜能选择的类型↓，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
       "trigger_type": "default",
-      // 潜能处理方式↓，"default+"表示在推荐图标基础上还会根据其他信息筛选，"json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
-      "handler": "default+",
-      "chooser": "tower_8",
+      // 潜能处理方式↓
+      // "preset"表示游戏里开启了预设作业，会根据选择策略选择潜能，"preset+bag"表示还会读取背包信息
+      // "json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
+      "handler": "preset",
+      "environment": "tower_8",
       // 策略通用参数↓
-      // tower_8_strategy代表塔8潜能选择严格程度，["conservative", "balanced", "greedy"]
-      // tower_8_capacity_strategy代表塔8倾向于选新潜能还是升级旧潜能，["normal", "greedy"]
-      "tower_8_strategy": "balanced",
-      "tower_8_capacity_strategy": "normal"
+      // threshold_coef_str为刷新阈值整体调节系数，0-9.99之间，0表示完全不考虑阈值，1表示完全按照阈值决定是否刷新
+      // threshold_decay_str为刷新阈值衰减系数，0-1之间，0表示不衰减，0.01表示每刷新一次衰减1%
+      "threshold_coef_str": "0.8",
+      "threshold_decay_str": "0.01"
     },
-    "post_wait_freeze": 100,
-    "timeout": 2000
+    "post_wait_freezes": 100
   },
   "星塔_节点_选择潜能_拿走_agent": {
     "recognition": {
@@ -126,7 +127,8 @@
     "next": [
       "星塔_节点_选择潜能_等待确认_agent",
       "星塔_节点_选择潜能_已确认_agent"
-    ]
+    ],
+    "post_delay": 300
   },
   "星塔_节点_选择潜能_等待确认_agent": {
     "recognition": {
@@ -139,19 +141,23 @@
           569,
           996,
           84
-        ]
+        ],
+        "threshold": 0.5
       },
       "type": "TemplateMatch"
     },
     "action": {
       "type": "Click"
     },
-    "post_delay": 500
+    "pre_delay": 0,
+    "post_delay": 300
   },
   "星塔_节点_选择潜能_已确认_agent": {
     "action": {
       "type": "DoNothing"
-    }
+    },
+    "pre_delay": 0,
+    "post_delay": 0
   },
   "星塔_节点_进入对话_agent": {
     "recognition": {

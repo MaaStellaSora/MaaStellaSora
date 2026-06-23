@@ -35,13 +35,6 @@ class RecommendationHandler(ChoosePotentialHandler):
                 new = potential.new_level
                 logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | {recommended_output}")
 
-            # TODO: 测试用
-            logger.debug(f"所属旅人 {potential.trekker} | 潜能数 {State.owned_potentials.count(trekker=potential.trekker)}")
-        if not self.data.core_potential:
-            p_counts = [State.owned_potentials.count(trekker=t) for t in ["0", "1", "2"]]
-            p_leveling_counts = [State.owned_potentials.count(trekker=t, leveling_only=True) for t in ["0", "1", "2"]]
-            logger.debug(f"当前分别持有潜能 {p_counts}，未满级潜能 {p_leveling_counts}")
-
         return self
 
     def choose(self) -> Potential | None:
@@ -84,8 +77,8 @@ class RecommendationHandler(ChoosePotentialHandler):
             self.data.potentials,
             key=lambda p: (
                 p.score,
-                p.level_span,
                 p.recommended_level,
+                p.level_span,
                 p.old_level,
             ),
         )
@@ -130,7 +123,7 @@ class RecommendationHandler(ChoosePotentialHandler):
                 recommended_level=p.recommended_level, core=p.core
             )
 
-        # 取得有效升级量，只有在升级到推荐等级上面才是有效升级
+        # 取得有效升级量，只有在升级到推荐等级上面才是有效升级。
         effective_gain = max(0, min(p.new_level, p.recommended_level) - min(p.old_level, p.recommended_level))
 
         if p.old_level == 0:
@@ -138,14 +131,13 @@ class RecommendationHandler(ChoosePotentialHandler):
             # 在辉光的奇迹buff没用完的情况下，新潜能升级量为3是100分，2是66分，1是33分，0是0分
             # 在辉光的奇迹buff用完的情况下，新潜能升级量为2是100分，1是50分，0是0分
             max_recommended_level = 3 if State.high_level_span_count < 10 else 2
-            score = effective_gain / max_recommended_level * 100
+            # 计算有没有有效利用辉光的奇迹buff
+            wasted_gain = max(0, p.new_level - p.recommended_level) if max_recommended_level == 3 else 0
+            # 计算分数
+            score = max(0, effective_gain - wasted_gain) / max_recommended_level * 100
         else:
-            # 老潜能，通过已保有潜能种类数打分
-            score = min(16, State.owned_potentials.count()) / 16 * 100
-            # 根据已有等级，对分数进行修正
-            score = score * (p.new_level / 6 * effective_gain)
-            # TODO: 如果所有潜能都获得了且满足推荐等级，则需要把非推荐潜能的分数提高
-            # TODO: 辉光的奇迹用在推荐等级2以下的潜能是否减分
+            # 对于有效升级的老潜能，通过已保有潜能种类数打分，因为永远是以新潜能优先
+            score = min(16, State.owned_potentials.count()) / 16 * 100 * effective_gain
 
         return round(score, 2)
 

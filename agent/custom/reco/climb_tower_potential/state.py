@@ -1,13 +1,17 @@
 import re
+import json
+from datetime import datetime
+from pathlib import Path
 from difflib import SequenceMatcher
 from typing import Literal
 from dataclasses import dataclass, field
 
 import numpy
 
-from .data import MAX_POTENTIAL_LEVEL, Potential
+from .data import MAX_POTENTIAL_LEVEL, Data, Potential
 
 from utils import logger as logger_module
+from utils.config import DRAW_DATA_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential_state")
 
 
@@ -229,22 +233,69 @@ class OwnedPotentials:
         """一般来讲，更长的名称更接近原名"""
         return new if len(new) > len(old) else old
 
+@dataclass
+class PotentialDrawInfo:
+    potential_draws: list[dict] = field(default_factory=list)
+
+    def add(self, data: Data) -> None:
+        draws = [
+            {
+                "name": p.name,
+                "trekker": p.trekker,
+                "old_level": p.old_level,
+                "new_level": p.new_level,
+                "recommended_level": p.recommended_level,
+            }
+            for p in data.potentials
+        ]
+        owned = [
+            {
+                "name": p.name,
+                "trekker": p.trekker,
+                "level": p.level,
+                "recommended_level": p.recommended_level,
+            }
+            for p in State.owned_potentials.potentials if not p.core
+        ]
+        self.potential_draws.append({
+            "draws": draws,
+            "owned": owned,
+            "trigger_type": data.params.trigger_type,
+            "high_level_span_count": State.high_level_span_count,
+            "enhance_high_level_span_count": State.enhance_high_level_span_count,
+        })
+
+    def export(self) -> None:
+        """导出潜能抽取数据到项目根目录下的debug/potential_draws/日期时间.json"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # %f是微秒，取前3位得到毫秒
+        filename = f"{timestamp}.json"
+        file_path = Path(__file__).resolve().parents[4] / "debug" / "potential_draws" / filename
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        json.dump(self.potential_draws, open(file_path, "w"), ensure_ascii=False, indent=4)
+        logger.info(f"已导出潜能抽取数据到 {file_path}")
+
+    @property
+    def available(self) -> bool:
+        return len(self.potential_draws) > 0
 
 class State:
-    failed_count: int = 0
     high_level_span_count: int = 0
     enhance_high_level_span_count: int = 0
     potentials_level_count: int = 0
     main_trekker: str = ""
     trekker_images: list[numpy.ndarray] = []
     owned_potentials: OwnedPotentials = OwnedPotentials()
+    potential_draw_info: PotentialDrawInfo = PotentialDrawInfo()
 
     @classmethod
     def reset(cls):
-        cls.failed_count = 0
         cls.high_level_span_count = 0
         cls.enhance_high_level_span_count = 0
         cls.potentials_level_count = 0
         cls.main_trekker = ""
         cls.trekker_images.clear()
         cls.owned_potentials = OwnedPotentials()
+        if cls.potential_draw_info.available and DRAW_DATA_SAVE_ENABLED:
+            cls.potential_draw_info.export()
+            cls.potential_draw_info = PotentialDrawInfo()

@@ -5,6 +5,7 @@ from maa.context import Context
 from maa.define import Rect
 
 from utils import logger as logger_module
+from utils.config import DEV_IMAGES_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_quiz")
 
 
@@ -51,8 +52,9 @@ class QuizRecognition(CustomRecognition):
 
         # 兜底，选择第一个选项
         logger.info(f"[问题选择] 选择第一个选项")
-        # from utils.image_handler import save_image
-        # save_image(argv.image, f"未知选项")
+        if DEV_IMAGES_SAVE_ENABLED:
+            from utils.image_handler import save_image
+            save_image(argv.image, f"未知选项")
         return CustomRecognition.AnalyzeResult(box=default_box, detail={})
 
     @staticmethod

@@ -7,6 +7,7 @@ from .ui import UIInteractor
 from .state import State
 
 from utils import logger as logger_module
+from utils.config import DEV_IMAGES_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential_default")
 
 
@@ -90,8 +91,7 @@ class ChoosePotentialHandler:
             old, new = self.screen.get_potential_level(roi)
             self.data.potentials[i].old_level, self.data.potentials[i].new_level = old, new
 
-            # TODO: 测试用
-            if old == -1 and new == -1:
+            if DEV_IMAGES_SAVE_ENABLED and old == -1 and new == -1:
                 from utils.image_handler import save_image
                 save_image(self.screen.image, f"第{i}个潜能等级识别失败_{roi}")
 

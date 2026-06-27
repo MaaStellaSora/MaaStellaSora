@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
@@ -12,6 +10,7 @@ from .handler_preset import RecommendationHandler, RecommendationPlusBagScanHand
 from .handler_json import AssistantPriorityHandler
 
 from utils import logger as logger_module
+from utils.config import DRAW_DATA_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential")
 
 
@@ -62,6 +61,11 @@ class ChoosePotentialRecognition(CustomRecognition):
         while True:
             # 获取潜能数据，并选择潜能
             potential = handler.read_potentials_info().choose()
+
+            # 如果已启用潜能抽取数据保存功能，且当前潜能不是核心潜能，保存当前潜能抽取数据
+            if DRAW_DATA_SAVE_ENABLED and "preset" in data.params.handler and not data.core_potential:
+                State.potential_draw_info.add(data)
+
             if potential:
                 break
             elif data.refreshable:

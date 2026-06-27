@@ -450,6 +450,7 @@ install
 # Tools
 tools/ImageCropper/**/*.png
 
+# Custom files
 config
 debug
 
@@ -459,3 +460,4 @@ debug
 /develop/
 
 merge_json_correct.py
+/agent/config.json

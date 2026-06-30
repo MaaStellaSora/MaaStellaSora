@@ -285,8 +285,7 @@
             "VIII"
           ]
         ],
-        "threshold": 0.6,
-        "order_by": "Vertical"
+        "threshold": 0.6
       },
       "type": "OCR"
     },

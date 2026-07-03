@@ -254,8 +254,9 @@ class PotentialDrawInfo:
                 "trekker": p.trekker,
                 "level": p.level,
                 "recommended_level": p.recommended_level,
+                "core": 1 if p.core else 0,
             }
-            for p in State.owned_potentials.potentials if not p.core
+            for p in State.owned_potentials.potentials
         ]
         self.potential_draws.append({
             "draws": draws,

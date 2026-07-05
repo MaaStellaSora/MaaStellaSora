@@ -307,7 +307,8 @@ class GridInfo:
     item_price: 商品价格。
     display_name: 商品显示名称，"潜能特饮"等。
     bought: 是否已购买。
-    checked: 是否已检查协奏音符。
+    trekker_specified: 当商品为潜能时，是否已指定 trekker。
+    checked: 当商品为音符时，是否已检查协奏音符。
     buy_type: 购买类型，"normal"、"assist_melody"、"dynamic_drink" 或"final_remainder"。
     buy_priority: 购买优先级，无限递增。
     """
@@ -317,6 +318,7 @@ class GridInfo:
     item_price: int = 0
     display_name: str = ""
     bought: bool = False
+    trekker_specified: bool = False
     checked: bool = False
     buy_type: str = ""
     buy_priority: int = 0
@@ -575,6 +577,7 @@ class ShopHandler:
             bool: 购买任务成功返回 True。
         """
         reserved_coin = grid.get_reserved_coin(self.data)
+        potential_source = "specified_drink" if grid.trekker_specified else "drink"
         override: dict = {
             "星塔_节点_商店_购物_购买道具_agent": {
                 "action": {"param": {"target": grid.price_roi}}
@@ -582,7 +585,7 @@ class ShopHandler:
             "星塔_节点_选择潜能_agent": {
                 "attach": {
                     "reserved_coin": reserved_coin,
-                    "trigger_type": "drink"
+                    "potential_source": potential_source
                 }
             },
         }
@@ -927,8 +930,8 @@ class ShopAction(CustomAction):
 
         for i, grid_roi in enumerate(self.GRID_ROIS):
             logger.debug(f"正在识别第 {i + 1} 个格子")
-            item_name, item_quantity, item_price = self._get_single_grid_info(
-                context, grid_roi["price_roi"], grid_roi["name_roi"], lang_type, image
+            item_name, item_quantity, item_price, trekker_specified = self._get_single_grid_info(
+                context, grid_roi["item_roi"], grid_roi["price_roi"], grid_roi["name_roi"], lang_type, image
             )
             if item_name and item_quantity and item_price:
                 grids_info.append(GridInfo(
@@ -936,6 +939,7 @@ class ShopAction(CustomAction):
                     item_name=item_name,
                     item_quantity=item_quantity,
                     item_price=item_price,
+                    trekker_specified=trekker_specified,
                     display_name=ShopAction.ITEM_NAMES.get(item_name, {}).get(data.lang_type, ["?"])[0]
                 ))
             else:
@@ -950,23 +954,25 @@ class ShopAction(CustomAction):
     def _get_single_grid_info(
         self,
         context: Context,
+        item_roi: list[int],
         price_roi: list[int],
         name_roi: list[int],
         lang_type: str,
         image=None,
-    ) -> tuple[str, int, int]:
+    ) -> tuple[str, int, int, bool]:
         """单个格子的名称、数量、价格识别，识别失败时重试。
 
         Args:
             context: 任务上下文。
+            item_roi: 道具识别框范围。
             price_roi: 道具价格的识别框范围。
             name_roi: 道具名称的识别框范围。
             lang_type: 识别语言类型。
             image: 截图，默认 None。
 
         Returns:
-            tuple[str, int, int]: (item_name, item_quantity, item_price)，
-                识别失败时能返回多少返回多少，完全失败返回 (None, None, None)。
+            tuple[str, int, int, bool]: (item_name, item_quantity, item_price, trekker_specified)，
+                识别失败时能返回多少返回多少，完全失败返回 (None, None, None, False)。
         """
         if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
@@ -983,10 +989,14 @@ class ShopAction(CustomAction):
             f"名称从 '{raw_item_name}' 解析为名称: '{item_name}'，数量: '{item_quantity}'"
         )
 
+        trekker_specified = False
+        if item_name == "potential_drink":
+            trekker_specified = self._grid_recognition(context, image, item_roi, "item") == []
+
         if not (item_name and item_quantity and item_price):
             logger.warning("识别道具格子失败")
 
-        return item_name, item_quantity, item_price
+        return item_name, item_quantity, item_price, trekker_specified
 
     @staticmethod
     def _grid_recognition(
@@ -1010,6 +1020,8 @@ class ShopAction(CustomAction):
             node_name = "星塔_节点_商店_购物_识别物品价格_agent"
         elif content == "name":
             node_name = "星塔_节点_商店_购物_识别物品内容_agent"
+        elif content == "item":
+            node_name = "星塔_节点_商店_购物_识别旅人限定特饮_agent"
         else:
             logger.error(f"未知的内容类型：{content}")
             return []
@@ -1018,16 +1030,18 @@ class ShopAction(CustomAction):
             node_name: {"recognition": {"param": {"roi": roi}}}
         })
         if reco_detail and reco_detail.hit:
+            text = "无指定旅人饮料" if content == "item" else [r.text for r in reco_detail.filtered_results]
             logger.debug(
-                f"识别到物品内容：{[r.text for r in reco_detail.filtered_results]}"
+                f"识别到物品内容：{text}"
             )
             return reco_detail.filtered_results
-        if reco_detail and reco_detail.all_results:
+        if content != "item" and reco_detail and reco_detail.all_results:
             logger.debug(
-                f"识别到的格子内容：{[r.text for r in reco_detail.all_results]}"
+                f"识别到分数不足的格子内容：{[r.text for r in reco_detail.all_results]}"
             )
         else:
-            logger.debug(f"格子 {roi} 未识别到任何内容")
+            text = "指定旅人饮料" if content == "item" else f"格子 {roi} 未识别到任何内容"
+            logger.debug(text)
         return []
 
     def _parse_item_name(self, item_name: str, lang_type: str) -> tuple[str, int]:
@@ -1192,7 +1206,7 @@ class EnhanceAction(CustomAction):
         pipeline_override = {
             "星塔_节点_选择潜能_agent": {
                 "attach": {
-                    "trigger_type": "enhance"
+                    "potential_source": "enhance"
                 }
             }
         }

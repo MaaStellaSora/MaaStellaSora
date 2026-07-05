@@ -20,10 +20,12 @@
   },
   "活动_关闭升级界面": {
     "recognition": {
-      "expected": [
-        "權限等級"
-      ]
-    },
-    "type": "OCR",
+      "param": {
+        "expected": [
+          "權限等級"
+        ]
+      },
+      "type": "OCR"
+    }
   }
 }

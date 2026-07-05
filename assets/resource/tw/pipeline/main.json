@@ -1,16 +1,5 @@
 {
   "任务_今日事务": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "任务_一键领取"
-      },
-      "通用_返回主页"
-    ],
     "recognition": {
       "param": {
         "expected": [
@@ -21,17 +10,6 @@
     }
   },
   "任务_每周事务": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "任务_一键领取"
-      },
-      "任务_魔王养成"
-    ],
     "recognition": {
       "param": {
         "expected": [
@@ -62,17 +40,6 @@
     }
   },
   "任务_魔王养成": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "任务_一键领取"
-      },
-      "任务_今日事务"
-    ],
     "recognition": {
       "param": {
         "expected": [
@@ -326,7 +293,10 @@
     },
     "recognition": {
       "param": {
-        "expected": "點擊任意區域進入遊戲"
+        "expected": [
+          "點擊任意區域進入遊戲",
+          "點選任意區域進入遊戲"
+        ]
       },
       "type": "OCR"
     },
@@ -378,93 +348,15 @@
       },
       "type": "Click"
     },
-    "next": [
-      "通用_判断是否在主页"
-    ],
     "recognition": {
       "param": {
         "expected": [
-          "點擊空白處繼續"
+          "點擊空白處繼續",
+          "點選空白處繼續"
         ]
       },
       "type": "OCR"
     },
     "timeout": 1000
-  },
-  "采购_判断是否已领取": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Recognition.Succeeded": "检测到每日赠礼已领取 将跳过"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "通用_返回主页"
-      }
-    ],
-    "recognition": {
-      "param": {
-        "expected": [
-          "已領取"
-        ]
-      },
-      "type": "OCR"
-    },
-    "timeout": 2000
-  },
-  "采购_前往采购": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "anchor": [
-      "前往采购"
-    ],
-    "focus": {
-      "Node.Recognition.Starting": "正在前往采购"
-    },
-    "next": [
-      "采购_领取每日赠礼",
-      "采购_判断是否已领取"
-    ],
-    "recognition": {
-      "param": {
-        "template": [
-          "procurement.png"
-        ]
-      },
-      "type": "TemplateMatch"
-    }
-  },
-  "采购_领取每日赠礼": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Recognition.Starting": "正在领取每日赠礼"
-    },
-    "next": [
-      {
-        "jump_back": true,
-        "name": "通用_返回主页"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_点击空白处继续"
-      }
-    ],
-    "recognition": {
-      "param": {
-        "expected": [
-          "每日贈禮"
-        ]
-      },
-      "type": "OCR"
-    },
-    "timeout": 2000
   }
 }

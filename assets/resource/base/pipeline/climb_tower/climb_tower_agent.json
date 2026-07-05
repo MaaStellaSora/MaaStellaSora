@@ -91,8 +91,8 @@
       "priority_list": [],
       "max_refresh_count": 5,
       "reserved_coin": 0,
-      // 触发潜能选择的类型↓，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
-      "trigger_type": "default",
+      // 潜能来源↓，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
+      "potential_source": "default",
       // 潜能处理方式↓
       // "preset"表示游戏里开启了预设作业，会根据选择策略选择潜能，"preset+bag"表示还会读取背包信息
       // "json"表示使用自定义优先级，否则仅靠推荐图标选择潜能

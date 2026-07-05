@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Any
+from typing import Any
 
 import numpy
 from maa.context import Context
@@ -43,7 +43,15 @@ class UIInteractor:
         return False
 
     def _base_recognition(
-            self, mode, node_name, failed_return, *, roi=None, image=None, template=None, max_try=0
+            self,
+            mode: str,
+            node_name: str,
+            failed_return: Any,
+            *,
+            roi: list[int] | None = None,
+            image: numpy.ndarray | None = None,
+            template: str | None = None,
+            max_try: int | None = None
     ) -> Any:
         """
         核心识别逻辑：支持 OCR 和 Template
@@ -53,10 +61,10 @@ class UIInteractor:
             mode(str): 识别模式，"ocr"或"template"或"color"
             node_name(str): 节点名称，用于识别结果的记录和返回
             failed_return(any): 识别失败时的默认值
-            roi(tuple): 可选的ROI坐标，用于模板识别
+            roi(list[int]): 可选的ROI坐标，用于模板识别
             image(numpy.ndarray): 可选的自定义图像，用于识别
             template(str): 可选的模板名称，用于模板识别
-            max_try(int): 可选的最大重试次数，默认为1
+            max_try(int): 可选的最大尝试次数，传入次数小于等于0时默认使用self.max_try
 
         Returns:
             any: 识别到的结果，根据mode返回文本或坐标列表
@@ -66,7 +74,7 @@ class UIInteractor:
                 self.image = self.context.tasker.controller.post_screencap().wait().get()
             image = self.image
 
-        actual_max_try = max_try if max_try > 0 else self.max_try
+        actual_max_try = max_try if isinstance(max_try, int) and max_try > 0 else self.max_try
 
         params = {}
         if roi:
@@ -115,28 +123,53 @@ class UIInteractor:
         return failed_return
 
     def _ocr(self, node_name, failed_return, **kwargs) -> list[tuple[str, list[int]]]:
+        """
+        识别文本，返回文本和坐标列表
+
+        Args:
+            node_name(str): 节点名称，用于识别结果的记录和返回
+            failed_return(any): 识别失败时的默认值
+
+        Returns:
+            list[tuple[str, list[int]]]: 识别到的文本和坐标列表，单个元素格式为("文本", [x1, y1, x2, y2])
+        """
         return self._base_recognition("ocr", node_name, failed_return, **kwargs)
 
     def _template(self, node_name, failed_return, **kwargs) -> list[list[int]]:
+        """
+        识别图片模板，返回坐标列表
+
+        Args:
+            node_name(str): 节点名称，用于识别结果的记录和返回
+            failed_return(any): 识别失败时的默认值
+
+        Returns:
+            list[list[int]]: 识别到的坐标列表，单个元素格式为[x1, y1, x2, y2]
+        """
         return self._base_recognition("template", node_name, failed_return, **kwargs)
 
     def _color(self, node_name, **kwargs) -> bool:
         return self._base_recognition("color", node_name, False, **kwargs)
 
-    def get_current_coin(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
+    def get_current_coin(self, image: numpy.ndarray | None = None, max_try: int = 1) -> int:
         ocr_results = self._ocr("星塔_通用_识别当前金币_agent", [["0"]], image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
-    def get_refresh_cost(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
+    def get_refresh_cost(self, image: numpy.ndarray | None = None, max_try: int = 1) -> int:
         ocr_results = self._ocr("星塔_通用_识别刷新花费_agent", [["-1"]], image=image, max_try=max_try)
         return int(ocr_results[0][0])
 
-    def check_core_potential(self, image: Optional[numpy.ndarray] = None, max_try: int = 1) -> bool:
+    def check_core_potential(self, image: numpy.ndarray | None = None, max_try: int = 1) -> bool:
         if self._template("星塔_节点_选择潜能_识别核心潜能_agent", [], image=image, max_try=max_try):
             return True
         return False
 
-    def get_potential_name(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> str:
+    def check_level_upped(self, image: numpy.ndarray | None = None, max_try: int = 1) -> bool:
+        if self._template("星塔_节点_选择潜能_检测是否升级_agent", [], image=image, max_try=max_try):
+            return True
+        return False
+
+    def get_potential_name(self, roi: list[int], image: numpy.ndarray | None = None, max_try: int = 1) -> str:
         node_name = "星塔_节点_选择潜能_识别潜能名称_agent"
         ocr_results = self._ocr(node_name, [["", []]], roi=roi, image=image, max_try=max_try)
         return " ".join([t for t, _ in ocr_results])
@@ -144,7 +177,7 @@ class UIInteractor:
     def get_potential_level(
             self,
             roi: list[int],
-            image: Optional[numpy.ndarray] = None,
+            image: numpy.ndarray | None = None,
             max_try: int = 1
     ) -> tuple[int, int]:
         node_name = "星塔_节点_选择潜能_识别潜能等级_agent"
@@ -179,7 +212,7 @@ class UIInteractor:
         logger.warning(f"无法解析潜能等级（识别到的等级文本: {texts}）")
         return -1, -1
 
-    def get_recommend_level(self, roi: list[int], image: Optional[numpy.ndarray] = None, max_try: int = 1) -> int:
+    def get_recommend_level(self, roi: list[int], image: numpy.ndarray | None = None, max_try: int = 1) -> int:
         node_name = "星塔_节点_选择潜能_识别推荐等级_agent"
         ocr_results = self._ocr(node_name, [["0"]], roi=roi, image=image, max_try=max_try)
         return int(ocr_results[0][0])
@@ -191,7 +224,7 @@ class UIInteractor:
     def get_potential_count(
             self,
             core_potential: bool = False,
-            image: Optional[numpy.ndarray] = None,
+            image: numpy.ndarray | None = None,
             max_try: int = 1
     ) -> int:
         """
@@ -218,7 +251,7 @@ class UIInteractor:
     def get_recommended_potential(
             self,
             borders: list[list],
-            image: Optional[numpy.ndarray] = None,
+            image: numpy.ndarray | None = None,
             max_try: int = 1
     ) -> list:
         """
@@ -226,7 +259,6 @@ class UIInteractor:
 
         推荐图标位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
         x_border 区间来确定归属卡片。
-        识别失败时返回第一张卡片的 box 作为兜底。
 
         Args:
             borders: 可选潜能卡片区域列表，每个元素结构：[float, float],  # 卡片 x 轴边界（左闭右闭）
@@ -259,7 +291,7 @@ class UIInteractor:
     def check_potential_recommended(
             self,
             roi: list[list],
-            image: Optional[numpy.ndarray] = None,
+            image: numpy.ndarray | None = None,
             max_try: int = 1
     ) -> bool:
         node_name = "星塔_节点_选择潜能_识别推荐图标_agent"
@@ -271,7 +303,7 @@ class UIInteractor:
     def get_selected_potential_index(
             self,
             borders: list[list[int]],
-            image: Optional[numpy.ndarray] = None,
+            image: numpy.ndarray | None = None,
             max_try: int = 1
     ) -> int:
         """识别拿走按钮，返回对应卡片的索引。

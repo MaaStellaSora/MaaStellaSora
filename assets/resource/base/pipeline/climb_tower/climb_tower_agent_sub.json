@@ -364,6 +364,23 @@
       "type": "TemplateMatch"
     }
   },
+  "星塔_节点_选择潜能_检测是否升级_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "\\d+"
+        ],
+        "roi": [
+          375,
+          0,
+          535,
+          90
+        ],
+        "threshold": 0.6
+      },
+      "type": "OCR"
+    }
+  },
   "星塔_节点_选择潜能_检测干扰文字_agent": {
     "recognition": {
       "param": {

@@ -5,13 +5,11 @@ from dataclasses import dataclass, field
 from .ui import UIInteractor
 
 
-# region 常量 ===============================================================
-
 MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
 
 @dataclass(slots=True, frozen=True)
 class Parameters:
-    trigger_type: str
+    potential_source: str
     max_refresh_count: int
     reserved_coin: int
     priority_list: list[dict]
@@ -136,7 +134,8 @@ class Data:
     potential_count: int = 0
     core_potential: bool = False
     # 不需要根据刷新更新的数据
-    threshold: float = -1.0
+    threshold: float = -1.0 # 刷新阈值储存变量
+    level_upped: bool = False # 是否通过旅人升级获得潜能
     # 需要根据刷新更新的数据
     selected_potential_index: int = 1
     potentials: list[Potential] = field(default_factory=lambda: [])
@@ -271,7 +270,3 @@ class Potential:
 
     def _get_adjusted_roi(self, roi, offset) -> list[int]:
             return [roi[0], max(0, roi[1] - offset) if self.selected else roi[1], roi[2], roi[3]]
-
-
-# endregion 统筹所有数据的类 ===============================================================
-

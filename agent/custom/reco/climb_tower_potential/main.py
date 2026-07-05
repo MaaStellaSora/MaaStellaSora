@@ -47,6 +47,8 @@ class ChoosePotentialRecognition(CustomRecognition):
         data.refresh_cost = screen.get_refresh_cost(image)
         data.core_potential = screen.check_core_potential(image)
         data.potential_count = screen.get_potential_count(data.core_potential, image)
+        if DRAW_DATA_SAVE_ENABLED and data.params.potential_source != "enhance":
+            data.level_upped = screen.check_level_upped(image)
 
         # 加载相应的潜能处理类
         if data.params.handler == "json":

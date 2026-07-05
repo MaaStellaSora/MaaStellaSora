@@ -69,8 +69,7 @@ class OwnedPotentials:
                 existed = None
         # 如果存在则更新等级和名字
         if existed:
-            # 防止 OCR 识别失败导致等级倒退，所以至少按照原等级+1处理
-            existed.level = min(existed.max_level, max(existed.level + 1, level))
+            existed.level = min(existed.max_level, max(existed.level, level))
             existed.recommended_level = max(existed.recommended_level, potential.recommended_level)
             # 使用更长的名字，因为更长的名字更接近原名
             existed.name = self._longer_name(existed.name, potential.name)
@@ -238,6 +237,11 @@ class PotentialDrawInfo:
     potential_draws: list[dict] = field(default_factory=list)
 
     def add(self, data: Data) -> None:
+        # 处理潜能来源
+        default_source = "level_up" if data.level_upped else "quiz"
+        potential_source = default_source if data.params.potential_source == "default" else data.params.potential_source
+
+        # 整合数据
         draws = [
             {
                 "name": p.name,
@@ -261,7 +265,7 @@ class PotentialDrawInfo:
         self.potential_draws.append({
             "draws": draws,
             "owned": owned,
-            "trigger_type": data.params.trigger_type,
+            "potential_source": potential_source,
             "high_level_span_count": State.high_level_span_count,
             "enhance_high_level_span_count": State.enhance_high_level_span_count,
         })

@@ -1,87 +1,87 @@
 {
-    "星塔_出发_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Go"
-                ],
-                "roi": [
-                    1022,
-                    551,
-                    259,
-                    169
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "星塔_星塔探索按钮_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Ascension"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "星塔_进入星塔按钮_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Enter Monolith"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "星塔_快速战斗按钮_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Quick Battle"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "星塔_回到未完成的星塔探索_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Confirm"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "星塔_编队角色_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Next"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "星塔_编队角色_点击下一步_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Next"
-                ]
-            },
-            "type": "OCR"
-        }
-    },
-    "星塔_编队秘纹_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Start Battle"
-                ]
-            }
-        }
+  "星塔_出发_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Go"
+        ],
+        "roi": [
+          1022,
+          551,
+          259,
+          169
+        ]
+      },
+      "type": "OCR"
     }
+  },
+  "星塔_星塔探索按钮_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Ascension"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "星塔_进入星塔按钮_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Enter Monolith"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "星塔_快速战斗按钮_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Quick Battle"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "星塔_回到未完成的星塔探索_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Confirm"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "星塔_编队角色_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Next"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "星塔_编队角色_点击下一步_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Next"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "星塔_编队秘纹_agent": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Start Battle"
+        ]
+      }
+    }
+  }
 }

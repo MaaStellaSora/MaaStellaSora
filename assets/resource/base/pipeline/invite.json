@@ -250,13 +250,6 @@
     }
   },
   "邀约_地点": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Recognition.Succeeded": "邀约_地点"
-    },
     "recognition": {
       "param": {
         "expected": [
@@ -272,9 +265,84 @@
       "type": "OCR"
     },
     "next": [
+      "邀约_特殊回忆",
+      "邀约_选择默认地点"
+    ],
+    "post_wait_freezes": {
+      "time": 200,
+      "target": [
+        615,
+        195,
+        590,
+        415
+      ]
+    }
+  },
+  "邀约_特殊回忆": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "特殊回忆"
+        ],
+        "roi": [
+          600,
+          190,
+          140,
+          435
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "邀约_选择回忆地点"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "邀约_选择默认地点": {
+    "action": {
+      "param": {
+        "target": "邀约_地点"
+      },
+      "type": "Click"
+    },
+    "next": [
       "邀约_跳过",
-      "邀约_地点"
-    ]
+      "邀约_选择默认地点"
+    ],
+    "focus": {
+      "Node.Recognition.Succeeded": "选择默认地点"
+    },
+    "pre_delay": 0
+  },
+  "邀约_选择回忆地点": {
+    "action": {
+      "param": {},
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Recognition.Succeeded": "选择回忆地点"
+    },
+    "recognition": {
+      "param": {
+        "expected": [
+          "选择"
+        ],
+        "roi": "邀约_特殊回忆",
+        "roi_offset": [
+          436,
+          -8,
+          54,
+          101
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "邀约_跳过",
+      "邀约_选择回忆地点"
+    ],
+    "pre_delay": 0
   },
   "邀约_总循环": {
     "action": {
@@ -283,7 +351,9 @@
       },
       "type": "Custom"
     },
-    "next": ["通用_返回主页"]
+    "next": [
+      "通用_返回主页"
+    ]
   },
   "邀约_已回到邀约界面": {
     "recognition": {

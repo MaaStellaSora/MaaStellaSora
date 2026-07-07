@@ -62,6 +62,24 @@
       }
     }
   },
+  "邀约_特殊回忆": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "特殊回憶"
+        ]
+      }
+    }
+  },
+  "邀约_选择回忆地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選擇"
+        ]
+      }
+    }
+  },
   "邀约_还是算了": {
     "recognition": {
       "param": {

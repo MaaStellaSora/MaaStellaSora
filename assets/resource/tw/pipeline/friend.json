@@ -1,0 +1,29 @@
+{
+  "好友_一键获取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "快速獲得"
+        ]
+      }
+    }
+  },
+  "好友_一键赠送": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "快速贈送"
+        ]
+      }
+    }
+  },
+  "好友_好友列表": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "好友清單"
+        ]
+      }
+    }
+  }
+}

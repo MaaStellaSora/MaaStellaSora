@@ -50,6 +50,15 @@
       }
     }
   },
+  "邀约_选择默认地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選択"
+        ]
+      }
+    }
+  },
   "邀约_选择回忆地点": {
     "recognition": {
       "param": {

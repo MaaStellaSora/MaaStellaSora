@@ -26,33 +26,6 @@
       }
     }
   },
-  "邀约_1号": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "希婭"
-        ]
-      }
-    }
-  },
-  "邀约_2号": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "霧語"
-        ]
-      }
-    }
-  },
-  "邀约_3号": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "蒼蘭"
-        ]
-      }
-    }
-  },
   "邀约_地点": {
     "recognition": {
       "param": {
@@ -67,6 +40,15 @@
       "param": {
         "expected": [
           "特殊回憶"
+        ]
+      }
+    }
+  },
+  "邀约_选择默认地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選擇"
         ]
       }
     }

@@ -1,0 +1,20 @@
+{
+  "心链_点击邮寄": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "郵寄"
+        ]
+      }
+    }
+  },
+  "心链_赠送礼物": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "贈送禮物"
+        ]
+      }
+    }
+  }
+}

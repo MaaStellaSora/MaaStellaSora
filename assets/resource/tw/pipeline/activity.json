@@ -1,5 +1,35 @@
 {
+  "活动_开启快速战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "快速戰鬥"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "活动_开始战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "開始戰鬥"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
   "活动_等待活动界面静止": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "戰鬥關卡"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
+  "活动_点击活动战斗关卡": {
     "recognition": {
       "param": {
         "expected": [
@@ -18,12 +48,24 @@
       }
     }
   },
+  "活动_确认": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "確認"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
   "活动_关闭升级界面": {
     "recognition": {
-      "expected": [
-        "權限等級"
-      ]
-    },
-    "type": "OCR",
+      "param": {
+        "expected": [
+          "權限等級"
+        ]
+      },
+      "type": "OCR"
+    }
   }
 }

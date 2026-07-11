@@ -1,9 +1,9 @@
 {
-  "采购_判断是否已领取": {
+  "委托_跳过": {
     "recognition": {
       "param": {
         "expected": [
-          "Claimed"
+          "跳過"
         ]
       }
     }

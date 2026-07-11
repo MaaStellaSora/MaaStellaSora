@@ -3,7 +3,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "括受取"
+          "快速獲得"
         ]
       }
     }
@@ -12,7 +12,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "括贈る"
+          "快速贈送"
         ]
       }
     }
@@ -21,7 +21,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "フレンドリスト"
+          "好友清單"
         ]
       }
     }

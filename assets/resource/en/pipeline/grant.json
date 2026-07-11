@@ -1,13 +1,13 @@
 {
-    "基金_判断是否已进入基金": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Grant"
-                ]
-            }
-        }
-    },
+  "基金_判断是否已进入基金": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Grant"
+        ]
+      }
+    }
+  },
   "基金_跳过月初皮肤展示": {
     "recognition": {
       "param": {
@@ -17,31 +17,31 @@
       }
     }
   },
-    "基金_营业目标全部领取": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Claim All"
-                ]
-            }
-        }
-    },
-    "基金_进入基金补贴": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Grant Milestone"
-                ]
-            }
-        }
-    },
-    "基金_基金补贴全部领取": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Claim All"
-                ]
-            }
-        }
+  "基金_营业目标全部领取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Claim All"
+        ]
+      }
     }
+  },
+  "基金_进入基金补贴": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Grant Milestone"
+        ]
+      }
+    }
+  },
+  "基金_基金补贴全部领取": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Claim All"
+        ]
+      }
+    }
+  }
 }

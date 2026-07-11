@@ -26,34 +26,34 @@
       }
     }
   },
-  "邀约_1号": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "希婭"
-        ]
-      }
-    }
-  },
-  "邀约_2号": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "霧語"
-        ]
-      }
-    }
-  },
-  "邀约_3号": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "蒼蘭"
-        ]
-      }
-    }
-  },
   "邀约_地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選擇"
+        ]
+      }
+    }
+  },
+  "邀约_特殊回忆": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "特殊回憶"
+        ]
+      }
+    }
+  },
+  "邀约_选择默认地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選擇"
+        ]
+      }
+    }
+  },
+  "邀约_选择回忆地点": {
     "recognition": {
       "param": {
         "expected": [
@@ -71,11 +71,22 @@
       }
     }
   },
+  "邀约_点击空白": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "點選空白",
+          "處繼續"
+        ]
+      }
+    }
+  },
   "邀约_送出礼物": {
     "recognition": {
       "param": {
         "expected": [
-          "送出禮物"
+          "送出禮物",
+          "贈送禮物"
         ]
       }
     }
@@ -84,7 +95,8 @@
     "recognition": {
       "param": {
         "expected": [
-          "送出禮物"
+          "送出禮物",
+          "贈送禮物"
         ]
       }
     }

@@ -1,4 +1,15 @@
 {
+  "通用_点击空白处继续": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "點擊空白處繼續",
+          "點選空白處繼續"
+        ]
+      },
+      "type": "OCR"
+    }
+  },
   "通用_点击空白处": {
     "recognition": {
       "param": {

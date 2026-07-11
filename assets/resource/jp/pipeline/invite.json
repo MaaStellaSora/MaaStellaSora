@@ -41,6 +41,33 @@
       }
     }
   },
+  "邀约_特殊回忆": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "特殊回想"
+        ]
+      }
+    }
+  },
+  "邀约_选择默认地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選択"
+        ]
+      }
+    }
+  },
+  "邀约_选择回忆地点": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "選択"
+        ]
+      }
+    }
+  },
   "邀约_点击空白": {
     "recognition": {
       "param": {

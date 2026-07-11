@@ -165,18 +165,33 @@ def is_assist_skill_unlocked(
     if image is None:
         image = context.tasker.controller.post_screencap().wait().get()
 
-    reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实数量_agent", image)
+    # 寻找roi左边边界
+    reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实红色_agent", image)
+    if reco_detail and reco_detail.hit:
+        x = reco_detail.best_result.box[0]
+        w = 863 + 42 - x
+        roi = [x, 285, w, 22]
+    else:
+        roi = [863, 285, 42, 22]
+    pipeline_override = {
+        "星塔_节点_商店_购买协奏音符_核实数量_agent": {
+            "recognition": {
+                "param": {
+                    "roi": roi
+                }
+            }
+        }
+    }
+
+    # 正式核实数量
+    reco_detail = context.run_recognition(
+        "星塔_节点_商店_购买协奏音符_核实数量_agent", image, pipeline_override=pipeline_override
+    )
     if reco_detail and reco_detail.hit:
         text = reco_detail.best_result.text
         current_melody = int(text[:-2])
         required_melody = int(text[-2:])
         logger.debug(f"识别到的现有音符数量：{current_melody}，协奏技能升级要求数量：{required_melody}")
-        # 解决OCR把音符图标识别为数字5的问题
-        if 50 <= current_melody < 60:
-            reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实红色_agent", image)
-            if reco_detail and reco_detail.hit:
-                logger.debug(f"识别到音符数量可能有问题，修正当前音符数量为当前识别值-50")
-                current_melody -= 50
 
         # 协奏技能未解锁，需要符合：
         # 1. 升级要求音符数量为 lv0_melody 中的值

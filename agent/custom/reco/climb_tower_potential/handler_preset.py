@@ -91,10 +91,10 @@ class RecommendationHandler(ChoosePotentialHandler):
         # 计算刷新阈值
         if self.data.threshold < 0.0:
             self.data.threshold = self._tower_8_threshold()
-        threshold = self.data.threshold - (self.data.params.threshold_decay * self.data.refresh_count)
+        threshold = self.data.threshold * (1 - self.data.params.threshold_decay * self.data.refresh_count)
 
         # 当前牌到达刷新分数阈值，直接选当前最优，否则返回 None 让外层刷新。
-        logger.debug(f"当前最优牌 {best_potential.name} 得分 {best_potential.score}，阈值 {threshold}")
+        logger.info(f"当前最优牌 {best_potential.name} 得分 {best_potential.score}，阈值 {threshold}")
         if best_potential.score >= threshold:
             self._tower_8_record(best_potential)
             return best_potential

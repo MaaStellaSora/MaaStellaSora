@@ -191,8 +191,8 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     def _calculate_new_potential_scores(self, new_potential_count: int) -> list[int | float]:
         """计算所有新潜能的总期望分数"""
-        # 新潜能等级概率权重: Lv1(80%), Lv2(10%), Lv3(10%)
-        level_weights = [(1, 0.8), (2, 0.1), (3, 0.1)] if State.high_level_span_count < 10 else [(1, 0.8), (2, 0.2)]
+        # 新潜能等级概率权重: Lv1(30%), Lv2(20%), Lv3(50%)
+        level_weights = [(1, 0.3), (2, 0.2), (3, 0.5)] if State.high_level_span_count < 10 else [(1, 0.3), (2, 0.7)]
 
         recommended_score = sum(
             self._tower_8_score(self.dummy_potential(old_level=0, new_level=lv, recommended_level=6)) * weight

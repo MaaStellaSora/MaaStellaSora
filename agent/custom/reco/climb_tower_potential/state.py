@@ -277,7 +277,8 @@ class PotentialDrawInfo:
         file_path = Path(__file__).resolve().parents[4] / "debug" / "potential_draws" / filename
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        json.dump(self.potential_draws, open(file_path, "w"), ensure_ascii=False, indent=4)
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(self.potential_draws, f, ensure_ascii=False, indent=4)
         logger.info(f"已导出潜能抽取数据到 {file_path}")
 
     @property

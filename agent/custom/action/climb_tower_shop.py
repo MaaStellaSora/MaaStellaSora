@@ -168,7 +168,7 @@ def is_assist_skill_unlocked(
     # 寻找roi左边边界
     reco_detail = context.run_recognition("星塔_节点_商店_购买协奏音符_核实红色_agent", image)
     if reco_detail and reco_detail.hit:
-        x = reco_detail.best_result.box[0]
+        x = min([r.box[0] for r in reco_detail.filtered_results])
         w = 863 + 42 - x
         roi = [x, 285, w, 22]
     else:

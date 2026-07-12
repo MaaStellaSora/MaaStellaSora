@@ -265,6 +265,7 @@ class PotentialDrawInfo:
         self.potential_draws.append({
             "draws": draws,
             "owned": owned,
+            "core": 1 if data.core_potential else 0,
             "potential_source": potential_source,
             "high_level_span_count": State.high_level_span_count,
             "enhance_high_level_span_count": State.enhance_high_level_span_count,

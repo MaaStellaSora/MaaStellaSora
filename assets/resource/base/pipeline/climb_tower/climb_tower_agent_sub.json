@@ -512,18 +512,34 @@
       "type": "TemplateMatch"
     }
   },
-  "星塔_节点_选择潜能_识别潜能数量_agent": {
+  "星塔_节点_选择潜能_识别稀有潜能数量_agent": {
     "recognition": {
       "param": {
         "template": [
-          "ClimbTower_agent/爬塔_普通潜能.png",
           "ClimbTower_agent/爬塔_稀有潜能.png"
         ],
         "roi": [
           135,
           135,
           1010,
-          445
+          250
+        ],
+        "threshold": 0.8
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "星塔_节点_选择潜能_识别普通潜能数量_agent": {
+    "recognition": {
+      "param": {
+        "template": [
+          "ClimbTower_agent/爬塔_普通潜能.png"
+        ],
+        "roi": [
+          135,
+          135,
+          1010,
+          250
         ],
         "threshold": 0.8
       },

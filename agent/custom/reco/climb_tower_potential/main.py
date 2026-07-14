@@ -46,7 +46,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         data.current_coin = screen.get_current_coin(image)
         data.refresh_cost = screen.get_refresh_cost(image)
         data.core_potential = screen.check_core_potential(image)
-        data.potential_count = screen.get_potential_count(data.core_potential, image)
+        data.potential_types = screen.get_potential_types(data.core_potential, image)
         if DRAW_DATA_SAVE_ENABLED and data.params.potential_source != "enhance":
             data.level_upped = screen.check_level_upped(image)
 

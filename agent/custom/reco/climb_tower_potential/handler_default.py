@@ -33,14 +33,14 @@ class ChoosePotentialHandler:
         potential_layouts = self.data.params.potential_layouts[self.data.potential_count]
         potentials = [Potential(potential_layouts[i]) for i in range(self.data.potential_count)]
 
-        # 给潜能的selected、core字段赋值
+        # 给潜能的selected、type字段赋值
         self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
         for i, p in enumerate(potentials):
             p.index = i
+            p.type = self.data.potential_types[i]
             if i == self.data.selected_potential_index:
                 p.selected = True
-            if self.data.core_potential:
-                p.core = True
+            if p.core:
                 p.old_level = 0
                 p.new_level = 1
 

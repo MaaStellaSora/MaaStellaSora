@@ -21,7 +21,12 @@ class OwnedPotential:
     level: int
     recommended_level: int
     trekker: str = "unknown"
-    core: bool = False
+    type: str = ""
+
+    @property
+    def core(self) -> bool:
+        """是否为核心潜能"""
+        return self.type == "core"
 
     @property
     def max_level(self) -> int:
@@ -81,7 +86,7 @@ class OwnedPotentials:
             level=level,
             recommended_level=potential.recommended_level,
             trekker=trekker,
-            core=core,
+            type=potential.type,
         ))
 
     def find(
@@ -246,6 +251,7 @@ class PotentialDrawInfo:
             {
                 "name": p.name,
                 "trekker": p.trekker,
+                "type": p.type,
                 "old_level": p.old_level,
                 "new_level": p.new_level,
                 "recommended_level": p.recommended_level,
@@ -258,7 +264,7 @@ class PotentialDrawInfo:
                 "trekker": p.trekker,
                 "level": p.level,
                 "recommended_level": p.recommended_level,
-                "core": 1 if p.core else 0,
+                "type": p.type,
             }
             for p in State.owned_potentials.potentials
         ]
@@ -267,6 +273,7 @@ class PotentialDrawInfo:
             "owned": owned,
             "core": 1 if data.core_potential else 0,
             "potential_source": potential_source,
+            "refresh_count": data.refresh_count,
             "high_level_span_count": State.high_level_span_count,
             "enhance_high_level_span_count": State.enhance_high_level_span_count,
         })

@@ -221,14 +221,14 @@ class UIInteractor:
         ocr_results = self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], max_try=max_try)
         return len(ocr_results) != 0
 
-    def get_potential_count(
+    def get_potential_types(
             self,
             core_potential: bool = False,
             image: numpy.ndarray | None = None,
             max_try: int = 1
-    ) -> int:
+    ) -> list[str]:
         """
-            检查可选潜能卡片数量
+            检查可选潜能卡片类型
 
             Args:
                 core_potential(bool): 是否为核心潜能，默认为False
@@ -239,14 +239,29 @@ class UIInteractor:
                 int: 可选潜能卡片数量，识别失败时返回3
         """
         if core_potential:
-            return 3
+            return ["core", "core", "core"]
 
-        node_name = "星塔_节点_选择潜能_识别潜能数量_agent"
-        failed_return = [1, 2, 3]
-        results = self._template(node_name, failed_return, image=image, max_try=max_try)
-        if results == failed_return:
-            logger.error("潜能数量识别失败，将默认为3个潜能")
-        return len(results)
+        normal_node_name = "星塔_节点_选择潜能_识别普通潜能数量_agent"
+        rare_node_name = "星塔_节点_选择潜能_识别稀有潜能数量_agent"
+        failed_return = []
+        # 获取坐标
+        normal_potentials = self._template(normal_node_name, failed_return, image=image, max_try=max_try)
+        rare_potentials = self._template(rare_node_name, failed_return, image=image, max_try=max_try)
+        # 打标签，排序
+        potentials = [["normal", box] for box in normal_potentials] + [["rare", box] for box in rare_potentials]
+        potentials.sort(key=lambda x: x[1][0])
+        # 去掉坐标，只保留类型标签
+        potential_types = [p[0] for p in potentials]
+        potential_count = len(potential_types)
+
+        if potential_count == 0:
+            logger.error("潜能数量识别失败（没有潜能），将默认为3个普通潜能")
+            return ["normal", "normal", "normal"]
+        elif potential_count > 3:
+            logger.error(f"潜能数量识别失败（识别到{potential_count}个潜能，不符合预期），将默认为3个普通潜能")
+            return ["normal", "normal", "normal"]
+
+        return potential_types
 
     def get_recommended_potential(
             self,

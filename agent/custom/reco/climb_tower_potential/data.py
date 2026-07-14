@@ -131,7 +131,7 @@ class Data:
     params: Parameters
     current_coin: int = 0
     refresh_cost: int = 0
-    potential_count: int = 0
+    potential_types: list[str] = field(default_factory=lambda: []) # 潜能类型，有"normal"、"rare"、"core"三种
     core_potential: bool = False
     # 不需要根据刷新更新的数据
     threshold: float = -1.0 # 刷新阈值储存变量
@@ -155,6 +155,10 @@ class Data:
         usable_coin = max(0, self.current_coin - self.params.reserved_coin)
         affordable = usable_coin // self.refresh_cost if self.refresh_botton else 0
         return min(self.params.max_refresh_count, affordable)
+
+    @property
+    def potential_count(self) -> int:
+        return len(self.potential_types)
 
     @property
     def potential_rois(self) -> list[list[int]]:
@@ -188,7 +192,7 @@ class Data:
 class Potential:
     layout: PotentialLayout
     index: int = -1
-    core: bool = False
+    type: str = "" # 潜能类型，有"normal"、"rare"、"core"三种
     name: str = ""
     old_level: int = -1
     new_level: int = -1
@@ -200,6 +204,14 @@ class Potential:
     rank: int = -1
     sub_rank: int = -1
     score: int = 0
+
+    @property
+    def core(self) -> bool:
+        return self.type == "core"
+
+    @property
+    def rare(self) -> bool:
+        return self.type == "rare"
 
     @property
     def level_span(self) -> int:

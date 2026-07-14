@@ -1,4 +1,5 @@
-from math import comb
+from itertools import combinations, permutations
+from math import exp
 from typing import Self
 
 from .state import State, OwnedPotential
@@ -98,7 +99,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         # 计算刷新阈值
         if self.data.threshold < 0.0:
             self.data.threshold = self._tower_8_threshold()
-        threshold = self.data.threshold * (1 - self.data.params.threshold_decay * self.data.refresh_count)
+        threshold = round(self.data.threshold * (1 - self.data.params.threshold_decay * self.data.refresh_count), 2)
 
         # 当前牌到达刷新分数阈值，直接选当前最优，否则返回 None 让外层刷新。
         logger.info(f"当前最优牌 {best_potential.name} 得分 {best_potential.score}，阈值 {threshold}")
@@ -110,9 +111,7 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     def _tower_8_score(self, p: Potential | OwnedPotential, *, level_span: int = 0) -> int | float:
         """
-        塔8专用潜能打分核心函数，满分为100分
-        由于还没摸透潜能抽取规则，所以只能使用平均概率的方法去计算
-        默认目标为6+5+5=16个潜能
+        塔8专用潜能打分核心函数
         """
         # 已获得潜能可能需要从保存的State类中获得推荐等级
         if isinstance(p, Potential) and p.old_level > 0 and not p.recommended:
@@ -127,99 +126,255 @@ class RecommendationHandler(ChoosePotentialHandler):
             recommended = True if p.recommended_level > 0 else False
             p = self.dummy_potential(
                 name=p.name, trekker=p.trekker, old_level=p.level, new_level=new_level, recommended=recommended,
-                recommended_level=p.recommended_level, core=p.core
+                recommended_level=p.recommended_level, type=p.type
             )
 
         # 取得有效升级量，只有在升级到推荐等级上面才是有效升级。
         effective_gain = max(0, min(p.new_level, p.recommended_level) - min(p.old_level, p.recommended_level))
+        if effective_gain <= 0:
+            return 0.0
 
+        # 对新潜能未能有效利用“心花怒放/辉光的奇迹”进行惩罚扣分
         if p.old_level == 0:
-            # 新潜能
-            # 在辉光的奇迹buff没用完的情况下，新潜能升级量为3是100分，2是66分，1是33分，0是0分
-            # 在辉光的奇迹buff用完的情况下，新潜能升级量为2是100分，1是50分，0是0分
             max_recommended_level = 3 if State.high_level_span_count < 10 else 2
-            # 计算有没有有效利用辉光的奇迹buff
             wasted_gain = max(0, p.new_level - p.recommended_level) if max_recommended_level == 3 else 0
-            # 计算分数
-            score = max(0, effective_gain - wasted_gain) / max_recommended_level * 100
-        else:
-            # 对于有效升级的老潜能，通过已保有潜能种类数打分，因为永远是以新潜能优先
-            score = min(16, State.owned_potentials.count()) / 16 * 100 * effective_gain
+            effective_gain = max(0, effective_gain - wasted_gain)
+
+        # 计算稀有度系数
+        owned_potential_count = State.owned_potentials.count(trekker=p.trekker)
+        owned_leveling_count = State.owned_potentials.count(trekker=p.trekker, leveling_only=True)
+        rarity_weight = 1.0 / (
+                self._calculate_trekker_weight(owned_potential_count)
+                * self._calculate_holding_weight(p.old_level, owned_leveling_count)
+        )
+
+        # 稍微增加一点点推荐等级权重（考虑到本模式推荐等级有造假情况，还是不要加了）
+        # recommended_weight = 1 + 0.05 * max(0, p.recommended_level)
+
+        # 计算最终分数
+        score = effective_gain * rarity_weight
 
         return round(score, 2)
 
-    # TODO: 研究抽取规则，然后重构
+    @staticmethod
+    def _calculate_trekker_weight(owned_potential_count: int) -> float:
+        """
+        计算旅人权重
+        weight = exp(-1.25 * owned_ratio)
+        该公式只是近似拟合数据，而不是游戏的实际公式
+        """
+        return exp(-1.25 * (owned_potential_count / 12.0))
+
+    @staticmethod
+    def _calculate_holding_weight(level: int, owned_leveling_count: int) -> float:
+        """
+        计算潜能持有数权重
+        weight = 1 + 4 * (unmaxed / 5) ** 0.75
+        该公式只是近似拟合数据，而不是游戏的实际公式
+        """
+        if level == 0:
+            return 1.0
+        old_pressure = min(1.0, owned_leveling_count / 5)
+        old_weight = 1.0 + 4.0 * (old_pressure ** 0.75)
+        return old_weight
+
     def _tower_8_threshold(self) -> int | float:
         """
         塔8专用刷新阈值计算函数
-        由于还没摸透潜能抽取规则，所以暂时只能使用平均概率的方法去计算
-        然后通过用户设置的激进程度去调整
-        默认目标为6+5+5=16个6级潜能
+        使用两阶段加权模型：
+        1. 先根据旅人持有潜能比例，估计下一次抽取属于哪个旅人；
+        2. 再根据该旅人当前新/旧潜能比例，在该旅人的池内加权无放回抽取3张；
+        3. 以3张中的最高分作为本次抽取收益，求总期望分数作为刷新阈值基础。
+        缺点：
+        1. 无法知道谁是主控旅人，所以无法得知谁拥有6潜能种类上限
+        2. 无法知道还有多少有效新潜能需要获取，所以只能默认最终目标为6+5+5=16个6级潜能
+        3. 仍未推算出精确计算公式，目前的数学模型仍然是近似模型
         """
-        # 1. 统计新潜能的种类数
+        # 1. 统计各旅人的新旧潜能的种类数
         trekkers = ["0", "1", "2"]
         owned_stats = {
-            t: {
-                "total": State.owned_potentials.count(trekker=t),
-                "leveling": State.owned_potentials.count(trekker=t, leveling_only=True)
+            trekker: {
+                "total": State.owned_potentials.count(trekker=trekker),
+                "leveling": State.owned_potentials.count(trekker=trekker, leveling_only=True)
             }
-            for t in trekkers
+            for trekker in trekkers
         }
-        new_potential_counts = [
-            0 if stats["total"] >= 5 and stats["leveling"] >= 3
-            else (12 - stats["total"])
-            for stats in owned_stats.values()
-        ]
-        new_potential_count = sum(new_potential_counts)
+        # 因为不知道谁是主控旅人，所以只能按照后台旅人的参数去判断有多少新潜能可以获取
+        new_potential_counts = {
+            trekker:
+                0 if stats["total"] >= 5 and stats["leveling"] >= 3
+                else 12 - stats["total"]
+            for trekker, stats in owned_stats.items()
+        }
+        # 获取未满级的已持有潜能列表
+        old_leveling_potentials = {
+            trekker: [
+                p for p in State.owned_potentials
+                if p.trekker == trekker and not p.core and p.level < 6
+            ]
+            for trekker in trekkers
+        }
 
-        if new_potential_count == 0:
+        total_new_count = sum(new_potential_counts.values())
+        total_old_leveling_count = sum(len(potentials) for potentials in old_leveling_potentials.values())
+
+        if total_new_count + total_old_leveling_count == 0:
             return 0
 
-        # 2. 计算新旧潜能的期望分数
-        new_potential_scores = self._calculate_new_potential_scores(new_potential_count)
-        old_potential_scores = self._calculate_old_potential_scores()
-        potential_scores = new_potential_scores + old_potential_scores
+        # 2. 建立带有新旧潜能的基础期望分数的潜能池
+        new_potential_pools = self._get_new_potential_pools(new_potential_counts)
+        old_potential_pools = self._get_old_potential_pools(old_leveling_potentials, owned_stats)
+        potential_pools = {trekker: new_potential_pools[trekker] + old_potential_pools[trekker] for trekker in trekkers}
 
-        # 3. 计算特定潜能在3次抽取中成为最佳潜能的期望分数
-        if len(potential_scores) <= 3: # 卡池只剩3个潜能代表当前显示的3个跟刷新后的3个会一模一样，不需要刷新
-            return 0
-        potential_scores.sort()
-        potential_count = len(potential_scores)
+        # 3. 计算期望分数
+        trekker_weights = {}
+        trekker_expected_scores = {}
+
+        # 计算每个旅人乘以新旧潜能权重后的综合期望分数
+        for t in trekkers:
+            if not potential_pools[t]:
+                continue
+
+            trekker_weights[t] = self._calculate_trekker_weight(owned_stats[t]["total"])
+            # 抽中某个旅人时，该旅人的综合期望分数，新旧潜能权重在这里计算
+            trekker_expected_scores[t] = self.expected_best_score(potential_pools[t])
+
+        # 计算每个旅人乘以旅人权重后的综合期望分数，然后求和
+        total_trekker_weight = sum(trekker_weights.values())
         expected_score = sum(
-            potential_scores[i] * comb(i, 2) / comb(potential_count, 3)
-            for i in range(2, potential_count)
+            trekker_expected_scores[t] * trekker_weights[t] / total_trekker_weight
+            for t in trekker_weights
         )
 
         # 4. 把刷新价值量化为潜能抽取的期望分数
         # 该系数由潜能特饮价格抽象而来，如果潜能特饮平均买入价格为160，那么一次潜能抽取的转换系数为160/200=0.8
         threshold = expected_score * self.data.params.threshold_coef
 
-        return round(max(0.0, min(100.0, threshold)), 2)
+        return round(max(0.0, threshold), 2)
 
-    def _calculate_new_potential_scores(self, new_potential_count: int) -> list[int | float]:
-        """计算所有新潜能的总期望分数"""
+    def _get_new_potential_pools(
+            self,
+            new_potential_counts: dict[str, int]
+    ) -> dict[str, list[dict[str, int | float]]]:
+        """
+        建立带有新潜能的基础期望分数及权重的潜能池
+
+        Args:
+            new_potential_counts: 各个旅人新潜能的数量，格式为{"旅人名称": 新潜能数量}
+
+        Returns:
+            dict[str, list[dict[str, int | float]]]: 各个旅人新潜能的期望分数及权重池
+                格式为{旅人名称: [{"score": 期望分数, "weight": 权重}]}
+        """
         # 新潜能等级概率权重: Lv1(30%), Lv2(20%), Lv3(50%)
         level_weights = [(1, 0.3), (2, 0.2), (3, 0.5)] if State.high_level_span_count < 10 else [(1, 0.3), (2, 0.7)]
 
-        recommended_score = sum(
-            self._tower_8_score(self.dummy_potential(old_level=0, new_level=lv, recommended_level=6)) * weight
-            for lv, weight in level_weights
-        )
-        # 由于6/5的硬上限限制，所以即使拿到了垃圾潜能，也只能当作拿到推荐潜能算
-        new_recommended_potential_count = max(0, 16 - State.owned_potentials.count())
-        # 计算期望分数
-        recommended_scores = [recommended_score for _ in range(new_recommended_potential_count)]
-        unrecommended_scores = [0 for _ in range(new_potential_count - new_recommended_potential_count)]
+        # 计算还可以获得的新推荐潜能的数量
+        # 由于6/5的硬上限限制，且无法预知还有多少有效新潜能需要获取，所以如果不小心拿到了垃圾潜能，也只能当作拿到推荐潜能算
+        remaining_recommended_new_count = max(0, 16 - State.owned_potentials.count())
 
-        return recommended_scores + unrecommended_scores
+        # 按照平均概率将新推荐潜能分配给各个旅人
+        total_new_count = sum(new_potential_counts.values())
+        recommended_new_counts = {t: 0 for t in new_potential_counts.keys()}
+        if total_new_count > 0 and remaining_recommended_new_count > 0:
+            # 通过平均概率计算每个旅人可能获得的新推荐潜能的数量的期望值
+            raw_allocations = {
+                trekker: remaining_recommended_new_count * new_count / total_new_count
+                for trekker, new_count in new_potential_counts.items()
+            }
+            # 防止数字超过旅人可以获得的潜能种类上限，且移除小数部分
+            recommended_new_counts = {
+                trekker: min(new_potential_counts[trekker], int(raw_allocations[trekker]))
+                for trekker in new_potential_counts.keys()
+            }
+            # 使用最大余数法分配多出来的潜能
+            # 1. 计算剩下的潜能数量
+            remainder = remaining_recommended_new_count - sum(recommended_new_counts.values())
+            # 2. 按照余数从大到小排序
+            allocation_order = sorted(
+                new_potential_counts.keys(),
+                key=lambda trekker: raw_allocations[trekker] - int(raw_allocations[trekker]),
+                reverse=True,
+            )
+            # 3. 通过余数从大到小分配多出来的潜能
+            for trekker in allocation_order:
+                if remainder <= 0:
+                    break
+                if recommended_new_counts[trekker] < new_potential_counts[trekker]:
+                    recommended_new_counts[trekker] += 1
+                    remainder -= 1
 
-    def _calculate_old_potential_scores(self) -> list[int | float]:
-        """计算所有已有潜能升一级的总分数"""
-        return [
-            self._tower_8_score(p, level_span=1)
-            for p in State.owned_potentials
-            if not p.core and p.level < 6
-        ]
+        potential_pools = {trekker: [] for trekker in new_potential_counts.keys()}
+        # 给每一张新潜能打分
+        for trekker, new_count in new_potential_counts.items():
+            # 单个新潜能的期望分数
+            recommended_new_score = sum(
+                self._tower_8_score(
+                    self.dummy_potential(trekker=trekker, old_level=0, new_level=lv, recommended_level=6)
+                ) * weight
+                for lv, weight in level_weights
+            )
+
+            # 推荐目标给期望分，非推荐目标给0分。
+            for i in range(new_count):
+                potential_pools[trekker].append({
+                    "score": recommended_new_score if i < recommended_new_counts[trekker] else 0,
+                    "weight": 1.0,
+                })
+
+        return potential_pools
+
+    def _get_old_potential_pools(
+            self,
+            old_leveling_potentials: dict[str, list[OwnedPotential]],
+            owned_stats: dict[str, dict[str, int]]
+    ) -> dict[str, list[dict[str, int | float]]]:
+        """
+        建立持有但未满级的潜能升一级时的基础期望分数及权重的潜能池
+
+        Args:
+            old_leveling_potentials: 各个旅人已持有但未满级的潜能，格式为{"旅人名称": [潜能列表]}
+            owned_stats: 各个旅人已持有但未满级的潜能统计信息，格式为{"旅人名称": {"leveling": 已持有但未满级的潜能数}}
+
+        Returns:
+            dict[str, list[dict[str, int | float]]]: 各个旅人已持有但未满级的潜能的期望分数及权重池
+                格式为{旅人名称: [{"score": 期望分数, "weight": 权重}]}
+        """
+        potential_pools = {trekker: [] for trekker in owned_stats.keys()}
+        for trekker in owned_stats.keys():
+            for p in old_leveling_potentials[trekker]:
+                potential_pools[trekker].append({
+                    "score": self._tower_8_score(p, level_span=1),
+                    "weight": self._calculate_holding_weight(p.level, owned_stats[trekker]["leveling"]),
+                })
+        return potential_pools
+
+    @staticmethod
+    def expected_best_score(pool: list[dict]) -> float:
+        """计算单个旅人池内，加权无放回抽3张后的最高分期望。"""
+        if len(pool) <= 3:
+            return max(card["score"] for card in pool)
+
+        total_weight = sum(card["weight"] for card in pool)
+        expected = 0.0
+
+        for comb_cards in combinations(pool, 3):
+            comb_probability = 0.0
+
+            for ordered_cards in permutations(comb_cards):
+                w1 = ordered_cards[0]["weight"]
+                w2 = ordered_cards[1]["weight"]
+                w3 = ordered_cards[2]["weight"]
+
+                comb_probability += (
+                    w1 / total_weight
+                    * w2 / (total_weight - w1)
+                    * w3 / (total_weight - w1 - w2)
+                )
+
+            expected += comb_probability * max(card["score"] for card in comb_cards)
+
+        return expected
 
     @staticmethod
     def _tower_8_record(p: Potential) -> None:

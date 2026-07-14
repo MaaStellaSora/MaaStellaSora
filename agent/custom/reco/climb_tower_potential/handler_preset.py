@@ -42,12 +42,19 @@ class RecommendationHandler(ChoosePotentialHandler):
         if self.data.params.environment.startswith("tower_8"):
             best_potential = self.tower_8_chooser()
         else:
-            best_potential = self.choose_fallback_potential()
+            best_potential = self.default_chooser() if self.data.refreshable else self.choose_fallback_potential()
 
         if best_potential:
             logger.info(f"[潜能选择] {best_potential.name}")
 
         return best_potential
+
+    def default_chooser(self):
+        candidates = [p for p in self.data.potentials if p.recommended]
+        if candidates:
+            # 按照等级跨度降序、推荐等级降序、旧等级降序来排序，选择最优的潜能
+            return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)
+        return None
 
     def tower_8_chooser(self) -> Potential | None:
         """

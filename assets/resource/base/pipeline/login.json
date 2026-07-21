@@ -137,6 +137,7 @@
         "jump_back": true,
         "name": "登录_确认下载资源"
       },
+      "登录_二次确认进入主页",
       {
         "jump_back": true,
         "name": "登录_启动游戏"

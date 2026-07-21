@@ -29,7 +29,10 @@
                 "mouse": "SendMessageWithCursorPos",
                 "keyboard": "SendMessageWithCursorPos"
             },
-            "permission_required": true
+            "permission_required": true,
+            "attach_resource_path": [
+                "{PROJECT_DIR}/resource/windows"
+            ]
         },
         {
             "name": "安卓端",

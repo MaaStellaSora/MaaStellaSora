@@ -60,17 +60,250 @@
         ],
         "roi": [
           0,
-          0,
-          1280,
-          720
+          600,
+          230,
+          120
         ]
       }
     },
-//    "next": [
-//      "[JumpBack]猎影合围_自发",
-//      "[JumpBack]猎影合围_救援",
-//      "通用_返回主页"
-//    ]
+    "next": [
+      "[JumpBack]猎影合围_自发",
+      "[JumpBack]猎影合围_救援",
+      "通用_返回主页"
+    ],
     "post_wait_freezes": 100
-  }
+  },
+  "猎影合围_捕物等级提升": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（捕物等级提升）"
+        ],
+        "roi": [
+          440,
+          190,
+          400,
+          300
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "猎影合围_自发": {
+    "next": [
+      "[JumpBack]通用_点击空白处继续",
+      "[JumpBack]猎影合围_捕物等级提升",
+      "[JumpBack]猎影合围_自发_领取奖励",
+      "猎影合围_自发_等待讨伐完成",
+      "[JumpBack]猎影合围_自发_追踪完成",
+      "[JumpBack]猎影合围_自发_点击追迹一次",
+      "猎影合围_自发_追迹依赖书不足"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0,
+    "max_hit": 1
+  },
+  "猎影合围_自发_领取奖励": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（领取）"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "猎影合围_自发_等待讨伐完成": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（再挑战）"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "猎影合围_自发_追踪完成": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（战斗）"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "next": [
+      "猎影合围_自发_进入战斗"
+    ],
+    "post_wait_freezes": 100
+  },
+  "猎影合围_自发_进入战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（战斗）"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      //"[JumpBack]通用战斗_进入纪录选择"
+      "猎影合围_自发_战斗结束"
+    ]
+  },
+  "猎影合围_自发_战斗结束": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ]
+      }
+    },
+    "next": [
+      "猎影合围_自发_是否处于主界面",
+      "[JumpBack]通用_点击空白处继续",
+      "[JumpBack]猎影合围_捕物等级提升"
+    ]
+  },
+  "猎影合围_自发_识别追迹按钮": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（追迹）"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ],
+        "index": -1
+      }
+    }
+  },
+  "猎影合围_自发_点击追迹一次": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "猎影合围_自发_识别追迹按钮",
+          {
+            "recognition": {
+              "type": "OCR",
+              "param": {
+                "expected": [
+                  "\\b(?!0/)\\d+/\\d+\\b"
+                ],
+                "roi": [
+                  1190,
+                  30,
+                  55,
+                  20
+                ]
+              },
+              "threshold": 0.6,
+              "only_rec": true
+            }
+          }
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "猎影合围_自发_追迹依赖书不足": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "\\b0/\\d+\\b"
+        ],
+        "roi": [
+          1190,
+          30,
+          55,
+          20
+        ]
+      },
+      "threshold": 0.6,
+      "only_rec": true
+    },
+    "next": [
+      "猎影合围_自发_是否处于主界面",
+      "[JumpBack]猎影合围_自发_返回主界面"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "猎影合围_自发_是否处于主界面": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "猎影合围_主界面"
+        ]
+      }
+    },
+    "post_wait_freezes": 100
+  },
+  "猎影合围_自发_返回主界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "Base/通用_返回按钮.png"
+        ],
+        "roi": [
+          0,
+          0,
+          120,
+          90
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "max_hit": 1
+  },
+  "猎影合围_救援": {}
 }

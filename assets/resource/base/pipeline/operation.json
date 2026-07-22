@@ -1,2 +1,76 @@
 {
+  "猎影合围_入口": {
+    "next": [
+      "猎影合围_出发",
+      "[JumpBack]通用_返回主页"
+    ],
+    "post_delay": 0,
+    "pre_delay": 0,
+  },
+  "猎影合围_出发": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "出发"
+        ],
+        "roi": [
+          1112,
+          652,
+          83,
+          39
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_点击入口图标"
+    ]
+  },
+  "猎影合围_点击入口图标": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "operation/entry.png"
+        ],
+        "roi": [
+          0,
+          600,
+          230,
+          120
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_主界面"
+    ]
+  },
+  "猎影合围_主界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "operation/coop.png"
+        ],
+        "roi": [
+          0,
+          0,
+          1280,
+          720
+        ]
+      }
+    },
+//    "next": [
+//      "[JumpBack]猎影合围_自发",
+//      "[JumpBack]猎影合围_救援",
+//      "通用_返回主页"
+//    ]
+    "post_wait_freezes": 100
+  }
 }

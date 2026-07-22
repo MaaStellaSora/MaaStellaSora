@@ -7,5 +7,60 @@
         ]
       }
     }
+  },
+  "猎影合围_捕物等级提升": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "捕物",
+          "レベルアップ"
+        ]
+      }
+    }
+  },
+  "猎影合围_自发_领取奖励": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "受取"
+        ]
+      }
+    }
+  },
+  "猎影合围_自发_等待讨伐完成": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "再挑戦"
+        ]
+      }
+    }
+  },
+  "猎影合围_自发_探测完成": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "バトル"
+        ]
+      }
+    }
+  },
+  "猎影合围_自发_进入战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "バトル"
+        ]
+      }
+    }
+  },
+  "猎影合围_自发_识别追迹按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "追跡"
+        ]
+      }
+    }
   }
 }

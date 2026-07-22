@@ -305,5 +305,141 @@
     },
     "max_hit": 1
   },
-  "猎影合围_救援": {}
+  "猎影合围_救援": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "operation/coop.png"
+        ],
+        "roi": [
+          0,
+          600,
+          230,
+          120
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_救援_救援主页面"
+    ],
+    "max_hit": 1
+  },
+  "猎影合围_救援_救援主页面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（救援参加）"
+        ],
+        "roi": [
+          860,
+          530,
+          250,
+          130
+        ]
+      },
+    },
+    "next": [
+      "猎影合围_救援_点击救援",
+      "猎影合围_救援_捕物许可证不足"
+    ],
+    "post_wait_freezes": 100
+  },
+  "猎影合围_救援_点击救援": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "猎影合围_救援_救援主页面",
+          {
+            "recognition": {
+              "type": "OCR",
+              "param": {
+                "expected": [
+                  "\\b(?!0/)\\d+/\\d+\\b"
+                ],
+                "roi": [
+                  1190,
+                  30,
+                  55,
+                  20
+                ]
+              },
+              "threshold": 0.6,
+              "only_rec": true
+            }
+          }
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      //"[JumpBack]通用战斗_进入纪录选择"
+      "猎影合围_救援_战斗结束"
+    ]
+  },
+  "猎影合围_救援_捕物许可证不足": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "\\b0/\\d+\\b"
+        ],
+        "roi": [
+          1190,
+          30,
+          55,
+          20
+        ]
+      },
+      "threshold": 0.6,
+      "only_rec": true
+    },
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "猎影合围_救援_战斗结束": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ]
+      }
+    },
+    "next": [
+      "猎影合围_救援_救援主页面",
+      "[JumpBack]通用_点击空白处继续",
+      "[JumpBack]猎影合围_捕物等级提升",
+      "[JumpBack]猎影合围_关闭添加好友界面"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "猎影合围_关闭添加好友界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "close.png"
+        ],
+        "roi": [
+          900,
+          140,
+          80,
+          80
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 100
+  }
 }

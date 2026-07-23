@@ -1,0 +1,103 @@
+{
+  "选择纪录_进入主界面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（纪录）"
+        ],
+        "roi": [
+          100,
+          15,
+          250,
+          60
+        ]
+      }
+    },
+    "next": [
+      "选择纪录_开始战斗",
+      "[JumpBack]选择纪录_点击选择纪录"
+    ]
+  },
+  "选择纪录_开始战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（开始战斗）"
+        ],
+        "roi": [
+          1070,
+          640,
+          180,
+          50
+        ],
+        "only_rec": true
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "通用战斗_进入战斗界面"
+      // "选择纪录_猎影合围_猎物已被击杀"
+      // "选择纪录_等级过低提示"
+    ]
+  },
+  "选择纪录_点击选择纪录": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "choose_record/choose_record_icon.png"
+        ],
+        "roi": [
+          600,
+          295,
+          80,
+          80
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "选择纪录_进入纪录管理界面"
+    ]
+  },
+  "选择纪录_进入纪录管理界面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（纪录管理）"
+        ],
+        "roi": [
+          100,
+          15,
+          250,
+          60
+        ]
+      }
+    },
+    "next": [
+      "选择纪录_选择首个纪录"
+    ],
+    "post_wait_freezes": 100
+  },
+  "选择纪录_选择首个纪录": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "choose_record/record_position.png"
+        ],
+        "order_by": "Vertical"
+      }
+    },
+    "action": {
+      "type": "Click"
+    }
+  }
+}

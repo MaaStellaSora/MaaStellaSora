@@ -1,0 +1,108 @@
+{
+  "通用战斗_进入战斗界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "battling/pause.png"
+        ],
+        "roi": [
+          0,
+          0,
+          100,
+          80
+        ]
+      }
+    },
+    "next": [
+      "通用战斗_自动战斗是否已打开",
+      "[JumpBack]通用战斗_打开自动战斗"
+    ]
+  },
+  "通用战斗_自动战斗是否已打开": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "TBD（自动战斗）"
+        ],
+        "roi": [
+          550,
+          620,
+          180,
+          70
+        ]
+      }
+    },
+    "next": [
+      "[JumpBack]通用战斗_战斗中",
+      "通用战斗_准备脱离战斗"
+    ]
+  },
+  "通用战斗_打开自动战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "(?i)auto"
+        ],
+        "roi": [
+          1200,
+          85,
+          60,
+          60
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_delay": 500
+  },
+  "通用战斗_战斗中": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用战斗_进入战斗界面"
+        ]
+      }
+    },
+    "post_delay": 5000
+  },
+  "通用战斗_准备脱离战斗": {
+    "description": "使用技能或必杀技会遮挡暂停键，所以需要做一个缓冲节点，这样可以避免死循环又可以正常脱离战斗",
+    "next": [
+      "通用战斗_仍在战斗",
+      "通用战斗_战斗结束"
+    ],
+    "rate_limit": 2000,
+    "timeout": 60000
+  },
+  "通用战斗_仍在战斗": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用战斗_进入战斗界面"
+        ]
+      }
+    },
+    "next": [
+      "[JumpBack]通用战斗_战斗中",
+      "通用战斗_准备脱离战斗"
+    ]
+  },
+  "通用战斗_战斗结束": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ]
+      }
+    },
+    "pre_delay": 0,
+    "post_delay": 0
+  }
+}

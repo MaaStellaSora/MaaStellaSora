@@ -114,7 +114,7 @@
       "Node.Action.Starting": "正在打开活动"
     },
     "next": [
-      "活动_等待活动界面静止"
+      "活动_活动界面"
     ],
     "recognition": {
       "param": {
@@ -125,11 +125,17 @@
       "type": "TemplateMatch"
     }
   },
-  "活动_等待活动界面静止": {
+  "活动_战斗关卡按钮": {
     "recognition": {
       "param": {
         "expected": [
           "战斗关卡"
+        ],
+        "roi": [
+          0,
+          90,
+          1280,
+          630
         ]
       },
       "type": "OCR"
@@ -137,12 +143,25 @@
     "next": [
       "活动_点击活动战斗关卡"
     ],
-    "post_wait_freezes": {
-      "time": 500,
-      "timeout": 5000
-    },
     "pre_delay": 0,
     "post_delay": 0
+  },
+  "活动_活动界面": {
+    "recognition": {
+      "param": {
+        "all_of": [
+          "活动_战斗关卡按钮"
+        ]
+      },
+      "type": "And"
+    },
+    "next": [
+      "活动_点击活动战斗关卡"
+    ],
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 2000
+    }
   },
   "活动_添加战斗次数": {
     "action": {
@@ -172,29 +191,24 @@
   },
   "活动_点击活动战斗关卡": {
     "action": {
-      "param": {
-        "target_offset": [
-          0,
-          0,
-          0,
-          -20
-        ]
-      },
       "type": "Click"
     },
     "next": [
-      "活动_选择活动难度"
+      "活动_选择活动难度",
+      "活动_点击活动战斗关卡"
     ],
     "recognition": {
       "param": {
-        "expected": [
-          "战斗关卡"
+        "all_of": [
+          "活动_战斗关卡按钮"
         ]
       },
-      "type": "OCR"
+      "type": "And"
     },
-    "pre_delay": 0,
-    "post_wait_freezes": 200
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 1000
+    }
   },
   "活动_选择活动难度": {
     "action": {

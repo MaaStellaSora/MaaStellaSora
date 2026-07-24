@@ -17,16 +17,7 @@
       }
     }
   },
-  "活动_等待活动界面静止": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "(?i)battle stage"
-        ]
-      }
-    }
-  },
-  "活动_点击活动战斗关卡": {
+  "活动_战斗关卡按钮": {
     "recognition": {
       "param": {
         "expected": [
@@ -58,7 +49,6 @@
       "expected": [
         "Authorization"
       ]
-    },
-    "type": "OCR",
+    }
   }
 }

@@ -137,7 +137,7 @@
       "type": "OCR",
       "param": {
         "expected": [
-          "TBD（领取）"
+          "领取奖励"
         ],
         "roi": [
           840,

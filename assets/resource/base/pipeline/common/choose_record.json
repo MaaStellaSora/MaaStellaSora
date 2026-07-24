@@ -1,0 +1,166 @@
+{
+  "选择纪录_进入主界面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "纪录"
+        ],
+        "roi": [
+          100,
+          15,
+          250,
+          60
+        ]
+      }
+    },
+    "next": [
+      "选择纪录_开始战斗",
+      "[JumpBack]选择纪录_点击选择纪录"
+    ]
+  },
+  "选择纪录_开始战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "出战"
+        ],
+        "roi": [
+          1071,
+          641,
+          179,
+          49
+        ],
+        "only_rec": true
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "通用战斗_进入战斗界面",
+      "选择纪录_猎影合围_目标已被讨伐"
+      // "选择纪录_等级过低提示"
+    ]
+  },
+  "选择纪录_点击选择纪录": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "choose_record/choose_record_icon.png"
+        ],
+        "roi": [
+          600,
+          295,
+          80,
+          80
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "选择纪录_进入纪录管理界面"
+    ]
+  },
+  "选择纪录_进入纪录管理界面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "纪录管理"
+        ],
+        "roi": [
+          100,
+          15,
+          250,
+          60
+        ]
+      }
+    },
+    "next": [
+      "选择纪录_选择首个纪录"
+    ],
+    "post_wait_freezes": 100
+  },
+  "选择纪录_选择首个纪录": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "choose_record/record_position.png"
+        ],
+        "order_by": "Vertical"
+      }
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "选择纪录_猎影合围_目标已被讨伐": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "讨伐" // 猜的
+        ],
+        "roi": [
+          315,
+          195,
+          650,
+          280
+        ]
+      }
+    },
+    "next": [
+      "选择纪录_退出选择纪录_关闭弹出框"
+    ],
+    "post_wait_freezes": 100
+  },
+  "选择纪录_退出选择纪录_关闭弹出框": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "close.png"
+        ],
+        "roi": [
+          900,
+          140,
+          80,
+          80
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "选择纪录_退出选择纪录_返回上一级"
+    ],
+    "post_wait_freezes": 100
+  },
+  "选择纪录_退出选择纪录_返回上一级": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "Base/通用_圆形返回按钮.png"
+        ],
+        "roi": [
+          0,
+          0,
+          120,
+          90
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 100
+  }
+}

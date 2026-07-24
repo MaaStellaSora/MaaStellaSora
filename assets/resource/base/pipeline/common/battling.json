@@ -1,0 +1,86 @@
+{
+  "通用战斗_进入战斗界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "battling/pause.png"
+        ],
+        "roi": [
+          0,
+          0,
+          100,
+          80
+        ]
+      }
+    },
+    "next": [
+      "通用战斗_自动战斗是否已打开",
+      "[JumpBack]通用战斗_打开自动战斗"
+    ]
+  },
+  "通用战斗_自动战斗是否已打开": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "自动战斗中"
+        ],
+        "roi": [
+          530,
+          620,
+          220,
+          70
+        ]
+      }
+    },
+    "next": [
+      "[JumpBack]通用战斗_战斗中",
+      "通用战斗_战斗结束"
+    ],
+    "timeout": 60000
+  },
+  "通用战斗_打开自动战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "自动战斗"
+        ],
+        "roi": [
+          1180,
+          85,
+          100,
+          60
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_delay": 500
+  },
+  "通用战斗_战斗中": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用战斗_进入战斗界面"
+        ]
+      }
+    },
+    "post_delay": 2000
+  },
+  "通用战斗_战斗结束": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ]
+      }
+    },
+    "pre_delay": 0,
+    "post_delay": 0
+  }
+}

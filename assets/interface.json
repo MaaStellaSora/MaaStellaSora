@@ -79,6 +79,7 @@
 		"resource/tasks/invite.json",
 		"resource/tasks/activity.json",
 		"resource/tasks/fight.json",
+        "resource/tasks/operation.json",
 		"resource/tasks/quest.json",
 		"resource/tasks/friend.json",
 		"resource/tasks/task.json",

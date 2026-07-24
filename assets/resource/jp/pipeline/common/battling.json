@@ -1,0 +1,23 @@
+{
+  "通用战斗_自动战斗是否已打开": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "オート",
+          "戦闘中"
+        ]
+      }
+    }
+  },
+  "通用战斗_打开自动战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "(?i)auto"
+        ]
+      }
+    }
+  }
+}

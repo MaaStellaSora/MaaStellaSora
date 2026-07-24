@@ -1,0 +1,83 @@
+{
+  "猎影合围_出发": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Go"
+        ]
+      }
+    }
+  },
+  "猎影合围_围猎等级提升": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "(?i)Siege Level Up"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_领取奖励": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Claim" // 猜的，不确定
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_等待讨伐完成": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Hunt Again"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_追踪完成": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "(?i)Go to Hunt"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_进入战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "(?i)Go to Hunt"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_追踪按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Track"
+        ]
+      }
+    }
+  },
+  "猎影合围_协助_协助讨伐主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Co-op Hunt"
+        ]
+      }
+    }
+  },
+  "猎影合围_协助_协助讨伐按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Co-op Hunt"
+        ]
+      }
+    }
+  }
+}

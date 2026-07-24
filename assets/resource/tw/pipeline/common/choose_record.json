@@ -30,7 +30,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "討伐" // 猜的
+          "目標已被討伐"
         ]
       }
     }

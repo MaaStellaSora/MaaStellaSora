@@ -89,7 +89,10 @@
   },
   "猎影合围_任务完成": {
     "pre_delay": 0,
-    "post_delay": 0
+    "post_delay": 0,
+    "focus": {
+      "Node.Action.Succeeded": "猎影合围任务完成"
+    }
   },
   "猎影合围_围猎等级提升": {
     "recognition": {
@@ -130,7 +133,10 @@
     ],
     "pre_delay": 0,
     "post_delay": 0,
-    "max_hit": 1
+    "max_hit": 1,
+    "focus": {
+      "Node.Action.Succeeded": "开始追踪目标"
+    }
   },
   "猎影合围_追踪目标_领取奖励": {
     "recognition": {
@@ -165,6 +171,9 @@
           100
         ]
       },
+    },
+    "focus": {
+      "Node.Action.Succeeded": "战斗结束，等待讨伐完成"
     }
   },
   "猎影合围_追踪目标_追踪完成": {
@@ -185,7 +194,10 @@
     "next": [
       "猎影合围_追踪目标_进入战斗"
     ],
-    "post_wait_freezes": 100
+    "post_wait_freezes": 100,
+    "focus": {
+      "Node.Action.Succeeded": "追踪目标成功，前往讨伐"
+    }
   },
   "猎影合围_追踪目标_进入战斗": {
     "recognition": {
@@ -296,7 +308,10 @@
       "[JumpBack]猎影合围_追踪目标_返回主界面"
     ],
     "pre_delay": 0,
-    "post_delay": 0
+    "post_delay": 0,
+    "focus": {
+      "Node.Action.Succeeded": "追踪委托书不足，结束追踪目标"
+    }
   },
   "猎影合围_是否处于主界面": {
     "recognition": {
@@ -350,7 +365,10 @@
     "next": [
       "猎影合围_协助_协助讨伐主界面"
     ],
-    "max_hit": 1
+    "max_hit": 1,
+    "focus": {
+      "Node.Action.Succeeded": "开始协助讨伐"
+    }
   },
   "猎影合围_协助_协助讨伐主界面": {
     "recognition": {
@@ -446,7 +464,10 @@
       "猎影合围_协助_返回主界面",
     ],
     "pre_delay": 0,
-    "post_delay": 0
+    "post_delay": 0,
+    "focus": {
+      "Node.Action.Succeeded": "围猎许可证不足，协助讨伐完成"
+    }
   },
   "猎影合围_协助_返回主界面": {
     "recognition": {

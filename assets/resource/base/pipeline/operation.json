@@ -83,9 +83,13 @@
     "next": [
       "[JumpBack]猎影合围_救援",
       "[JumpBack]猎影合围_自发",
-      "通用_返回主页"
+      "猎影合围_任务完成"
     ],
     "post_wait_freezes": 100
+  },
+  "猎影合围_任务完成": {
+    "pre_delay": 0,
+    "post_delay": 0
   },
   "猎影合围_捕物等级提升": {
     "recognition": {

@@ -175,7 +175,7 @@
     "recognition": {
       "param": {
         "template": [
-          "Base/通用_返回按钮.png"
+          "Base/通用_返回按钮.png" // 这个返回按钮是方形的
         ]
       },
       "type": "TemplateMatch"

@@ -148,7 +148,7 @@
       "type": "TemplateMatch",
       "param": {
         "template": [
-          "Base/通用_返回按钮.png"
+          "Base/通用_圆形返回按钮.png"
         ],
         "roi": [
           0,

@@ -1,9 +1,61 @@
 {
     "task": [
         {
-            "name": "猎影合围(Beta)",
+            "name": "猎影合围(测试版)",
             "entry": "猎影合围_入口",
-            "description": "猎影合围模块目前处于测试阶段，如有问题或遇到bug请通过issue反馈"
+            "description": "猎影合围模块目前处于测试阶段，如有问题请通过issue反馈<br>请确保拥有能够击杀目标的实力，否则将会陷入无限循环",
+            "option": [
+                "猎影合围_开启协助讨伐",
+                "猎影合围_开启追踪目标"
+            ]
         }
-    ]
+    ],
+    "option": {
+        "猎影合围_开启协助讨伐": {
+            "type": "switch",
+            "label": "协助讨伐",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "猎影合围_协助讨伐": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "猎影合围_协助讨伐": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "猎影合围_开启追踪目标": {
+            "type": "switch",
+            "label": "追踪目标",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "猎影合围_追踪目标": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "猎影合围_追踪目标": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        }
+    }
 }

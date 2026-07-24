@@ -81,8 +81,8 @@
       }
     },
     "next": [
-      "[JumpBack]猎影合围_自发",
       "[JumpBack]猎影合围_救援",
+      "[JumpBack]猎影合围_自发",
       "通用_返回主页"
     ],
     "post_wait_freezes": 100
@@ -216,7 +216,7 @@
       }
     },
     "next": [
-      "猎影合围_自发_是否处于主界面",
+      "猎影合围_是否处于主界面",
       "[JumpBack]通用_点击空白处继续",
       "[JumpBack]猎影合围_捕物等级提升"
     ]
@@ -288,13 +288,13 @@
       "only_rec": true
     },
     "next": [
-      "猎影合围_自发_是否处于主界面",
+      "猎影合围_是否处于主界面",
       "[JumpBack]猎影合围_自发_返回主界面"
     ],
     "pre_delay": 0,
     "post_delay": 0
   },
-  "猎影合围_自发_是否处于主界面": {
+  "猎影合围_是否处于主界面": {
     "recognition": {
       "type": "And",
       "param": {
@@ -421,8 +421,33 @@
       "threshold": 0.6,
       "only_rec": true
     },
+    "next": [
+      "猎影合围_救援_返回主界面",
+    ],
     "pre_delay": 0,
     "post_delay": 0
+  },
+  "猎影合围_救援_返回主界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "Base/通用_返回按钮.png"
+        ],
+        "roi": [
+          0,
+          0,
+          120,
+          90
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_是否处于主界面"
+    ],
   },
   "猎影合围_救援_战斗结束": {
     "recognition": {

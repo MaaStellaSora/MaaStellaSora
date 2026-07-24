@@ -4,7 +4,7 @@
       "type": "OCR",
       "param": {
         "expected": [
-          "TBD（纪录）"
+          "纪录"
         ],
         "roi": [
           100,
@@ -24,13 +24,13 @@
       "type": "OCR",
       "param": {
         "expected": [
-          "TBD（开始战斗）"
+          "出战"
         ],
         "roi": [
-          1070,
-          640,
-          180,
-          50
+          1071,
+          641,
+          179,
+          49
         ],
         "only_rec": true
       }
@@ -71,7 +71,7 @@
       "type": "OCR",
       "param": {
         "expected": [
-          "TBD（纪录管理）"
+          "纪录管理"
         ],
         "roi": [
           100,

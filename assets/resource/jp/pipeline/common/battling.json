@@ -9,5 +9,15 @@
         ]
       }
     }
+  },
+  "通用战斗_打开自动战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "(?i)auto"
+        ]
+      }
+    }
   }
 }

@@ -1,0 +1,38 @@
+{
+  "选择纪录_进入主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Records"
+        ]
+      }
+    }
+  },
+  "选择纪录_开始战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Deploy"
+        ]
+      }
+    }
+  },
+  "选择纪录_进入纪录管理界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Records"
+        ]
+      }
+    }
+  },
+  "选择纪录_猎影合围_目标已被讨伐": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "Target has been hunted"
+        ]
+      }
+    }
+  }
+}

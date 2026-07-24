@@ -3,7 +3,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "出発"
+          "Go"
         ]
       }
     }
@@ -12,8 +12,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "捕物",
-          "レベルアップ"
+          "(?i)Siege Level Up"
         ]
       }
     }
@@ -22,7 +21,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "受取"
+          "Claim" // 猜的，不确定
         ]
       }
     }
@@ -31,7 +30,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "再挑戦"
+          "Hunt Again"
         ]
       }
     }
@@ -40,7 +39,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "バトル"
+          "(?i)Go to Hunt"
         ]
       }
     }
@@ -49,7 +48,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "バトル"
+          "(?i)Go to Hunt"
         ]
       }
     }
@@ -58,7 +57,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "追跡"
+          "Track"
         ]
       }
     }
@@ -67,7 +66,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "救援参加"
+          "Co-op Hunt"
         ]
       }
     }
@@ -76,7 +75,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "救援参加"
+          "Co-op Hunt"
         ]
       }
     }

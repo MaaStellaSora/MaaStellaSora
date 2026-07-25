@@ -1,0 +1,83 @@
+{
+  "猎影合围_出发": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "出發"
+        ]
+      }
+    }
+  },
+  "猎影合围_围猎等级提升": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "圍獵等級提升"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_领取奖励": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "領取獎勵"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_等待讨伐完成": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "再次討伐"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_追踪完成": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "前往討伐"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_进入战斗": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "前往討伐"
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标_追踪按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "追蹤"
+        ]
+      }
+    }
+  },
+  "猎影合围_协助_协助讨伐主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "協助討伐"
+        ]
+      }
+    }
+  },
+  "猎影合围_协助_协助讨伐按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "協助討伐"
+        ]
+      }
+    }
+  }
+}

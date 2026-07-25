@@ -1,0 +1,532 @@
+{
+  "猎影合围_入口": {
+    "next": [
+      "猎影合围_出发",
+      "[JumpBack]通用_返回主页"
+    ],
+    "post_delay": 0,
+    "pre_delay": 0,
+  },
+  "猎影合围_出发": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "出发"
+        ],
+        "roi": [
+          1112,
+          652,
+          83,
+          39
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_出发主界面"
+    ]
+  },
+  "猎影合围_出发主界面": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "猎影合围_点击入口图标"
+        ]
+      }
+    },
+    "next": [
+      "猎影合围_点击入口图标"
+    ],
+    "post_wait_freezes": 100
+  },
+  "猎影合围_点击入口图标": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "operation/entry.png"
+        ],
+        "roi": [
+          0,
+          600,
+          230,
+          120
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_主界面"
+    ]
+  },
+  "猎影合围_主界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "operation/coop.png"
+        ],
+        "roi": [
+          0,
+          600,
+          230,
+          120
+        ]
+      }
+    },
+    "next": [
+      "[JumpBack]猎影合围_协助讨伐",
+      "[JumpBack]猎影合围_追踪目标",
+      "猎影合围_任务完成"
+    ],
+    "post_wait_freezes": 100
+  },
+  "猎影合围_任务完成": {
+    "pre_delay": 0,
+    "post_delay": 0,
+    "focus": {
+      "Node.Action.Succeeded": "猎影合围任务完成"
+    }
+  },
+  "猎影合围_围猎等级提升": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "围猎等级提升"
+        ],
+        "roi": [
+          440,
+          190,
+          400,
+          300
+        ]
+      },
+    },
+    "action": {
+      "type": "Click",
+      "param": {
+        "target": [
+          500,
+          510,
+          280,
+          90
+        ]
+      }
+    }
+  },
+  "猎影合围_追踪目标": {
+    "next": [
+      "[JumpBack]通用_点击空白处继续",
+      "[JumpBack]猎影合围_围猎等级提升",
+      "[JumpBack]猎影合围_追踪目标_领取奖励",
+      "猎影合围_追踪目标_等待讨伐完成",
+      "[JumpBack]猎影合围_追踪目标_追踪完成",
+      "[JumpBack]猎影合围_追踪目标_点击追踪一次",
+      "猎影合围_追踪目标_追踪委托书不足"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0,
+    "max_hit": 1,
+    "focus": {
+      "Node.Action.Succeeded": "开始追踪目标"
+    }
+  },
+  "猎影合围_追踪目标_领取奖励": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "领取奖励"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "猎影合围_追踪目标_等待讨伐完成": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "再次讨伐"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "focus": {
+      "Node.Action.Succeeded": "战斗结束，等待讨伐完成"
+    }
+  },
+  "猎影合围_追踪目标_追踪完成": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "前往讨伐"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "next": [
+      "猎影合围_追踪目标_进入战斗"
+    ],
+    "post_wait_freezes": 100,
+    "focus": {
+      "Node.Action.Succeeded": "追踪目标成功，前往讨伐"
+    }
+  },
+  "猎影合围_追踪目标_进入战斗": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "前往讨伐"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "[JumpBack]选择纪录_进入主界面",
+      "猎影合围_追踪目标_战斗结束"
+    ]
+  },
+  "猎影合围_追踪目标_战斗结束": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ]
+      }
+    },
+    "next": [
+      "猎影合围_是否处于主界面",
+      "[JumpBack]通用_点击空白处继续",
+      "[JumpBack]猎影合围_围猎等级提升"
+    ]
+  },
+  "猎影合围_追踪目标_追踪按钮": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "追踪"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ],
+        "index": -1
+      }
+    }
+  },
+  "猎影合围_追踪目标_点击追踪一次": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "猎影合围_追踪目标_追踪按钮",
+          {
+            "recognition": {
+              "type": "OCR",
+              "param": {
+                "expected": [
+                  "\\b(?!0/)\\d+/\\d+\\b"
+                ],
+                "roi": [
+                  1190,
+                  30,
+                  55,
+                  20
+                ]
+              },
+              "threshold": 0.6,
+              "only_rec": true
+            }
+          }
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 100
+  },
+  "猎影合围_追踪目标_追踪委托书不足": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "\\b0/\\d+\\b"
+        ],
+        "roi": [
+          1190,
+          30,
+          55,
+          20
+        ]
+      },
+      "threshold": 0.6,
+      "only_rec": true
+    },
+    "next": [
+      "猎影合围_是否处于主界面",
+      "[JumpBack]猎影合围_追踪目标_返回主界面"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0,
+    "focus": {
+      "Node.Action.Succeeded": "追踪委托书不足，结束追踪目标"
+    }
+  },
+  "猎影合围_是否处于主界面": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "猎影合围_主界面"
+        ]
+      }
+    },
+    "post_wait_freezes": 100
+  },
+  "猎影合围_追踪目标_返回主界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "Base/通用_圆形返回按钮.png"
+        ],
+        "roi": [
+          0,
+          0,
+          120,
+          90
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "max_hit": 1
+  },
+  "猎影合围_协助讨伐": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "operation/coop.png"
+        ],
+        "roi": [
+          0,
+          600,
+          230,
+          120
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_协助_协助讨伐主界面"
+    ],
+    "max_hit": 1,
+    "focus": {
+      "Node.Action.Succeeded": "开始协助讨伐"
+    }
+  },
+  "猎影合围_协助_协助讨伐主界面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "协助讨伐"
+        ],
+        "roi": [
+          100,
+          15,
+          250,
+          60
+        ]
+      },
+    },
+    "next": [
+      "猎影合围_协助_点击协助讨伐",
+      "猎影合围_协助_围猎许可证不足"
+    ],
+    "post_wait_freezes": 100
+  },
+  "猎影合围_协助_协助讨伐按钮": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "协助讨伐"
+        ],
+        "roi": [
+          860,
+          530,
+          250,
+          130
+        ]
+      }
+    }
+  },
+  "猎影合围_协助_点击协助讨伐": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "猎影合围_协助_协助讨伐按钮",
+          {
+            "recognition": {
+              "type": "OCR",
+              "param": {
+                "expected": [
+                  "\\b(?!0/)\\d+/\\d+\\b"
+                ],
+                "roi": [
+                  1190,
+                  30,
+                  55,
+                  20
+                ]
+              },
+              "threshold": 0.6,
+              "only_rec": true
+            }
+          }
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "pre_wait_freezes": 100,
+    "next": [
+      "[JumpBack]选择纪录_进入主界面",
+      "猎影合围_协助_战斗结束"
+    ]
+  },
+  "猎影合围_协助_围猎许可证不足": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "\\b0/\\d+\\b"
+        ],
+        "roi": [
+          1190,
+          30,
+          55,
+          20
+        ]
+      },
+      "threshold": 0.6,
+      "only_rec": true
+    },
+    "next": [
+      "猎影合围_协助_返回主界面",
+    ],
+    "pre_delay": 0,
+    "post_delay": 0,
+    "focus": {
+      "Node.Action.Succeeded": "围猎许可证不足，协助讨伐完成"
+    }
+  },
+  "猎影合围_协助_返回主界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "Base/通用_圆形返回按钮.png"
+        ],
+        "roi": [
+          0,
+          0,
+          120,
+          90
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "猎影合围_是否处于主界面"
+    ],
+  },
+  "猎影合围_协助_战斗结束": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ]
+      }
+    },
+    "next": [
+      "猎影合围_协助_协助讨伐主界面",
+      "[JumpBack]通用_点击空白处继续",
+      "[JumpBack]猎影合围_围猎等级提升",
+      "[JumpBack]猎影合围_关闭添加好友界面"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "猎影合围_关闭添加好友界面": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": [
+          "close.png"
+        ],
+        "roi": [
+          900,
+          140,
+          80,
+          80
+        ]
+      },
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 100
+  }
+}

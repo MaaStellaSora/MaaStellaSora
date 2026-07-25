@@ -20,9 +20,9 @@ class ChoosePotentialHandler:
 
     def _wait_for_item_list_gone(self):
         self.screen.load_last_screenshot()
-        while True:
+        for _ in range(3):
             if self.screen.check_item_list_visibility():
-                logger.debug("识别到干扰文字，等待1秒")
+                logger.info("识别到干扰文字，等待1秒")
                 time.sleep(1)
                 self.screen.screenshot()
                 continue

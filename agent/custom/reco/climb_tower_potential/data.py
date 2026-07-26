@@ -203,7 +203,8 @@ class Potential:
     # 自定义参数
     rank: int = -1
     sub_rank: int = -1
-    score: int = 0
+    score: int | float = 0
+    probability: float = 0
 
     @property
     def core(self) -> bool:

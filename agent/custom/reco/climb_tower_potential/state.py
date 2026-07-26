@@ -189,6 +189,13 @@ class OwnedPotentials:
             and (not leveling_only or potential.level < potential.max_level)
         )
 
+    def count_by_trekkers(self) -> dict[str, int]:
+        """统计每个旅人潜能的数量"""
+        return {
+            trekker: self.count(trekker=trekker)
+                for trekker in set(potential.trekker for potential in self.potentials)
+        }
+
     @staticmethod
     def _match(a: str, b: str, *, contains_mode: bool) -> bool:
         """

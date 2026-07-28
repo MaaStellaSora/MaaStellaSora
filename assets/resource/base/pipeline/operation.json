@@ -254,31 +254,33 @@
       }
     }
   },
+  "猎影合围_识别资源数量": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "\\b\\d+/\\d+\\b"
+        ],
+        "roi": [
+          1190,
+          30,
+          55,
+          20
+        ],
+        "threshold": 0.6,
+        "only_rec": true
+      }
+    },
+    "attach": {
+      "tracking_permit_keep_count": 0,
+      "hunt_license_keep_count": 0
+    }
+  },
   "猎影合围_追踪目标_点击追踪一次": {
     "recognition": {
-      "type": "And",
+      "type": "Custom",
       "param": {
-        "all_of": [
-          "猎影合围_追踪目标_追踪按钮",
-          {
-            "recognition": {
-              "type": "OCR",
-              "param": {
-                "expected": [
-                  "\\b(?!0/)\\d+/\\d+\\b"
-                ],
-                "roi": [
-                  1190,
-                  30,
-                  55,
-                  20
-                ]
-              },
-              "threshold": 0.6,
-              "only_rec": true
-            }
-          }
-        ]
+        "custom_recognition": "enough_tracking_permit_recognition"
       }
     },
     "action": {
@@ -288,20 +290,10 @@
   },
   "猎影合围_追踪目标_追踪委托书不足": {
     "recognition": {
-      "type": "OCR",
+      "type": "Custom",
       "param": {
-        "expected": [
-          "\\b0/\\d+\\b"
-        ],
-        "roi": [
-          1190,
-          30,
-          55,
-          20
-        ]
-      },
-      "threshold": 0.6,
-      "only_rec": true
+        "custom_recognition": "lack_of_tracking_permit_recognition"
+      }
     },
     "next": [
       "猎影合围_是否处于主界面",
@@ -409,29 +401,9 @@
   },
   "猎影合围_协助_点击协助讨伐": {
     "recognition": {
-      "type": "And",
+      "type": "Custom",
       "param": {
-        "all_of": [
-          "猎影合围_协助_协助讨伐按钮",
-          {
-            "recognition": {
-              "type": "OCR",
-              "param": {
-                "expected": [
-                  "\\b(?!0/)\\d+/\\d+\\b"
-                ],
-                "roi": [
-                  1190,
-                  30,
-                  55,
-                  20
-                ]
-              },
-              "threshold": 0.6,
-              "only_rec": true
-            }
-          }
-        ]
+        "custom_recognition": "enough_hunt_license_recognition"
       }
     },
     "action": {
@@ -445,20 +417,10 @@
   },
   "猎影合围_协助_围猎许可证不足": {
     "recognition": {
-      "type": "OCR",
+      "type": "Custom",
       "param": {
-        "expected": [
-          "\\b0/\\d+\\b"
-        ],
-        "roi": [
-          1190,
-          30,
-          55,
-          20
-        ]
-      },
-      "threshold": 0.6,
-      "only_rec": true
+        "custom_recognition": "lack_of_hunt_license_recognition"
+      }
     },
     "next": [
       "猎影合围_协助_返回主界面",

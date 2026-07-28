@@ -22,7 +22,10 @@
                         "猎影合围_协助讨伐": {
                             "enabled": true
                         }
-                    }
+                    },
+                    "option": [
+                        "猎影合围_协助讨伐_保留数量"
+                    ]
                 },
                 {
                     "name": "No",
@@ -33,6 +36,25 @@
                     }
                 }
             ]
+        },
+        "猎影合围_协助讨伐_保留数量": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "猎影合围_协助讨伐_保留围猎许可证数量",
+                    "label": "保留围猎许可证数量",
+                    "verify": "\\d+",
+                    "default": "0",
+                    "pipeline_type": "int"
+                }
+            ],
+            "pipeline_override": {
+                "猎影合围_识别资源数量": {
+                    "attach": {
+                        "hunt_license_keep_count": "{猎影合围_协助讨伐_保留围猎许可证数量}"
+                    }
+                }
+            }
         },
         "猎影合围_开启追踪目标": {
             "type": "switch",
@@ -45,7 +67,10 @@
                         "猎影合围_追踪目标": {
                             "enabled": true
                         }
-                    }
+                    },
+                    "option": [
+                        "猎影合围_追踪目标_保留数量"
+                    ]
                 },
                 {
                     "name": "No",
@@ -56,6 +81,25 @@
                     }
                 }
             ]
+        },
+        "猎影合围_追踪目标_保留数量": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "猎影合围_追踪目标_保留追踪委托书数量",
+                    "label": "保留追踪委托书数量",
+                    "verify": "\\d+",
+                    "default": "0",
+                    "pipeline_type": "int"
+                }
+            ],
+            "pipeline_override": {
+                "猎影合围_识别资源数量": {
+                    "attach": {
+                        "tracking_permit_keep_count": "{猎影合围_追踪目标_保留追踪委托书数量}"
+                    }
+                }
+            }
         }
     }
 }

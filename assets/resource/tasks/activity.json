@@ -8,9 +8,42 @@
                 "作战关卡",
                 "活动战斗消耗所有干劲"
             ]
+        },
+        {
+            "name": "活动挑战关卡自动战斗",
+            "entry": "活动挑战_入口",
+            "description": "进入活动战斗关卡后选择“挑战”，随机选择一个可识别的 2-x 关卡，并依次点击“出发”和“出战”；战斗结束后重复指定次数",
+            "option": [
+                "活动挑战重复次数"
+            ]
         }
     ],
     "option": {
+        "活动挑战重复次数": {
+            "type": "input",
+            "label": "活动挑战重复次数",
+            "inputs": [
+                {
+                    "name": "挑战次数",
+                    "label": "次数",
+                    "description": "完整挑战关卡战斗流程要重复的次数",
+                    "default": "1",
+                    "pipeline_type": "int",
+                    "verify": "^[1-9]\\d*$"
+                }
+            ],
+            "pipeline_override": {
+                "活动挑战_执行循环": {
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "activity_challenge_battle_loop",
+                            "custom_action_param": "{挑战次数}"
+                        }
+                    }
+                }
+            }
+        },
         "作战关卡": {
             "type": "input",
             "inputs": [

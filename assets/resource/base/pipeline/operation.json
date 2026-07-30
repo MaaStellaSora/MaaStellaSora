@@ -155,6 +155,9 @@
     },
     "action": {
       "type": "Click"
+    },
+    "focus": {
+      "Node.Action.Succeeded": "讨伐完成，领取奖励"
     }
   },
   "__猎影合围_追踪目标_再次讨伐按钮": {

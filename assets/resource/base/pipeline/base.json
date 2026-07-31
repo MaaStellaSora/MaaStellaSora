@@ -67,7 +67,7 @@
     "recognition": {
       "param": {
         "expected": [
-          "点击空白处继续"
+          "点击空白处继.*"
         ]
       },
       "type": "OCR"
@@ -252,8 +252,8 @@
     "recognition": {
       "param": {
         "expected": [
-          "点击空白处继续",
-          "点击空白处关闭"
+          "点击空白处继.*",
+          "点击空白处关.*"
         ]
       },
       "type": "OCR"

@@ -79,12 +79,12 @@
 		"resource/tasks/invite.json",
 		"resource/tasks/activity.json",
 		"resource/tasks/fight.json",
-        "resource/tasks/operation.json",
 		"resource/tasks/quest.json",
 		"resource/tasks/friend.json",
 		"resource/tasks/task.json",
 		"resource/tasks/mail.json",
 		"resource/tasks/grant.json",
+        "resource/tasks/operation.json",
         "resource/tasks/climb_tower.json",
         "resource/tasks/climb_tower_presets.json"
     ],

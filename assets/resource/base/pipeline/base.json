@@ -83,7 +83,7 @@
       "type": "Custom"
     },
     "next": [
-      "活动_添加战斗次数"
+      "活动快速战斗_添加战斗次数"
     ],
     "recognition": {
       "param": {},
@@ -301,7 +301,7 @@
       "type": "Click"
     },
     "next": [
-      "活动_开始战斗"
+      "活动快速战斗_开始战斗"
     ],
     "recognition": {
       "param": {
@@ -312,5 +312,34 @@
       },
       "type": "TemplateMatch"
     }
+  },
+  "通用_关闭升级界面": {
+    "action": {
+      "param": {
+        "target": [
+          640,
+          700
+        ]
+      },
+      "type": "Click"
+    },
+    "focus": {
+      "Node.Action.Starting": "正在关闭升级界面"
+    },
+    "recognition": {
+      "param": {
+        "roi": [
+          187,
+          302,
+          578,
+          132
+        ],
+        "expected": [
+          "权限等级"
+        ]
+      },
+      "type": "OCR"
+    },
+    "post_delay": 1000
   }
 }

@@ -22,11 +22,11 @@ def _get_tracking_permit_keep_count(context: Context) -> int:
     attach = node_data.get("attach", {})
     return attach.get("tracking_permit_keep_count", 0)
 
-def _get_resource_count(context: Context, image: np.ndarray) -> int:
+def _get_resource_count(context: Context, image: np.ndarray) -> int | None:
     reco_result = context.run_recognition(RESOURCE_RECOGNITION_NODE, image)
     if reco_result and reco_result.hit:
         return int(reco_result.best_result.text.split("/")[0])
-    return 0
+    return None
 
 def _locate_track_button(context: Context, image: np.ndarray) -> Rect | None:
     reco_result = context.run_recognition("猎影合围_追踪目标_追踪按钮", image)
@@ -53,7 +53,7 @@ class EnoughTrackingPermitRecognition(CustomRecognition):
 
         keep_count = _get_tracking_permit_keep_count(context)
         count = _get_resource_count(context, argv.image)
-        if count <= keep_count or count <= 0:
+        if count is None or count <= keep_count or count <= 0:
             logger.debug(f"追踪委托书数量{count}小于等于保留数量{keep_count}或数量为0")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         
@@ -67,7 +67,7 @@ class LackOfTrackingPermitRecognition(CustomRecognition):
         keep_count = _get_tracking_permit_keep_count(context)
         count = _get_resource_count(context, argv.image)
         logger.debug(f"结束追踪模块前检查：追踪委托书数量{count}，保留数量{keep_count}")
-        if count > keep_count and count > 0:
+        if count is None or (count > keep_count and count > 0):
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         hunt_again_button_box = _locate_hunt_again_button(context, argv.image)
@@ -90,7 +90,7 @@ class EnoughHuntLicenseRecognition(CustomRecognition):
 
         keep_count = _get_hunt_license_keep_count(context)
         count = _get_resource_count(context, argv.image)
-        if count <= keep_count or count <= 0:
+        if count is None or count <= keep_count or count <= 0:
             logger.debug(f"围猎许可证数量{count}小于等于保留数量{keep_count}或数量为0")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         
@@ -111,7 +111,7 @@ class LackOfHuntLicenseRecognition(CustomRecognition):
         keep_count = _get_hunt_license_keep_count(context)
         count = _get_resource_count(context, argv.image)
         logger.debug(f"结束协助模块前检查：围猎许可证数量{count}，保留数量{keep_count}")
-        if count <= keep_count or count <= 0:
-            return CustomRecognition.AnalyzeResult(box=(1, 1, 1, 1), detail={})
-        else:
+        if count is None or (count > keep_count and count > 0):
             return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        return CustomRecognition.AnalyzeResult(box=(1, 1, 1, 1), detail={})

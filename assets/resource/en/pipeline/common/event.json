@@ -1,0 +1,21 @@
+{
+  "活动_战斗关卡界面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "(?i)Battle Stage"
+        ]
+      }
+    }
+  },
+  "__活动_战斗关卡按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "(?i)Battle Stage"
+        ]
+      }
+    }
+  }
+}

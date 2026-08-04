@@ -33,5 +33,12 @@
         ]
       }
     }
+  },
+  "通用_关闭升级界面": {
+    "recognition": {
+      "expected": [
+        "Authorization"
+      ]
+    }
   }
 }

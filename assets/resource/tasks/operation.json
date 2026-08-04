@@ -1,0 +1,105 @@
+{
+    "task": [
+        {
+            "name": "猎影合围(测试版)",
+            "entry": "猎影合围_入口",
+            "description": "猎影合围模块目前处于测试阶段，如有问题请通过issue反馈\n\n任务说明：\n1. 会按照协助讨伐->追踪目标的顺序消耗资源，直到到达保留数量\n2. 追踪目标时不会使用围猎许可证，如果没有人协助围猎，会一直等待直到目标逃跑成功\n3. 战斗时，如无选择纪录会默认选择第一个纪录\n4. 战斗使用自动战斗，请确保拥有足够的实力。如果结果不足1星，任务将会陷入无限循环",
+            "option": [
+                "猎影合围_开启协助讨伐",
+                "猎影合围_开启追踪目标"
+            ]
+        }
+    ],
+    "option": {
+        "猎影合围_开启协助讨伐": {
+            "type": "switch",
+            "label": "协助讨伐",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "猎影合围_协助讨伐": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "猎影合围_协助讨伐_保留数量"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "猎影合围_协助讨伐": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "猎影合围_协助讨伐_保留数量": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "猎影合围_协助讨伐_保留围猎许可证数量",
+                    "label": "保留围猎许可证数量",
+                    "verify": "\\d+",
+                    "default": "0",
+                    "pipeline_type": "int"
+                }
+            ],
+            "pipeline_override": {
+                "猎影合围_识别资源数量": {
+                    "attach": {
+                        "hunt_license_keep_count": "{猎影合围_协助讨伐_保留围猎许可证数量}"
+                    }
+                }
+            }
+        },
+        "猎影合围_开启追踪目标": {
+            "type": "switch",
+            "label": "追踪目标",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "猎影合围_追踪目标": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "猎影合围_追踪目标_保留数量"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "猎影合围_追踪目标": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "猎影合围_追踪目标_保留数量": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "猎影合围_追踪目标_保留追踪委托书数量",
+                    "label": "保留追踪委托书数量",
+                    "verify": "\\d+",
+                    "default": "0",
+                    "pipeline_type": "int"
+                }
+            ],
+            "pipeline_override": {
+                "猎影合围_识别资源数量": {
+                    "attach": {
+                        "tracking_permit_keep_count": "{猎影合围_追踪目标_保留追踪委托书数量}"
+                    }
+                }
+            }
+        }
+    }
+}

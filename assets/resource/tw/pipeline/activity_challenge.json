@@ -1,0 +1,20 @@
+{
+  "活动挑战_选择挑战难度": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "挑戰"
+        ]
+      }
+    }
+  },
+  "活动挑战_出发": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "出發"
+        ]
+      }
+    }
+  }
+}

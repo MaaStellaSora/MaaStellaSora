@@ -1,5 +1,5 @@
 {
-  "活动_开启快速战斗": {
+  "活动快速战斗_开启快速战斗": {
     "recognition": {
       "param": {
         "expected": [
@@ -8,7 +8,7 @@
       }
     }
   },
-  "活动_开始战斗": {
+  "活动快速战斗_开始战斗": {
     "recognition": {
       "param": {
         "expected": [
@@ -17,25 +17,7 @@
       }
     }
   },
-  "活动_等待活动界面静止": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "(?i)battle stage"
-        ]
-      }
-    }
-  },
-  "活动_点击活动战斗关卡": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "(?i)battle stage"
-        ]
-      }
-    }
-  },
-  "活动_选择活动难度": {
+  "活动快速战斗_选择活动难度": {
     "recognition": {
       "param": {
         "expected": [
@@ -44,7 +26,7 @@
       }
     }
   },
-  "活动_确认": {
+  "活动快速战斗_确认": {
     "recognition": {
       "param": {
         "expected": [
@@ -52,13 +34,5 @@
         ]
       }
     }
-  },
-  "活动_关闭升级界面": {
-    "recognition": {
-      "expected": [
-        "Authorization"
-      ]
-    },
-    "type": "OCR",
   }
 }

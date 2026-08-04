@@ -1,0 +1,170 @@
+{
+  "活动挑战_入口": {
+    "recognition": {
+      "type": "DirectHit"
+    },
+    "action": {
+      "type": "DoNothing"
+    },
+    "next": [
+      "活动挑战_战斗关卡界面",
+      "[JumpBack]活动_从主页进入战斗关卡"
+    ]
+  },
+  "活动挑战_战斗关卡界面": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "活动_战斗关卡界面"
+        ]
+      }
+    },
+    "next": [
+      "活动挑战_执行循环"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "活动挑战_执行循环": {
+    "recognition": {
+      "type": "DirectHit"
+    },
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "activity_challenge_battle_loop",
+        "custom_action_param": "1"
+      }
+    },
+    "next": [
+      "通用_返回主页"
+    ],
+    "on_error": [
+      "通用_返回主页"
+    ]
+  },
+  "活动挑战_单次挑战": {
+    "recognition": {
+      "type": "DirectHit"
+    },
+    "next": [
+      "活动挑战_选择挑战难度"
+    ]
+  },
+  "活动挑战_选择挑战难度": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "挑战"
+        ],
+        "roi": [
+          190,
+          620,
+          230,
+          90
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "活动挑战_随机选择关卡"
+    ],
+    "post_wait_freezes": 100,
+    "focus": {
+      "Node.Action.Starting": "正在选择活动挑战难度"
+    }
+  },
+  "活动挑战_识别可选关卡": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "2-\\d+"
+        ],
+        "roi": [
+          0,
+          90,
+          1280,
+          540
+        ],
+        "threshold": 0.8
+      }
+    }
+  },
+  "活动挑战_随机选择关卡": {
+    "recognition": {
+      "type": "DirectHit"
+    },
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "activity_challenge_random_stage"
+      }
+    },
+    "next": [
+      "活动挑战_出发",
+      "活动挑战_随机选择关卡"
+    ],
+    "post_wait_freezes": 100
+  },
+  "活动挑战_出发": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "出发"
+        ],
+        "roi": [
+          900,
+          600,
+          350,
+          120
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "选择纪录_进入主界面"
+    ],
+    "post_wait_freezes": 100,
+    "focus": {
+      "Node.Action.Starting": "正在点击活动挑战出发"
+    }
+  },
+  "活动挑战_结算并返回": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "活动挑战_回到战斗关卡列表",
+      "[JumpBack]通用_关闭升级界面",
+      "[JumpBack]通用_点击空白处继续"
+    ],
+    "post_wait_freezes": 100
+  },
+  "活动挑战_回到战斗关卡列表": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "活动_战斗关卡界面"
+        ]
+      }
+    },
+    "post_wait_freezes": 100
+  }
+}

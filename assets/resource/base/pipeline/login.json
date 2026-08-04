@@ -76,7 +76,10 @@
       },
       "type": "TemplateMatch"
     },
-    "post_delay": 500
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 2000
+    }
   },
   "登录_点击任意区域进入游戏": {
     "action": {
@@ -134,6 +137,7 @@
         "jump_back": true,
         "name": "登录_确认下载资源"
       },
+      "登录_二次确认进入主页",
       {
         "jump_back": true,
         "name": "登录_启动游戏"
@@ -175,7 +179,10 @@
       },
       "type": "OCR"
     },
-    "post_delay": 500
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 2000
+    }
   },
   "登录_确认下载资源": {
     "action": {
@@ -271,7 +278,10 @@
     "recognition": {
       "type": "DirectHit"
     },
-    "post_delay": 2000,
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 2000
+    },
     "max_hit": 10
   }
 }

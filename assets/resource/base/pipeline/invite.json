@@ -287,7 +287,7 @@
         "roi": [
           600,
           190,
-          140,
+          190,
           435
         ]
       },
@@ -318,12 +318,14 @@
       "type": "Click"
     },
     "next": [
-      "邀约_跳过"
+      "邀约_跳过",
+      "邀约_选择默认地点"
     ],
     "focus": {
       "Node.Recognition.Succeeded": "选择默认地点"
     },
-    "pre_delay": 0
+    "pre_delay": 0,
+    "post_delay": 300
   },
   "邀约_选择回忆地点": {
     "action": {
@@ -349,9 +351,11 @@
       "type": "OCR"
     },
     "next": [
-      "邀约_跳过"
+      "邀约_跳过",
+      "邀约_选择回忆地点"
     ],
-    "pre_delay": 0
+    "pre_delay": 0,
+    "post_delay": 300
   },
   "邀约_总循环": {
     "action": {

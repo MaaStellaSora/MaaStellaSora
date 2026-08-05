@@ -60,7 +60,8 @@
     "post_wait_freezes": {
       "time": 100,
       "timeout": 1000
-    }
+    },
+    "max_hit": 10
   },
   "活动_战斗关卡界面": {
     "recognition": {

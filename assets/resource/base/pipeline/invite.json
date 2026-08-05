@@ -237,7 +237,8 @@
     "recognition": {
       "param": {
         "expected": [
-          "邀约"
+          "邀约",
+          "邀約"
         ],
         "roi": [
           72,

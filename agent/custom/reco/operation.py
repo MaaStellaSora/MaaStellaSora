@@ -28,10 +28,10 @@ def _get_resource_count(context: Context, image: np.ndarray) -> int | None:
         return int(reco_result.best_result.text.split("/")[0])
     return None
 
-def _locate_track_button(context: Context, image: np.ndarray) -> Rect | None:
+def _locate_track_button(context: Context, image: np.ndarray) -> list[Rect] | None:
     reco_result = context.run_recognition("猎影合围_追踪目标_追踪按钮", image)
     if reco_result and reco_result.hit:
-        return reco_result.best_result.box
+        return [result.box for result in reco_result.filtered_results]
     return None
 
 def _locate_hunt_again_button(context: Context, image: np.ndarray) -> Rect | None:
@@ -45,19 +45,24 @@ def _locate_hunt_again_button(context: Context, image: np.ndarray) -> Rect | Non
 class EnoughTrackingPermitRecognition(CustomRecognition):
     def analyze(self, context: Context, argv: CustomRecognition.AnalyzeArg) -> CustomRecognition.AnalyzeResult:
         """检查追踪委托书是否大于保留数量及追踪按钮是否可用。"""
-        # TODO: 数量符合要求时点追踪多次按钮
-        track_button_box = _locate_track_button(context, argv.image)
-        if not track_button_box:
-            logger.debug("未找到追踪按钮")
+        track_button_boxes = _locate_track_button(context, argv.image)
+        if not track_button_boxes or len(track_button_boxes) != 2:
+            logger.debug("未找到2个追踪按钮")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         keep_count = _get_tracking_permit_keep_count(context)
         count = _get_resource_count(context, argv.image)
-        if count is None or count <= keep_count or count <= 0:
+        usable = count - keep_count
+        if not count or usable <= 0:
             logger.debug(f"追踪委托书数量{count}小于等于保留数量{keep_count}或数量为0")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         
-        logger.debug(f"追踪委托书数量{count}大于保留数量{keep_count}，开始追踪")
+        logger.info(f"追踪委托书数量{count}大于保留数量{keep_count}，开始追踪")
+        quick_track_cost = min(5, max(2, count))
+        if usable >= quick_track_cost:
+            track_button_box = track_button_boxes[0]
+        else:
+            track_button_box = track_button_boxes[-1]
         return CustomRecognition.AnalyzeResult(box=track_button_box, detail={})
 
 @AgentServer.custom_recognition("lack_of_tracking_permit_recognition")
@@ -94,7 +99,7 @@ class EnoughHuntLicenseRecognition(CustomRecognition):
             logger.debug(f"围猎许可证数量{count}小于等于保留数量{keep_count}或数量为0")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         
-        logger.debug(f"围猎许可证数量{count}大于保留数量{keep_count}，开始协助讨伐")
+        logger.info(f"围猎许可证数量{count}大于保留数量{keep_count}，开始协助讨伐")
         return CustomRecognition.AnalyzeResult(box=coop_button_box, detail={})
 
     @staticmethod

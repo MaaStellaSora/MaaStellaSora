@@ -281,6 +281,7 @@ class PotentialDrawInfo:
             "core": 1 if data.core_potential else 0,
             "potential_source": potential_source,
             "refresh_count": data.refresh_count,
+            "main_trekker": State.main_trekker if State.main_trekker else None,
             "high_level_span_count": State.high_level_span_count,
             "enhance_high_level_span_count": State.enhance_high_level_span_count,
         })

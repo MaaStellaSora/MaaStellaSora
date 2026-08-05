@@ -122,6 +122,10 @@ class ChoosePotentialHandler:
                 State.trekker_images.append(cropped_image)
                 self.data.potentials[potential_i].trekker = str(len(State.trekker_images) - 1)
 
+            # 给主控旅人做标记
+            if not State.main_trekker and self.data.params.potential_source == "specified_drink":
+                State.main_trekker = self.data.potentials[potential_i].trekker
+
             # 如果trekker_images超过3个，输出错误日志
             if len(State.trekker_images) > 3:
                 logger.error("识别到超过3种旅人，后续潜能判断将会出现问题")

@@ -18,62 +18,7 @@
       },
       "type": "TemplateMatch"
     },
-    "timeout": 2000
-  },
-  "通用_判断是否在主页": {
-    "action": {
-      "param": {},
-      "type": "DoNothing"
-    },
-    "focus": {
-      "Node.Recognition.Succeeded": "已位于主页 进行下一步"
-    },
-    "on_error": [
-      "通用_返回主页"
-    ],
-    "recognition": {
-      "param": {
-        "template": [
-          "menu.png"
-        ],
-        "roi": [
-          1180,
-          0,
-          100,
-          80
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "timeout": 100
-  },
-  "通用_异常处理空节点": {
-    "action": {
-      "param": {},
-      "type": "DoNothing"
-    },
-    "post_delay": 0,
-    "pre_delay": 0,
-    "recognition": {
-      "param": {},
-      "type": "DirectHit"
-    }
-  },
-  "通用_点击空白处继续": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "recognition": {
-      "param": {
-        "expected": [
-          "点击空白处继.*"
-        ]
-      },
-      "type": "OCR"
-    },
-    "pre_wait_freezes": 100,
-    "post_wait_freezes": 100
+    "timeout": 1500
   },
   "通用_换算快速作战次数": {
     "action": {
@@ -90,42 +35,20 @@
       "type": "DirectHit"
     }
   },
-  // "通用_返回主页": {
-  //   "action": {
-  //     "param": {},
-  //     "type": "DoNothing"
-  //   },
-  //   "next": [
-  //     "通用_判断是否在主页",
-  //     {
-  //       "jump_back": true,
-  //       "name": "通用_返回主页1"
-  //     }
-  //   ],
-  //   "recognition": {
-  //     "param": {
-  //       "roi": [
-  //         0,
-  //         0,
-  //         1280,
-  //         94
-  //       ],
-  //       "template": [
-  //         "home.png",
-  //         "chat_shutdown.png",
-  //         "通用_返回主页按钮.png"
-  //       ]
-  //     },
-  //     "type": "TemplateMatch"
-  //   },
-  //   "timeout": 1000
-  // },
   "通用_返回主页": {
     "next": [
       "通用_主页标记",
       {
         "jump_back": true,
         "name": "通用_返回主页按钮"
+      },
+      {
+        "jump_back": true,
+        "name": "通用_点击空白处继续"
+      },
+      {
+        "jump_back": true,
+        "name": "通用_关闭按钮"
       },
       {
         "jump_back": true,
@@ -137,31 +60,22 @@
       },
       {
         "jump_back": true,
-        "name": "通用_点击空白处"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_关闭公告按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "签到_关闭按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "通用_关闭活动公告按钮"
-      },
-      {
-        "jump_back": true,
-        "name": "月卡_领取"
+        "name": "通用_关闭升级界面"
       }
-    ]
+    ],
+    "max_hit": 10
   },
   "通用_主页标记": {
     "recognition": {
       "param": {
         "template": [
           "menu.png"
+        ],
+        "roi": [
+          1180,
+          0,
+          100,
+          80
         ]
       },
       "type": "TemplateMatch"
@@ -175,12 +89,22 @@
     "recognition": {
       "param": {
         "template": [
-          "Base/通用_返回按钮.png" // 这个返回按钮是方形的
+          "Base/通用_返回按钮_方形.png",
+          "Base/通用_返回按钮_圆形.png"
+        ],
+        "roi": [
+          0,
+          0,
+          120,
+          90
         ]
       },
       "type": "TemplateMatch"
     },
-    "timeout": 1000
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 1500
+    }
   },
   "通用_返回主页按钮": {
     "action": {
@@ -190,45 +114,23 @@
     "recognition": {
       "param": {
         "template": [
-          "home.png",
-          "Base/通用_返回主页按钮2.png"
+          "Base/通用_返回主页按钮1.png",
+          "Base/通用_返回主页按钮2.png" // 出发界面
         ],
-        "threshold": 0.8
-      },
-      "type": "TemplateMatch"
-    },
-    "timeout": 1000,
-    "post_delay": 2000
-  },
-  "通用_关闭公告按钮": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "recognition": {
-      "param": {
-        "template": [
-          "Base/通用_关闭公告按钮.png"
+        "threshold": 0.8,
+        "roi": [
+          0,
+          0,
+          450,
+          90
         ]
       },
       "type": "TemplateMatch"
     },
-    "timeout": 1000
-  },
-  "通用_关闭活动公告按钮": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "recognition": {
-      "param": {
-        "template": [
-          "close_variant_2.png"
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "timeout": 1000
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 1500
+    }
   },
   "通用_关闭心链按钮": {
     "action": {
@@ -239,13 +141,22 @@
       "param": {
         "template": [
           "chat_shutdown.png"
+        ],
+        "roi": [
+          1180,
+          0,
+          100,
+          100
         ]
       },
       "type": "TemplateMatch"
     },
-    "timeout": 1000
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 1500
+    }
   },
-  "通用_点击空白处": {
+  "通用_点击空白处继续": {
     "action": {
       "param": {},
       "type": "Click"
@@ -254,13 +165,26 @@
       "param": {
         "expected": [
           "点击空白处继.*",
-          "点击空白处关.*"
+          "点击空白处关.*",
+          "点击任意位置领取",
+          "点击",
+          "任意位置"
+        ],
+        "roi": [
+          470,
+          500,
+          340,
+          130
         ]
       },
       "type": "OCR"
+    },
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 1500
     }
   },
-  "签到_关闭按钮": {
+  "通用_关闭按钮": {
     "action": {
       "param": {},
       "type": "Click"
@@ -268,32 +192,22 @@
     "recognition": {
       "param": {
         "template": [
-          "Base/签到_关闭按钮.png"
+          "Base/通用_关闭公告按钮.png",
+          "Base/通用_关闭活动按钮.png",
+          "Base/通用_关闭每日签到按钮.png"
+        ],
+        "roi": [
+          640,
+          0,
+          640,
+          360
         ]
       },
       "type": "TemplateMatch"
-    }
-  },
-  "月卡_领取": {
-    "action": {
-      "param": {},
-      "type": "Click"
     },
-    "recognition": {
-      "param": {
-        "roi": [
-          431,
-          60,
-          425,
-          602
-        ],
-        "expected": [
-          "点击任意",
-          "位置领取",
-          "星愿"
-        ]
-      },
-      "type": "OCR"
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 1500
     }
   },
   "通用_消耗所有干劲": {
@@ -309,7 +223,7 @@
         "template": [
           "max.png"
         ],
-        "threshold": 0.9
+        "threshold": 0.8
       },
       "type": "TemplateMatch"
     }
@@ -341,6 +255,9 @@
       },
       "type": "OCR"
     },
-    "post_delay": 1000
+    "post_wait_freezes": {
+      "time": 100,
+      "timeout": 1500
+    }
   }
 }

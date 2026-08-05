@@ -126,11 +126,13 @@
     "next": [
       "[JumpBack]通用_点击空白处继续",
       "[JumpBack]猎影合围_围猎等级提升",
-      "[JumpBack]猎影合围_追踪目标_点击追踪一次",
+      "[JumpBack]猎影合围_追踪目标_点击追踪按钮",
       "[JumpBack]猎影合围_追踪目标_领取奖励",
       "[JumpBack]猎影合围_追踪目标_追踪完成",
       "猎影合围_追踪目标_追踪委托书不足",
-      "[JumpBack]猎影合围_追踪目标_等待讨伐完成"
+      "[JumpBack]猎影合围_追踪目标_等待讨伐完成",
+      "猎影合围_追踪目标_不等待讨伐完成",
+      "[JumpBack]猎影合围_追踪目标_点击跳过按钮"
     ],
     "pre_delay": 0,
     "post_delay": 0,
@@ -193,10 +195,7 @@
     },
     "next": [
       "猎影合围_追踪目标_等待1分钟"
-    ],
-    "focus": {
-      "Node.Action.Succeeded": "正在等待讨伐完成"
-    }
+    ]
   },
   "猎影合围_追踪目标_等待1分钟": {
     "pre_delay": 0,
@@ -205,7 +204,7 @@
       "猎影合围_追踪目标_点击入口图标"
     ],
     "focus": {
-      "Node.Action.Succeeded": "等待1分钟……"
+      "Node.Action.Succeeded": "正在等待讨伐完成，等待1分钟"
     }
   },
   "猎影合围_追踪目标_点击入口图标": {
@@ -223,6 +222,19 @@
     "next": [
       "猎影合围_追踪目标_主界面"
     ]
+  },
+  "猎影合围_追踪目标_不等待讨伐完成": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "__猎影合围_追踪目标_再次讨伐按钮"
+        ]
+      }
+    },
+    "focus": {
+      "Node.Action.Succeeded": "出击完成，结束追踪目标任务"
+    }
   },
   "猎影合围_追踪目标_主界面": {
     "recognition": {
@@ -308,8 +320,7 @@
           620,
           440,
           100
-        ],
-        "index": -1
+        ]
       }
     }
   },
@@ -335,7 +346,7 @@
       "hunt_license_keep_count": 0
     }
   },
-  "猎影合围_追踪目标_点击追踪一次": {
+  "猎影合围_追踪目标_点击追踪按钮": {
     "recognition": {
       "type": "Custom",
       "param": {
@@ -361,7 +372,7 @@
     "pre_delay": 0,
     "post_delay": 0,
     "focus": {
-      "Node.Action.Succeeded": "追踪委托书不足，结束追踪目标"
+      "Node.Action.Succeeded": "追踪委托书不足，结束追踪目标任务"
     }
   },
   "猎影合围_是否处于主界面": {
@@ -607,7 +618,7 @@
       "type": "TemplateMatch",
       "param": {
         "template": [
-          "Base/通用_圆形返回按钮.png"
+          "Base/通用_返回按钮_圆形.png"
         ],
         "roi": [
           0,
@@ -620,5 +631,25 @@
     "action": {
       "type": "Click"
     }
+  },
+  "猎影合围_追踪目标_点击跳过按钮": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "跳过"
+        ],
+        "roi": [
+          840,
+          620,
+          440,
+          100
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 100
   }
 }

@@ -5,6 +5,8 @@ from pathlib import Path
 from maa.agent.agent_server import AgentServer
 from maa.toolkit import Toolkit
 
+from utils.config import DEBUG_MODE
+
 # 添加agent目录，解决便携版python不自动添加脚本目录的问题
 AGENT_DIR = Path(__file__).resolve().parent
 if str(AGENT_DIR) not in sys.path:
@@ -14,7 +16,7 @@ if str(AGENT_DIR) not in sys.path:
 import custom # noqa: F401
 
 # 开启debug_mode
-if os.getenv("APP_DEBUG", "false").lower() == "true":
+if os.getenv("APP_DEBUG", "false").lower() == "true" or DEBUG_MODE:
     from utils import logger
     logger.debug_mode()
 

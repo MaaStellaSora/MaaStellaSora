@@ -8,6 +8,7 @@ config_path = Path(__file__).resolve().parents[1] / "config.json"
 
 DRAW_DATA_SAVE_ENABLED = False
 DEV_IMAGES_SAVE_ENABLED = False
+DEBUG_MODE = False
 
 try:
     with open(config_path, "r", encoding="utf-8") as f:
@@ -15,6 +16,7 @@ try:
 
     DRAW_DATA_SAVE_ENABLED = data.get("DRAW_DATA_SAVE_ENABLE", False)
     DEV_IMAGES_SAVE_ENABLED = data.get("DEV_IMAGES_SAVE_ENABLE", False)
+    DEBUG_MODE = data.get("DEBUG_MODE", False)
 
 except FileNotFoundError:
     logger.debug("agent配置文件不存在")

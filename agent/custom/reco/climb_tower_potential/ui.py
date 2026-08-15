@@ -291,15 +291,18 @@ class UIInteractor:
         )
         hit_xs = [r[0] for r in recommended_boxes]
         matched = [
-            i for x in hit_xs
-            for i, (low, high) in enumerate(borders)
-            if low <= x <= high
+            i for i, (low, high) in enumerate(borders)
+            if any(low <= x <= high for x in hit_xs)
+        ]
+        unmatched_xs = [
+            x for x in hit_xs
+            if not any(low <= x <= high for low, high in borders)
         ]
 
         if not matched:
             logger.debug("推荐图标识别失败，有可能是没有推荐图标，也有可能是识别问题")
-        if len(matched) != len(hit_xs):
-            logger.error("推荐图标识别位置与潜能数量不匹配，潜能选择可能会出现问题")
+        if unmatched_xs:
+            logger.error(f"检测到 {len(unmatched_xs)} 个推荐图标超出所有潜能卡片边界: {unmatched_xs}，后续选择将会出现问题")
 
         return matched
 

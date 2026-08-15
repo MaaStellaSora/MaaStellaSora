@@ -88,15 +88,15 @@ class RecommendationHandler(ChoosePotentialHandler):
         for p in self.data.potentials:
             p.score = self._tower_8_score(p)
             p.probability = self._tower_8_probability(p)
-            logger.debug(f"[潜能打分] {p.name} | 得分 {p.score} | 概率 {p.probability}")
+            logger.debug(f"[潜能打分] {p.name} | 得分 {p.score} | 概率 {p.probability:.2%}")
 
         # 取得最优潜能
         best_potential = max(
             self.data.potentials,
             key=lambda p: (
                 p.score,
-                p.probability,
                 p.recommended_level,
+                -p.probability,
                 p.level_span,
                 p.old_level,
             ),
@@ -146,10 +146,11 @@ class RecommendationHandler(ChoosePotentialHandler):
             return 0.0
 
         # 对新潜能未能有效利用“心花怒放/辉光的奇迹”进行惩罚扣分
-        if p.old_level == 0:
-            max_recommended_level = 3 if State.high_level_span_count < 10 else 2
-            wasted_gain = max(0, p.new_level - p.recommended_level) if max_recommended_level == 3 else 0
-            effective_gain = max(0, effective_gain - wasted_gain)
+        # 但由于本模式默认655都是推荐等级满级，扣分会跟阈值计算对不上，所以暂时注释掉
+        # if p.old_level == 0:
+        #     max_recommended_level = 3 if State.high_level_span_count < 10 else 2
+        #     wasted_gain = max(0, p.new_level - p.recommended_level) if max_recommended_level == 3 else 0
+        #     effective_gain = max(0, effective_gain - wasted_gain)
 
         # 稍微增加一点点推荐等级权重（考虑到本模式推荐等级有造假情况，还是不要加了）
         # recommended_weight = 1 + 0.05 * max(0, p.recommended_level)

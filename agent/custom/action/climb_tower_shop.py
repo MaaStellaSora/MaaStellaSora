@@ -198,6 +198,10 @@ def is_assist_skill_unlocked(
         # 2. 且当前音符数量小于升级要求数量
         if required_melody in lv0_melody and current_melody < required_melody:
             return False
+        # 目前有一种情况无法应对，当有两种技能分别需要同一种协奏音符且解锁数量分别为10和15时，音符到达10后，对话框提示会从15直接跳到25
+        # 但是目前没有去处理这种情况，因为过程会比较复杂，只好统一按照15音符激活lv1去处理
+        elif required_melody == 25 and current_melody < 15:
+            return False
     return True
 
 

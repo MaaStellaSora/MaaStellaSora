@@ -179,6 +179,10 @@
       },
       "type": "OCR"
     },
+    "pre_wait_freezes": {
+      "time": 100,
+      "timeout": 2000
+    },
     "post_wait_freezes": {
       "time": 100,
       "timeout": 1500

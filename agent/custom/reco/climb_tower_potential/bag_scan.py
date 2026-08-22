@@ -104,12 +104,14 @@ class BagUIInteractor(UIInteractor):
         return roi[1] + LOWER_POTENTIAL_FIRST_ROW_Y_OFFSET, roi[1] + LOWER_POTENTIAL_SECOND_ROW_Y_OFFSET
 
     def get_potential_name_from_bag(self, roi: list[int]) -> str:
+        # TODO：处理国际服两行英文的问题
         ocr_results = self._ocr("星塔_背包_识别潜能名称_agent", "",roi=roi)
         if not ocr_results:
             logger.debug("未识别到潜能名称")
             return ""
         return ocr_results[0][0]
 
+    # TODO：增加识别准确度，处理纹章等级
     def get_potential_level_from_bag(self, roi: list[int]) -> int:
         ocr_results = self._ocr("星塔_背包_识别潜能等级_agent", "",roi=roi)
         if not ocr_results:
@@ -117,6 +119,7 @@ class BagUIInteractor(UIInteractor):
             return 0
         return int(ocr_results[0][0])
 
+    # TODO：增加识别准确度
     def get_potential_recommend_level_from_bag(self, roi: list[int]) -> int:
         ocr_results = self._ocr("星塔_背包_识别推荐等级_agent", "",roi=roi, image=self.image_reverse)
         if not ocr_results:
@@ -126,6 +129,7 @@ class BagUIInteractor(UIInteractor):
 
     def check_potential_recommended_from_bag(self, roi: list[int]) -> bool:
         return self._color("星塔_背包_识别核心潜能_agent",roi=roi)
+        # TODO：验证获得后是否仍然有效
 
 
 
@@ -223,7 +227,7 @@ class PotentialReader:
             if not potential.name:
                 continue
             # 读取核心潜能标记
-            potential.core = self.screen.check_potential_recommended_from_bag(core_potential_rois[i])
+            potential.type = "core" if self.screen.check_potential_recommended_from_bag(core_potential_rois[i]) else ""
             if not potential.core:
                 # 读取潜能等级
                 potential.level = self.screen.get_potential_level_from_bag(level_rois[i])

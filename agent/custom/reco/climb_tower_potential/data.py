@@ -249,7 +249,7 @@ class Potential:
     def update(self, screen: UIInteractor, data: Data):
         # 更新核心潜能
         if data.core_potential:
-            self.core = True
+            self.type = "core"
 
         # 更新潜能数据
         self.name = self._get_name(screen, data)

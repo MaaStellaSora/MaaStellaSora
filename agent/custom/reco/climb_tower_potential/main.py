@@ -6,7 +6,7 @@ from .data import Data, Parameters
 from .state import State
 from .ui import UIInteractor
 from .handler_default import ChoosePotentialHandler
-from .handler_preset import RecommendationHandler, RecommendationPlusBagScanHandler
+from .handler_preset import RecommendationHandler
 from .handler_json import AssistantPriorityHandler
 
 from utils import logger as logger_module
@@ -55,8 +55,8 @@ class ChoosePotentialRecognition(CustomRecognition):
             handler = AssistantPriorityHandler(screen, data)
         elif data.params.handler == "preset":
             handler = RecommendationHandler(screen, data)
-        elif data.params.handler == "preset+bag":
-            handler = RecommendationPlusBagScanHandler(screen, data)
+        # elif data.params.handler == "preset+bag":
+        #     handler = RecommendationPlusBagScanHandler(screen, data)
         else: # default
             handler = ChoosePotentialHandler(screen, data)
 

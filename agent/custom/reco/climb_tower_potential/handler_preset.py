@@ -51,6 +51,9 @@ class RecommendationHandler(ChoosePotentialHandler):
         return best_potential
 
     def default_chooser(self):
+        """
+        默认策略，根据等级跨度、推荐等级、当前等级排序来选择推荐潜能，如没有推荐潜能则返回 None
+        """
         candidates = [p for p in self.data.potentials if p.recommended]
         if candidates:
             # 按照等级跨度降序、推荐等级降序、旧等级降序来排序，选择最优的潜能

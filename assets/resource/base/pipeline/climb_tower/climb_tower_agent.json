@@ -103,7 +103,7 @@
       // threshold_coef_str为刷新阈值整体调节系数，0-9.99之间，0表示完全不考虑阈值，1表示完全按照阈值决定是否刷新
       // threshold_decay_str为刷新阈值衰减系数，0-1之间，0表示不衰减，0.01表示每刷新一次衰减1%
       "threshold_coef_str": "0.8",
-      "threshold_decay_str": "0.01"
+      "threshold_decay_str": "0.05"
     },
     "post_wait_freezes": 100
   },

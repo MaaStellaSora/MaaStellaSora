@@ -1,3 +1,4 @@
+import random
 import time
 from typing import Any
 
@@ -28,19 +29,10 @@ class UIInteractor:
 
     def click_potential(self, box: list[int]) -> bool:
         """点击指定box"""
-        pipeline_override = {
-            "星塔_节点_选择潜能_点击潜能_agent": {
-                "action": {
-                    "param": {
-                        "target": box
-                    }
-                }
-            }
-        }
-        run_result = self.context.run_task("星塔_节点_选择潜能_点击潜能_agent", pipeline_override)
-        if run_result and run_result.status.succeeded:
-            return True
-        return False
+        click_x = random.randint(box[0], box[0] + box[2])
+        click_y = random.randint(box[1], box[1] + box[3])
+        self.context.tasker.controller.post_click(click_x, click_y)
+        return True
 
     def _base_recognition(
             self,

@@ -82,7 +82,8 @@
       }
     },
     "action": {
-      "type": "DoNothing" // 因为设置为recognition方便debug，但实际操作不一定会点击，所以交给识别函数点击了
+      "type": "DoNothing"
+      // 因为设置为recognition方便debug，但实际操作不一定会点击，所以交给识别函数点击了
     },
     "next": [
       "星塔_节点_选择潜能_拿走_agent"
@@ -112,12 +113,14 @@
         "template": [
           "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
         ],
-        "roi": [
-          148,
-          569,
-          996,
-          84
-        ]
+        "roi": "星塔_节点_选择潜能_agent",
+        "roi_offset": [
+          0,
+          185,
+          0,
+          70
+        ],
+        "threshold": 0.6
       },
       "type": "TemplateMatch"
     },
@@ -125,34 +128,13 @@
       "type": "Click"
     },
     "next": [
-      "星塔_节点_选择潜能_等待确认_agent",
-      "星塔_节点_选择潜能_已确认_agent"
+      "星塔_节点_选择潜能_拿走_agent",
+      "星塔_节点_选择潜能_已确认拿走_agent"
     ],
-    "post_delay": 300
-  },
-  "星塔_节点_选择潜能_等待确认_agent": {
-    "recognition": {
-      "param": {
-        "template": [
-          "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
-        ],
-        "roi": [
-          148,
-          569,
-          996,
-          84
-        ],
-        "threshold": 0.5
-      },
-      "type": "TemplateMatch"
-    },
-    "action": {
-      "type": "Click"
-    },
     "pre_delay": 0,
     "post_delay": 300
   },
-  "星塔_节点_选择潜能_已确认_agent": {
+  "星塔_节点_选择潜能_已确认拿走_agent": {
     "action": {
       "type": "DoNothing"
     },

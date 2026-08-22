@@ -468,19 +468,3 @@ class RecommendationHandler(ChoosePotentialHandler):
             if p.old_level > 0 and p.level_span == 2:
                 State.enhance_high_level_span_count += 1
                 logger.info(f"潜能飞升计数 {State.enhance_high_level_span_count}/5")
-
-
-
-class RecommendationPlusBagScanHandler(RecommendationHandler):
-    def __init__(self, screen: UIInteractor, data: Data):
-        super().__init__(screen, data)
-
-    # TODO：
-    # def _tower_8_score(self, p: Potential) -> int:
-    # 因为能获得整体情况，所以还需要考虑下面问题
-    # 还得考虑潜能到达旅人上限的问题，以保证推荐潜能数超过普通上限的情况打分偏向于能够突破上限
-    # 推荐等级越高分数越高的修正
-
-    # def _tower_8_threshold(self, threshold: int) -> int:
-    # 这个可能不用调整思路，但需要把默认16种潜能改为整个潜能库的概率计算
-

@@ -450,6 +450,7 @@ install
 # Tools
 tools/ImageCropper/**/*.png
 
+# Custom files
 config
 debug
 

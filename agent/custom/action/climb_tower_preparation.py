@@ -29,12 +29,34 @@ class AscensionPreparation(CustomAction):
         Returns:
             bool: 成功时返回 True，失败时返回 False。
         """
+        # 获得选择潜能模式
+        node_data = context.get_node_data("星塔_节点_选择潜能_agent")
+        potential_config = node_data.get("attach", {})
+        handler = potential_config.get("handler", "")
 
-        # 导入json作业参数
-        node_data = context.get_node_data(argv.node_name)
-        preset_path = Path(os.path.abspath(__file__)).parent.parent.parent / "presets"
+        # 如果潜能模式为json时，导入json作业参数
+        if handler == "json":
+            preparation_node_data = context.get_node_data(argv.node_name)
+            preset_path = Path(os.path.abspath(__file__)).parent.parent.parent / "presets"
+            json_import_result = self._import_json_priority_list(context, preparation_node_data, preset_path)
+            if not json_import_result:
+                return False
+
+        # 如果潜能模式为preset时，检查刷新阈值能否被转为float类型
+        if handler.startswith("preset"):
+            threshold_coef_str = potential_config.get("threshold_coef_str", "")
+            threshold_decay_str = potential_config.get("threshold_decay_str", "")
+            try:
+                float(threshold_coef_str)
+                float(threshold_decay_str)
+            except ValueError:
+                logger.error(f"刷新阈值系数{threshold_coef_str}或衰减系数{threshold_decay_str}设置有误，请重新检查")
+                return False
+
+        return True
+
+    def _import_json_priority_list(self, context: Context, node_data: dict, preset_path: Path) -> bool:
         full_path = ""
-
         try:
             preset_name = node_data["attach"]["preset_name"]
 
@@ -59,13 +81,11 @@ class AscensionPreparation(CustomAction):
         except json.decoder.JSONDecodeError as e:
             logger.error(f"无法解析作业文件，错误信息：{e}")
             logger.error("请核实json内容的格式是否正确")
-            context.tasker.post_stop()
             return False
 
         err = self._validate_priority_list(priority_list)
         if err:
             logger.error(f"潜能优先级设置校验失败：{err}")
-            context.tasker.post_stop()
             return False
 
         context.override_pipeline({
@@ -157,9 +177,7 @@ class AscensionPreparation(CustomAction):
                     })
                 else:
                     logger.error(f"导入音符：{melody} 失败，请核实音符名是否符合文档要求")
-                    context.tasker.post_stop()
                     return False
-
 
         logger.info(f"已导入预设作业：{preset_name}")
         return True

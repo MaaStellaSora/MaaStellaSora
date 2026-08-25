@@ -35,31 +35,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Update Version in HTML
         if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          TAG="${{ github.event.release.tag_name }}"
-          echo "Updating version to $TAG"
-          
-          sed -i "s|const DEFAULT_VERSION = '.*';|const DEFAULT_VERSION = '$TAG';|" ./page/index.html
+          echo "Updating version to $RELEASE_TAG"
+
+          sed -i "s|const DEFAULT_VERSION = '.*';|const DEFAULT_VERSION = '$RELEASE_TAG';|" ./page/index.html
 
       - name: Commit and Push Version Update
         if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ./page/index.html
-          git commit -m "chore: bump version to ${{ github.event.release.tag_name }}"
+          git commit -m "chore: bump version to $RELEASE_TAG"
           git push
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
-          path: './page'
+          path: "./page"
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

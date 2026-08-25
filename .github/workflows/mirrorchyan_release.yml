@@ -3,11 +3,14 @@ name: mirrorchyan_release
 on:
   workflow_dispatch:
     inputs:
-        tag:
-            default: ''
-            required: false
+      tag:
+        default: ""
+        required: false
 #   release:
 #     types: [released]
+
+permissions:
+  contents: read
 
 jobs:
   mirrorchyan:
@@ -19,7 +22,7 @@ jobs:
         os: [win, macos, linux]
         arch: [aarch64, x86_64]
     steps:
-      - uses: MirrorChyan/uploading-action@v1
+      - uses: MirrorChyan/uploading-action@ea9a0f6f516fafb6b0a3046a1fe4b0dccb29eca8 # v1
         with:
           filetype: latest-release
           filename: ${{ format('MaaStellaSora-{0}-{1}-*', matrix.os, matrix.arch) }}

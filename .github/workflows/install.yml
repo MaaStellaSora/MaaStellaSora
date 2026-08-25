@@ -5,32 +5,31 @@ on:
     branches:
       - main
     paths:
-      - 'assets/interface.json'
+      - "assets/interface.json"
   pull_request:
     branches:
       - "**"
     paths:
       - ".github/workflows/install.yml"
       - "assets/**"
-      - "**.py"
+      - "**/*.py"
   workflow_dispatch:
-    branches:
-      - "**"
-    paths:
-      - ".github/workflows/install.yml"
-      - "assets/**"
-      - "**.py"
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
+
+concurrency:
+  group: install-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   tag:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -63,13 +62,16 @@ jobs:
   meta:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - id: set_tag
+        env:
+          REF_NAME: ${{ github.ref }}
         run: |
           # 检查标签格式
-          if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$ ]]; then
+          if [[ "$REF_NAME" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$ ]]; then
             is_release=true
             tag=${GITHUB_REF#refs/tags/}
             echo "Release tag format is valid: $tag"
@@ -118,12 +120,13 @@ jobs:
     runs-on: ${{ matrix.runner }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
+          persist-credentials: false
 
       - name: Download MaaFramework
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-win-${{ matrix.arch }}*"
@@ -131,10 +134,10 @@ jobs:
           latest: true
           out-file-path: "deps"
           extract: true
-          
+
       - name: Download MFAAvalonia
         id: download_mfa
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: SweetSmellFox/MFAAvalonia
           fileName: "MFAAvalonia-*-win-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
@@ -154,7 +157,7 @@ jobs:
         shell: bash
         run: |
           python tools/ci/setup_embed_python.py
-          
+
       - name: Download Python dependencies
         shell: bash
         run: |
@@ -182,7 +185,7 @@ jobs:
             echo "MFA directory not found, skipping copy."
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
@@ -196,12 +199,13 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
+          persist-credentials: false
 
       - name: Download MaaFramework for Linux
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-linux-${{ matrix.arch }}*"
@@ -212,7 +216,7 @@ jobs:
 
       - name: Download MFAAvalonia for Linux
         id: download_mfa
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: SweetSmellFox/MFAAvalonia
           fileName: "MFAAvalonia-*-linux-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
@@ -264,7 +268,7 @@ jobs:
             echo "MFA directory not found on Linux, skipping copy."
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-linux-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
@@ -275,18 +279,19 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: macos-15-intel  # Intel-based macOS runner
+            runner: macos-15-intel # Intel-based macOS runner
           - arch: aarch64
-            runner: macos-latest  # Apple Silicon macOS runner
+            runner: macos-latest # Apple Silicon macOS runner
       fail-fast: false
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
+          persist-credentials: false
 
       - name: Download MaaFramework for macOS
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-macos-${{ matrix.arch }}*"
@@ -297,7 +302,7 @@ jobs:
 
       - name: Download MFAAvalonia for macOS
         id: download_mfa
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: SweetSmellFox/MFAAvalonia
           fileName: "MFAAvalonia-*-osx-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
@@ -361,7 +366,7 @@ jobs:
             echo "MFA directory not found on macOS, skipping copy."
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-macos-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
@@ -374,12 +379,13 @@ jobs:
       release_body: ${{ steps.git-cliff.outputs.content }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Generate a changelog
-        uses: orhun/git-cliff-action@v4
+        uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4
         id: git-cliff
         with:
           config: .github/cliff.toml
@@ -396,8 +402,11 @@ jobs:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
     needs: [meta, windows, linux, macos, changelog]
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: assets
 
@@ -439,7 +448,7 @@ jobs:
             fi
           done
 
-      - uses: softprops/action-gh-release@v2.2.2
+      - uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         with:
           files: assets/*
           tag_name: ${{ needs.meta.outputs.tag }}

@@ -27,6 +27,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,24 +41,27 @@ jobs:
           echo "VERSION=$VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Get previous tag
-        id: prev_tag
+      - name: Create and build version tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          echo "PREV_TAG=$PREV_TAG"
-          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          TAG="v${VERSION}"
+          HEAD_SHA=$(git rev-parse HEAD)
 
-      - name: Create tag
-        if: steps.version.outputs.version != steps.prev_tag.outputs.prev_tag && steps.prev_tag.outputs.prev_tag != ''
-        run: |
-          git tag v${{ steps.version.outputs.version }}
-          git push origin v${{ steps.version.outputs.version }}
+          if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
+            TAG_SHA=$(git rev-list -n 1 "${TAG}")
+            if [[ "${TAG_SHA}" != "${HEAD_SHA}" ]]; then
+              echo "::warning::${TAG} already exists at ${TAG_SHA}; skipping tag creation"
+              exit 0
+            fi
+            echo "${TAG} already points to HEAD; dispatching its release build"
+          else
+            git tag "${TAG}"
+            git push origin "${TAG}"
+          fi
 
-      - name: Create initial tag
-        if: steps.prev_tag.outputs.prev_tag == ''
-        run: |
-          git tag v${{ steps.version.outputs.version }}
-          git push origin v${{ steps.version.outputs.version }}
+          gh workflow run install.yml --ref "${TAG}"
 
   meta:
     runs-on: ubuntu-latest
@@ -232,17 +236,26 @@ jobs:
           rm -f "${ARCHIVE_FILE_PATH}"
           echo "Archive cleanup command executed for MFAAvalonia on Linux."
 
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
       - name: Download Python dependencies
         shell: bash
         run: |
-          python tools/ci/download_deps.py --deps-dir install/deps
+          python tools/ci/download_deps.py --deps-dir install/deps --platform-tag manylinux2014_${{ matrix.arch }} --python-version 3.12
 
       - name: Download drop_core module
         shell: bash
         env:
           PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          python tools/ci/download_drop_core.py --os linux --arch ${{ matrix.arch }} || echo "drop_core download skipped"
+          if [[ -f tools/ci/download_drop_core.py && -n "${PRIVATE_REPO_TOKEN}" ]]; then
+            python tools/ci/download_drop_core.py --os linux --arch ${{ matrix.arch }}
+          else
+            echo "::notice::Optional drop_core downloader or token is unavailable; skipping"
+          fi
 
       - name: Install Python dependencies
         shell: bash
@@ -340,7 +353,11 @@ jobs:
         env:
           PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          ./install/python/bin/python3 tools/ci/download_drop_core.py --os darwin --arch ${{ matrix.arch }} || echo "drop_core download skipped"
+          if [[ -f tools/ci/download_drop_core.py && -n "${PRIVATE_REPO_TOKEN}" ]]; then
+            ./install/python/bin/python3 tools/ci/download_drop_core.py --os darwin --arch ${{ matrix.arch }}
+          else
+            echo "::notice::Optional drop_core downloader or token is unavailable; skipping"
+          fi
 
       - name: Install Python dependencies on macOS
         shell: bash
@@ -456,17 +473,20 @@ jobs:
           draft: false
           prerelease: ${{ needs.meta.outputs.is_prerelease == 'true' }}
 
-      - name: Trigger MirrorChyanUploading
+      - name: Trigger post-release workflows
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.meta.outputs.tag }}
         run: |
+          gh workflow run --repo "$GITHUB_REPOSITORY" static.yml --ref main -f tag="${RELEASE_TAG}"
+
           is_prerelease=false
-          if [[ $tag =~ .*-nightly.* ]]; then
+          if [[ "${RELEASE_TAG}" =~ .*-nightly.* ]]; then
             is_prerelease=true
             echo "This is a pre-release version"
           fi
           if [[ $is_prerelease == false ]]; then
-            gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release.yml -f tag=${{ needs.meta.outputs.tag }}
-            gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release_note.yml -f tag=${{ needs.meta.outputs.tag }}
+            gh workflow run --repo "$GITHUB_REPOSITORY" mirrorchyan_release.yml -f tag="${RELEASE_TAG}"
+            gh workflow run --repo "$GITHUB_REPOSITORY" mirrorchyan_release_note.yml -f tag="${RELEASE_TAG}"
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

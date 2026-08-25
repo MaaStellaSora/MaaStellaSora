@@ -1,8 +1,34 @@
 import difflib
+import json
+from pathlib import Path
+
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 from utils import logger
+
+# 角色 -> 特殊选项文本列表，用于回忆收集模式。配置与本文件同目录。
+_SPECIAL_OPTIONS_PATH = Path(__file__).resolve().parent / "invite_special_options.json"
+
+
+def _load_special_options() -> dict[str, list[str]]:
+    """从配置文件读取角色 -> 特殊选项映射，读取失败时返回空映射。"""
+    try:
+        with open(_SPECIAL_OPTIONS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return {}
+        return {
+            str(name): [str(opt) for opt in options]
+            for name, options in data.items()
+            if isinstance(options, list)
+        }
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.get_logger("invite").warning(
+            f"读取特殊选项配置失败，将不启用特殊选项：{exc}"
+        )
+        return {}
+
 
 @AgentServer.custom_action("InviteAuto")
 class InviteAuto(CustomAction):
@@ -22,6 +48,10 @@ class InviteAuto(CustomAction):
 
         # 邀约对象的任务列表
         invite_nodes = ["邀约_1号", "邀约_2号", "邀约_3号", "邀约_4号", "邀约_5号"]
+
+        # 是否开启回忆收集模式（由设置界面的 switch 通过 attach 注入）
+        inviter_node_data = context.get_node_data(argv.node_name) or {}
+        memory_mode = bool(inviter_node_data.get("attach", {}).get("memory_mode"))
 
         for node in invite_nodes:
             # 检查邀约对象是否达到上限
@@ -43,6 +73,10 @@ class InviteAuto(CustomAction):
                 if self._click_trekker(context, trekker_name):
                     # 成功点击邀约对象后，按照choose_gift情况获取送礼流程，然后尝试执行邀约
                     pipeline_override = self._get_choose_gift_pipeline(choose_gift)
+                    if memory_mode:
+                        pipeline_override = self._merge_memory_override(
+                            pipeline_override, trekker_name
+                        )
                     res = context.run_task("邀约_开始邀约", pipeline_override)
 
                     # 成功识别到邀约按钮时，不需要手动重置位置
@@ -260,6 +294,35 @@ class InviteAuto(CustomAction):
             if context.tasker.stopping:
                 return False
 
+    def _merge_memory_override(self, pipeline_override: dict, trekker_name: str) -> dict:
+        """
+            回忆收集模式下的额外 pipeline override：
+            向回忆收集循环节点注入当前角色的特殊选项文本。
+            （地点节点的 next 改道由设置界面的 switch 选项负责）
+
+            Args:
+                pipeline_override: 已有 pipeline override（送礼选项相关）
+                trekker_name: 当前邀约对象名字
+
+            Returns:
+                dict: 合并后的 pipeline override
+        """
+        special_options = _load_special_options().get(trekker_name, [])
+        attach_override = {
+            "邀约_回忆收集_循环": {
+                "attach": {
+                    "special_options": list(special_options)
+                }
+            }
+        }
+        node = "邀约_回忆收集_循环"
+        if node in pipeline_override:
+            pipeline_override[node].update(attach_override[node])
+        else:
+            pipeline_override[node] = attach_override[node]
+
+        return pipeline_override
+
     def _get_choose_gift_pipeline(self, choose_gift: str) -> dict:
         """
             根据choose_gift修改送礼流程
@@ -299,3 +362,137 @@ class InviteAuto(CustomAction):
             self.logger.error(f"未知的送礼选项：{choose_gift}，将默认只送黄色笑脸")
             return {}
         return pipeline_override
+
+
+@AgentServer.custom_action("InviteMemory")
+class InviteMemory(CustomAction):
+    """邀约·回忆收集模式的自定义动作。
+
+    逐句推进对话，遇到选项时优先选择角色特殊选项，否则兜底点首个选项，
+    直到识别到「送出礼物」结束面板为止。
+
+    结束面板检测（邀约_送礼 的 OCR）优先级最高；选项状态判定以
+    `邀约_对话选项按钮.png` 模板匹配为准；对话推进点击点 [1000, 200]。
+    """
+    # 推进对话点击点
+    ADVANCE_CLICK = (1000, 200)
+
+    # 选项行 Y 坐标（下对齐，从 y=470 起向上铺）
+    OPTION_ROWS = (470, 400, 330)
+    OPTION_ROW_HEIGHT = 60
+    OPTION_ROW_WIDTH = 450
+    OPTION_ROW_X = 760
+
+    # 特殊选项匹配阈值
+    SIMILARITY_LIMIT = 0.85
+
+    # 最大迭代次数，防止无选项推进时死循环
+    MAX_ITERATIONS = 2000
+
+    def __init__(self):
+        super().__init__()
+        self.logger = logger.get_logger("invite_memory")
+
+    def run(
+            self,
+            context: Context,
+            argv: CustomAction.RunArg,
+    ) -> bool:
+        node_data = context.get_node_data(argv.node_name) or {}
+        special_options = node_data.get("attach", {}).get("special_options", [])
+        if not isinstance(special_options, list):
+            special_options = []
+
+        iteration = 0
+        while not context.tasker.stopping:
+            iteration += 1
+            if iteration > self.MAX_ITERATIONS:
+                self.logger.error("回忆收集循环次数超过上限，强制退出")
+                return False
+
+            image = context.tasker.controller.post_screencap().wait().get()
+
+            # 1. 结束面板检测优先级最高
+            if self._hit_gift_panel(context, image):
+                self.logger.info("识别到送出礼物结束面板，退出回忆收集循环")
+                return True
+
+            # 2. 选项状态判定，优先于推进点击
+            if self._in_option_state(context, image):
+                if self._click_option(context, image, special_options):
+                    continue
+                # 未匹配到选项（或点击失败），兜底点首个选项
+                self._click_first_option(context)
+                continue
+
+            # 3. 非选项状态，点推进点
+            context.tasker.controller.post_click(*self.ADVANCE_CLICK).wait()
+
+        return context.tasker.stopping is False
+
+    def _hit_gift_panel(self, context: Context, image) -> bool:
+        """识别「送出礼物」结束面板，复用 邀约_送礼 的 OCR 识别。"""
+        reco_detail = context.run_recognition("邀约_送礼", image)
+        return bool(reco_detail and reco_detail.hit)
+
+    def _in_option_state(self, context: Context, image) -> bool:
+        """以 `邀约_对话选项按钮.png` 模板匹配判定是否处于选项弹出状态。"""
+        reco_detail = context.run_recognition("邀约_对话选项按钮", image)
+        return bool(reco_detail and reco_detail.hit)
+
+    def _click_option(self, context: Context, image, special_options: list[str]) -> bool:
+        """逐行 OCR 选项文本，命中特殊选项则点击对应行，返回是否命中。"""
+        if not special_options:
+            return False
+
+        for y in self.OPTION_ROWS:
+            texts = self._ocr_row(context, image, y)
+            row_text = "".join(texts)
+            if not row_text:
+                continue
+            if self._match_special(row_text, special_options):
+                self.logger.info(f"命中特殊选项：{row_text}，点击行 y={y}")
+                context.tasker.controller.post_click(
+                    self.OPTION_ROW_X + self.OPTION_ROW_WIDTH // 2,
+                    y + self.OPTION_ROW_HEIGHT // 2,
+                ).wait()
+                return True
+        return False
+
+    def _click_first_option(self, context: Context) -> None:
+        """兜底：点击首个（最下 y=470 那行）选项，保证对话继续。"""
+        y = self.OPTION_ROWS[0]
+        self.logger.info("未命中特殊选项，点击首个选项")
+        context.tasker.controller.post_click(
+            self.OPTION_ROW_X + self.OPTION_ROW_WIDTH // 2,
+            y + self.OPTION_ROW_HEIGHT // 2,
+        ).wait()
+
+    def _ocr_row(self, context: Context, image, y: int) -> list[str]:
+        """对指定选项行 ROI 做 OCR，返回识别到的文本列表。"""
+        roi = [self.OPTION_ROW_X, y, self.OPTION_ROW_WIDTH, self.OPTION_ROW_HEIGHT]
+        pipeline_override = {
+            "邀约_读取选项文本": {
+                "recognition": {
+                    "param": {"roi": roi},
+                }
+            }
+        }
+        reco_detail = context.run_recognition("邀约_读取选项文本", image, pipeline_override)
+        if not reco_detail or not reco_detail.all_results:
+            return []
+        return [r.text for r in reco_detail.all_results if r.text]
+
+    @classmethod
+    def _match_special(cls, row_text: str, special_options: list[str]) -> bool:
+        """判断选项文本是否命中特殊选项，支持精确包含与模糊匹配。"""
+        normalized = row_text.strip()
+        for opt in special_options:
+            opt = opt.strip()
+            if not opt:
+                continue
+            if opt in normalized or normalized in opt:
+                return True
+            if difflib.SequenceMatcher(None, normalized, opt).ratio() >= cls.SIMILARITY_LIMIT:
+                return True
+        return False

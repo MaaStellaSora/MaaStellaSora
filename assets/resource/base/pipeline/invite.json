@@ -736,5 +736,48 @@
       },
       "type": "TemplateMatch"
     }
+  },
+  "邀约_回忆收集_循环": {
+    "action": {
+      "param": {
+        "custom_action": "InviteMemory"
+      },
+      "type": "Custom"
+    },
+    "next": [
+      "邀约_送礼"
+    ]
+  },
+  "邀约_对话选项按钮": {
+    "recognition": {
+      "param": {
+        "roi": [
+          760,
+          330,
+          450,
+          200
+        ],
+        "template": [
+          "Invite/邀约_对话选项按钮.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "邀约_读取选项文本": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "InviteMemory函数专用节点"
+        ],
+        "roi": [
+          760,
+          330,
+          450,
+          200
+        ]
+      },
+      "type": "OCR"
+    }
   }
 }

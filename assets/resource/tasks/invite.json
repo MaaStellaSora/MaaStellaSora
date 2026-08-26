@@ -5,6 +5,7 @@
             "entry": "邀约_入口",
             "description": "自动邀约<br>由于选项过多，可能需要下拉菜单才能看到其他选项",
             "option": [
+                "邀约_回忆收集模式",
                 "邀约旅人",
                 "邀约旅人_1号_送礼",
                 "邀约旅人_2号_送礼",
@@ -297,6 +298,44 @@
                             "attach": {
                                 "gift": "no"
                             }
+                        }
+                    }
+                }
+            ]
+        },
+        "邀约_回忆收集模式": {
+            "type": "switch",
+            "label": "回忆收集模式",
+            "description": "开启后不再快进对话，改为逐句推进并选择特殊选项以收集角色特殊回忆。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "memory_mode": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "memory_mode": true
+                            }
+                        },
+                        "邀约_选择默认地点": {
+                            "next": [
+                                "邀约_回忆收集_循环"
+                            ]
+                        },
+                        "邀约_选择回忆地点": {
+                            "next": [
+                                "邀约_回忆收集_循环"
+                            ]
                         }
                     }
                 }

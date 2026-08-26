@@ -52,8 +52,12 @@ class EnoughTrackingPermitRecognition(CustomRecognition):
 
         keep_count = _get_tracking_permit_keep_count(context)
         count = _get_resource_count(context, argv.image)
+        if count is None:
+            logger.debug("未识别到追踪委托书数量")
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
         usable = count - keep_count
-        if not count or usable <= 0:
+        if count <= 0 or usable <= 0:
             logger.debug(f"追踪委托书数量{count}小于等于保留数量{keep_count}或数量为0")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         

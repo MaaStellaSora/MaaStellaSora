@@ -53,11 +53,11 @@ def get_platform_tag():
     elif os_type == "Linux":
         # 映射platform.machine()到pip的平台标签
         arch_mapping = {
-            "x86_64": "linux_x86_64",
-            "aarch64": "linux_aarch64",
-            "arm64": "linux_aarch64",
+            "x86_64": "manylinux2014_x86_64",
+            "aarch64": "manylinux2014_aarch64",
+            "arm64": "manylinux2014_aarch64",
         }
-        platform_tag = arch_mapping.get(os_arch, f"linux_{os_arch}")
+        platform_tag = arch_mapping.get(os_arch, f"manylinux2014_{os_arch}")
 
     else:
         raise ValueError(f"不支持的操作系统: {os_type}")
@@ -66,7 +66,9 @@ def get_platform_tag():
     return platform_tag
 
 
-def download_dependencies(deps_dir, platform_tag):
+def download_dependencies(
+    deps_dir, platform_tag, *, python_version=None, allow_native_fallback=True
+):
     """下载依赖到指定目录"""
     # 创建deps目录
     deps_path = Path(deps_dir)
@@ -95,6 +97,8 @@ def download_dependencies(deps_dir, platform_tag):
             platform_tag,
             "--only-binary=:all:",
         ]
+        if python_version:
+            cmd.extend(["--python-version", python_version])
 
         print(f"执行命令: {' '.join(cmd)}")
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -115,7 +119,7 @@ def download_dependencies(deps_dir, platform_tag):
 
     except subprocess.CalledProcessError as e:
         print(f"平台特定下载失败: {e}")
-        if e.stderr and (
+        if allow_native_fallback and e.stderr and (
             "Could not find a version" in e.stderr
             or "No matching distribution" in e.stderr
         ):
@@ -134,6 +138,8 @@ def download_dependencies(deps_dir, platform_tag):
                     str(deps_path),
                     "--only-binary=:all:",
                 ]
+                if python_version:
+                    cmd_fallback.extend(["--python-version", python_version])
 
                 print(f"执行回退命令: {' '.join(cmd_fallback)}")
                 result = subprocess.run(
@@ -172,15 +178,30 @@ def download_dependencies(deps_dir, platform_tag):
 def main():
     parser = argparse.ArgumentParser(description="下载Python依赖到deps目录")
     parser.add_argument("--deps-dir", default="deps", help="依赖下载目录 (默认: deps)")
+    parser.add_argument(
+        "--platform-tag",
+        help="显式指定 pip 平台标签；交叉构建时必须传入，例如 manylinux2014_aarch64",
+    )
+    parser.add_argument(
+        "--python-version",
+        help="显式指定目标 Python 版本，例如 3.12",
+    )
 
     args = parser.parse_args()
 
     try:
-        # 自动检测平台
-        platform_tag = get_platform_tag()
+        # 交叉构建使用显式平台；原生构建继续自动检测。
+        platform_tag = args.platform_tag or get_platform_tag()
+        if args.platform_tag:
+            print(f"使用显式平台标签: {platform_tag}")
 
         # 下载依赖
-        success = download_dependencies(args.deps_dir, platform_tag)
+        success = download_dependencies(
+            args.deps_dir,
+            platform_tag,
+            python_version=args.python_version,
+            allow_native_fallback=not bool(args.platform_tag),
+        )
 
         if success:
             print("✅ 依赖下载成功")

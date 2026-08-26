@@ -338,6 +338,98 @@
                                 "邀约_回忆收集_循环"
                             ]
                         }
+                    },
+                    "option": [
+                        "邀约_自动查找未收集"
+                    ]
+                }
+            ]
+        },
+        "邀约_自动查找未收集": {
+            "type": "switch",
+            "label": "自动查找未收集回忆",
+            "description": "开启后自动遍历左侧角色列表，找出有未收集回忆的角色并优先邀约。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_find": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_find": true
+                            }
+                        }
+                    },
+                    "option": [
+                        "邀约_自动查找_最多查找人数",
+                        "邀约_自动收集_送礼类型"
+                    ]
+                }
+            ]
+        },
+        "邀约_自动查找_最多查找人数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "人数",
+                    "label": "最多查找人数",
+                    "pipeline_type": "int",
+                    "verify": "^[1-9]\\d*$",
+                    "default": "5"
+                }
+            ],
+            "pipeline_override": {
+                "邀约_总循环": {
+                    "attach": {
+                        "max_find_count": "{人数}"
+                    }
+                }
+            }
+        },
+        "邀约_自动收集_送礼类型": {
+            "type": "select",
+            "label": "自动收集送礼类型",
+            "description": "自动找到的角色统一使用该送礼类型。",
+            "default_case": "所有",
+            "cases": [
+                {
+                    "name": "所有",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_gift": "all"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "最爱",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_gift": "favorite"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "不送",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_gift": "no"
+                            }
+                        }
                     }
                 }
             ]

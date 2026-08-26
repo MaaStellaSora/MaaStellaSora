@@ -369,6 +369,22 @@
       "通用_返回主页"
     ]
   },
+  "邀约_未收集回忆": {
+    "recognition": {
+      "param": {
+        "template": [
+          "Invite/邀约_未收集回忆.png"
+        ],
+        "roi": [
+          625,
+          216,
+          530,
+          390
+        ]
+      },
+      "type": "TemplateMatch"
+    }
+  },
   "邀约_已回到邀约界面": {
     "recognition": {
       "param": {

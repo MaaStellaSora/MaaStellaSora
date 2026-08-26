@@ -159,6 +159,45 @@ def set_log_level(level: int) -> None:
             handler.setLevel(level)
 
 
+def enable_debug_loggers(*names: str, to_file: bool = True) -> None:
+    """仅对指定名称的 logger 开启 DEBUG 输出，不影响其他 logger 的默认 INFO 级别。
+
+    用于在保持全局 INFO 的前提下，只让爬塔等特定模块输出详细的调试日志。
+
+    Args:
+        names: 需要开启 DEBUG 的 logger 名称列表，如 "climb_tower_shop"
+        to_file: 是否同时将 DEBUG 输出写入 debug/agent/YYYY-MM-DD.log（默认 True）
+    """
+    debug_file = None
+    if to_file:
+        log_dir = Path(__file__).resolve().parents[2] / "debug" / "agent"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        debug_file = log_dir / f"{datetime.now().strftime('%Y-%m-%d')}.log"
+
+    for name in names:
+        # 若该 logger 尚未初始化，先走标准 get_logger 创建（含控制台 handler）
+        if name not in _initialized_loggers:
+            get_logger(name)
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+
+        # 为这些 logger 单独添加文件 handler，写入调试日志
+        if debug_file is not None:
+            has_file = any(isinstance(h, logging.FileHandler) for h in logger.handlers)
+            if not has_file:
+                fh = logging.FileHandler(str(debug_file), encoding="utf-8")
+                fh.setLevel(logging.DEBUG)
+                fh.setFormatter(logging.Formatter(
+                    "%(asctime)s|%(name)s|%(levelname)s|%(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                ))
+                logger.addHandler(fh)
+
+        # 将已有 handler（含控制台）都提为 DEBUG
+        for handler in logger.handlers:
+            handler.setLevel(logging.DEBUG)
+
+
 if __name__ == "__main__":
     # 测试代码
     logger = get_logger(__name__)

@@ -13,9 +13,18 @@ if str(AGENT_DIR) not in sys.path:
 # 导入自定义的action和recognition，以注册到AgentServer
 import custom # noqa: F401
 
-# 开启debug_mode
+# 仅对爬塔相关模块开启 DEBUG 日志输出（其余模块保持默认 INFO）
+from utils import logger
+logger.enable_debug_loggers(
+    "climb_tower_shop",
+    "climb_tower_potential",
+    "climb_tower_loop",
+    "climb_tower_preparation",
+    "climb_tower_quiz",
+)
+
+# 全局调试模式（如需所有模块都 DEBUG，可设环境变量 APP_DEBUG=true）
 if os.getenv("APP_DEBUG", "false").lower() == "true":
-    from utils import logger
     logger.debug_mode()
 
 

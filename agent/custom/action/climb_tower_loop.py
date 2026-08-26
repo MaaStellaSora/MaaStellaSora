@@ -23,8 +23,9 @@ class AscensionLoop(CustomAction):
         Returns:
             bool: 返回 True。
         """
-        # 重置潜能状态
+        # 重置潜能状态（跨爬塔累计次数）
         climb_tower_potential.State.reset()
+        climb_tower_potential.State.climb_count += 1
 
         # 更新循环次数，并判断是否继续爬塔
         node_data = context.get_node_data(argv.node_name)
@@ -34,7 +35,9 @@ class AscensionLoop(CustomAction):
         loop_count = attachment.get("loop_count", 1)
         loop_count -= 1
         if loop_count > 0:
-            logger.info(f"完成一次爬塔，剩余爬塔次数：{loop_count}")
+            logger.info(
+                f"===== 第 {climb_tower_potential.State.climb_count} 次爬塔完成，剩余爬塔次数：{loop_count} ====="
+            )
             context.override_pipeline({
                 argv.node_name: {
                     "attach": {

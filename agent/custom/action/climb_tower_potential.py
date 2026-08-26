@@ -640,7 +640,10 @@ class ScreenDataProcessor:
         )
 
         hit_x = result_boxes[0][0] if result_boxes else -1
-        matched = next(i for i, (low, high) in enumerate(borders) if low <= hit_x <= high)
+        matched = next(
+            (i for i, (low, high) in enumerate(borders) if low <= hit_x <= high),
+            None,
+        )
 
         if matched is None:
             logger.error("拿走按钮识别失败，潜能选择可能会出现问题")

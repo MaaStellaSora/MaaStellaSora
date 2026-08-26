@@ -14,6 +14,9 @@ logger = logger_module.get_logger("climb_tower_potential")
 
 
 MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
+ITEM_LIST_OCR_NODE = "星塔_节点_选择潜能_检测干扰文字_agent"
+ITEM_LIST_OCR_ROI = (20, 365, 130, 100)
+ITEM_LIST_WAIT_TIMEOUT_SECONDS = 10.0
 
 DEFAULT_POTENTIAL_LAYOUTS = {
     1: [
@@ -529,8 +532,35 @@ class ScreenDataProcessor:
         return int(texts[0])
 
     def check_item_list_visibility(self, max_try: int = 1) -> bool:
-        image = self.context.tasker.controller.post_screencap().wait().get()
-        return self._ocr("星塔_节点_选择潜能_检测干扰文字_agent", [], image=image, max_try=max_try)
+        """检测左侧物品提示，并忽略 MaaFramework 的整块 ROI OCR 兜底结果。"""
+        actual_max_try = max(1, max_try if max_try > 0 else self.max_try)
+
+        for try_count in range(actual_max_try):
+            if self.context.tasker.stopping:
+                return False
+
+            image = self.context.tasker.controller.post_screencap().wait().get()
+            reco_detail = self.context.run_recognition(ITEM_LIST_OCR_NODE, image)
+            results = list(reco_detail.filtered_results or []) if reco_detail and reco_detail.hit else []
+            visible_results = [result for result in results if tuple(result.box) != ITEM_LIST_OCR_ROI]
+
+            if visible_results:
+                logger.debug(
+                    f"识别到物品提示：{[(result.text, result.score, tuple(result.box)) for result in visible_results]}"
+                )
+                return True
+
+            if results:
+                logger.debug(
+                    f"忽略物品提示 OCR 整块 ROI 兜底结果："
+                    f"{[(result.text, result.score, tuple(result.box)) for result in results]}"
+                )
+
+            if try_count + 1 < actual_max_try:
+                logger.debug("未识别到物品提示，等待1秒后重新识别")
+                time.sleep(1)
+
+        return False
 
     def get_potential_count(
             self,
@@ -657,13 +687,24 @@ class ChoosePotentialHandler:
         self.screen = screen
         self.data = data
 
-    def _wait_for_item_list_gone(self):
-        while True:
-            if self.screen.check_item_list_visibility():
-                logger.debug("识别到干扰文字，等待1秒")
-                time.sleep(1)
-                continue
-            break
+    def _wait_for_item_list_gone(self, timeout_seconds: float = ITEM_LIST_WAIT_TIMEOUT_SECONDS) -> bool:
+        """等待物品提示消失，超时或任务停止时返回 False。"""
+        deadline = time.monotonic() + timeout_seconds
+
+        while not self.screen.context.tasker.stopping:
+            if not self.screen.check_item_list_visibility():
+                return True
+
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                logger.error(f"等待物品提示消失超时（{timeout_seconds:g}秒）")
+                return False
+
+            logger.debug("识别到物品提示，等待1秒")
+            time.sleep(min(1.0, remaining))
+
+        logger.info("任务正在停止，结束等待物品提示")
+        return False
 
     def initialize_potentials(self):
         # 初始化Potential对象，并储存到list中
@@ -685,7 +726,6 @@ class ChoosePotentialHandler:
 
     def read_potentials_info(self) -> Self:
         """最原始的潜能信息识别器，仅识别推荐图标"""
-        self._wait_for_item_list_gone()
         self.screen.screenshot()
         self.data.potentials = self.initialize_potentials()
 
@@ -787,7 +827,6 @@ class GameRecommendedHandler(ChoosePotentialHandler):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
-        self._wait_for_item_list_gone()
         self.screen.screenshot()
         self.data.potentials = self.initialize_potentials()
 
@@ -916,7 +955,6 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
-        self._wait_for_item_list_gone()
         self.screen.screenshot()
         self.data.potentials = self.initialize_potentials()
 
@@ -1103,6 +1141,10 @@ class ChoosePotentialAction(CustomAction):
 
         while True:
             # 获取潜能数据，并选择潜能
+            if not handler._wait_for_item_list_gone():
+                logger.error("等待物品提示消失失败，终止本次潜能选择")
+                return CustomAction.RunResult(success=False)
+
             potential = handler.read_potentials_info().choose()
             if potential:
                 break

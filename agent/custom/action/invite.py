@@ -1,5 +1,6 @@
 import difflib
 import json
+import time
 from pathlib import Path
 
 from maa.agent.agent_server import AgentServer
@@ -51,20 +52,47 @@ class InviteAuto(CustomAction):
 
         # 是否开启回忆收集模式（由设置界面的 switch 通过 attach 注入）
         inviter_node_data = context.get_node_data(argv.node_name) or {}
-        memory_mode = bool(inviter_node_data.get("attach", {}).get("memory_mode"))
+        attach = inviter_node_data.get("attach", {})
+        memory_mode = bool(attach.get("memory_mode"))
+        auto_find = bool(attach.get("auto_find"))
 
+        # 组装待邀约名单：元素 (名字, 送礼类型)
+        queue = []
+
+        if auto_find:
+            max_find_count = int(attach.get("max_find_count", "5") or "5")
+            auto_gift = attach.get("auto_gift", "all") or "all"
+
+            names = self._auto_find_uncollected(context, max_find_count)
+            for n in names:
+                queue.append((n, auto_gift))
+            # 自动查找后重置回顶部，衔接下方 _click_trekker “从顶部开始找”的前提
+            self._scroll_to_top(context)
+
+        # 追加用户手填名字（不重复，保持原有 1~5 号顺序）
+        # 去重统一按规范化后的名字比较，避免全角/半角括号、空格差异导致重复邀约
+        selected = {self._normalize_name(t) for t, _ in queue}
         for node in invite_nodes:
+            trekker_name, choose_gift = self._get_trekker_info(context, node)
+            if not trekker_name or trekker_name in ("x", "X"):
+                continue
+            if self._normalize_name(trekker_name) in selected:
+                self.logger.info(f"邀约对象 '{trekker_name}' 已由自动查找记录，跳过手填重复项")
+                continue
+            selected.add(self._normalize_name(trekker_name))
+            queue.append((trekker_name, choose_gift))
+
+        # 每日上限 5 人
+        queue = queue[:5]
+        self.logger.info(f"邀约名单：{", ".join([name for name, _ in queue])}")
+
+        for trekker_name, choose_gift in queue:
             # 检查邀约对象是否达到上限
             image = context.tasker.controller.post_screencap().wait().get()
             reco_detail = context.run_recognition("邀约_达上限", image)
             if reco_detail and reco_detail.hit:
                 self.logger.info(f"邀约次数已达到本日上限")
                 return True
-
-            trekker_name, choose_gift = self._get_trekker_info(context, node)
-            if not trekker_name or trekker_name in ("x", "X"):
-                self.logger.debug(f"节点'{node}'的邀约对象为空，跳过")
-                continue
 
             # 标记是否需要手动重置位置
             need_reset = False
@@ -85,7 +113,7 @@ class InviteAuto(CustomAction):
 
                     break # 无论任务结果如何，只要点到了人，就停止向下翻页
 
-                # 没找到则滑向下一页，若已到底部则放弃寻找
+                # 没找到则滑向下一页，若已到底部则放弃查找
                 is_bottom = self._scroll_to_next_page(context)
                 if is_bottom:
                     break
@@ -293,6 +321,67 @@ class InviteAuto(CustomAction):
             # 检测任务中止的情况，防止卡死，检测成功时返回False
             if context.tasker.stopping:
                 return False
+
+    @staticmethod
+    def _normalize_name(name: str) -> str:
+        """名称规范化，与 _click_trekker 的 translate_table 保持一致。"""
+        translate_table = str.maketrans({
+            '（': '(',
+            '）': ')',
+            ' ': None,
+            '　': None
+        })
+        return name.translate(translate_table)
+
+    def _auto_find_uncollected(self, context: Context, max_find_count: int) -> list[str]:
+        """自动遍历左侧角色列表，找出尚有「未收集回忆」标记的角色。
+
+        逐页 OCR 列表，逐角色点击进入详情态，再对右侧区域匹配「未收集回忆」标记，
+        命中则记录角色名，直到查完全部角色或命中数达到上限。
+
+        Args:
+            context: maa.context.Context
+            max_find_count: 最多查找人数，命中达此数量即提前退出
+
+        Returns:
+            list[str]: 命中的角色名（按列表顺序）
+        """
+        pending = []       # 命中「未收集」的角色名
+        seen = set()       # 已点击处理过的角色名（规范化后），仅用于跨翻页去重
+
+        self.logger.info(f"开始自动查找未收集回忆的角色，最多查找 {max_find_count} 人")
+
+        while not context.tasker.stopping:
+            image = context.tasker.controller.post_screencap().wait().get()
+            reco_detail = context.run_recognition("邀约_左方识别邀约对象", image)
+            results = self._get_refined_merge(reco_detail.all_results)
+            if not results:
+                break
+
+            for r in results:
+                key = self._normalize_name(r['text'])
+                if key in seen:
+                    # 跨半页翻页重复出现的角色，跳过，避免重复点击/重复记录
+                    continue
+                seen.add(key)
+
+                if len(pending) >= max_find_count:
+                    return pending
+
+                context.tasker.controller.post_click(r['x'], r['y']).wait()
+                time.sleep(0.5)
+
+                image = context.tasker.controller.post_screencap().wait().get()
+                hit = context.run_recognition("邀约_未收集回忆", image)
+                if hit and hit.hit:
+                    pending.append(r['text'])
+                    self.logger.info(f"发现未收集回忆的角色：{r['text']}")
+
+            # 一轮点完，向下翻页，已到底部则停止
+            if self._scroll_to_next_page(context):
+                break
+
+        return pending
 
     def _merge_memory_override(self, pipeline_override: dict, trekker_name: str) -> dict:
         """

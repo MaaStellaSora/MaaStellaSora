@@ -13,8 +13,9 @@
                 "新版爬塔_预设作业_en",
                 "新版爬塔_预设作业_jp",
                 "新版爬塔_潜能最大刷新次数",
+                "新版爬塔_潜能数目标",
+                "新版爬塔_记录等级目标",
                 "新版爬塔_商店_购买音符策略",
-                "新版爬塔_商店_其他音符策略",
                 "新版爬塔_商店_中途商店刷新最小金额",
                 "新版爬塔_商店_潜能特饮折扣",
                 "新版爬塔_商店_5个音符折扣",
@@ -125,10 +126,11 @@
             ],
             "type": "select",
             "label": "潜能选择模式",
-            "default_case": "系统推荐",
+            "default_case": "系统推荐+选择策略",
             "cases": [
                 {
                     "name": "系统推荐",
+                    "label": "系统推荐（不推荐）",
                     "description": "选择系统推荐潜能，如无推荐潜能将会尝试使用刷新（刷新次数会根据配置调整）",
                     "pipeline_override": {
                         "星塔_节点_选择潜能_agent": {
@@ -176,7 +178,7 @@
             ],
             "type": "select",
             "label": "潜能选择模式",
-            "default_case": "系统推荐",
+            "default_case": "系统推荐+选择策略",
             "cases": [
                 {
                     "name": "系统推荐",
@@ -227,7 +229,7 @@
             ],
             "type": "select",
             "label": "潜能选择模式",
-            "default_case": "系统推荐",
+            "default_case": "系统推荐+选择策略",
             "cases": [
                 {
                     "name": "系统推荐",
@@ -278,7 +280,7 @@
             ],
             "type": "select",
             "label": "潜能选择模式",
-            "default_case": "系统推荐",
+            "default_case": "系统推荐+选择策略",
             "cases": [
                 {
                     "name": "系统推荐",
@@ -411,6 +413,85 @@
                 }
             }
         },
+        "新版爬塔_潜能数目标": {
+            "type": "input",
+            "description": "刷到潜能数不少于该值时停止爬塔",
+            "inputs": [
+                {
+                    "name": "潜能数目标",
+                    "pipeline_type": "int",
+                    "default": "80",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入潜能数目标(≥0)"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_检查记录达标_agent": {
+                    "attach": {
+                        "min_potential_count": "{潜能数目标}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_记录等级目标": {
+            "type": "input",
+            "description": "刷到记录等级不少于该值时停止爬塔",
+            "inputs": [
+                {
+                    "name": "记录等级目标",
+                    "pipeline_type": "int",
+                    "default": "30",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入记录等级目标(≥0)"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_检查记录达标_agent": {
+                    "attach": {
+                        "min_record_level": "{记录等级目标}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_音符数量目标": {
+            "type": "input",
+            "label": "音符数量目标",
+            "description": "每种音符的目标数量（到该数量即视为够；填 0 = 不考虑该音符）",
+            "inputs": [
+                {"name": "水之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "火之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "地之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "风之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "光之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "暗之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "专注之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "技巧之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "绝招之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "强攻之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "幸运之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "暴发之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "体力之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"}
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_购物_agent": {
+                    "attach": {
+                        "melody_target_aqua": "{水之音}",
+                        "melody_target_ignis": "{火之音}",
+                        "melody_target_terra": "{地之音}",
+                        "melody_target_ventus": "{风之音}",
+                        "melody_target_lux": "{光之音}",
+                        "melody_target_umbra": "{暗之音}",
+                        "melody_target_focus": "{专注之音}",
+                        "melody_target_skill": "{技巧之音}",
+                        "melody_target_ultimate": "{绝招之音}",
+                        "melody_target_pummel": "{强攻之音}",
+                        "melody_target_luck": "{幸运之音}",
+                        "melody_target_burst": "{暴发之音}",
+                        "melody_target_stamina": "{体力之音}"
+                    }
+                }
+            }
+        },
         "新版爬塔_商店_购买音符策略": {
             "type": "select",
             "label": "购买音符策略",
@@ -429,8 +510,25 @@
                     }
                 },
                 {
+                    "name": "手动设置目标",
+                    "label": "手动设置目标",
+                    "description": "按音符数量目标购买",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": true,
+                                "buy_assist_at_final_only": false
+                            }
+                        }
+                    },
+                    "option": [
+                        "新版爬塔_音符数量目标"
+                    ]
+                },
+                {
                     "name": "激活协奏",
-                    "description": "只买与协奏有关的音符（需要符合折扣要求）",
+                    "description": "只买协奏相关音符",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -443,7 +541,7 @@
                 },
                 {
                     "name": "仅激活1级协奏",
-                    "description": "只买与协奏有关的音符，且协奏技能到达1级后不再购买（需要符合折扣要求）",
+                    "description": "协奏到1级后停买",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -456,7 +554,7 @@
                 },
                 {
                     "name": "仅在最终商店激活1级协奏",
-                    "description": "只在最终商店购买与协奏有关的音符，且协奏技能到达1级后不再购买（需要符合折扣要求）",
+                    "description": "最终商店激活1级后停买",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {

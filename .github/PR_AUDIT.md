@@ -12,6 +12,7 @@
 | Ruff | 快速检测 Python 语法、未定义名称等确定性错误 | 失败即阻止合并 |
 | actionlint | 校验 GitHub Actions 语法和表达式 | 失败即阻止合并 |
 | zizmor | 检查 Actions 表达式注入、权限和供应链风险 | 高危且高置信问题阻止合并 |
+| PR Review | 汇总静态检查、依赖审查、CodeQL 和高置信度行级发现 | `github-actions[bot]` 提交中文 Review |
 | MaaFw Resource | 按项目实际加载顺序校验 base、台/国际/日服及 Windows 叠加资源 | 资源加载失败即阻止合并 |
 | Dependabot | 维护 Python、npm 与 GitHub Actions 依赖 | 每周创建分组升级 PR |
 
@@ -32,6 +33,12 @@ Dependency Review、Dependabot alerts、security updates 和 version updates 对
 Ruff、actionlint 与 zizmor 均作为开源 GitHub Action 在 runner 内运行，不调用付费 SaaS，
 不需要第三方账号、API Key 或仓库 secret。所有 Action 都锁定到完整且不可变的提交 SHA，
 再由 Dependabot 提交版本升级 PR，避免跟随可移动 tag 静默更新。
+
+同仓库分支创建或更新 PR 后，`PR review summary` job 使用该次运行自动生成的短期
+`GITHUB_TOKEN` 提交 `COMMENT` 类型 Review，效果显示为 `github-actions[bot] reviewed`。
+Review 会汇总审计状态并列出最多十条高置信度行级发现，但不会自动批准、请求变更或合并。
+为避免向不受信任代码提供写权限，来自 fork 和 Dependabot 的 PR 不执行评论 job，仍会保留只读检查结果。
+该 Review 是确定性检查摘要，不调用生成式 AI；因此没有模型费用、外部账号和模型幻觉风险。
 
 以上免费结论依赖仓库保持公开并继续使用标准 runner。如果仓库改为私有、改用 larger runner、
 大量保存 artifact，或引入需要授权的外部服务，必须重新评估 GitHub 计划、Actions 存储与 Code Security 费用。

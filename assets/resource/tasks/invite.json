@@ -306,6 +306,7 @@
         "邀约_回忆收集模式": {
             "type": "switch",
             "label": "回忆收集模式",
+            "resource": ["官服"],
             "description": "开启后不再快进对话，改为逐句推进并选择特殊选项以收集角色特殊回忆。",
             "default_case": "No",
             "cases": [

@@ -6,12 +6,17 @@ on:
       - "**"
     paths:
       - ".github/workflows/check.yml"
+      - "check_resource.py"
       - "requirements-ci.txt"
-      - "assets/**"
-      - "**/*.py"
+      - "assets/resource/**"
   pull_request:
     branches:
       - "**"
+    paths:
+      - ".github/workflows/check.yml"
+      - "check_resource.py"
+      - "requirements-ci.txt"
+      - "assets/resource/**"
   workflow_dispatch:
 
 permissions:

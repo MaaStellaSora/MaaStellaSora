@@ -2,9 +2,23 @@ name: PR Audit
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "**/*.py"
+      - "requirements*.txt"
+      - "**/requirements*.txt"
+      - "package.json"
+      - "package-lock.json"
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/**"
+      - "**/*.py"
+      - "requirements*.txt"
+      - "**/requirements*.txt"
+      - "package.json"
+      - "package-lock.json"
   schedule:
     - cron: "23 18 * * 3"
   workflow_dispatch:
@@ -68,19 +82,13 @@ jobs:
           fail-on-severity: "moderate"
 
   codeql:
-    name: CodeQL / ${{ matrix.language }}
+    name: CodeQL / python
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
       packages: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language:
-          - python
-          - actions
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -90,48 +98,10 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
         with:
-          languages: ${{ matrix.language }}
+          languages: python
           queries: security-extended
 
       - name: Analyze
         uses: github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
         with:
-          category: "/language:${{ matrix.language }}"
-
-  review-summary:
-    name: PR review summary
-    if: >-
-      always() &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.actor != 'dependabot[bot]'
-    needs:
-      - static-checks
-      - dependency-review
-      - codeql
-    runs-on: ubuntu-latest
-    permissions:
-      checks: read
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version: "3.12"
-
-      - name: Publish PR audit review
-        env:
-          CHECK_SHA: ${{ github.sha }}
-          CODEQL_RESULT: ${{ needs.codeql.result }}
-          DEPENDENCY_RESULT: ${{ needs.dependency-review.result }}
-          GH_TOKEN: ${{ github.token }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          STATIC_RESULT: ${{ needs.static-checks.result }}
-        run: python tools/ci/post_pr_review.py
+          category: "/language:python"

@@ -4,7 +4,7 @@ from maa.context import Context
 
 from .data import Data, Parameters
 from .state import State
-from .ui import UIInteractor
+from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
 from .handler_preset import RecommendationHandler
 from .handler_json import AssistantPriorityHandler
@@ -39,16 +39,15 @@ class ChoosePotentialRecognition(CustomRecognition):
         node_name = argv.node_name
         params = self._get_params(context, node_name)
         data = Data(params=params)
-        screen = UIInteractor(context)
+        screen = PotentialInteractor(context)
 
         # 获取只使用一次的数据
-        image = argv.image
-        data.current_coin = screen.get_current_coin(image)
-        data.refresh_cost = screen.get_refresh_cost(image)
-        data.core_potential = screen.check_core_potential(image)
-        data.potential_types = screen.get_potential_types(data.core_potential, image)
+        data.current_coin = screen.get_current_coin()
+        data.refresh_cost = screen.get_refresh_cost()
+        data.core_potential = screen.check_core_potential()
+        data.potential_types = screen.get_potential_types(data.core_potential)
         if DRAW_DATA_SAVE_ENABLED and data.params.potential_source != "enhance":
-            data.level_upped = screen.check_level_upped(image)
+            data.level_upped = screen.check_level_upped()
 
         # 加载相应的潜能处理类
         if data.params.handler == "json":
@@ -111,4 +110,3 @@ class ChoosePotentialRecognition(CustomRecognition):
         attach = node_data.get("attach", {})
         params = Parameters(**attach)
         return params
-

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .ui import UIInteractor
+from .interactor import PotentialInteractor
 
 
 MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
@@ -105,14 +105,14 @@ class PotentialLayout:
 @dataclass(slots=True)
 class PotentialLayouts:
     potential_layouts: dict[int, list[PotentialLayout]] = field(default_factory=lambda: {
-        count: [PotentialLayout(**l) for l in layouts]
-        for count, layouts in DEFAULT_POTENTIAL_LAYOUTS.items()
+        count: [PotentialLayout(**l) for l in layouts]\
+        for count, layouts in DEFAULT_POTENTIAL_LAYOUTS.items()\
     })
 
     def __getitem__(self, key):
         return self.potential_layouts[key]
 
-    def __iter__(self):
+    def __iter__(self):\
         return iter(self.potential_layouts)
 
     def items(self):
@@ -246,7 +246,7 @@ class Potential:
     def recommended_level_roi(self) -> list[int]:
         return self.layout.recommended_level_roi
 
-    def update(self, screen: UIInteractor, data: Data):
+    def update(self, screen: PotentialInteractor, data: Data):
         # 更新核心潜能
         if data.core_potential:
             self.type = "core"
@@ -256,21 +256,21 @@ class Potential:
         self.old_level, self.new_level = self._get_level(screen, data)
         self.recommended, self.recommended_level = self._get_recommended_data(screen, data)
 
-    def _get_name(self, screen: UIInteractor, data: Data) -> str:
+    def _get_name(self, screen: PotentialInteractor, data: Data) -> str:
         roi = self.core_potential_name_roi if self.core else self.general_potential_name_roi
         adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
         return screen.get_potential_name(adjusted_roi)
 
-    def _get_level(self, screen: UIInteractor, data: Data) -> tuple[int, int]:
+    def _get_level(self, screen: PotentialInteractor, data: Data) -> tuple[int, int]:
         if self.core:
             return 0, 1
         adjusted_roi = self._get_adjusted_roi(self.general_potential_level_roi, data.params.selected_potential_offset)
         old, new = screen.get_potential_level(adjusted_roi)
         return old, new
 
-    def _get_recommended_data(self, screen: UIInteractor, data: Data) -> tuple[bool, int]:
+    def _get_recommended_data(self, screen: PotentialInteractor, data: Data) -> tuple[bool, int]:
         roi = self.potential_roi
-        adjusted_roi = [self._get_adjusted_roi(roi, data.params.selected_potential_offset)]
+        adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
         recommended = True if screen.check_potential_recommended(adjusted_roi) else False
         if not recommended:
             return False, 0

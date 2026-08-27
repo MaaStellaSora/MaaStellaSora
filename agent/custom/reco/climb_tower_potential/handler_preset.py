@@ -4,7 +4,7 @@ from typing import Self, Any
 
 from .state import State, OwnedPotential
 from .data import Data, Potential
-from .ui import UIInteractor
+from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
 
 from utils import logger as logger_module
@@ -14,7 +14,7 @@ logger = logger_module.get_logger("climb_tower_potential_preset")
 class RecommendationHandler(ChoosePotentialHandler):
     HANDLER_TYPE = "preset"
 
-    def __init__(self, screen: UIInteractor, data: Data):
+    def __init__(self, screen: PotentialInteractor, data: Data):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
@@ -129,7 +129,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         塔8专用潜能打分函数
         """
         # 已获得潜能可能需要从保存的State类中获得推荐等级
-        # 如果重新启动过agent再从中途开始，会丢失潜能数据，到时候推荐等级取得一定会有问题，所以要提示用户最好不要中断
+        # 如果重新启动过agent再从途中开始，会丢失潜能数据，到时候推荐等级取得一定会有问题，所以要提示用户最好不要中断
         if isinstance(p, Potential) and p.old_level > 0 and not p.recommended:
             p.recommended_level = State.owned_potentials.find_recommended_level(p.name, mode="FUZZY", trekker=p.trekker)
             p.recommended = True if p.recommended_level >= 0 else False
@@ -254,7 +254,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         3. 以3张中的最高分作为本次抽取收益，求总期望分数作为刷新阈值基础。
         缺点：
         1. 如果不买主控潜能特饮就无法知道谁是主控旅人，所以无法得知谁拥有6潜能种类上限
-        2. 无法知道还有多少有效新潜能需要获取，所以只能默认最终目标为6+5+5=16个6级潜能
+        2. 无法得知还有多少有效新潜能需要获取，所以只能默认最终目标为6+5+5=16个6级潜能
         3. 仍未推算出精确计算公式，目前的数学模型仍然是近似模型
         """
         # 1. 统计各旅人的新旧潜能的种类数

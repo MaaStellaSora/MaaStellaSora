@@ -3,7 +3,7 @@ from typing import Self
 from dataclasses import replace
 
 from .data import Data, Potential
-from .ui import UIInteractor
+from .interactor import PotentialInteractor
 from .state import State
 
 from utils import logger as logger_module
@@ -14,13 +14,12 @@ logger = logger_module.get_logger("climb_tower_potential_default")
 class ChoosePotentialHandler:
     HANDLER_TYPE = "default"
 
-    def __init__(self, screen: UIInteractor, data: Data):
+    def __init__(self, screen: PotentialInteractor, data: Data):
         self.screen = screen
         self.data = data
 
     def _wait_for_item_list_gone(self):
-        self.screen.load_last_screenshot()
-        for _ in range(3):
+        for _ in range(5):
             if self.screen.check_item_list_visibility():
                 logger.info("识别到干扰文字，等待1秒")
                 time.sleep(1)
@@ -29,7 +28,7 @@ class ChoosePotentialHandler:
             break
 
     def initialize_potentials(self):
-        # 初始化Potential对象，并储存到list中
+        # 初始化Potential对象，并保存到list中
         potential_layouts = self.data.params.potential_layouts[self.data.potential_count]
         potentials = [Potential(potential_layouts[i]) for i in range(self.data.potential_count)]
 

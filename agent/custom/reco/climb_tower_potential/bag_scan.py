@@ -4,7 +4,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from .ui import UIInteractor
+from .interactor import PotentialInteractor
 from .state import OwnedPotential
 
 from utils import logger as logger_module
@@ -36,7 +36,7 @@ TREKKER_W = 200
 TREKKER_H = 23 + TREKKER_Y_OFFSET * 2
 
 
-class BagUIInteractor(UIInteractor):
+class BagInteractor(PotentialInteractor):
     def __init__(self, context: Context):
         super().__init__(context)
         self.image_reverse = None
@@ -62,73 +62,73 @@ class BagUIInteractor(UIInteractor):
         self.context.run_task("星塔_背包_向下滑动_agent", pipeline_override)
 
     def get_trekker_name_roi_from_bag(self) -> list[int]:
-        results = self._template("星塔_背包_潜能标记_agent", [])
+        results = self._recognize("星塔_背包_潜能标记_agent")
         if len(results) > 1:
             logger.warning("识别到多个潜能标记，无法确定旅人名称位置")
         if len(results) == 0:
             logger.error("未识别到潜能标记，无法确定旅人名称位置")
             return []
-        roi = results[0]
+        roi = results[0].box
         return [TREKKER_X, roi[1] - TREKKER_Y_OFFSET, TREKKER_W, TREKKER_H]
 
     def get_upper_scroll_begin_point_from_bag(self) -> list[int]:
-        results = self._template("星塔_背包_潜能标记_agent", [])
+        results = self._recognize("星塔_背包_潜能标记_agent")
         if not results or len(results) > 1:
             logger.error("无法定位潜能种类标记位置")
             return []
-        return [640, results[0][1]]
+        return [640, results[0].box[1]]
 
     def get_lower_scroll_begin_point_from_bag(self) -> list[int]:
-        ocr_results = self._ocr("星塔_背包_通用潜能标记_agent", [])
+        ocr_results = self._recognize("星塔_背包_通用潜能标记_agent")
         if not ocr_results or len(ocr_results) > 1:
             logger.error("无法定位通用潜能位置")
             return []
-        return [640, ocr_results[0][1][1]]
+        return [640, ocr_results[0].box[1]]
 
     def get_upper_potential_ys_from_bag(self) -> tuple[int, int]:
-        results = self._template("星塔_背包_潜能标记_agent", [])
+        results = self._recognize("星塔_背包_潜能标记_agent")
         if len(results) > 1:
             logger.warning("识别到多个潜能标记，无法确定潜能行位置")
         if len(results) == 0:
             logger.error("未识别到潜能标记，无法确定潜能行位置")
             return 0, 0
-        roi = results[0]
+        roi = results[0].box
         return roi[1] + UPPER_POTENTIAL_FIRST_ROW_Y_OFFSET, roi[1] + UPPER_POTENTIAL_SECOND_ROW_Y_OFFSET
 
     def get_lower_potential_ys_from_bag(self) -> tuple[int, int]:
-        ocr_results = self._ocr("星塔_背包_通用潜能标记_agent", [])
+        ocr_results = self._recognize("星塔_背包_通用潜能标记_agent")
         if len(ocr_results) == 0:
             logger.error("未识别到潜能标记，无法确定潜能行位置")
             return 0, 0
-        roi = ocr_results[0][1]
+        roi = ocr_results[0].box
         return roi[1] + LOWER_POTENTIAL_FIRST_ROW_Y_OFFSET, roi[1] + LOWER_POTENTIAL_SECOND_ROW_Y_OFFSET
 
     def get_potential_name_from_bag(self, roi: list[int]) -> str:
         # TODO：处理国际服两行英文的问题
-        ocr_results = self._ocr("星塔_背包_识别潜能名称_agent", "",roi=roi)
+        ocr_results = self._recognize("星塔_背包_识别潜能名称_agent", roi=roi)
         if not ocr_results:
             logger.debug("未识别到潜能名称")
             return ""
-        return ocr_results[0][0]
+        return ocr_results[0].text
 
     # TODO：增加识别准确度，处理纹章等级
     def get_potential_level_from_bag(self, roi: list[int]) -> int:
-        ocr_results = self._ocr("星塔_背包_识别潜能等级_agent", "",roi=roi)
+        ocr_results = self._recognize("星塔_背包_识别潜能等级_agent", roi=roi)
         if not ocr_results:
             logger.warning("未识别到潜能等级，将默认为0")
             return 0
-        return int(ocr_results[0][0])
+        return int(ocr_results[0].text)
 
     # TODO：增加识别准确度
     def get_potential_recommend_level_from_bag(self, roi: list[int]) -> int:
-        ocr_results = self._ocr("星塔_背包_识别推荐等级_agent", "",roi=roi, image=self.image_reverse)
+        ocr_results = self._recognize("星塔_背包_识别推荐等级_agent", roi=roi)
         if not ocr_results:
             logger.warning("未识别到推荐等级，将默认为0")
             return 0
-        return int(ocr_results[0][0])
+        return int(ocr_results[0].text)
 
     def check_potential_recommended_from_bag(self, roi: list[int]) -> bool:
-        return self._color("星塔_背包_识别核心潜能_agent",roi=roi)
+        return bool(self._recognize("星塔_背包_识别核心潜能_agent", roi=roi))
         # TODO：验证获得后是否仍然有效
 
 
@@ -137,7 +137,7 @@ class BagUIInteractor(UIInteractor):
 class PotentialReader:
     def __init__(self, context: Context):
         self.context = context
-        self.screen = BagUIInteractor(context)
+        self.screen = BagInteractor(context)
 
     def read_potentials(self) -> list[OwnedPotential]:
         """读取背包中的所有潜能"""
@@ -183,7 +183,7 @@ class PotentialReader:
             # 读取完后，识别通用潜能的位置，然后向下滚动到刚好通用潜能处于顶部可见区域
             begin_point = self.screen.get_lower_scroll_begin_point_from_bag()
             if not begin_point:
-                logger.error("无法定位潜能位置，扫描背包潜能失败。")
+                logger.error("无法定位通用潜能位置，扫描背包潜能失败。")
                 return []
             self.screen.scroll_down(begin_point, SCROLL_END)
             # 截图
@@ -191,7 +191,7 @@ class PotentialReader:
             # 然后读取后两行的潜能
             first_y, second_y = self.screen.get_lower_potential_ys_from_bag()
             if not first_y or not second_y:
-                logger.error("无法定位潜能位置，扫描背包潜能失败。")
+                logger.error("无法定位通用潜能位置，扫描背包潜能失败。")
                 return []
             potential_rois, core_potential_rois, level_rois, recommend_rois = self._generate_rois(first_y, second_y)
             potentials_lower = self._read_rows(potential_rois, core_potential_rois, level_rois, recommend_rois)

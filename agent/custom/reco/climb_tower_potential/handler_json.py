@@ -3,7 +3,7 @@ from typing import Any, Self
 
 from .state import State, OwnedPotentials
 from .data import MAX_POTENTIAL_LEVEL, Data, Potential
-from .ui import UIInteractor
+from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
 
 from utils import logger as logger_module
@@ -13,7 +13,7 @@ logger = logger_module.get_logger("climb_tower_potential_json")
 class AssistantPriorityHandler(ChoosePotentialHandler):
     HANDLER_TYPE = "json"
 
-    def __init__(self, screen: UIInteractor, data: Data):
+    def __init__(self, screen: PotentialInteractor, data: Data):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
@@ -256,4 +256,3 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
             })
 
         return valid_entries
-

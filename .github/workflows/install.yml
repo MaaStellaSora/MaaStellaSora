@@ -454,6 +454,13 @@ jobs:
             echo "::notice::Optional drop_core downloader or token is unavailable; skipping"
           fi
 
+      - name: Install host Python dependencies
+        shell: bash
+        run: >-
+          python -m pip install --pre
+          -r requirements.txt
+          "maafw==${{ needs.meta.outputs.maafw_python_version }}"
+
       - name: Install on Linux
         shell: bash
         run: |

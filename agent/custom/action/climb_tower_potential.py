@@ -1459,18 +1459,26 @@ class ReadMelodyCounts(CustomAction):
             d = context.run_recognition(node, image, {
                 node: {"recognition": {"param": {"expected": [".+"], "roi": self.LIST_ROI}}}
             })
-            if d and d.hit:
-                for r in d.filtered_results:
-                    text = r.text
-                    logger.info(f"[音符数量] 列表项 '{text}' box={r.box}")
-                    try:
-                        parts = re.match(r"(.+?)s*(d+)s*个?$", text)
-                        if parts and parts.group(1).strip():
-                            counts[parts.group(1).strip()] = int(parts.group(2))
-                    except Exception:
-                        pass
+            items = list(d.filtered_results) if d and d.hit else []
+            songs = []
+            nums = []
+            for r in items:
+                t = (r.text or "").strip()
+                if re.fullmatch(r"\d+个?", t):
+                    nums.append((int(re.sub(r"\D", "", t)), r.box))
+                else:
+                    songs.append((t, r.box))
+            # 按 y 坐标把"音符名字"和"同一行的数量"配对
+            for name, nbox in songs:
+                ny = nbox[1] + nbox[3] / 2
+                best = None
+                for num, cbox in nums:
+                    cy = cbox[1] + cbox[3] / 2
+                    if abs(ny - cy) <= 30 and (best is None or abs(ny - cy) < abs(ny - best[1])):
+                        best = (num, cy)
+                if best:
+                    counts[name] = best[0]
             if i < 5:
-                # 在"属性音符"列表内向上滑动（从下往上），露出下方更多音符（共13种，一屏显示不全）
                 context.tasker.controller.post_swipe(450, 520, 450, 240, 400).wait()
                 time.sleep(0.6)
         return counts

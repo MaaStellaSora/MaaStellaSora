@@ -1242,7 +1242,7 @@ class RecordStopCheck(CustomAction):
 
     ROI 为 1280x720 估算值，需按实机校准；识别失败默认“不达标”，安全不误停。
     """
-    LEVEL_ROI = [84, 114, 32, 28]
+    LEVEL_ROI = [45, 25, 80, 145]
     POTENTIAL_ROIS = [
         [130, 220, 65, 55],
         [225, 220, 65, 55],

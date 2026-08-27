@@ -1486,19 +1486,6 @@ class ReadMelodyCounts(CustomAction):
                 context.tasker.controller.post_swipe(450, 520, 450, 240, 400).wait()
                 time.sleep(0.6)
         return counts
-                    if abs(ny - cy) <= 30 and (best is None or abs(ny - cy) < abs(ny - best[1])):
-                        best = (num, cy)
-                if best:
-                    counts[name] = best[0]
-            if i < 5:
-                context.tasker.controller.post_swipe(450, 520, 450, 240, 400).wait()
-                time.sleep(0.6)
-        return counts
-            if i < 5:
-                context.tasker.controller.post_swipe(450, 520, 450, 240, 400).wait()
-                time.sleep(0.6)
-        return counts
-
     def _log_summary(self, context: Context, counts: dict) -> None:
         """读取结束后输出总结：对比"音符数量目标"，达到设定时额外提示。"""
         try:

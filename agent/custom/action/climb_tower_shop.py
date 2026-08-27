@@ -472,8 +472,9 @@ class GridInfo:
 
             # 有目标数量 → 作为"需要补到目标数"的音符买（走补货验证）
             if target > 0:
+                if data.buy_assist_at_final_only and data.shop_type != "final":
+                    return ""  # 只在最终商店补齐目标音符，中途商店不补
                 return "assist_melody"
-
             if self.item_name in data.target_melodies:
                 return "normal"
 

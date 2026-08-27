@@ -10,9 +10,17 @@ import sys
 import subprocess
 import argparse
 import platform
+import re
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+
+MAAFW_VERSION_PATTERN = re.compile(
+    r"^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
+    r"(?:(?:a|b|rc)(?:0|[1-9]\d*))?$"
+)
 
 
 def get_platform_tag():
@@ -66,8 +74,56 @@ def get_platform_tag():
     return platform_tag
 
 
+def build_download_command(
+    deps_path, platform_tag=None, *, python_version=None, maafw_version=None
+):
+    """构造 pip download 命令。"""
+    requirements_file = Path("requirements.txt")
+    cmd = [
+        sys.executable,
+        "-m",
+        "pip",
+        "download",
+        "-r",
+        str(requirements_file),
+        "-d",
+        str(deps_path),
+        "--only-binary=:all:",
+    ]
+    if platform_tag:
+        cmd.extend(["--platform", platform_tag])
+    if python_version:
+        cmd.extend(["--python-version", python_version])
+    if maafw_version:
+        if not MAAFW_VERSION_PATTERN.fullmatch(maafw_version):
+            raise ValueError(f"无效的 MaaFramework Python 版本: {maafw_version}")
+        cmd.extend(["--pre", f"maafw=={maafw_version}"])
+    return cmd
+
+
+def validate_maafw_wheel(deps_path, expected_version):
+    """确认依赖目录只包含目标版本的 maafw wheel。"""
+    maafw_wheels = []
+    for wheel in Path(deps_path).glob("*.whl"):
+        parts = wheel.name[:-4].split("-")
+        if len(parts) >= 2 and re.sub(r"[-_.]+", "-", parts[0]).lower() == "maafw":
+            maafw_wheels.append((wheel, parts[1].lower()))
+
+    expected = expected_version.lower()
+    if len(maafw_wheels) != 1 or maafw_wheels[0][1] != expected:
+        found = [wheel.name for wheel, _ in maafw_wheels]
+        raise RuntimeError(
+            f"maafw wheel 必须唯一且版本为 {expected_version}，实际为: {found or '无'}"
+        )
+
+
 def download_dependencies(
-    deps_dir, platform_tag, *, python_version=None, allow_native_fallback=True
+    deps_dir,
+    platform_tag,
+    *,
+    python_version=None,
+    maafw_version=None,
+    allow_native_fallback=True,
 ):
     """下载依赖到指定目录"""
     # 创建deps目录
@@ -84,21 +140,12 @@ def download_dependencies(
 
     # 首先尝试下载平台特定的wheel文件
     try:
-        cmd = [
-            sys.executable,
-            "-m",
-            "pip",
-            "download",
-            "-r",
-            str(requirements_file),
-            "-d",
-            str(deps_path),
-            "--platform",
+        cmd = build_download_command(
+            deps_path,
             platform_tag,
-            "--only-binary=:all:",
-        ]
-        if python_version:
-            cmd.extend(["--python-version", python_version])
+            python_version=python_version,
+            maafw_version=maafw_version,
+        )
 
         print(f"执行命令: {' '.join(cmd)}")
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -107,6 +154,9 @@ def download_dependencies(
         if result.stderr:
             print("警告信息:")
             print(result.stderr)
+
+        if maafw_version:
+            validate_maafw_wheel(deps_path, maafw_version)
 
         # 列出下载的文件
         whl_files = list(deps_path.glob("*.whl"))
@@ -127,19 +177,11 @@ def download_dependencies(
 
             # 回退到通用下载策略（不指定平台）
             try:
-                cmd_fallback = [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "download",
-                    "-r",
-                    str(requirements_file),
-                    "-d",
-                    str(deps_path),
-                    "--only-binary=:all:",
-                ]
-                if python_version:
-                    cmd_fallback.extend(["--python-version", python_version])
+                cmd_fallback = build_download_command(
+                    deps_path,
+                    python_version=python_version,
+                    maafw_version=maafw_version,
+                )
 
                 print(f"执行回退命令: {' '.join(cmd_fallback)}")
                 result = subprocess.run(
@@ -150,6 +192,9 @@ def download_dependencies(
                 if result.stderr:
                     print("警告信息:")
                     print(result.stderr)
+
+                if maafw_version:
+                    validate_maafw_wheel(deps_path, maafw_version)
 
                 # 列出下载的文件
                 whl_files = list(deps_path.glob("*.whl"))
@@ -186,6 +231,10 @@ def main():
         "--python-version",
         help="显式指定目标 Python 版本，例如 3.12",
     )
+    parser.add_argument(
+        "--maafw-version",
+        help="锁定 maafw wheel 的 PEP 440 版本，例如 5.13.0b5",
+    )
 
     args = parser.parse_args()
 
@@ -200,6 +249,7 @@ def main():
             args.deps_dir,
             platform_tag,
             python_version=args.python_version,
+            maafw_version=args.maafw_version,
             allow_native_fallback=not bool(args.platform_tag),
         )
 

@@ -50,10 +50,13 @@
   "星塔_爬塔流程_agent": {
     "anchor": "星塔总循环",
     "next": [
+      "[JumpBack]星塔_弹窗点空白_agent",
+      "[JumpBack]星塔_节点_读协奏音符_agent",
       "星塔_节点_进入商店_agent",
       "[JumpBack]星塔_节点_进入潜能选择_agent",
       "[JumpBack]星塔_节点_进入对话_agent",
-      "[JumpBack]星塔_点击空白处关闭_agent"
+      "[JumpBack]星塔_节点_选择变强_agent",
+      "[JumpBack]星塔_节点_进入剧情选择_agent"
     ]
   },
   "星塔_节点_进入潜能选择_agent": {
@@ -140,12 +143,62 @@
     "action": {
       "type": "Click"
     },
-    "post_delay": 500
+    "next": [
+      "星塔_节点_选择潜能_等待确认_agent",
+      "星塔_节点_选择潜能_已确认_agent"
+    ],
+    "post_delay": 500,
+    "timeout": 5000
   },
   "星塔_节点_选择潜能_已确认_agent": {
     "action": {
       "type": "DoNothing"
     }
+  },
+  "星塔_节点_选择变强_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "变成最强的存在吧"
+        ],
+        "roi": [
+          560,
+          200,
+          660,
+          420
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "星塔_爬塔流程_agent"
+    ]
+  },
+  "星塔_节点_进入剧情选择_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "我们志同道合"
+        ],
+        "roi": [
+          700,
+          300,
+          360,
+          130
+        ]
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "星塔_爬塔流程_agent"
+    ],
+    "post_wait_freezes": 100
   },
   "星塔_节点_进入对话_agent": {
     "recognition": {
@@ -261,6 +314,31 @@
     "action": {
       "type": "Click"
     }
+  },
+  "星塔_节点_读协奏音符_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "星塔商店"
+        ],
+        "roi": [
+          0,
+          0,
+          1280,
+          720
+        ]
+      }
+    },
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "read_melody_counts"
+      }
+    },
+    "next": [
+      "星塔_节点_进入商店_agent"
+    ]
   },
   "星塔_节点_进入商店_agent": {
     "recognition": {
@@ -418,11 +496,59 @@
       "type": "Click"
     },
     "next": [
-      "星塔_保存记录_agent",
+      "星塔_结算_点空白继续_agent",
       "[JumpBack]星塔_确认_agent",
       "[JumpBack]星塔_点击空白处关闭_agent",
       "[JumpBack]星塔_默契提升_agent"
     ]
+  },
+  "星塔_结算_点空白继续_agent": {
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "settle_click_through"
+      }
+    },
+    "next": [
+      "星塔_检查记录达标_agent"
+    ]
+  },
+  "星塔_检查记录达标_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "保存纪录"
+        ],
+        "roi": [
+          1076,
+          623,
+          135,
+          57
+        ]
+      }
+    },
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "record_stop_check"
+      }
+    },
+    "next": [
+      "星塔_保存记录_agent"
+    ],
+    "timeout": 5000
+  },
+  "星塔_记录_识别数字_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "\\d+"
+        ],
+        "threshold": 0.45
+      }
+    }
   },
   "星塔_保存记录_agent": {
     "recognition": {
@@ -488,6 +614,38 @@
       "type": "Click"
     }
   },
+  "星塔_弹窗点空白_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "获得音符",
+          "获得道具",
+          "探索完成",
+          "默契提升",
+          "点击空白处继续",
+          "激活协奏技能",
+          "点击.*继续"
+        ],
+        "roi": [
+          0,
+          0,
+          1280,
+          720
+        ]
+      }
+    },
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "click_blank"
+      }
+    },
+    "next": [
+      "星塔_爬塔流程_agent"
+    ],
+    "timeout": 3000
+  },
   "星塔_点击空白处关闭_agent": {
     "action": {
       "type": "Click"
@@ -500,10 +658,10 @@
           "处关闭"
         ],
         "roi": [
-          470,
-          560,
-          340,
-          130
+          400,
+          600,
+          660,
+          120
         ]
       },
       "type": "OCR"

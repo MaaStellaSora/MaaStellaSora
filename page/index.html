@@ -190,6 +190,12 @@
             flex-wrap: wrap;
         }
 
+        .download-note {
+            margin-top: 14px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
         .btn {
             padding: 16px 36px;
             border-radius: 16px;
@@ -228,6 +234,10 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none !important;
+        }
+
+        .btn[hidden] {
+            display: none;
         }
 
         /* Mirror 按钮优化 */
@@ -453,13 +463,17 @@
 
                 <div class="btn-group">
                     <a href="#" class="btn btn-primary" id="githubDownloadBtn">
-                        <i class="fa-brands fa-github"></i> <span id="downloadText">下载中...</span>
+                        <i class="fa-brands fa-github"></i> <span id="downloadText">正在匹配 MFAAvalonia...</span>
+                    </a>
+                    <a href="#" class="btn btn-outline" id="mxuDownloadBtn" hidden>
+                        <i class="fa-brands fa-github"></i> 下载 MXU (Windows x64)
                     </a>
                     <a href="https://mirrorchyan.com/zh/projects?rid=SSAH&os=windows&arch=x64&channel=stable"
                         target="_blank" class="btn btn-outline">
                         <i class="fa-solid fa-cloud-arrow-down"></i> Mirror酱下载
                     </a>
                 </div>
+                <p class="download-note" id="downloadNote">MFAAvalonia 支持自动更新；MXU 当前仅支持 Windows x64，需手动下载更新。</p>
             </div>
 
             <div class="hero-image">
@@ -515,7 +529,7 @@
         async function initUI() {
             await fetchLatestVersion();
             document.getElementById('versionBadge').textContent = currentVersion;
-            updateGithubButton();
+            await updateGithubButton();
         }
 
         // ================= 2. 获取仓库 Star 数 =================
@@ -535,9 +549,19 @@
         }
 
         // ================= 3. Github 下载链接构建逻辑 =================
-        function getDownloadInfo(version) {
+        async function getDownloadInfo(version) {
             const userAgent = navigator.userAgent;
             const platform = navigator.platform;
+            let architecture = `${userAgent} ${platform}`;
+            if (navigator.userAgentData?.getHighEntropyValues) {
+                try {
+                    const values = await navigator.userAgentData.getHighEntropyValues(['architecture']);
+                    architecture += ` ${values.architecture || ''}`;
+                } catch (error) {
+                    console.warn('Failed to detect CPU architecture:', error);
+                }
+            }
+            const isArm = /arm|aarch64/i.test(architecture);
 
             let os = 'unknown';
             let arch = 'x86_64';
@@ -545,11 +569,14 @@
             let label = '';
             let isSupported = true;
 
-            if (platform.indexOf('Mac') !== -1 || userAgent.indexOf('Mac') !== -1) {
+            if (/Android/.test(userAgent) || /iPhone|iPad|iPod/.test(userAgent)) {
+                os = 'mobile';
+                isSupported = false;
+            } else if (platform.indexOf('Mac') !== -1 || userAgent.indexOf('Mac') !== -1) {
                 os = 'macos';
                 ext = 'tar.gz';
                 label = 'macOS';
-                if (platform === 'MacARM' || (typeof navigator.userAgentData !== 'undefined' && navigator.userAgentData.platform === 'macOS' && navigator.userAgentData.architecture === 'arm')) {
+                if (isArm) {
                     arch = 'aarch64';
                     label = 'macOS (Apple Silicon)';
                 }
@@ -557,25 +584,31 @@
                 os = 'win';
                 ext = 'zip';
                 label = 'Windows';
+                if (isArm) {
+                    arch = 'aarch64';
+                    label = 'Windows (ARM64)';
+                }
             } else if (platform.indexOf('Linux') !== -1 || userAgent.indexOf('Linux') !== -1) {
                 os = 'linux';
                 ext = 'tar.gz';
                 label = 'Linux';
-            } else if (/Android/.test(userAgent) || /iPhone|iPad|iPod/.test(userAgent)) {
-                os = 'mobile';
-                isSupported = false;
+                if (isArm) {
+                    arch = 'aarch64';
+                    label = 'Linux (ARM64)';
+                }
             }
 
             const baseUrl = `https://gh-proxy.com/https://github.com/${CONFIG.repo}/releases/download/${version}`;
             const fileName = `MaaStellaSora-${os}-${arch}-${version}.${ext}`;
             const fullUrl = `${baseUrl}/${fileName}`;
 
-            return { os, arch, label, isSupported, fullUrl, fileName };
+            return { os, arch, label, isSupported, baseUrl, fullUrl, fileName };
         }
 
-        function updateGithubButton() {
+        async function updateGithubButton() {
             const btn = document.getElementById('githubDownloadBtn');
-            const info = getDownloadInfo(currentVersion);
+            const mxuBtn = document.getElementById('mxuDownloadBtn');
+            const info = await getDownloadInfo(currentVersion);
 
             if (!info.isSupported) {
                 btn.onclick = (e) => {
@@ -585,11 +618,12 @@
                 btn.style.backgroundColor = '#666';
                 btn.style.opacity = '0.7';
                 document.getElementById('downloadText').textContent = '不支持当前系统';
+                mxuBtn.hidden = true;
                 return;
             }
 
             const textSpan = document.getElementById('downloadText');
-            textSpan.textContent = `立即从 Github 下载 (${info.label})`;
+            textSpan.textContent = `下载 MFAAvalonia (${info.label})`;
 
             btn.href = info.fullUrl;
             btn.setAttribute('download', info.fileName);
@@ -598,6 +632,18 @@
             btn.addEventListener('click', (e) => {
                 showToast(`正在跳转下载: ${info.fileName}...`);
             });
+
+            if (info.os === 'win' && info.arch === 'x86_64') {
+                const mxuFileName = `MaaStellaSora-mxu-win-amd64-${currentVersion}.zip`;
+                mxuBtn.href = `${info.baseUrl}/${mxuFileName}`;
+                mxuBtn.setAttribute('download', mxuFileName);
+                mxuBtn.hidden = false;
+                mxuBtn.addEventListener('click', () => {
+                    showToast(`正在跳转下载: ${mxuFileName}...`);
+                });
+            } else {
+                mxuBtn.hidden = true;
+            }
         }
 
         function showToast(message, type = 'info') {

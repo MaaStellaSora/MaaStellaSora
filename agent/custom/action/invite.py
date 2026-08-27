@@ -60,6 +60,9 @@ class InviteAuto(CustomAction):
         queue = []
 
         if auto_find:
+            # 检查邀约对象是否达到上限
+            if self._hit_daily_limit(context):
+                return True
             max_find_count = int(attach.get("max_find_count", "5") or "5")
             auto_gift = attach.get("auto_gift", "all") or "all"
 
@@ -88,10 +91,7 @@ class InviteAuto(CustomAction):
 
         for trekker_name, choose_gift in queue:
             # 检查邀约对象是否达到上限
-            image = context.tasker.controller.post_screencap().wait().get()
-            reco_detail = context.run_recognition("邀约_达上限", image)
-            if reco_detail and reco_detail.hit:
-                self.logger.info(f"邀约次数已达到本日上限")
+            if self._hit_daily_limit(context):
                 return True
 
             # 标记是否需要手动重置位置
@@ -129,6 +129,15 @@ class InviteAuto(CustomAction):
                 return False
         # 返回True，执行后续的“通用_返回主页”节点
         return True
+
+    def _hit_daily_limit(self, context: Context) -> bool:
+        """识别当日邀约次数是否已达上限。"""
+        image = context.tasker.controller.post_screencap().wait().get()
+        reco_detail = context.run_recognition("邀约_达上限", image)
+        if reco_detail and reco_detail.hit:
+            self.logger.info("邀约次数已达到本日上限")
+            return True
+        return False
 
     def _get_trekker_info(self, context: Context, node) -> tuple[str, str]:
         """

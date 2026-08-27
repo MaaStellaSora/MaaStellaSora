@@ -11,8 +11,9 @@ on:
       - "**"
     paths:
       - ".github/workflows/install.yml"
-      - "assets/**"
-      - "**/*.py"
+      - "assets/interface.json"
+      - "requirements.txt"
+      - "tools/ci/**"
   workflow_dispatch:
 
 permissions:

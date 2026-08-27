@@ -1464,9 +1464,11 @@ class ReadMelodyCounts(CustomAction):
             nums = []
             for r in items:
                 t = (r.text or "").strip()
-                if re.fullmatch(r"\d+个?", t):
+                bx = r.box[0]
+                # 数量只认"左侧属性列表"那一列(x≈430~500)，排除右侧"升级表"的数字(x>500)
+                if re.fullmatch(r"\d+个?", t) and 430 <= bx <= 500:
                     nums.append((int(re.sub(r"\D", "", t)), r.box))
-                else:
+                elif not re.fullmatch(r"\d+个?", t):
                     songs.append((t, r.box))
             # 按 y 坐标把"音符名字"和"同一行的数量"配对
             for name, nbox in songs:
@@ -1478,6 +1480,10 @@ class ReadMelodyCounts(CustomAction):
                         best = (num, cy)
                 if best:
                     counts[name] = best[0]
+            if i < 5:
+                context.tasker.controller.post_swipe(450, 520, 450, 240, 400).wait()
+                time.sleep(0.6)
+        return counts
             if i < 5:
                 context.tasker.controller.post_swipe(450, 520, 450, 240, 400).wait()
                 time.sleep(0.6)

@@ -1450,6 +1450,8 @@ class ReadMelodyCounts(CustomAction):
     def _click(self, context: Context, xy):
         context.tasker.controller.post_click(int(xy[0]), int(xy[1])).wait()
 
+    VALID_SONGS = ["水之音","火之音","地之音","土之音","风之音","光之音","暗之音","专注之音","技巧之音","绝招之音","强攻之音","幸运之音","暴发之音","体力之音"]
+
     def _read_list(self, context: Context) -> dict:
         import re
         counts = {}
@@ -1465,17 +1467,25 @@ class ReadMelodyCounts(CustomAction):
             for r in items:
                 t = (r.text or "").strip()
                 bx = r.box[0]
-                # 数量只认"左侧属性列表"那一列(x≈430~500)，排除右侧"升级表"的数字(x>500)
                 if re.fullmatch(r"\d+个?", t) and 430 <= bx <= 500:
                     nums.append((int(re.sub(r"\D", "", t)), r.box))
                 elif not re.fullmatch(r"\d+个?", t):
                     songs.append((t, r.box))
-            # 按 y 坐标把"音符名字"和"同一行的数量"配对
             for name, nbox in songs:
+                if name not in self.VALID_SONGS:
+                    continue
                 ny = nbox[1] + nbox[3] / 2
                 best = None
                 for num, cbox in nums:
                     cy = cbox[1] + cbox[3] / 2
+                    if abs(ny - cy) <= 30 and (best is None or abs(ny - cy) < abs(ny - best[1])):
+                        best = (num, cy)
+                if best:
+                    counts[name] = best[0]
+            if i < 5:
+                context.tasker.controller.post_swipe(450, 520, 450, 240, 400).wait()
+                time.sleep(0.6)
+        return counts
                     if abs(ny - cy) <= 30 and (best is None or abs(ny - cy) < abs(ny - best[1])):
                         best = (num, cy)
                 if best:

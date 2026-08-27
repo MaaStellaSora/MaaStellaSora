@@ -66,11 +66,22 @@ jobs:
 
   meta:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Test CI helpers
+        run: python -m unittest discover -s tools/ci -p "test_*.py" -v
+
+      - name: Resolve upstream releases
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/ci/resolve_releases.py
+
       - id: set_tag
         env:
           REF_NAME: ${{ github.ref }}
@@ -111,6 +122,23 @@ jobs:
       tag: ${{ steps.set_tag.outputs.tag }}
       is_release: ${{ steps.set_tag.outputs.is_release }}
       is_prerelease: ${{ steps.set_tag.outputs.is_prerelease }}
+      maafw_tag: ${{ steps.upstream.outputs.maafw_tag }}
+      maafw_python_version: ${{ steps.upstream.outputs.maafw_python_version }}
+      maafw_win_x86_64_asset: ${{ steps.upstream.outputs.maafw_win_x86_64_asset }}
+      maafw_win_aarch64_asset: ${{ steps.upstream.outputs.maafw_win_aarch64_asset }}
+      maafw_linux_x86_64_asset: ${{ steps.upstream.outputs.maafw_linux_x86_64_asset }}
+      maafw_linux_aarch64_asset: ${{ steps.upstream.outputs.maafw_linux_aarch64_asset }}
+      maafw_macos_x86_64_asset: ${{ steps.upstream.outputs.maafw_macos_x86_64_asset }}
+      maafw_macos_aarch64_asset: ${{ steps.upstream.outputs.maafw_macos_aarch64_asset }}
+      mfa_tag: ${{ steps.upstream.outputs.mfa_tag }}
+      mfa_win_x64_asset: ${{ steps.upstream.outputs.mfa_win_x64_asset }}
+      mfa_win_arm64_asset: ${{ steps.upstream.outputs.mfa_win_arm64_asset }}
+      mfa_linux_x64_asset: ${{ steps.upstream.outputs.mfa_linux_x64_asset }}
+      mfa_linux_arm64_asset: ${{ steps.upstream.outputs.mfa_linux_arm64_asset }}
+      mfa_osx_x64_asset: ${{ steps.upstream.outputs.mfa_osx_x64_asset }}
+      mfa_osx_arm64_asset: ${{ steps.upstream.outputs.mfa_osx_arm64_asset }}
+      mxu_tag: ${{ steps.upstream.outputs.mxu_tag }}
+      mxu_win_x86_64_asset: ${{ steps.upstream.outputs.mxu_win_x86_64_asset }}
 
   windows:
     needs: meta
@@ -134,9 +162,9 @@ jobs:
         uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: MaaXYZ/MaaFramework
-          fileName: "MAA-win-${{ matrix.arch }}*"
-          # tag: "v5.3.0-beta.5"
-          latest: true
+          tag: ${{ needs.meta.outputs.maafw_tag }}
+          fileName: ${{ matrix.arch == 'x86_64' && needs.meta.outputs.maafw_win_x86_64_asset || needs.meta.outputs.maafw_win_aarch64_asset }}
+          token: ${{ github.token }}
           out-file-path: "deps"
           extract: true
 
@@ -144,10 +172,10 @@ jobs:
         id: download_mfa
         uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
-          repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-win-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
-          # tag: "v2.2.7"
-          latest: true
+          repository: MaaXYZ/MFAAvalonia
+          tag: ${{ needs.meta.outputs.mfa_tag }}
+          fileName: ${{ matrix.arch == 'x86_64' && needs.meta.outputs.mfa_win_x64_asset || needs.meta.outputs.mfa_win_arm64_asset }}
+          token: ${{ github.token }}
           out-file-path: "MFA"
           extract: true
 
@@ -166,12 +194,12 @@ jobs:
       - name: Download Python dependencies
         shell: bash
         run: |
-          ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps
+          ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps --maafw-version "${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install Python dependencies
         shell: bash
         run: |
-          ./install/python/python.exe -m pip install -r requirements.txt
+          ./install/python/python.exe -m pip install --no-index --find-links=install/deps --pre -r requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install
         shell: bash
@@ -195,6 +223,174 @@ jobs:
           name: MaaStellaSora-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
 
+  mxu_windows:
+    name: MXU (Windows x86_64)
+    needs: meta
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: Download MaaFramework for MXU
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
+        with:
+          repository: MaaXYZ/MaaFramework
+          tag: ${{ needs.meta.outputs.maafw_tag }}
+          fileName: ${{ needs.meta.outputs.maafw_win_x86_64_asset }}
+          token: ${{ github.token }}
+          out-file-path: "deps"
+          extract: true
+
+      - name: Download MXU
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
+        with:
+          repository: MistEO/MXU
+          tag: ${{ needs.meta.outputs.mxu_tag }}
+          fileName: ${{ needs.meta.outputs.mxu_win_x86_64_asset }}
+          token: ${{ github.token }}
+          out-file-path: "MXU"
+          extract: true
+
+      - name: Download MaaFramework license
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAAFW_TAG: ${{ needs.meta.outputs.maafw_tag }}
+        run: |
+          $endpoint = "repos/MaaXYZ/MaaFramework/contents/LICENSE.md?ref=$env:MAAFW_TAG"
+          $license = gh api -H "Accept: application/vnd.github.raw+json" $endpoint
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to download MaaFramework license for $env:MAAFW_TAG"
+          }
+          $license | Set-Content -LiteralPath deps/LICENSE-MaaFramework -Encoding utf8
+
+      - name: Setup Embed Python for MXU
+        shell: bash
+        run: python tools/ci/setup_embed_python.py
+
+      - name: Download Python dependencies for MXU
+        shell: bash
+        run: >-
+          ./install/python/python.exe tools/ci/download_deps.py
+          --deps-dir install/deps
+          --maafw-version "${{ needs.meta.outputs.maafw_python_version }}"
+
+      - name: Install Python dependencies for MXU
+        shell: bash
+        run: >-
+          ./install/python/python.exe -m pip install
+          --no-index --find-links=install/deps --pre
+          -r requirements.txt
+          "maafw==${{ needs.meta.outputs.maafw_python_version }}"
+
+      - name: Assemble MXU package
+        shell: bash
+        run: ./install/python/python.exe tools/ci/install_mxu.py "${{ needs.meta.outputs.tag }}"
+
+      - name: Validate MXU package
+        shell: pwsh
+        env:
+          EXPECTED_MAAFW_VERSION: ${{ needs.meta.outputs.maafw_python_version }}
+          GH_TOKEN: ${{ github.token }}
+          MAAFW_TAG: ${{ needs.meta.outputs.maafw_tag }}
+        run: |
+          $schemaDir = Join-Path $env:RUNNER_TEMP "maafw-schema-$env:MAAFW_TAG"
+          New-Item -ItemType Directory -Path $schemaDir -Force | Out-Null
+          foreach ($schemaName in @(
+            'interface.schema.json',
+            'interface_import.schema.json'
+          )) {
+            $endpoint = "repos/MaaXYZ/MaaFramework/contents/tools/$($schemaName)?ref=$env:MAAFW_TAG"
+            $schemaPath = Join-Path $schemaDir $schemaName
+            $schema = gh api -H "Accept: application/vnd.github.raw+json" $endpoint
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to download $schemaName from MaaFramework $env:MAAFW_TAG"
+            }
+            $schema | Set-Content -LiteralPath $schemaPath -Encoding utf8
+          }
+
+          $interfaceJson = Get-Content -LiteralPath install/interface.json -Raw
+          $schemaPath = Join-Path $schemaDir 'interface.schema.json'
+          if (-not ($interfaceJson | Test-Json -SchemaFile $schemaPath -ErrorAction Stop)) {
+            throw 'MXU interface.json does not match the selected MaaFramework schema'
+          }
+
+          $interface = $interfaceJson | ConvertFrom-Json
+          $importSchemaPath = Join-Path $schemaDir 'interface_import.schema.json'
+          foreach ($importPath in $interface.import) {
+            $packageImportPath = Join-Path install $importPath
+            $importJson = Get-Content -LiteralPath $packageImportPath -Raw
+            if (-not ($importJson | Test-Json -SchemaFile $importSchemaPath -ErrorAction Stop)) {
+              throw "MXU import does not match the selected MaaFramework schema: $importPath"
+            }
+          }
+
+          $actualVersion = (& ./install/python/python.exe -B -c `
+            "from importlib.metadata import version; print(version('maafw'))").Trim()
+          if ($LASTEXITCODE -ne 0 -or $actualVersion -ne $env:EXPECTED_MAAFW_VERSION) {
+            throw "maafw Python version mismatch: expected $env:EXPECTED_MAAFW_VERSION, got $actualVersion"
+          }
+
+          $env:MAAFW_BINARY_PATH = (Resolve-Path -LiteralPath install/maafw).Path
+          $env:PATH = "$env:MAAFW_BINARY_PATH;$env:PATH"
+          $nativeVersion = (& ./install/python/python.exe -B -c `
+            "from maa.library import Library; print(Library.version())").Trim()
+          if ($LASTEXITCODE -ne 0 -or $nativeVersion -ne $env:MAAFW_TAG) {
+            throw "MaaFramework native version mismatch: expected $env:MAAFW_TAG, got $nativeVersion"
+          }
+
+          Push-Location install
+          try {
+            & ./python/python.exe -B -c `
+              "import sys; sys.path.insert(0, 'agent'); import maa; from maa.toolkit import Toolkit; import custom"
+            $importExitCode = $LASTEXITCODE
+          }
+          finally {
+            Pop-Location
+          }
+          if ($importExitCode -ne 0) {
+            throw 'Failed to import maa or a custom Agent module'
+          }
+
+          $forbidden = Get-ChildItem -LiteralPath install -Recurse -Force |
+            Where-Object {
+              ($_.PSIsContainer -and $_.Name -in @('__pycache__', '.pytest_cache', '.ruff_cache', '.mypy_cache')) -or
+              (-not $_.PSIsContainer -and $_.Extension.ToLowerInvariant() -in @('.pdb', '.pyc', '.pyo'))
+            }
+          if ($forbidden) {
+            throw "Forbidden build artifact remains: $($forbidden[0].FullName)"
+          }
+          foreach ($runtimeDir in @('cache', 'config', 'debug', 'logs')) {
+            if (Test-Path -LiteralPath (Join-Path install $runtimeDir)) {
+              throw "Runtime directory must not be shipped: $runtimeDir"
+            }
+          }
+
+      - name: Smoke test MXU executable
+        shell: pwsh
+        run: |
+          $smokeDir = Join-Path $env:RUNNER_TEMP "mxu-smoke-$([guid]::NewGuid())"
+          Copy-Item -LiteralPath install -Destination $smokeDir -Recurse
+          $process = Start-Process -FilePath (Join-Path $smokeDir 'mxu.exe') `
+            -ArgumentList '--help' -WorkingDirectory $smokeDir -PassThru
+          if (-not $process.WaitForExit(15000)) {
+            $process.Kill($true)
+            throw 'mxu.exe --help did not exit within 15 seconds'
+          }
+          if ($process.ExitCode -ne 0) {
+            throw "mxu.exe --help exited with code $($process.ExitCode)"
+          }
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: MaaStellaSora-mxu-win-amd64-${{ needs.meta.outputs.tag }}
+          path: "install"
+          if-no-files-found: error
+
   linux:
     needs: meta
     runs-on: ubuntu-latest
@@ -213,9 +409,9 @@ jobs:
         uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: MaaXYZ/MaaFramework
-          fileName: "MAA-linux-${{ matrix.arch }}*"
-          # tag: "v5.3.0-beta.5"
-          latest: true
+          tag: ${{ needs.meta.outputs.maafw_tag }}
+          fileName: ${{ matrix.arch == 'x86_64' && needs.meta.outputs.maafw_linux_x86_64_asset || needs.meta.outputs.maafw_linux_aarch64_asset }}
+          token: ${{ github.token }}
           out-file-path: "deps"
           extract: true
 
@@ -223,10 +419,10 @@ jobs:
         id: download_mfa
         uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
-          repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-linux-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
-          # tag: "v2.2.7"
-          latest: true
+          repository: MaaXYZ/MFAAvalonia
+          tag: ${{ needs.meta.outputs.mfa_tag }}
+          fileName: ${{ matrix.arch == 'x86_64' && needs.meta.outputs.mfa_linux_x64_asset || needs.meta.outputs.mfa_linux_arm64_asset }}
+          token: ${{ github.token }}
           out-file-path: "MFA"
           extract: true
 
@@ -245,7 +441,7 @@ jobs:
       - name: Download Python dependencies
         shell: bash
         run: |
-          python tools/ci/download_deps.py --deps-dir install/deps --platform-tag manylinux2014_${{ matrix.arch }} --python-version 3.12
+          python tools/ci/download_deps.py --deps-dir install/deps --platform-tag manylinux2014_${{ matrix.arch }} --python-version 3.12 --maafw-version "${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Download drop_core module
         shell: bash
@@ -258,10 +454,12 @@ jobs:
             echo "::notice::Optional drop_core downloader or token is unavailable; skipping"
           fi
 
-      - name: Install Python dependencies
+      - name: Install host Python dependencies
         shell: bash
-        run: |
-          python -m pip install -r requirements.txt
+        run: >-
+          python -m pip install --pre
+          -r requirements.txt
+          "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install on Linux
         shell: bash
@@ -308,9 +506,9 @@ jobs:
         uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
           repository: MaaXYZ/MaaFramework
-          fileName: "MAA-macos-${{ matrix.arch }}*"
-          # tag: "v5.3.0-beta.5"
-          latest: true
+          tag: ${{ needs.meta.outputs.maafw_tag }}
+          fileName: ${{ matrix.arch == 'x86_64' && needs.meta.outputs.maafw_macos_x86_64_asset || needs.meta.outputs.maafw_macos_aarch64_asset }}
+          token: ${{ github.token }}
           out-file-path: "deps"
           extract: true
 
@@ -318,10 +516,10 @@ jobs:
         id: download_mfa
         uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
         with:
-          repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-osx-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
-          # tag: "v2.2.7"
-          latest: true
+          repository: MaaXYZ/MFAAvalonia
+          tag: ${{ needs.meta.outputs.mfa_tag }}
+          fileName: ${{ matrix.arch == 'x86_64' && needs.meta.outputs.mfa_osx_x64_asset || needs.meta.outputs.mfa_osx_arm64_asset }}
+          token: ${{ github.token }}
           out-file-path: "MFA"
           extract: true
 
@@ -347,7 +545,7 @@ jobs:
       - name: Download Python dependencies
         shell: bash
         run: |
-          ./install/python/bin/python3 tools/ci/download_deps.py --deps-dir install/deps
+          ./install/python/bin/python3 tools/ci/download_deps.py --deps-dir install/deps --maafw-version "${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Download drop_core module
         shell: bash
@@ -363,7 +561,7 @@ jobs:
       - name: Install Python dependencies on macOS
         shell: bash
         run: |
-          ./install/python/bin/python3 -m pip install -r requirements.txt
+          ./install/python/bin/python3 -m pip install --no-index --find-links=install/deps --pre -r requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install on macOS
         shell: bash
@@ -418,7 +616,7 @@ jobs:
 
   release:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
-    needs: [meta, windows, linux, macos, changelog]
+    needs: [meta, windows, mxu_windows, linux, macos, changelog]
     runs-on: ubuntu-latest
     permissions:
       actions: write

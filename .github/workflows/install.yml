@@ -261,7 +261,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           MAAFW_TAG: ${{ needs.meta.outputs.maafw_tag }}
         run: |
-          $endpoint = "repos/MaaXYZ/MaaFramework/contents/LICENSE?ref=$env:MAAFW_TAG"
+          $endpoint = "repos/MaaXYZ/MaaFramework/contents/LICENSE.md?ref=$env:MAAFW_TAG"
           $license = gh api -H "Accept: application/vnd.github.raw+json" $endpoint
           if ($LASTEXITCODE -ne 0) {
             throw "Failed to download MaaFramework license for $env:MAAFW_TAG"

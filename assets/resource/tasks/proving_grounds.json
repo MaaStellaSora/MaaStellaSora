@@ -1,0 +1,147 @@
+{
+    "task": [
+        {
+            "name": "真格挑战",
+            "entry": "真格挑战_入口",
+            "description": "自动完成真格挑战\n\n注意：\n\n1. 为保证任务顺利进行，只会在该首领已有默认纪录的情况下进入战斗，否则会在选择纪录界面结束任务\n\n2. 挑战最多循环10次，如果失败次数过多可能会不能把挑战次数用光，请具备一定实力再使用",
+            "option": [
+                "真格挑战_选择首领"
+            ]
+        }
+    ],
+    "option": {
+        "真格挑战_选择首领": {
+            "type": "select",
+            "label": "选择首领",
+            "default_case": "真格挑战_选择首领_首领1",
+            "cases": [
+                {
+                    "name": "真格挑战_选择首领_首领1",
+                    "label": "寄生之庭(暗)",
+                    "pipeline_override": {
+                        "__真格挑战_选择首领": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "proving_grounds/boss_1.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "真格挑战_有挑战次数时选择首领": {
+                            "focus": {
+                                "Node.Action.Succeeded": "选择首领：寄生之庭"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "真格挑战_选择首领_首领2",
+                    "label": "猛进之灵(地)",
+                    "pipeline_override": {
+                        "__真格挑战_选择首领": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "proving_grounds/boss_2.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "真格挑战_有挑战次数时选择首领": {
+                            "focus": {
+                                "Node.Action.Succeeded": "选择首领：猛进之灵"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "真格挑战_选择首领_首领3",
+                    "label": "魔侍巨像(火)",
+                    "pipeline_override": {
+                        "__真格挑战_选择首领": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "proving_grounds/boss_3.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "真格挑战_有挑战次数时选择首领": {
+                            "focus": {
+                                "Node.Action.Succeeded": "选择首领：魔侍巨像"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "真格挑战_选择首领_首领4",
+                    "label": "流风美人(风)",
+                    "pipeline_override": {
+                        "__真格挑战_选择首领": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "proving_grounds/boss_4.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "真格挑战_有挑战次数时选择首领": {
+                            "focus": {
+                                "Node.Action.Succeeded": "选择首领：流风美人"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "真格挑战_选择首领_首领5",
+                    "label": "翠煌之刃(光)",
+                    "pipeline_override": {
+                        "__真格挑战_选择首领": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "proving_grounds/boss_5.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "真格挑战_有挑战次数时选择首领": {
+                            "focus": {
+                                "Node.Action.Succeeded": "选择首领：翠煌之刃"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "真格挑战_选择首领_首领6",
+                    "label": "咕噜六角鲸(水)",
+                    "pipeline_override": {
+                        "__真格挑战_选择首领": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "proving_grounds/boss_6.png"
+                                    ]
+                                },
+                                "type": "TemplateMatch"
+                            }
+                        },
+                        "真格挑战_有挑战次数时选择首领": {
+                            "focus": {
+                                "Node.Action.Succeeded": "选择首领：咕噜六角鲸"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

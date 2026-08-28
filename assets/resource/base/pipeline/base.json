@@ -174,7 +174,7 @@
           470,
           500,
           340,
-          130
+          220
         ]
       },
       "type": "OCR"
@@ -262,6 +262,26 @@
     "post_wait_freezes": {
       "time": 100,
       "timeout": 1500
+    }
+  },
+  "通用_主页_出发": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "出发"
+        ],
+        "roi": [
+          1122,
+          656,
+          64,
+          32
+        ],
+        "only_rec": true
+      }
+    },
+    "action": {
+      "type": "Click"
     }
   }
 }

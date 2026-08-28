@@ -1,0 +1,20 @@
+{
+  "真格挑战_主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "真格挑戰"
+        ]
+      }
+    }
+  },
+  "真格挑战_开始挑战": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "挑戰"
+        ]
+      }
+    }
+  }
+}

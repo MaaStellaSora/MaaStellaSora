@@ -86,6 +86,7 @@
 		"resource/tasks/mail.json",
 		"resource/tasks/grant.json",
         "resource/tasks/operation.json",
+        "resource/tasks/proving_grounds.json",
         "resource/tasks/climb_tower.json",
         "resource/tasks/climb_tower_presets.json"
     ],

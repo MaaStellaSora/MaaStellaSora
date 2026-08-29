@@ -202,7 +202,7 @@ class RecommendationHandler(ChoosePotentialHandler):
             is_main = 1 if trekker.main else 0
             cap = 6 if is_main else 5
             is_capped = int(potential_count >= cap)
-            score = -0.39 * potential_count + 0.54 * is_main - 2.59 * is_capped
+            score = 0.056 * potential_count - 0.092 * potential_count ** 2 + 0.80 * is_main - 2.18 * is_capped
             target_score = score if trekker == target_trekker else target_score
             scores.append(score)
 

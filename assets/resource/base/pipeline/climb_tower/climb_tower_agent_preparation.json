@@ -12,7 +12,8 @@
       "[JumpBack]通用_返回主页"
     ],
     "attach": {
-      "preset_name": ""
+      "preset_name": "",
+      "reset_state": false
     }
   },
   "星塔_出发_agent": {

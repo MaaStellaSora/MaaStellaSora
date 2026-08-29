@@ -9,6 +9,8 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
+from custom.reco import climb_tower_potential
+
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_preparation")
 
@@ -33,6 +35,7 @@ class AscensionPreparation(CustomAction):
         node_data = context.get_node_data("星塔_节点_选择潜能_agent")
         potential_config = node_data.get("attach", {})
         handler = potential_config.get("handler", "")
+        reset_state = potential_config.get("reset_state", False)
 
         # 如果潜能模式为json时，导入json作业参数
         if handler == "json":
@@ -52,6 +55,10 @@ class AscensionPreparation(CustomAction):
             except ValueError:
                 logger.error(f"刷新阈值系数{threshold_coef_str}或衰减系数{threshold_decay_str}设置有误，请重新检查")
                 return False
+
+        # 清除潜能状态
+        if reset_state:
+            climb_tower_potential.State.reset()
 
         return True
 

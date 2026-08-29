@@ -13,6 +13,7 @@ logger = logger_module.get_logger("climb_tower_potential_preset")
 
 class RecommendationHandler(ChoosePotentialHandler):
     HANDLER_TYPE = "preset"
+    P_NEW_MAP = (1.0, 2 / 3, 1 / 3, 0.0) # 到达软上限时的新潜能概率映射表，索引为未满级潜能数量，值为新潜能概率
 
     def __init__(self, screen: PotentialInteractor, data: Data):
         super().__init__(screen, data)
@@ -211,8 +212,8 @@ class RecommendationHandler(ChoosePotentialHandler):
 
         return target_exp_score / sum(exp_scores)
 
-    @staticmethod
     def _calculate_holding_weight(
+            self,
             trekker_name:str,
             old_level: int,
             owned_potential_count: int,
@@ -222,27 +223,33 @@ class RecommendationHandler(ChoosePotentialHandler):
         计算新旧潜能权重
         该公式只是近似拟合数据，而不是游戏的实际公式
         """
+        # 防止极端情况
+        remaining = 12 - owned_potential_count
         cap = 6 if trekker_name == State.main_trekker else 5
 
-        # 持有潜能数不超过1时，必定只抽到新潜能
-        if owned_potential_count <= 1:
-            return 1.0 if old_level == 0 else 0.0
+        # 1. 新/旧潜能类别概率
+        if remaining <= 0:
+            # 新潜能抽满12种：无法再出新潜能，旧潜能按槽位上限分配
+            p_new, p_old = 0.0, min(owned_leveling_count, 3) / 3
+        elif owned_potential_count <= 1:
+            # 开局阶段（≤1）：机制保底必定全为新潜能
+            p_new, p_old = 1.0, 0.0
+        elif owned_potential_count >= cap:
+            # 到达软上限：查表获取槽位占比（1.0, 2/3, 1/3, 0.0）
+            p_new = self.P_NEW_MAP[min(owned_leveling_count, 3)]
+            p_old = 1.0 - p_new
+        else:
+            # 常规阶段：拟合曲线动态过渡
+            # 当前拟合公式大概有±5~7个百分点的系统误差
+            x = (cap + 1 - owned_potential_count)
+            p_new = x / (x + 1.6 * owned_leveling_count)
+            p_old = 1.0 - p_new
 
-        # 持有数到达软上限时，在未满级潜能有3张及以上时，必定只抽到旧潜能
-        if owned_potential_count >= cap and owned_leveling_count >= 3:
-            return 1.0 if old_level != 0 else 0.0
+        # 2. 除以潜能数量获得单潜能真实概率
+        prob = p_new if old_level == 0 else p_old
+        count = remaining if old_level == 0 else owned_leveling_count
 
-        # 防止极端情况
-        if owned_potential_count >= 12:
-            return 0.0 if old_level == 0 else 1.0
-
-        # 12是旅人能够抽取的潜能种类最大数量，4.63是拟合值
-        remaining = 12 - owned_potential_count
-        prob_new = remaining / (remaining + 4.63 * owned_leveling_count)
-
-        # 必须除以潜能数量以得到单一潜能概率
-        # 理论上owned_leveling_count不会在old_level>0时为0，但为了保险起见，这里还是取最大值1
-        return prob_new / remaining if old_level == 0 else (1 - prob_new) / max(1, owned_leveling_count)
+        return prob / count if count > 0 else 0.0
 
     def _tower_8_threshold(self) -> int | float:
         """

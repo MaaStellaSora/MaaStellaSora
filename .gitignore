@@ -460,4 +460,4 @@ debug
 /develop/
 
 merge_json_correct.py
-/agent/config.json
+/agent/agent_config/dev_config.json

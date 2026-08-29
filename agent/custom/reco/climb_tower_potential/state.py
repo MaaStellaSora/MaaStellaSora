@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from .data import MAX_POTENTIAL_LEVEL, Data, Potential, Trekker
 
 from utils import logger as logger_module
-from utils.config import DRAW_DATA_SAVE_ENABLED
+from utils.dev_config import DRAW_DATA_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential_state")
 
 

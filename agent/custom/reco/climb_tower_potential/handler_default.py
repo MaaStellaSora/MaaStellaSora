@@ -7,7 +7,7 @@ from .interactor import PotentialInteractor
 from .state import State, Trekker
 
 from utils import logger as logger_module
-from utils.config import DEV_IMAGES_SAVE_ENABLED
+from utils.dev_config import DEV_IMAGES_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential_default")
 
 

@@ -10,7 +10,7 @@ from .handler_preset import RecommendationHandler
 from .handler_json import AssistantPriorityHandler
 
 from utils import logger as logger_module
-from utils.config import DRAW_DATA_SAVE_ENABLED
+from utils.dev_config import DRAW_DATA_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential")
 
 

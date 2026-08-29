@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 from utils import logger as logger_module
-logger = logger_module.get_logger("config")
+logger = logger_module.get_logger("dev_config")
 
 
-config_path = Path(__file__).resolve().parents[1] / "config.json"
+config_path = Path(__file__).resolve().parents[1] / "agent_config" / "dev_config.json"
 
 DRAW_DATA_SAVE_ENABLED = False
 DEV_IMAGES_SAVE_ENABLED = False
@@ -22,5 +22,5 @@ except FileNotFoundError:
     logger.debug("agent配置文件不存在")
 except json.JSONDecodeError:
     logger.debug("agent配置文件 JSON 格式错误")
-except Exception:
-    logger.debug("agent配置文件读取时发生未知错误")
+except OSError:
+    logger.debug("agent配置文件读取时发生文件 I/O 错误")

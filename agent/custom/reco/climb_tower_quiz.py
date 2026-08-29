@@ -5,7 +5,7 @@ from maa.context import Context
 from maa.define import Rect
 
 from utils import logger as logger_module
-from utils.config import DEV_IMAGES_SAVE_ENABLED
+from utils.dev_config import DEV_IMAGES_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_quiz")
 
 

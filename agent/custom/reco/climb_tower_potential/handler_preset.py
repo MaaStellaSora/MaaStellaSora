@@ -85,6 +85,7 @@ class RecommendationHandler(ChoosePotentialHandler):
             for trekker, count in owned_potential_count_by_trekker.items():
                 if count >= 6:
                     trekker.main = True
+                    logger.debug("已通过触发潜能种类上限识别到主旅人")
                     break
 
         # 打分

@@ -125,6 +125,7 @@ class ChoosePotentialHandler:
             if not State.get_main_trekker() and self.data.params.potential_source == "specified_drink":
                 matched_trekker = self.data.potentials[potential_i].trekker
                 matched_trekker.main = True
+                logger.debug("已通过特殊潜能特饮识别到主旅人")
 
             # 如果trekker超过3个，输出错误日志
             if len(State.trekkers) > 3:

@@ -3,12 +3,10 @@ import json
 from datetime import datetime
 from pathlib import Path
 from difflib import SequenceMatcher
-from typing import Literal
+from typing import Literal, Iterable
 from dataclasses import dataclass, field
 
-import numpy
-
-from .data import MAX_POTENTIAL_LEVEL, Data, Potential
+from .data import MAX_POTENTIAL_LEVEL, Data, Potential, Trekker
 
 from utils import logger as logger_module
 from utils.config import DRAW_DATA_SAVE_ENABLED
@@ -20,7 +18,7 @@ class OwnedPotential:
     name: str
     level: int
     recommended_level: int
-    trekker: str = "unknown"
+    trekker: Trekker
     type: str = ""
 
     @property
@@ -58,13 +56,13 @@ class OwnedPotentials:
         if not potential.name:
             return
 
-        trekker = potential.trekker or "unknown"
+        trekker = potential.trekker
         level = max(potential.new_level, 1)
         core = potential.core
 
         # 先查找潜能是否已存在
         if handler == "json":
-            existed = self.find(potential.name, mode="EXACT", trekker=trekker, core=core)
+            existed = self.find(potential.name, mode="EXACT", trekker_name=trekker.name, core=core)
         else:
             if potential.old_level >= 1:
                 existed = self.find(potential.name, mode="FUZZY", trekker=trekker, core=core, threshold=0.75)
@@ -94,7 +92,8 @@ class OwnedPotentials:
         name: str,
         *,
         mode: Literal["EXACT", "CONTAINS", "FUZZY"],
-        trekker: str | None = None,
+        trekker: Trekker | None = None,
+        trekker_name: str | None = None,
         core: bool | None = None,
         threshold: float = 0
     ) -> OwnedPotential | None:
@@ -107,7 +106,8 @@ class OwnedPotentials:
                 "EXACT"：精确匹配，只有当名称完全匹配时才返回潜能
                 "CONTAINS"：包含匹配，当名称有一方包含另一方时返回潜能
                 "FUZZY"：模糊匹配，返回相似度最高的潜能，支持通过阈值限制
-            trekker: 指定旅人名称（这里的旅人是代码内部名称，不一定是旅人真实名称）
+            trekker: 指定旅人对象
+            trekker_name: 指定旅人名称
             core: 指定是否为核心潜能
             threshold: 指定相似度阈值（仅对"FUZZY"模式有效）
 
@@ -120,6 +120,9 @@ class OwnedPotentials:
                 (
                     (score, p) for p in self.potentials
                     if (score := self._fuzzy_match(name, p.name)) >= threshold
+                       and (trekker is None or p.trekker == trekker and p.trekker)
+                       and (trekker_name is None or p.trekker.name == trekker_name)
+                       and (core is None or p.core == core)
                 ),
                 key=lambda p: p[0],
                 default=None
@@ -129,7 +132,9 @@ class OwnedPotentials:
         # 普通匹配
         contains_mode = mode == "CONTAINS"
         for p in self.potentials:
-            if trekker is not None and p.trekker != trekker:
+            if trekker is not None and (p.trekker.index != trekker.index or not p.trekker):
+                continue
+            if trekker_name is not None and p.trekker.name != trekker_name:
                 continue
             if core is not None and p.core != core:
                 continue
@@ -142,11 +147,14 @@ class OwnedPotentials:
         name: str,
         *,
         mode: Literal["EXACT", "CONTAINS", "FUZZY"],
-        trekker: str | None = None,
+        trekker: Trekker | None = None,
+        trekker_name: str | None = None,
         fuzzy_threshold: float = 0,
     ) -> int:
         """查找已拥有的某潜能的等级，如果不存在则返回0"""
-        owned_potential = self.find(name, mode=mode, trekker=trekker, threshold=fuzzy_threshold)
+        owned_potential = self.find(
+            name, mode=mode, trekker=trekker, trekker_name=trekker_name, threshold=fuzzy_threshold
+        )
         return owned_potential.level if owned_potential else 0
 
     def find_recommended_level(
@@ -154,17 +162,21 @@ class OwnedPotentials:
         name: str,
         *,
         mode: Literal["EXACT", "CONTAINS", "FUZZY"],
-        trekker: str | None = None,
+        trekker: Trekker | None = None,
+        trekker_name: str | None = None,
         fuzzy_threshold: float = 0,
     ) -> int:
         """查找已拥有的某潜能的推荐等级，如果不存在则返回0"""
-        owned_potential = self.find(name, mode=mode, trekker=trekker, threshold=fuzzy_threshold)
+        owned_potential = self.find(
+            name, mode=mode, trekker=trekker, trekker_name=trekker_name, threshold=fuzzy_threshold
+        )
         return owned_potential.recommended_level if owned_potential else 0
 
     def count(
         self,
         *,
-        trekker: str | list = None,
+        trekker: Trekker | Iterable[Trekker] | None = None,
+        trekker_name: str | None = None,
         level_at_least: int | None = None,
         level_at_most: int | None = None,
         recommended_level_at_least: int | None = None,
@@ -174,12 +186,20 @@ class OwnedPotentials:
         leveling_only: bool = False
     ) -> int:
         """统计符合条件的潜能的数量"""
-        if isinstance(trekker, str):
-            trekker = (trekker,)
+        if trekker is not None:
+            items = (trekker,) if isinstance(trekker, Trekker) else trekker
+            trekker_indexes = {t.index for t in items if t is not None}
+        else:
+            trekker_indexes = None
+
+        def get_index(p) -> int | None:
+            """为了防止p.trekker为falsy，所以单独做一个index提取器"""
+            return p.trekker.index if p.trekker else None
 
         return sum(
             1 for potential in self.potentials
-            if (trekker is None or potential.trekker in trekker)
+            if (trekker_indexes is None or get_index(potential) in trekker_indexes)
+            and (trekker_name is None or potential.trekker.name == trekker_name)
             and (level_at_least is None or potential.level >= level_at_least)
             and (level_at_most is None or potential.level <= level_at_most)
             and (recommended_level_at_least is None or potential.recommended_level >= recommended_level_at_least)
@@ -189,7 +209,7 @@ class OwnedPotentials:
             and (not leveling_only or potential.level < potential.max_level)
         )
 
-    def count_by_trekkers(self) -> dict[str, int]:
+    def count_by_trekkers(self) -> dict[Trekker, int]:
         """统计每个旅人潜能的数量"""
         return {
             trekker: self.count(trekker=trekker)
@@ -246,6 +266,7 @@ class OwnedPotentials:
 
 @dataclass
 class PotentialDrawInfo:
+    """储存潜能抽取数据的类，仅preset模式下使用才能获得正确的数据"""
     potential_draws: list[dict] = field(default_factory=list)
 
     def add(self, data: Data) -> None:
@@ -257,7 +278,7 @@ class PotentialDrawInfo:
         draws = [
             {
                 "name": p.name,
-                "trekker": p.trekker,
+                "trekker": p.trekker.index,
                 "type": p.type,
                 "old_level": p.old_level,
                 "new_level": p.new_level,
@@ -268,7 +289,7 @@ class PotentialDrawInfo:
         owned = [
             {
                 "name": p.name,
-                "trekker": p.trekker,
+                "trekker": p.trekker.index,
                 "level": p.level,
                 "recommended_level": p.recommended_level,
                 "type": p.type,
@@ -281,7 +302,7 @@ class PotentialDrawInfo:
             "core": 1 if data.core_potential else 0,
             "potential_source": potential_source,
             "refresh_count": data.refresh_count,
-            "main_trekker": State.main_trekker if State.main_trekker else None,
+            "main_trekker": State.get_main_trekker_index() if State.get_main_trekker() else None,
             "high_level_span_count": State.high_level_span_count,
             "enhance_high_level_span_count": State.enhance_high_level_span_count,
         })
@@ -305,8 +326,7 @@ class State:
     high_level_span_count: int = 0
     enhance_high_level_span_count: int = 0
     potentials_level_count: int = 0
-    main_trekker: str = ""
-    trekker_images: list[numpy.ndarray] = []
+    trekkers: list[Trekker] = []
     owned_potentials: OwnedPotentials = OwnedPotentials()
     potential_draw_info: PotentialDrawInfo = PotentialDrawInfo()
 
@@ -315,9 +335,19 @@ class State:
         cls.high_level_span_count = 0
         cls.enhance_high_level_span_count = 0
         cls.potentials_level_count = 0
-        cls.main_trekker = ""
-        cls.trekker_images.clear()
+        cls.trekkers.clear()
         cls.owned_potentials = OwnedPotentials()
         if cls.potential_draw_info.available and DRAW_DATA_SAVE_ENABLED:
             cls.potential_draw_info.export()
             cls.potential_draw_info = PotentialDrawInfo()
+
+    @classmethod
+    def get_main_trekker(cls) -> Trekker | None:
+        """获取主旅人对象"""
+        return next((t for t in cls.trekkers if t.main), None)
+
+    @classmethod
+    def get_main_trekker_index(cls) -> int:
+        """获取主旅人序号，若无则返回 -1"""
+        main_trekker = cls.get_main_trekker()
+        return main_trekker.index if main_trekker else -1

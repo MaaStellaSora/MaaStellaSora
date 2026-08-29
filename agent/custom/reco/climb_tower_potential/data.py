@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import numpy as np
+
 from .interactor import PotentialInteractor
 
 
@@ -189,6 +191,24 @@ class Data:
         return [l.trekker_roi for l in self.params.potential_layouts[self.potential_count]]
 
 @dataclass(slots=True)
+class Trekker:
+    index: int
+    name: str = ""
+    main: bool = False
+    image: np.ndarray | None = None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Trekker):
+            return False
+        return self.index == other.index
+
+    def __hash__(self) -> int:
+        return hash(self.index)
+
+    def __bool__(self) -> bool:
+        return self.index >= 0
+
+@dataclass(slots=True)
 class Potential:
     layout: PotentialLayout
     index: int = -1
@@ -198,7 +218,7 @@ class Potential:
     new_level: int = -1
     recommended: bool = False
     recommended_level: int = -1
-    trekker: str = ""
+    trekker: Trekker = field(default_factory=lambda: Trekker(index=-1))
     selected: bool = False
     # 自定义参数
     rank: int = -1

@@ -53,7 +53,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
             rank, sub_rank, trekker = self._get_potential_priority(potential)
             potential.rank = rank
             potential.sub_rank = sub_rank
-            potential.trekker = trekker
+            potential.trekker.name = trekker
 
     def _get_potential_priority(
         self,
@@ -198,7 +198,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                 level_min = item.get("level_at_least")
                 level_max = item.get("level_at_most")
                 count = owned_potentials.count(
-                    trekker=item["trekker"],
+                    trekker_name=item["trekker"],
                     level_at_least=level_min,
                     level_at_most=level_max,
                 )
@@ -210,7 +210,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
             current = owned_potentials.find_level(
                 item["potential"],
                 mode="EXACT",
-                trekker=item.get("trekker"),
+                trekker_name=item.get("trekker"),
             )
             min_ok = current >= item["level_at_least"] if "level_at_least" in item else True
             max_ok = current <= item["level_at_most"] if "level_at_most" in item else True

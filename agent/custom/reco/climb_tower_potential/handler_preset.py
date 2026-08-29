@@ -2,7 +2,7 @@ from itertools import combinations, permutations, product
 from math import exp, prod
 from typing import Self, Any
 
-from .state import State, OwnedPotential
+from .state import State, OwnedPotential, Trekker
 from .data import Data, Potential
 from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
@@ -80,11 +80,11 @@ class RecommendationHandler(ChoosePotentialHandler):
             return best_potential
 
         # 寻找主旅人的兜底策略
-        if self.data.refresh_count == 0 and not State.main_trekker:
+        if self.data.refresh_count == 0 and not State.get_main_trekker():
             owned_potential_count_by_trekker = State.owned_potentials.count_by_trekkers()
             for trekker, count in owned_potential_count_by_trekker.items():
                 if count >= 6:
-                    State.main_trekker = trekker
+                    trekker.main = True
                     break
 
         # 打分
@@ -178,8 +178,8 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     def _calculate_trekker_weight(
             self,
-            trekker_name: str,
-            owned_potential_count_by_trekkers: dict[str, int]
+            target_trekker: Trekker,
+            owned_potential_count_by_trekkers: dict[Trekker, int]
     ) -> float:
         """
         计算旅人权重
@@ -187,23 +187,23 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         # 主旅人饮料
         if self.data.params.potential_source == "specified_drink":
-            return 1.0 if trekker_name == State.main_trekker else 0.0
+            return 1.0 if target_trekker.main else 0.0
 
         # 补充到3个旅人，在游戏初期卡包可能不满3个旅人
         missing_count = 3 - len(owned_potential_count_by_trekkers)
         if missing_count > 0:
-            placeholders = {f"__dummy_{i}__": 0 for i in range(missing_count)}
+            placeholders = {Trekker(index=-(i + 1)): 0 for i in range(missing_count)}
             owned_potential_count_by_trekkers = owned_potential_count_by_trekkers.copy() | placeholders
 
         scores = []
         # 若匹配不到任何旅人，视为初始未获取状态 (c=0, is_main=0, is_capped=0)，score 为 0
         target_score = 0.0
         for trekker, potential_count in owned_potential_count_by_trekkers.items():
-            is_main = 1 if trekker == State.main_trekker else 0
+            is_main = 1 if trekker.main else 0
             cap = 6 if is_main else 5
             is_capped = int(potential_count >= cap)
             score = -0.39 * potential_count + 0.54 * is_main - 2.59 * is_capped
-            target_score = score if trekker == trekker_name else target_score
+            target_score = score if trekker == target_trekker else target_score
             scores.append(score)
 
         max_score = max(scores)
@@ -214,7 +214,7 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     def _calculate_holding_weight(
             self,
-            trekker_name:str,
+            target_trekker: Trekker,
             old_level: int,
             owned_potential_count: int,
             owned_leveling_count: int
@@ -225,7 +225,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         # 防止极端情况
         remaining = 12 - owned_potential_count
-        cap = 6 if trekker_name == State.main_trekker else 5
+        cap = 6 if target_trekker.main else 5
 
         # 1. 新/旧潜能类别概率
         if remaining <= 0:
@@ -263,8 +263,12 @@ class RecommendationHandler(ChoosePotentialHandler):
         2. 无法得知还有多少有效新潜能需要获取，所以只能默认最终目标为6+5+5=16个6级潜能
         3. 仍未推算出精确计算公式，目前的数学模型仍然是近似模型
         """
+        # 0. 补充到3个旅人，在游戏初期潜能列表可能不满3个旅人
+        trekkers = list(State.trekkers)
+        for i in range(len(trekkers), 3):
+            trekkers.append(Trekker(index=i))
+
         # 1. 统计各旅人的新旧潜能的种类数
-        trekkers = ["0", "1", "2"]
         owned_stats = {
             trekker: {
                 "total": State.owned_potentials.count(trekker=trekker),
@@ -274,9 +278,9 @@ class RecommendationHandler(ChoosePotentialHandler):
         }
         new_potential_counts = {
             trekker:
-                0 if stats["total"] >= 5 and stats["leveling"] >= 3 and trekker != State.main_trekker
-                    or stats["total"] >= 6 and stats["leveling"] >= 3 and trekker == State.main_trekker
-                else 12 - stats["total"]
+                0 if stats["total"] >= 5 and stats["leveling"] >= 3 and not trekker.main
+                    or stats["total"] >= 6 and stats["leveling"] >= 3 and trekker.main
+                else max(0, 12 - stats["total"])
             for trekker, stats in owned_stats.items()
         }
         # 获取未满级的已持有潜能列表
@@ -328,18 +332,19 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     def _get_new_potential_pools(
             self,
-            new_potential_counts: dict[str, int],
-            owned_stats: dict[str, dict[str, int]]
-    ) -> dict[str, list[dict[str, Any]]]:
+            new_potential_counts: dict[Trekker, int],
+            owned_stats: dict[Trekker, dict[str, int]]
+    ) -> dict[Trekker, list[dict[str, Any]]]:
         """
         建立带有新潜能的基础期望分数及权重的潜能池
 
         Args:
-            new_potential_counts: 各个旅人新潜能的数量，格式为{"旅人名称": 新潜能数量}
+            new_potential_counts: 各个旅人新潜能的数量，格式为{旅人对象: 新潜能数量}
+            owned_stats: 各个旅人的潜能统计信息，格式为{旅人对象: {"total": 已持有潜能总数, "leveling": 已持有但未满级的潜能数}}
 
         Returns:
-            dict[str, list[dict[str, Any]]]: 各个旅人新潜能的期望分数及权重池
-                格式为{旅人名称: [{"score": 期望分数, "weight": 权重}]}
+            dict[Trekker, list[dict[str, Any]]]: 各个旅人新潜能的期望分数及权重池
+                格式为{旅人对象: [{"score": 期望分数, "weight": 权重}]}
         """
         # 新潜能等级概率权重: Lv1(30%), Lv2(20%), Lv3(50%)
         level_weights = [(1, 0.3), (2, 0.2), (3, 0.5)] if State.high_level_span_count < 10 else [(1, 0.3), (2, 0.7)]
@@ -402,19 +407,19 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     def _get_old_potential_pools(
             self,
-            old_leveling_potentials: dict[str, list[OwnedPotential]],
-            owned_stats: dict[str, dict[str, int]]
-    ) -> dict[str, list[dict[str, Any]]]:
+            old_leveling_potentials: dict[Trekker, list[OwnedPotential]],
+            owned_stats: dict[Trekker, dict[str, int]]
+    ) -> dict[Trekker, list[dict[str, Any]]]:
         """
         建立持有但未满级的潜能升一级时的基础期望分数及权重的潜能池
 
         Args:
-            old_leveling_potentials: 各个旅人已持有但未满级的潜能，格式为{"旅人名称": [潜能列表]}
-            owned_stats: 各个旅人已持有但未满级的潜能统计信息，格式为{"旅人名称": {"leveling": 已持有但未满级的潜能数}}
+            old_leveling_potentials: 各个旅人已持有但未满级的潜能，格式为{旅人对象: [潜能列表]}
+            owned_stats: 各个旅人已持有但未满级的潜能统计信息，格式为{旅人对象: {"leveling": 已持有但未满级的潜能数}}
 
         Returns:
-            dict[str, list[dict[str, Any]]]: 各个旅人已持有但未满级的潜能的期望分数及权重池
-                格式为{旅人名称: [{"score": 期望分数, "weight": 权重}]}
+            dict[Trekker, list[dict[str, Any]]]: 各个旅人已持有但未满级的潜能的期望分数及权重池
+                格式为{旅人对象: [{"score": 期望分数, "weight": 权重}]}
         """
         potential_pools = {trekker: [] for trekker in owned_stats.keys()}
         for trekker in owned_stats.keys():

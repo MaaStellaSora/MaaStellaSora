@@ -5,7 +5,7 @@ from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
 from .interactor import PotentialInteractor
-from .state import OwnedPotential
+from .state import OwnedPotential, Trekker
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_bag")
@@ -135,6 +135,7 @@ class BagInteractor(PotentialInteractor):
 
 
 class PotentialReader:
+    """读取背包潜能的类，本类只为RecommendationPlusBagScanHandler提供服务"""
     def __init__(self, context: Context):
         self.context = context
         self.screen = BagInteractor(context)
@@ -200,7 +201,7 @@ class PotentialReader:
             potentials_tmp = potentials_upper + potentials_lower
             for potential in potentials_tmp:
                 if not potential.trekker:
-                    potential.trekker = str(i)
+                    potential.trekker = Trekker(index=i)
 
             # 合并临时潜能列表到主潜能列表
             potentials.extend(potentials_tmp)
@@ -221,7 +222,7 @@ class PotentialReader:
         """读取潜能"""
         potentials = []
         for i, roi in enumerate(potential_rois):
-            potential = OwnedPotential("", 0, 0)
+            potential = OwnedPotential("", 0, 0, trekker=Trekker(index=-1))
             # 读取潜能名称
             potential.name = self.screen.get_potential_name_from_bag(roi)
             if not potential.name:
@@ -234,7 +235,7 @@ class PotentialReader:
                 # 读取推荐等级
                 potential.recommended_level = self.screen.get_potential_recommend_level_from_bag(recommend_rois[i])
             # 读取旅人名称（由于意义不大所以不读）
-            potential.trekker = ""
+            potential.trekker.name = ""
             # 保存潜能
             potentials.append(potential)
         return potentials

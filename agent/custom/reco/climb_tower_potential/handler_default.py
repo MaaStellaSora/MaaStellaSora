@@ -4,7 +4,7 @@ from dataclasses import replace
 
 from .data import Data, Potential
 from .interactor import PotentialInteractor
-from .state import State
+from .state import State, Trekker
 
 from utils import logger as logger_module
 from utils.config import DEV_IMAGES_SAVE_ENABLED
@@ -106,25 +106,28 @@ class ChoosePotentialHandler:
     def _update_trekkers(self):
         save_rois = self._get_adjusted_rois(self.data.trekker_rois)
         expanded_rois = self._expand_rois(save_rois)
-        # 先根据State.trekker_images识别旅人，根据识别到的信息返回index给Potential的trekker字段
+
         for potential_i, roi in enumerate(expanded_rois):
-            for trekker_i, trekker_image in enumerate(State.trekker_images):
-                if self.screen.match_trekker(trekker_image, roi):
-                    self.data.potentials[potential_i].trekker = str(trekker_i)
+            # 先根据现有旅人信息匹配，如果匹配到对应旅人，给潜能赋值对应的trekker对象
+            for trekker in State.trekkers:
+                if self.screen.match_trekker(trekker.image, roi):
+                    self.data.potentials[potential_i].trekker = trekker
                     break
 
-            # 识别不到时，截图保存到State中，并返回新的index给Potential的trekker字段
+            # 匹配不到时，创建新的Trekker实例，保存到State中，然后再赋值
             if not self.data.potentials[potential_i].trekker:
                 cropped_image = self.screen.crop_screenshot(save_rois[potential_i])
-                State.trekker_images.append(cropped_image)
-                self.data.potentials[potential_i].trekker = str(len(State.trekker_images) - 1)
+                new_trekker = Trekker(index=len(State.trekkers), image=cropped_image)
+                State.trekkers.append(new_trekker)
+                self.data.potentials[potential_i].trekker = new_trekker
 
             # 给主控旅人做标记
-            if not State.main_trekker and self.data.params.potential_source == "specified_drink":
-                State.main_trekker = self.data.potentials[potential_i].trekker
+            if not State.get_main_trekker() and self.data.params.potential_source == "specified_drink":
+                matched_trekker = self.data.potentials[potential_i].trekker
+                matched_trekker.main = True
 
-            # 如果trekker_images超过3个，输出错误日志
-            if len(State.trekker_images) > 3:
+            # 如果trekker超过3个，输出错误日志
+            if len(State.trekkers) > 3:
                 logger.error("识别到超过3种旅人，后续潜能判断将会出现问题")
 
     def _get_adjusted_rois(self, base_rois: list[list[int]]) -> list[list[int]]:

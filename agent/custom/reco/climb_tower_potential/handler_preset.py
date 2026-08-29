@@ -18,7 +18,6 @@ class RecommendationHandler(ChoosePotentialHandler):
         super().__init__(screen, data)
 
     def read_potentials_info(self) -> Self:
-        self._wait_for_item_list_gone()
         self.data.potentials = self.initialize_potentials()
 
         self._update_recommended_potentials()

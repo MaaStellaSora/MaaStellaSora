@@ -18,7 +18,7 @@ class ChoosePotentialHandler:
         self.screen = screen
         self.data = data
 
-    def _wait_for_item_list_gone(self):
+    def wait_for_item_list_gone(self):
         for _ in range(5):
             if self.screen.check_item_list_visibility():
                 logger.info("识别到干扰文字，等待1秒")
@@ -47,9 +47,7 @@ class ChoosePotentialHandler:
 
     def read_potentials_info(self) -> Self:
         """最原始的潜能信息识别器，仅识别推荐图标"""
-        self._wait_for_item_list_gone()
         self.data.potentials = self.initialize_potentials()
-
         self._update_recommended_potentials()
 
         return self

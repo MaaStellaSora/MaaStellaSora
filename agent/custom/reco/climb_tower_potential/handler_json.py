@@ -20,7 +20,6 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
         self.data.parsed_priority_list = self._parse_priority_raw_list(
             self.data.params.priority_list, State.owned_potentials
         )
-        self._wait_for_item_list_gone()
         self.data.potentials = self.initialize_potentials()
 
         self._update_names()

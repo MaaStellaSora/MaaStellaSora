@@ -41,7 +41,8 @@ class ChoosePotentialRecognition(CustomRecognition):
         data = Data(params=params)
         screen = PotentialInteractor(context)
 
-        # 获取只使用一次的数据
+        # 1. 提前获取不受左侧道具列表遮挡、且后续选择潜能流程中不需要再次获取的数据
+        # （金币、刷新花费、核心潜能、潜能数量与类型等均位于界面上方/右侧，提前识别可充分利用等待时间）
         data.current_coin = screen.get_current_coin()
         data.refresh_cost = screen.get_refresh_cost()
         data.core_potential = screen.check_core_potential()
@@ -49,7 +50,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         if DRAW_DATA_SAVE_ENABLED and data.params.potential_source != "enhance":
             data.level_upped = screen.check_level_upped()
 
-        # 加载相应的潜能处理类
+        # 2. 加载相应的潜能处理类
         if data.params.handler == "json":
             handler = AssistantPriorityHandler(screen, data)
         elif data.params.handler == "preset":
@@ -59,6 +60,11 @@ class ChoosePotentialRecognition(CustomRecognition):
         else: # default
             handler = ChoosePotentialHandler(screen, data)
 
+        # 3. 等待左方获得道具列表消失（仅初次进入时可能存在，刷新后不会重复出现）
+        # 确保后续读取左侧潜能的潜能名称、推荐图标时不会被遮挡；若发生等待会自动更新最新截图
+        handler.wait_for_item_list_gone()
+
+        # 4. 进入潜能选择与刷新循环
         while True:
             # 获取潜能数据，并选择潜能
             potential = handler.read_potentials_info().choose()

@@ -19,7 +19,7 @@ class ChoosePotentialHandler:
         self.data = data
 
     def wait_for_item_list_gone(self):
-        for _ in range(5):
+        for _ in range(10):
             if self.screen.check_item_list_visibility():
                 logger.info("识别到干扰文字，等待1秒")
                 time.sleep(1)

@@ -93,7 +93,7 @@
       "委托_再次派遣",
       {
         "jump_back": true,
-        "name": "活动_关闭升级界面"
+        "name": "通用_关闭升级界面"
       }
     ],
     "recognition": {

@@ -237,7 +237,8 @@
     "recognition": {
       "param": {
         "expected": [
-          "邀约"
+          "邀约",
+          "邀約"
         ],
         "roi": [
           72,
@@ -367,6 +368,22 @@
     "next": [
       "通用_返回主页"
     ]
+  },
+  "邀约_未收集回忆": {
+    "recognition": {
+      "param": {
+        "template": [
+          "Invite/邀约_未收集回忆.png"
+        ],
+        "roi": [
+          625,
+          216,
+          530,
+          390
+        ]
+      },
+      "type": "TemplateMatch"
+    }
   },
   "邀约_已回到邀约界面": {
     "recognition": {
@@ -734,6 +751,49 @@
         "threshold": 0.99
       },
       "type": "TemplateMatch"
+    }
+  },
+  "邀约_回忆收集_循环": {
+    "action": {
+      "param": {
+        "custom_action": "InviteMemory"
+      },
+      "type": "Custom"
+    },
+    "next": [
+      "邀约_送礼"
+    ]
+  },
+  "邀约_对话选项按钮": {
+    "recognition": {
+      "param": {
+        "roi": [
+          760,
+          330,
+          450,
+          200
+        ],
+        "template": [
+          "Invite/邀约_对话选项按钮.png"
+        ]
+      },
+      "type": "TemplateMatch"
+    }
+  },
+  "邀约_读取选项文本": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "InviteMemory函数专用节点"
+        ],
+        "roi": [
+          760,
+          330,
+          450,
+          200
+        ]
+      },
+      "type": "OCR"
     }
   }
 }

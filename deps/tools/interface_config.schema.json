@@ -13,7 +13,12 @@
                 "type": {
                     "title": "控制器类型",
                     "type": "string",
-                    "enum": ["Adb", "Win32"]
+                    "enum": [
+                        "Adb",
+                        "Win32",
+                        "PlayCover",
+                        "Linux"
+                    ]
                 }
             }
         },
@@ -38,6 +43,42 @@
         "win32": {
             "title": "Win32配置",
             "type": "object"
+        },
+        "playcover": {
+            "title": "PlayCover配置",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "title": "服务地址",
+                    "type": "string"
+                },
+                "uuid": {
+                    "title": "Bundle Identifier",
+                    "type": "string"
+                }
+            }
+        },
+        "linux": {
+            "title": "Linux配置",
+            "type": "object",
+            "properties": {
+                "wlr_socket_path": {
+                    "title": "Wayland Socket 路径",
+                    "type": "string"
+                },
+                "uinput_screen_width": {
+                    "title": "UInput 屏幕宽度（像素）",
+                    "type": "integer"
+                },
+                "uinput_screen_height": {
+                    "title": "UInput 屏幕高度（像素）",
+                    "type": "integer"
+                },
+                "eis_socket_path": {
+                    "title": "EIS socket 路径",
+                    "type": "string"
+                }
+            }
         },
         "resource": {
             "title": "激活的资源",

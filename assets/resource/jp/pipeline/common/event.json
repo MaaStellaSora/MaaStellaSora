@@ -1,0 +1,22 @@
+{
+  "活动_战斗关卡界面": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "バトル",
+          "ステージ"
+        ]
+      }
+    }
+  },
+  "__活动_战斗关卡按钮": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "バトル"
+        ]
+      }
+    }
+  }
+}

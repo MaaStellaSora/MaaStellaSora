@@ -56,12 +56,35 @@ def extract_zip(zip_path, dest_dir):
     print("ZIP 解压完成。")
 
 
+def _validate_tar_members(tar_ref, dest_dir):
+    """校验 TAR 成员路径，防止路径穿越写出目标目录。"""
+    dest_dir_real = os.path.realpath(dest_dir)
+    for member in tar_ref.getmembers():
+        member_name = member.name
+
+        # 拒绝绝对路径
+        if os.path.isabs(member_name):
+            raise ValueError(f"非法 TAR 条目（绝对路径）: {member_name}")
+
+        # 拒绝显式父目录跳转
+        normalized_name = os.path.normpath(member_name)
+        path_parts = normalized_name.split(os.sep)
+        if ".." in path_parts:
+            raise ValueError(f"非法 TAR 条目（路径穿越）: {member_name}")
+
+        # 二次确认：最终路径必须仍在目标目录下
+        target_path = os.path.realpath(os.path.join(dest_dir_real, member_name))
+        if os.path.commonpath([dest_dir_real, target_path]) != dest_dir_real:
+            raise ValueError(f"非法 TAR 条目（越界写入）: {member_name}")
+
+
 def extract_tar(tar_path, dest_dir):
     """解压 TAR (tar.gz, tar.xz, tar.bz2) 文件"""
     print(f"正在解压 TAR: {tar_path} 到 {dest_dir}")
     try:
         # 'r:*' 会自动检测压缩格式
         with tarfile.open(tar_path, "r:*") as tar_ref:
+            _validate_tar_members(tar_ref, dest_dir)
             tar_ref.extractall(path=dest_dir)
         print("TAR 解压完成。")
     except tarfile.ReadError as e:

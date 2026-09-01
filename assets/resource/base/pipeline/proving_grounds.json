@@ -1,0 +1,218 @@
+{
+  "真格挑战_入口": {
+    "next": [
+      "真格挑战_出发",
+      "真格挑战_主界面",
+      "[JumpBack]通用_返回主页"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "真格挑战_出发": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "通用_主页_出发"
+        ]
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {
+        "target_offset": [
+          0,
+          -20,
+          0,
+          0
+        ]
+      }
+    },
+    "next": [
+      "真格挑战_入口图标"
+    ]
+  },
+  "真格挑战_入口图标": {
+    "recognition": {
+      "param": {
+        "template": [
+          "proving_grounds/entry_icon.png"
+        ],
+        "roi": [
+          1040,
+          382,
+          114,
+          115
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "真格挑战_主界面"
+    ]
+  },
+  "真格挑战_主界面": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "真格挑战"
+        ],
+        "roi": [
+          100,
+          20,
+          250,
+          50
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "真格挑战_有挑战次数时选择首领",
+      "真格挑战_识别是否用光挑战次数"
+    ],
+    "post_wait_freezes": 100
+  },
+  "__真格挑战_识别是否有挑战次数": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "^[1-9]\\d*/\\d+$"
+        ],
+        "roi": [
+          1200,
+          40,
+          45,
+          20
+        ]
+      },
+      "type": "OCR"
+    },
+    "next": [
+      "__真格挑战_选择首领"
+    ]
+  },
+  "真格挑战_识别是否用光挑战次数": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "^0/\\d+$"
+        ],
+        "roi": [
+          1200,
+          40,
+          45,
+          20
+        ]
+      },
+      "type": "OCR"
+    },
+    "focus": {
+      "Node.Action.Succeeded": "挑战次数已用完，任务完成"
+    }
+  },
+  "__真格挑战_选择首领": {
+    "recognition": {
+      "param": {
+        "template": [
+          "proving_grounds/boss_1.png"
+        ],
+        "roi": [
+          0,
+          80,
+          260,
+          640
+        ]
+      },
+      "type": "TemplateMatch"
+    },
+    "action": {
+      "type": "Click"
+    }
+  },
+  "真格挑战_有挑战次数时选择首领": {
+    "recognition": {
+      "param": {
+        "all_of": [
+          "__真格挑战_识别是否有挑战次数",
+          "__真格挑战_选择首领"
+        ],
+        "box_index": 1
+      },
+      "type": "And"
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "真格挑战_开始挑战"
+    ],
+    "focus": {
+      "Node.Action.Succeeded": "选择首领：寄生之庭"
+    },
+    "post_wait_freezes": 100,
+    "max_hit": 10
+  },
+  "真格挑战_开始挑战": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "挑战"
+        ],
+        "roi": [
+          960,
+          595,
+          180,
+          50
+        ]
+      },
+      "type": "OCR"
+    },
+    "action": {
+      "type": "Click"
+    },
+    "next": [
+      "真格挑战_没有默认纪录",
+      "[JumpBack]选择纪录_进入主界面(不选择纪录版)",
+      "真格挑战_挑战完成",
+    ],
+    "post_wait_freezes": 100
+  },
+  "真格挑战_挑战完成": {
+    "recognition": {
+      "param": {
+        "all_of": [
+          "通用_点击空白处继续"
+        ],
+      },
+      "type": "And"
+    },
+    "next": [
+      "真格挑战_主界面",
+      "[JumpBack]通用_点击空白处继续"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0,
+    "focus": {
+      "Node.Action.Succeeded": "单次首领挑战完成"
+    }
+  },
+  "真格挑战_没有默认纪录": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "选择纪录_点击选择纪录"
+        ]
+      }
+    },
+    "focus": {
+      "Node.Action.Succeeded": {
+        "content": "没有默认纪录，请先选择纪录挑战一次再使用真格挑战模块",
+        "display": "notification"
+      }
+    }
+  }
+}

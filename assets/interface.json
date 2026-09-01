@@ -29,7 +29,10 @@
                 "mouse": "SendMessageWithCursorPos",
                 "keyboard": "SendMessageWithCursorPos"
             },
-            "permission_required": true
+            "permission_required": true,
+            "attach_resource_path": [
+                "{PROJECT_DIR}/resource/windows"
+            ]
         },
         {
             "name": "安卓端",
@@ -75,12 +78,15 @@
 		"resource/tasks/talk.json",
 		"resource/tasks/invite.json",
 		"resource/tasks/activity.json",
+		"resource/tasks/activity_challenge.json",
 		"resource/tasks/fight.json",
 		"resource/tasks/quest.json",
 		"resource/tasks/friend.json",
 		"resource/tasks/task.json",
 		"resource/tasks/mail.json",
 		"resource/tasks/grant.json",
+        "resource/tasks/operation.json",
+        "resource/tasks/proving_grounds.json",
         "resource/tasks/climb_tower.json",
         "resource/tasks/climb_tower_presets.json"
     ],

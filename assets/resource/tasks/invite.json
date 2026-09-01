@@ -5,6 +5,7 @@
             "entry": "邀约_入口",
             "description": "自动邀约<br>由于选项过多，可能需要下拉菜单才能看到其他选项",
             "option": [
+                "邀约_回忆收集模式",
                 "邀约旅人",
                 "邀约旅人_1号_送礼",
                 "邀约旅人_2号_送礼",
@@ -296,6 +297,137 @@
                         "邀约_5号": {
                             "attach": {
                                 "gift": "no"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "邀约_回忆收集模式": {
+            "type": "switch",
+            "label": "回忆收集模式",
+            "resource": ["官服"],
+            "description": "开启后不再快进对话，改为逐句推进并选择特殊选项以收集角色特殊回忆。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "memory_mode": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "memory_mode": true
+                            }
+                        },
+                        "邀约_选择默认地点": {
+                            "next": [
+                                "邀约_回忆收集_循环"
+                            ]
+                        },
+                        "邀约_选择回忆地点": {
+                            "next": [
+                                "邀约_回忆收集_循环"
+                            ]
+                        }
+                    },
+                    "option": [
+                        "邀约_自动查找未收集"
+                    ]
+                }
+            ]
+        },
+        "邀约_自动查找未收集": {
+            "type": "switch",
+            "label": "自动查找未收集回忆",
+            "description": "开启后自动遍历左侧角色列表，找出有未收集回忆的角色并优先邀约。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_find": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_find": true
+                            }
+                        }
+                    },
+                    "option": [
+                        "邀约_自动查找_最多查找人数",
+                        "邀约_自动收集_送礼类型"
+                    ]
+                }
+            ]
+        },
+        "邀约_自动查找_最多查找人数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "人数",
+                    "label": "最多查找人数",
+                    "pipeline_type": "int",
+                    "verify": "^[1-9]\\d*$",
+                    "default": "5"
+                }
+            ],
+            "pipeline_override": {
+                "邀约_总循环": {
+                    "attach": {
+                        "max_find_count": "{人数}"
+                    }
+                }
+            }
+        },
+        "邀约_自动收集_送礼类型": {
+            "type": "select",
+            "label": "自动收集送礼类型",
+            "description": "自动找到的角色统一使用该送礼类型。",
+            "default_case": "所有",
+            "cases": [
+                {
+                    "name": "所有",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_gift": "all"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "最爱",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_gift": "favorite"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "不送",
+                    "pipeline_override": {
+                        "邀约_总循环": {
+                            "attach": {
+                                "auto_gift": "no"
                             }
                         }
                     }

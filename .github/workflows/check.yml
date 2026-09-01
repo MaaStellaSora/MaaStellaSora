@@ -6,31 +6,65 @@ on:
       - "**"
     paths:
       - ".github/workflows/check.yml"
-      - "assets/**"
-      - "**.py"
+      - "check_resource.py"
+      - "requirements-ci.txt"
+      - "assets/resource/**"
   pull_request:
     branches:
       - "**"
     paths:
       - ".github/workflows/check.yml"
-      - "assets/**"
-      - "**.py"
+      - "check_resource.py"
+      - "requirements-ci.txt"
+      - "assets/resource/**"
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   resource:
+    name: Resource checks
     runs-on: macos-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      # pip install maafw
-      - name: Install maafw
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Install resource checker dependencies
         run: |
-            python -m pip install --upgrade pip
-            python -m pip install --upgrade maafw --pre
+          python -m pip install --disable-pip-version-check --upgrade --pre --requirement requirements-ci.txt
 
       - name: Check Resource (BASE)
         run: |
-            python ./check_resource.py ./assets/resource/base/
+          python ./check_resource.py ./assets/resource/base/
+
+      - name: Check Resource (TW)
+        run: |
+          python ./check_resource.py ./assets/resource/base/ ./assets/resource/tw/
+
+      - name: Check Resource (EN)
+        run: |
+          python ./check_resource.py ./assets/resource/base/ ./assets/resource/en/
+
+      - name: Check Resource (JP)
+        run: |
+          python ./check_resource.py ./assets/resource/base/ ./assets/resource/jp/
+
+      - name: Check desktop resource overlays
+        run: |
+          python ./check_resource.py ./assets/resource/base/ ./assets/resource/windows/
+          python ./check_resource.py ./assets/resource/base/ ./assets/resource/tw/ ./assets/resource/windows/
+          python ./check_resource.py ./assets/resource/base/ ./assets/resource/en/ ./assets/resource/windows/
+          python ./check_resource.py ./assets/resource/base/ ./assets/resource/jp/ ./assets/resource/windows/

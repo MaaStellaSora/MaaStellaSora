@@ -2,7 +2,7 @@
   "通用_一键领取": {
     "recognition": {
       "param": {
-        "threshold": 0.9
+        "threshold": 0.8
       }
     }
   },
@@ -10,26 +10,25 @@
     "recognition": {
       "param": {
         "expected": [
-          "タップして続ける"
-        ]
-      }
-    }
-  },
-  "通用_点击空白处": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "タップして"
-        ]
-      }
-    }
-  },
-  "月卡_领取": {
-    "recognition": {
-      "param": {
-        "expected": [
+          "タップして続ける",
           "タップして",
           "続ける"
+        ]
+      }
+    }
+  },
+  "通用_关闭升级界面": {
+    "recognition": {
+      "expected": [
+        "権限レベル"
+      ]
+    }
+  },
+  "通用_主页_出发": {
+    "recognition": {
+      "param": {
+        "expected": [
+          "出発"
         ]
       }
     }

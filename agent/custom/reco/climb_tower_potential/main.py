@@ -34,7 +34,7 @@ class ChoosePotentialRecognition(CustomRecognition):
             argv: CustomAction.RunArg，含当前截图与节点名
 
         Returns:
-            bool: 返回 True
+            CustomRecognition.AnalyzeResult: 返回 AnalyzeResult
         """
         node_name = argv.node_name
         params = self._get_params(context, node_name)
@@ -106,11 +106,16 @@ class ChoosePotentialRecognition(CustomRecognition):
             node_name: 当前节点名称，用于动态获取节点数据
 
         Returns:
-            Parameters: 包含以下属性的实例：
-                - max_refresh_count (int): 最大刷新次数，0 表示禁用
-                - reserved_coin (int): 预留金币，计算可用金币时需减去此值
-                - priority_list (list): 自定义优先级列表
-                - owned_potentials (dict): 已拥有潜能状态，按 trekker 分组
+            Parameters: 参数对象，包含常用字段（根据 attach 可选）：
+                - potential_source (str): 潜能来源标识（例如 "enhance"）。
+                - max_refresh_count (int): 最大刷新次数；0 表示禁用刷新。
+                - reserved_coin (int): 预留金币，计算可用金币时需减去此值。
+                - priority_list (list): json自定义优先级列表，用于按优先级选择潜能。
+                - owned_potentials (dict): 已拥有潜能的状态信息。
+                - handler (str): 使用的处理器类型（如 "json"、"preset" 等）。
+                - environment (str): 塔难度环境。
+                - threshold_coef_str (str): 刷新阈值系数字符串配置。
+                - threshold_decay_str (str): 刷新阈值衰减系数字符串配置。
         """
         node_data = context.get_node_data(node_name)
         attach = node_data.get("attach", {})

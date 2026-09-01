@@ -75,29 +75,37 @@
     "timeout": 5000
   },
   "星塔_节点_选择潜能_agent": {
-    "action": {
+    "recognition": {
       "type": "Custom",
       "param": {
-        "custom_action": "choose_potential_action"
+        "custom_recognition": "choose_potential_recognition"
       }
+    },
+    "action": {
+      "type": "DoNothing"
+      // 因为设置为recognition方便debug，但实际操作不一定会点击，所以交给识别函数点击了
     },
     "next": [
       "星塔_节点_选择潜能_拿走_agent"
     ],
     "attach": {
       "priority_list": [],
-      "max_refresh_count": 4,
+      "max_refresh_count": 5,
       "reserved_coin": 0,
-      "max_failed_count": 2,
-      "max_potential_count": 70,
-      // 触发潜能选择的类型，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
-      "trigger_type": "default",
-      // 潜能处理方式，"default+"表示在推荐图标基础上还会根据其他信息筛选，"json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
-      "handler": "default+",
-      "chooser": "tower_8"
+      // 潜能来源↓，"default"表示升级或者选项触发，"drink"表示潜能特饮触发，"enhance"表示强化触发
+      "potential_source": "default",
+      // 潜能处理方式↓
+      // "preset"表示游戏里开启了预设作业，会根据选择策略选择潜能，"preset+bag"表示还会读取背包信息
+      // "json"表示使用自定义优先级，否则仅靠推荐图标选择潜能
+      "handler": "preset",
+      "environment": "tower_8",
+      // 策略通用参数↓
+      // threshold_coef_str为刷新阈值整体调节系数，0-9.99之间，0表示完全不考虑阈值，1表示完全按照阈值决定是否刷新
+      // threshold_decay_str为刷新阈值衰减系数，0-1之间，0表示不衰减，0.01表示每刷新一次衰减1%
+      "threshold_coef_str": "0.8",
+      "threshold_decay_str": "0.05"
     },
-    "post_wait_freeze": 100,
-    "timeout": 2000
+    "post_wait_freezes": 100
   },
   "星塔_节点_选择潜能_拿走_agent": {
     "recognition": {
@@ -105,12 +113,14 @@
         "template": [
           "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
         ],
-        "roi": [
-          148,
-          569,
-          996,
-          84
-        ]
+        "roi": "星塔_节点_选择潜能_agent",
+        "roi_offset": [
+          0,
+          185,
+          0,
+          70
+        ],
+        "threshold": 0.6
       },
       "type": "TemplateMatch"
     },
@@ -118,34 +128,18 @@
       "type": "Click"
     },
     "next": [
-      "星塔_节点_选择潜能_等待确认_agent",
-      "星塔_节点_选择潜能_已确认_agent"
-    ]
+      "星塔_节点_选择潜能_拿走_agent",
+      "星塔_节点_选择潜能_已确认拿走_agent"
+    ],
+    "pre_delay": 0,
+    "post_delay": 300
   },
-  "星塔_节点_选择潜能_等待确认_agent": {
-    "recognition": {
-      "param": {
-        "template": [
-          "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
-        ],
-        "roi": [
-          148,
-          569,
-          996,
-          84
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "action": {
-      "type": "Click"
-    },
-    "post_delay": 500
-  },
-  "星塔_节点_选择潜能_已确认_agent": {
+  "星塔_节点_选择潜能_已确认拿走_agent": {
     "action": {
       "type": "DoNothing"
-    }
+    },
+    "pre_delay": 0,
+    "post_delay": 500
   },
   "星塔_节点_进入对话_agent": {
     "recognition": {

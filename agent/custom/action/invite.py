@@ -108,8 +108,9 @@ class InviteAuto(CustomAction):
                     res = context.run_task("邀约_开始邀约", pipeline_override)
 
                     # 成功识别到邀约按钮时，不需要手动重置位置
+                    # 2026/9/3观察到邀约成功时游戏没有重置滚动位置，只能手动翻回第一页了
                     if res and res.status.succeeded:
-                        need_reset = False
+                        need_reset = True
 
                     break # 无论任务结果如何，只要点到了人，就停止向下翻页
 

@@ -120,6 +120,9 @@ class ChoosePotentialHandler:
                 new_trekker = Trekker(index=len(State.trekkers), image=cropped_image)
                 State.trekkers.append(new_trekker)
                 self.data.potentials[potential_i].trekker = new_trekker
+                # from utils.image_handler import save_image
+                # save_datetime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+                # save_image(cropped_image, f"{save_datetime}_新旅人_{new_trekker.index}")
 
             # 给主控旅人做标记
             if not State.get_main_trekker() and self.data.params.potential_source == "specified_drink":

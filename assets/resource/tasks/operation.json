@@ -106,7 +106,7 @@
             "type": "switch",
             "label": "是否等待讨伐完成",
             "description": "如开启该选项，出击完成后会一直等待直到讨伐完成，任务只会在追踪委托书数量到达保留数量时结束\n\n如关闭该选项，出击完成后会直接结束追踪目标任务",
-            "default_case": "Yes",
+            "default_case": "No",
             "cases": [
                 {
                     "name": "Yes",

@@ -174,7 +174,7 @@
     "recognition": {
       "param": {
         "template": [
-          "ClimbTower_agent/爬塔_稀有潜能.png"
+          "ClimbTower_agent/爬塔_稀有潜能_绿幕版.png"
         ],
         "roi": [
           135,
@@ -182,7 +182,7 @@
           1010,
           250
         ],
-        "threshold": 0.8
+        "green_mask": true
       },
       "type": "TemplateMatch"
     }
@@ -191,7 +191,7 @@
     "recognition": {
       "param": {
         "template": [
-          "ClimbTower_agent/爬塔_普通潜能.png"
+          "ClimbTower_agent/爬塔_普通潜能_绿幕版.png"
         ],
         "roi": [
           135,
@@ -199,7 +199,7 @@
           1010,
           250
         ],
-        "threshold": 0.8
+        "green_mask": true
       },
       "type": "TemplateMatch"
     }

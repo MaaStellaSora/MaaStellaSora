@@ -105,6 +105,13 @@
   "星塔_节点_选择潜能_识别推荐等级_agent": {
     "recognition": {
       "param": {
+        "roi": "星塔_节点_选择潜能_识别推荐图标_agent",
+        "roi_offset": [
+          -80,
+          4,
+          45,
+          -5
+        ],
         "expected": [
           "\\d+"
         ],
@@ -114,6 +121,7 @@
             ""
           ]
         ],
+        "only_rec": true,
         "threshold": 0.6
       },
       "type": "OCR"

@@ -195,39 +195,10 @@ class PotentialInteractor:
 
         return potential_types
 
-    def get_recommended_potential(self, borders: list[list]) -> list:
-        """
-        识别系统推荐图标，返回对应卡片的潜能序数列表。
-
-        推荐图标位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
-        x_border 区间来确定归属卡片。
-
-        Args:
-            borders: 可选潜能卡片区域列表，每个元素结构：[float, float],  # 卡片 x 轴边界（左闭右闭）
-
-        Returns:
-            list: 包含推荐潜顺序数的列表
-        """
-        reco_results = self._recognize("星塔_节点_选择潜能_识别推荐图标_agent")
-        hit_xs = [r.box[0] for r in reco_results]
-        matched = [
-            i for i, (low, high) in enumerate(borders)
-            if any(low <= x <= high for x in hit_xs)
-        ]
-        unmatched_xs = [
-            x for x in hit_xs
-            if not any(low <= x <= high for low, high in borders)
-        ]
-
-        if not matched:
-            logger.debug("推荐图标识别失败，有可能是没有推荐图标，也有可能是识别问题")
-        if unmatched_xs:
-            logger.error(f"检测到 {len(unmatched_xs)} 个推荐图标超出所有潜能卡片边界: {unmatched_xs}，后续选择将会出现问题")
-
-        return matched
-
-    def check_potential_recommended(self, roi: list[int]) -> bool:
-        return bool(self._recognize("星塔_节点_选择潜能_识别推荐图标_agent", roi=roi))
+    def get_recommended_potential(self, roi: list[int] | None = None) -> list:
+        """识别系统推荐图标，返回识别到的推荐潜能图标的坐标列表"""
+        reco_results = self._recognize("星塔_节点_选择潜能_识别推荐图标_agent", roi=roi)
+        return [r.box for r in reco_results]
 
     def get_selected_potential_index(self, borders: list[list[int]]) -> int:
         """识别拿到按钮，返回对应卡片的索引。

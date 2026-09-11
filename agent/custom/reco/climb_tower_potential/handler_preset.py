@@ -18,6 +18,33 @@ class RecommendationHandler(ChoosePotentialHandler):
     def __init__(self, screen: PotentialInteractor, data: Data):
         super().__init__(screen, data)
 
+    def _update_recommended_potentials(self):
+        """
+        更新推荐潜能信息，包括通过推荐图标位置判断是否是预设形式的推荐，哪个潜能是推荐潜能，还有推荐等级的识别更新
+        更新前需要根据潜能数量初始化潜能类，否则会出问题
+        更新信息直接写入到self.data中，而不是通过return的形式返回
+        """
+        # 识别出哪些潜能是推荐潜能
+        boxes = self.screen.get_recommended_potential()
+        potential_indices = self._get_recommended_potential_indices(boxes, self.data.x_borders)
+
+        # 判断是否设置了预设推荐潜能
+        if boxes and boxes[0][1] < 300:
+            self.data.preset_available = True
+        elif boxes and boxes[0][1] >= 300:
+            self.data.preset_available = False
+
+        # 开始遍历推荐潜能索引
+        for index, box in potential_indices.items():
+            # 更新潜能的是否推荐信息
+            self.data.potentials[index].recommended = True
+
+            # 更新潜能的推荐等级
+            if self.data.core_potential:
+                self.data.potentials[index].recommended_level = 1
+            else:
+                self.data.potentials[index].recommended_level = self.screen.get_recommend_level(box)
+
     def read_potentials_info(self) -> Self:
         self.data.potentials = self.initialize_potentials()
 

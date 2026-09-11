@@ -11,6 +11,7 @@ MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段�
 
 @dataclass(slots=True, frozen=True)
 class Parameters:
+    """不会改变的参数，只在初始化时设置一次。通常包含从attach传入的参数，以及一些公用常量"""
     potential_source: str
     max_refresh_count: int
     reserved_coin: int
@@ -37,7 +38,6 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential_roi": [530, 405, 220, 60],
             "general_potential_roi": [530, 375, 220, 60],
             "general_potential_level_roi": [530, 425, 220, 40],
-            "recommended_level_roi": [670, 165, 140, 50],
             "potential_roi": [470, 0, 343, 720],
             "trekker_roi": [500, 182, 40, 40],
             "x_border": [470, 813]
@@ -48,7 +48,6 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential_roi": [358, 405, 220, 60],
             "general_potential_roi": [358, 375, 220, 60],
             "general_potential_level_roi": [358, 425, 220, 40],
-            "recommended_level_roi": [490, 165, 140, 50],
             "potential_roi": [0, 0, 639, 720],
             "trekker_roi": [329, 182, 40, 40],
             "x_border": [0, 639]
@@ -57,7 +56,6 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential_roi": [703, 405, 220, 60],
             "general_potential_roi": [703, 375, 220, 60],
             "general_potential_level_roi": [703, 425, 220, 40],
-            "recommended_level_roi": [840, 165, 140, 50],
             "potential_roi": [640, 0, 640, 720],
             "trekker_roi": [673, 182, 40, 40],
             "x_border": [640, 1280]
@@ -68,7 +66,6 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential_roi": [187, 405, 220, 60],
             "general_potential_roi": [187, 375, 220, 60],
             "general_potential_level_roi": [187, 425, 220, 40],
-            "recommended_level_roi":[320, 165, 140, 50],
             "potential_roi": [0, 0, 469, 720],
             "trekker_roi": [156, 182, 40, 40],
             "x_border": [0, 469]
@@ -77,7 +74,6 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential_roi": [530, 405, 220, 60],
             "general_potential_roi": [530, 375, 220, 60],
             "general_potential_level_roi": [530, 425, 220, 40],
-            "recommended_level_roi": [670, 165, 140, 50],
             "potential_roi": [470, 0, 343, 720],
             "trekker_roi": [500, 182, 40, 40],
             "x_border": [470, 813]
@@ -86,7 +82,6 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "core_potential_roi": [875, 405, 220, 60],
             "general_potential_roi": [875, 375, 220, 60],
             "general_potential_level_roi": [875, 425, 220, 40],
-            "recommended_level_roi":[1010, 165, 140, 50],
             "potential_roi": [814, 0, 466, 720],
             "trekker_roi": [844, 182, 40, 40],
             "x_border": [814, 1280]
@@ -99,7 +94,6 @@ class PotentialLayout:
     core_potential_roi: list[int]
     general_potential_roi: list[int]
     general_potential_level_roi: list[int]
-    recommended_level_roi: list[int]
     potential_roi: list[int]
     trekker_roi: list[int]
     x_border: list[int]
@@ -107,14 +101,14 @@ class PotentialLayout:
 @dataclass(slots=True)
 class PotentialLayouts:
     potential_layouts: dict[int, list[PotentialLayout]] = field(default_factory=lambda: {
-        count: [PotentialLayout(**l) for l in layouts]\
-        for count, layouts in DEFAULT_POTENTIAL_LAYOUTS.items()\
+        count: [PotentialLayout(**l) for l in layouts]
+        for count, layouts in DEFAULT_POTENTIAL_LAYOUTS.items()
     })
 
     def __getitem__(self, key):
         return self.potential_layouts[key]
 
-    def __iter__(self):\
+    def __iter__(self):
         return iter(self.potential_layouts)
 
     def items(self):
@@ -124,20 +118,19 @@ class PotentialLayouts:
         return self.potential_layouts.get(key, default)
 
 
-# endregion 常量 ===============================================================
-
-# region 统筹所有数据的类 ===============================================================
 
 @dataclass(slots=True)
 class Data:
+    """包含所有数据的类，用于存储和更新本次潜能识别中的数据"""
     params: Parameters
-    current_coin: int = 0
-    refresh_cost: int = 0
+    current_coin: int = -1
+    refresh_cost: int = -1
     potential_types: list[str] = field(default_factory=lambda: []) # 潜能类型，有"normal"、"rare"、"core"三种
     core_potential: bool = False
     # 不需要根据刷新更新的数据
     threshold: float = -1.0 # 刷新阈值储存变量
     level_upped: bool = False # 是否通过旅人升级获得潜能
+    preset_available: bool | None = None # 是否在游戏中设置了预设推荐潜能
     # 需要根据刷新更新的数据
     selected_potential_index: int = 1
     potentials: list[Potential] = field(default_factory=lambda: [])
@@ -183,10 +176,6 @@ class Data:
         return [l.general_potential_level_roi for l in self.params.potential_layouts[self.potential_count]]
 
     @property
-    def recommended_level_rois(self) -> list[list[int]]:
-        return [l.recommended_level_roi for l in self.params.potential_layouts[self.potential_count]]
-
-    @property
     def trekker_rois(self) -> list[list[int]]:
         return [l.trekker_roi for l in self.params.potential_layouts[self.potential_count]]
 
@@ -212,7 +201,7 @@ class Trekker:
 class Potential:
     layout: PotentialLayout
     index: int = -1
-    type: str = "" # 潜能类型，有"normal"、"rare"、"core"三种
+    type: str = "" # 潜能类型，有"common"、"rare"、"core"三种
     name: str = ""
     old_level: int = -1
     new_level: int = -1
@@ -262,10 +251,6 @@ class Potential:
     def general_potential_level_roi(self) -> list[int]:
         return self.layout.general_potential_level_roi
 
-    @property
-    def recommended_level_roi(self) -> list[int]:
-        return self.layout.recommended_level_roi
-
     def update(self, screen: PotentialInteractor, data: Data):
         # 更新核心潜能
         if data.core_potential:
@@ -288,17 +273,19 @@ class Potential:
         old, new = screen.get_potential_level(adjusted_roi)
         return old, new
 
+    def _get_recommended_roi(self, screen: PotentialInteractor) -> list[int]:
+        return self.potential_roi if screen.get_recommended_potential(self.potential_roi) else []
+
     def _get_recommended_data(self, screen: PotentialInteractor, data: Data) -> tuple[bool, int]:
-        roi = self.potential_roi
-        adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
-        recommended = True if screen.check_potential_recommended(adjusted_roi) else False
+        box = self._get_recommended_roi(screen)
+        recommended = bool(box)
         if not recommended:
             return False, 0
         if recommended and data.core_potential:
             return True, 1
-        roi = self.recommended_level_roi
-        adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
-        level = screen.get_recommend_level(adjusted_roi)
+        if recommended and box[1] > 300: # 如果设置了预设推荐潜能推荐图标会在潜能右上角，y坐标远低于300
+            return True, -1
+        level = screen.get_recommend_level(box)
         return recommended, level
 
     def _get_adjusted_roi(self, roi, offset) -> list[int]:

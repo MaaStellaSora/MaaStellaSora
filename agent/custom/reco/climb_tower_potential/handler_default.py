@@ -93,15 +93,36 @@ class ChoosePotentialHandler:
                 save_image(self.screen.image, f"第{i}个潜能等级识别失败_{roi}")
 
     def _update_recommended_potentials(self):
-        adjusted_rois = self._get_adjusted_rois(self.data.recommended_level_rois)
-        indices = self.screen.get_recommended_potential(self.data.x_borders)
-        for index in indices:
-            roi = adjusted_rois[index]
+        """更新推荐潜能信息"""
+        # 识别出哪些潜能是推荐潜能
+        boxes = self.screen.get_recommended_potential()
+        potential_indices = self._get_recommended_potential_indices(boxes, self.data.x_borders)
+
+        # 开始遍历推荐潜能索引
+        for index in potential_indices:
+            # 更新潜能的是否推荐信息
             self.data.potentials[index].recommended = True
-            if self.data.core_potential:
-                self.data.potentials[index].recommended_level = 1
+
+    def _get_recommended_potential_indices(self, boxes: list[list], borders: list[list]) -> dict[int, list]:
+        """根据推荐图标位置判断哪些是推荐潜能，然后返回索引到推荐图标box的映射"""
+        matched = {}
+        unmatched_xs = []
+
+        for box in boxes:
+            x = box[0]
+            matched_i = next((i for i, (low, high) in enumerate(borders) if low <= x <= high), None)
+            if matched_i is not None:
+                matched[matched_i] = box
             else:
-                self.data.potentials[index].recommended_level = self.screen.get_recommend_level(roi)
+                unmatched_xs.append(x)
+
+        if unmatched_xs:
+            logger.error(f"检测到 {len(unmatched_xs)} 个推荐图标超出所有潜能卡片边界，后续选择将会出现问题")
+            logger.error(f"超出边界的x坐标为{unmatched_xs}")
+            logger.error("为保证爬塔质量，将结束任务")
+            self.screen.context.tasker.post_stop()
+
+        return matched
 
     def _update_trekkers(self):
         save_rois = self._get_adjusted_rois(self.data.trekker_rois)

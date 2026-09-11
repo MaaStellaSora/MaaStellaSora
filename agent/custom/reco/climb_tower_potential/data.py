@@ -39,7 +39,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_roi": [530, 375, 220, 60],
             "general_potential_level_roi": [530, 425, 220, 40],
             "potential_roi": [470, 0, 343, 720],
-            "trekker_roi": [500, 182, 40, 40],
+            "trekker_roi": [500, 185, 40, 40],
             "x_border": [470, 813]
         }
     ],
@@ -49,7 +49,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_roi": [358, 375, 220, 60],
             "general_potential_level_roi": [358, 425, 220, 40],
             "potential_roi": [0, 0, 639, 720],
-            "trekker_roi": [329, 182, 40, 40],
+            "trekker_roi": [329, 185, 40, 40],
             "x_border": [0, 639]
         },
         {
@@ -57,7 +57,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_roi": [703, 375, 220, 60],
             "general_potential_level_roi": [703, 425, 220, 40],
             "potential_roi": [640, 0, 640, 720],
-            "trekker_roi": [673, 182, 40, 40],
+            "trekker_roi": [673, 185, 40, 40],
             "x_border": [640, 1280]
         }
     ],
@@ -67,7 +67,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_roi": [187, 375, 220, 60],
             "general_potential_level_roi": [187, 425, 220, 40],
             "potential_roi": [0, 0, 469, 720],
-            "trekker_roi": [156, 182, 40, 40],
+            "trekker_roi": [156, 185, 40, 40],
             "x_border": [0, 469]
         },
         {
@@ -75,7 +75,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_roi": [530, 375, 220, 60],
             "general_potential_level_roi": [530, 425, 220, 40],
             "potential_roi": [470, 0, 343, 720],
-            "trekker_roi": [500, 182, 40, 40],
+            "trekker_roi": [500, 185, 40, 40],
             "x_border": [470, 813]
         },
         {
@@ -83,7 +83,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_roi": [875, 375, 220, 60],
             "general_potential_level_roi": [875, 425, 220, 40],
             "potential_roi": [814, 0, 466, 720],
-            "trekker_roi": [844, 182, 40, 40],
+            "trekker_roi": [844, 185, 40, 40],
             "x_border": [814, 1280]
         }
     ]

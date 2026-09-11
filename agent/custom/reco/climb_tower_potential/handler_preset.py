@@ -160,9 +160,10 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         # 已获得潜能可能需要从保存的State类中获得推荐等级
         # 如果重新启动过agent再从途中开始，会丢失潜能数据，到时候推荐等级取得一定会有问题，所以要提示用户最好不要中断
-        if isinstance(p, Potential) and p.old_level > 0 and not p.recommended:
-            p.recommended_level = State.owned_potentials.find_recommended_level(p.name, mode="FUZZY", trekker=p.trekker)
-            p.recommended = True if p.recommended_level > 0 else False
+        # 2026/9/11发现本次版本更新会把已经达到推荐等级的潜能的推荐等级也显示出来，这里的根据历史数据读取推荐等级的函数没有意义了
+        # if isinstance(p, Potential) and p.old_level > 0 and not p.recommended:
+        #     p.recommended_level = State.owned_potentials.find_recommended_level(p.name, mode="FUZZY", trekker=p.trekker)
+        #     p.recommended = True if p.recommended_level > 0 else False
         # 传入OwnedPotential对象时，需要设置等级跨度，然后转为Potential对象处理
         if isinstance(p, OwnedPotential):
             if level_span == 0:

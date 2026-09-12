@@ -64,7 +64,7 @@
       "type": "OCR",
       "param": {
         "expected": [
-          "上樓"
+          "上[樓楼]"
         ]
       }
     }

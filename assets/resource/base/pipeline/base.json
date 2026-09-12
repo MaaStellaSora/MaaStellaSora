@@ -158,7 +158,14 @@
   },
   "通用_点击空白处继续": {
     "action": {
-      "param": {},
+      "param": {
+        "target_offset": [
+          0,
+          25,
+          0,
+          0
+        ]
+      },
       "type": "Click"
     },
     "recognition": {

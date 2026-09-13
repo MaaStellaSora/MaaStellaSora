@@ -70,13 +70,13 @@
           ]
         ],
         "roi": [
-          1130,
-          0,
-          150,
-          60
+          1180,
+          20,
+          65,
+          25
         ],
         "threshold": 0.6,
-        "order_by": "Horizontal"
+        "only_rec": true
       },
       "type": "OCR"
     }

@@ -230,25 +230,6 @@
     "action": {
       "type": "Click"
     },
-    "next": [
-      "星塔_节点_选择潜能_点击刷新_刷新完成_agent"
-    ],
     "post_delay": 1000
-  },
-  "星塔_节点_选择潜能_点击刷新_刷新完成_agent": {
-    "recognition": {
-      "type": "TemplateMatch",
-      "param": {
-        "template": [
-          "ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
-        ],
-        "roi": [
-          148,
-          569,
-          996,
-          84
-        ]
-      }
-    }
   }
 }

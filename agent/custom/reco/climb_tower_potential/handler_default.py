@@ -193,8 +193,42 @@ class ChoosePotentialHandler:
         refresh_result = self.screen.refresh()
         if not refresh_result:
             return False
-        self.data.refresh_count += 1
-        return True
+        # 通过检测金币变化来判断是否成功刷新，同时更新当前金币数量
+        wait_time = 20
+        new_coin = -1
+        for i in range(wait_time):
+            # 1. 阶段一：若尚未确认金币扣减，先检测金币
+            if new_coin < 0:
+                coin = self.screen.get_current_coin()
+                if 0 <= coin < self.data.current_coin:
+                    new_coin = coin
+                    logger.debug(f"金币已扣除: {self.data.current_coin} -> {new_coin}")
+                    # 等待1秒，以确保不会出现金币扣除但拿走按钮仍未消失的情况
+                    time.sleep(1)
+                    self.screen.screenshot()
+
+            # 2. 阶段二：金币已扣除的前提下，检测卡片拿走按钮是否就绪
+            # 利用 short-circuit 特性：new_coin 未就绪时不会浪费性能去匹配按钮
+            if new_coin >= 0 and self.screen.get_select_button():
+                self.data.current_coin = new_coin
+                self.data.refresh_count += 1
+                logger.debug(f"潜能刷新成功: 当前金币={new_coin}, 已刷新={self.data.refresh_count}次")
+                return True
+
+            logger.debug(
+                f"等待刷新就绪: 金币扣除确认={new_coin >= 0} (最新={new_coin}), 拿走按钮未检测或未出现"
+            )
+
+            # 末次超时不再白等
+            if i < wait_time - 1:
+                time.sleep(1)
+                self.screen.screenshot()
+
+        logger.error(
+            f"刷新潜能失败，等待 {wait_time} 秒后仍未完成 "
+            f"(金币扣除状态: {new_coin >= 0}, 缓存金币: {self.data.current_coin})"
+        )
+        return False
 
     @property
     def _default_potential(self):

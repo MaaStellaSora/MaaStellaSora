@@ -89,8 +89,8 @@ class PotentialInteractor:
         try:
             return int(ocr_results[0].text)
         except (ValueError, TypeError, IndexError):
-            logger.error("未识别到当前金币，将默认为0")
-            return 0
+            logger.error("未识别到当前金币，将默认为-1")
+            return -1
 
     def get_refresh_cost(self) -> int:
         ocr_results = self._recognize("星塔_通用_识别刷新花费_agent")
@@ -180,6 +180,7 @@ class PotentialInteractor:
         normal_potentials = [r.box for r in self._recognize(normal_node_name)]
         rare_potentials = [r.box for r in self._recognize(rare_node_name)]
         # 打标签，按照x坐标排序
+        # TODO: 正式名字是common不是normal，后续需要修改
         potentials = [["normal", box] for box in normal_potentials] + [["rare", box] for box in rare_potentials]
         potentials.sort(key=lambda x: x[1][0])
         # 去掉坐标，只保留类型标签
@@ -200,6 +201,10 @@ class PotentialInteractor:
         reco_results = self._recognize("星塔_节点_选择潜能_识别推荐图标_agent", roi=roi)
         return [r.box for r in reco_results]
 
+    def get_select_button(self) -> list[list]:
+        """识别拿到按钮，返回识别到的拿到按钮的坐标列表"""
+        return [r.box for r in self._recognize("星塔_节点_选择潜能_识别预选潜能位置_agent")]
+
     def get_selected_potential_index(self, borders: list[list[int]]) -> int:
         """识别拿到按钮，返回对应卡片的索引。
 
@@ -213,7 +218,7 @@ class PotentialInteractor:
         Returns:
             int: 目标卡片索引，识别失败时返回0。这里的索引是0-based的，适合给list使用。
         """
-        result_boxes = [r.box for r in self._recognize("星塔_节点_选择潜能_识别预选潜能位置_agent")]
+        result_boxes = self.get_select_button()
 
         hit_x = result_boxes[0][0] if result_boxes else -1
         matched = next((i for i, (low, high) in enumerate(borders) if low <= hit_x <= high), None)

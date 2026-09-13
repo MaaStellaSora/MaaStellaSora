@@ -123,6 +123,7 @@ class PotentialLayouts:
 class Data:
     """包含所有数据的类，用于存储和更新本次潜能识别中的数据"""
     params: Parameters
+    initial_coin: int = -1
     current_coin: int = -1
     refresh_cost: int = -1
     potential_types: list[str] = field(default_factory=lambda: []) # 潜能类型，有"normal"、"rare"、"core"三种
@@ -147,7 +148,7 @@ class Data:
 
     @property
     def refresh_limit(self) -> int:
-        usable_coin = max(0, self.current_coin - self.params.reserved_coin)
+        usable_coin = max(0, self.initial_coin - self.params.reserved_coin)
         affordable = usable_coin // self.refresh_cost if self.refresh_botton else 0
         return min(self.params.max_refresh_count, affordable)
 

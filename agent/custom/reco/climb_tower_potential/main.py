@@ -43,7 +43,8 @@ class ChoosePotentialRecognition(CustomRecognition):
 
         # 1. 提前获取不受左侧道具列表遮挡、且后续选择潜能流程中不需要再次获取的数据
         # （金币、刷新花费、核心潜能、潜能数量与类型等均位于界面上方/右侧，提前识别可充分利用等待时间）
-        data.current_coin = screen.get_current_coin()
+        data.initial_coin = screen.get_current_coin()
+        data.current_coin = data.initial_coin
         data.refresh_cost = screen.get_refresh_cost()
         data.core_potential = screen.check_core_potential()
         data.potential_types = screen.get_potential_types(data.core_potential)

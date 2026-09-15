@@ -150,15 +150,17 @@ def check_shop_type(
 def is_assist_skill_unlocked(
     context: Context,
     image: Optional[numpy.ndarray] = None,
+    target: Optional[int] = None,
 ) -> bool:
-    """检查协奏技能是否已解锁。
+    """检查协奏音符是否已够（未解锁则要买）。
 
     Args:
         context: 任务上下文。
         image: 截图，为 None 时自动截图。
+        target: 协奏音符目标数量；传入后按“当前数量 >= target 视为已够”判断。
 
     Returns:
-        bool: 是否已解锁。
+        bool: True 表示已够/无需购买；False 表示还没到目标、需要买。
     """
     lv0_melody = (10, 15)
 
@@ -193,6 +195,10 @@ def is_assist_skill_unlocked(
         required_melody = int(text[-2:])
         logger.debug(f"识别到的现有音符数量：{current_melody}，协奏技能升级要求数量：{required_melody}")
 
+        # 按用户设定的目标数量判断：当前 >= 目标 即视为已够，不再买
+        if target is not None:
+            return current_melody >= target
+
         # 协奏技能未解锁，需要符合：
         # 1. 升级要求音符数量为 lv0_melody 中的值
         # 2. 且当前音符数量小于升级要求数量
@@ -219,6 +225,20 @@ class Data:
     buy_assist_at_final_only: bool = False
     regular_shop_refresh_threshold: int = 1500
     full_price_buy_reserve_base: int = 500
+    # 每种音符的目标数量（到达该数量即视为够，不再买；0 = 不考虑该音符）
+    melody_target_aqua: int = 0
+    melody_target_ignis: int = 0
+    melody_target_terra: int = 0
+    melody_target_ventus: int = 0
+    melody_target_lux: int = 0
+    melody_target_umbra: int = 0
+    melody_target_focus: int = 0
+    melody_target_skill: int = 0
+    melody_target_ultimate: int = 0
+    melody_target_pummel: int = 0
+    melody_target_luck: int = 0
+    melody_target_burst: int = 0
+    melody_target_stamina: int = 0
     melody_of_aqua: bool = False
     melody_of_ignis: bool = False
     melody_of_terra: bool = False
@@ -253,6 +273,20 @@ class Data:
         for k, v in data.items():
             if k in cls_fields:
                 setattr(self, k, v)
+
+    def get_melody_target(self, item_name: str) -> int:
+        """根据音符内部名（如 melody_of_aqua）返回该音符的目标数量；无对应则 0。
+
+        Args:
+            item_name: 音符内部名，如 "melody_of_aqua"。
+
+        Returns:
+            int: 该音符的目标数量，未设置时返回 0。
+        """
+        match = re.match(r"melody_of_(.+)", item_name)
+        if not match:
+            return 0
+        return int(getattr(self, f"melody_target_{match.group(1)}", 0) or 0)
 
     @property
     def target_melodies(self) -> list[str]:
@@ -437,11 +471,18 @@ class GridInfo:
             return ""
 
         if item_type == "melody" and "melody" in self.item_name:
+            target = data.get_melody_target(self.item_name)
             thresholds = {5: data.melody_5_discount_threshold, 15: data.melody_15_discount_threshold}
             discount_limit = thresholds.get(self.item_quantity)
 
             if discount_limit is None or self.discount > discount_limit:
                 return ""
+
+            # 有目标数量 → 作为"需要补到目标数"的音符买（走补货验证）
+            if target > 0:
+                if data.buy_assist_at_final_only and data.shop_type != "final":
+                    return ""  # 只在最终商店补齐目标音符，中途商店不补
+                return "assist_melody"
 
             if self.item_name in data.target_melodies:
                 return "normal"
@@ -643,10 +684,16 @@ class ShopHandler:
         if not(reco_detail and reco_detail.hit):
             logger.debug("该音符不是协奏音符")
             passed = False
-        # 验证协奏技能是否解锁
-        elif self.data.buy_assist_before_unlock and is_assist_skill_unlocked(self.context, image):
-            logger.debug("协奏技能已解锁，无需购买")
-            passed = False
+        # 验证该音符是否已够：设定了目标数量的音符按目标判断，未设定时沿用解锁判断
+        elif self.data.buy_assist_before_unlock:
+            target = self.data.get_melody_target(grid.item_name)
+            if target > 0:
+                if is_assist_skill_unlocked(self.context, image, target):
+                    logger.debug(f"音符 {grid.item_name} 已到目标数量 {target}，无需购买")
+                    passed = False
+            elif is_assist_skill_unlocked(self.context, image):
+                logger.debug("协奏技能已解锁，无需购买")
+                passed = False
 
         # 如果没有通过验证，关闭确认框
         grid.checked = True

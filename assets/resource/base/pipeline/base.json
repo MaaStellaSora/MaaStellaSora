@@ -61,6 +61,10 @@
       {
         "jump_back": true,
         "name": "通用_关闭升级界面"
+      },
+      {
+        "jump_back": true,
+        "name": "心链_默契提升"
       }
     ],
     "max_hit": 10

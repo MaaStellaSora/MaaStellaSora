@@ -674,11 +674,17 @@ class ShopHandler:
         if not(reco_detail and reco_detail.hit):
             logger.debug("该音符不是协奏音符")
             passed = False
-        # 验证该音符是否已到它的目标数量（到了就不再买，激活一级够用）
-        elif self.data.buy_assist_before_unlock:
+        else:
+            # 设定了目标数量的音符：够了就不再买（与 buy_assist_before_unlock 无关，
+            # 因为 is_match_normal_buy_plan 只凭目标数量就会把该音符路由到这里）
             _tgt = self.data.get_melody_target(grid.item_name)
-            if _tgt > 0 and is_assist_skill_unlocked(self.context, image, _tgt):
-                logger.debug(f"音符 {grid.item_name} 已到目标数量 {_tgt}，无需购买")
+            if _tgt > 0:
+                if is_assist_skill_unlocked(self.context, image, _tgt):
+                    logger.debug(f"音符 {grid.item_name} 已到目标数量 {_tgt}，无需购买")
+                    passed = False
+            # 未设目标数量时，沿用原有的解锁判断
+            elif self.data.buy_assist_before_unlock and is_assist_skill_unlocked(self.context, image):
+                logger.debug("协奏技能已解锁，无需购买")
                 passed = False
 
         # 如果没有通过验证，关闭确认框

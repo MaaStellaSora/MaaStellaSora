@@ -33,7 +33,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
         # 输出比较结果
         for potential in self.data.potentials:
-            print_rank = potential.rank + 1 if potential.rank >= 0 else "无"
+            print_rank = potential.rank if potential.in_preset else "无"
             if self.data.core_potential:
                 logger.info(f"[潜能识别] {potential.name} | 核心潜能 | 排名 {print_rank}")
             else:
@@ -50,59 +50,120 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
     def _update_priority(self):
         for potential in self.data.potentials:
-            rank, sub_rank, trekker = self._get_potential_priority(potential)
+            rank, sub_rank, trekker, in_preset = self._get_potential_priority(potential)
             potential.rank = rank
             potential.sub_rank = sub_rank
             potential.trekker.name = trekker
+            potential.in_preset = in_preset
+            # 是否已拥有：用于优先级相同时优先选择尚未拥有的潜能
+            potential.in_owned = bool(
+                in_preset
+                and trekker
+                and State.owned_potentials.find(
+                    potential.name, mode="EXACT", trekker_name=trekker
+                )
+            )
 
     def _get_potential_priority(
         self,
         potential: Potential,
-    ) -> tuple[int, int, str | None]:
-        """获取单个待选潜能在规则列表中的最高排名及其 trekker 归属。
+    ) -> tuple[int, int, str | None, bool]:
+        """获取单个待选潜能的实际优先级及其 trekker 归属。
 
-        遍历 priority_list，找到所有名称匹配且满足 level_span / max_level / refresh
-        条件的规则，返回排名数值最小（即优先级最高）的规则对应的排名与 trekker。
+        遍历 priority_list，找到所有名称匹配且满足 level_span / max_level / refresh /
+        no_enhance 等条件的规则，取实际优先级最小（即最优先）的那条规则。
+
+        实际优先级 = 基础优先级 - (等级跨度 - 1)：
+        一次跃升越多级的潜能越优先；标了 no_upgrade 的规则不做此提升。
 
         Args:
             potential: 单个待选潜能，结构：
                 {"name": str, "old_level": int, "new_level": int, "box": list}
 
         Returns:
-            tuple[int, int, str | None]: (rank, sub_rank, trekker)
-                rank 为匹配到的最小排名数值； rank 从 0 开始。无匹配时返回 -1
+            tuple[int, int, str | None, bool]: (priority, sub_rank, trekker, in_preset)
+                priority 为实际优先级，可为负数；无匹配时返回 -1
                 sub_rank 为命中的 potential 名称在该规则 names 列表中的下标；无匹配时返回 -1
                 trekker 为对应规则的归属角色；无匹配时返回空字符
+                in_preset 为是否命中任何一条规则
         """
         priority_list = self.data.parsed_priority_list
 
         best_entry = None
-        best_rank = -1
+        best_priority = None
         best_sub_rank = -1
 
-        for rank, entry in enumerate(priority_list):
-            # 1. 基础剪枝：优先级如果不更高，直接跳过
-            if best_entry and entry["priority"] >= best_entry["priority"]:
-                continue
+        level_span = max(0, potential.level_span)
 
-            # 2. 匹配名称并获取优先级排名
+        for entry in priority_list:
+            # 1. 匹配名称并获取副排名
             sub_rank = self._find_sub_rank(potential.name, entry["names"])
             if sub_rank == -1:
                 continue
 
-            # 3. 验证其他规则是否通过
+            # 2. 验证 level_span / max_level / refresh / no_enhance 等条件
             if not self._is_entry_valid(entry, potential):
                 continue
 
-            # 全部通过后，记录该行及副等级
-            best_entry = entry
-            best_rank = rank
-            best_sub_rank = sub_rank
+            # 3. 计算实际优先级
+            #    未配置 priority 的规则：沿用列表行号排名，不做等级跃升提升（与旧版行为完全一致）
+            #    配置了 priority 的规则：实际优先级 = 基础优先级 - (等级跨度 - 1)，标了 no_upgrade 的除外
+            base_priority = entry["priority"]
+            if base_priority is None:
+                actual_priority = entry["line_rank"]
+            elif entry["no_upgrade"]:
+                actual_priority = base_priority
+            else:
+                actual_priority = base_priority - (level_span - 1)
 
-        if not best_entry:
-            best_entry = {"trekker": ""}
+            # 4. 特殊机制：只在特定等级跨度/刷新次数下抓取，条件不满足则整条规则跳过
+            special = entry["special"]
+            if special and not self._check_special_rule(special, entry, potential):
+                continue
 
-        return best_rank, best_sub_rank, best_entry["trekker"]
+            # 5. 取实际优先级最小（最优先）的规则
+            if best_entry is None or actual_priority < best_priority:
+                best_entry = entry
+                best_priority = actual_priority
+                best_sub_rank = sub_rank
+
+        if best_entry is None:
+            return -1, -1, "", False
+
+        return best_priority, best_sub_rank, best_entry["trekker"], True
+
+    def _check_special_rule(self, special: str, entry: dict, potential: Potential) -> bool:
+        """判断特殊机制规则在当前潜能上是否成立。
+
+        这类潜能的价值取决于「等级跨度」与「刷新次数」，并非无条件抓取；
+        达到 special_cap_level 后直接放弃。
+
+        Args:
+            special: 特殊机制标记
+            entry: 当前规则
+            potential: 待选潜能
+
+        Returns:
+            bool: True 表示满足条件可参与选择；False 表示跳过该规则
+        """
+        old = potential.old_level
+        span = potential.level_span
+        cap = entry["special_cap_level"]
+
+        # 已经抓到上限等级（或以上）就不再抓
+        if cap is not None and old >= cap:
+            return False
+
+        if special == "dark_afterimage":
+            # 暗·蜃影：0→1 的跃升时抓取，或刷新次数足够多时抓取
+            return (old == 0 and span == 1) or self.data.refresh_count > 3
+        if special == "salute_double":
+            # 礼炮双响：仅 0→1 的跃升时抓取
+            return old == 0 and span == 1
+        if special == "mirror_current":
+            # 镜水归潮：低等级起步的跃升（0→2 以内）时抓取
+            return old == 0 and span <= 2
+        return True
 
     def _find_sub_rank(self, name: str, rule_names: list[str]) -> int:
         """通过潜能名称获取最优排名数值"""
@@ -145,6 +206,10 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
         if self.data.core_potential:
             return True
 
+        # 强化阶段：标了 no_enhance 的潜能不参与选择
+        if self.data.params.potential_source == "enhance" and entry["no_enhance"]:
+            return False
+
         # 普通潜能，组合匹配规则
         checks = [
             potential.old_level < entry["max_level"],
@@ -155,9 +220,17 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
 
     @property
     def best_potential(self) -> Potential | None:
-        """按照排名升序、等级跨度降序、副排名升序三个维度，筛选出最好的潜能"""
-        valid_potentials = (p for p in self.data.potentials if p.rank >= 0)
-        return min(valid_potentials, key=lambda p: (p.rank, -p.level_span, p.sub_rank), default=None)
+        """按实际优先级升序选最好的潜能；优先级相同时优先未拥有，再比跨度、副排名。
+
+        只考虑命中优先级规则（in_preset）的潜能，实际优先级可为负数。
+        """
+        valid_potentials = (p for p in self.data.potentials if p.in_preset)
+        return min(
+            valid_potentials,
+            # 优先级相同 → 未拥有的优先；再按跨度大、副排名小
+            key=lambda p: (p.rank, p.in_owned, -p.level_span, p.sub_rank),
+            default=None,
+        )
 
     @staticmethod
     def _parse_priority_raw_list(
@@ -177,6 +250,12 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                     "level_span": int,      # 可选，默认 1，最小升级跨度
                     "max_level": int,       # 可选，默认 MAX_POTENTIAL_LEVEL，旧等级上限（不含）
                     "refresh": int,         # 可选，默认 0，已刷新次数必须 >= 该值规则才生效
+                    "priority": int,        # 可选，基础优先级（越小越优先，可为负数）；
+                                            #   不填则沿用列表行号排名，且不做等级跃升提升
+                    "no_upgrade": bool,     # 可选，默认 False，为 True 时等级跃升不提升优先级
+                    "no_enhance": bool,     # 可选，默认 False，为 True 时强化阶段不选该潜能
+                    "special": str,         # 可选，特殊机制标记，见 _check_special_rule
+                    "special_cap_level": int,     # 可选，特殊机制：达到该等级后不再抓取
                     "condition": list       # 可选，生效条件，元素为 dict 时 AND，为 list 时 OR
                 }
             owned_potentials: 已拥有潜能状态。
@@ -189,7 +268,12 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                     "level_span": int,      # 最小升级跨度
                     "max_level": int,       # 旧等级上限（不含）
                     "refresh": int,         # 已刷新次数下限
-                    "priority": int         # 原始 JSON 的 1-based 行号，越小排名越高
+                    "priority": int | None, # 基础优先级，越小越优先，可为负数；None 表示未配置
+                    "line_rank": int,       # 未配置 priority 时使用的行号排名
+                    "no_upgrade": bool,     # 等级跃升不提升优先级
+                    "no_enhance": bool,     # 强化阶段不选该潜能
+                    "special": str | None,  # 特殊机制标记
+                    "special_cap_level": int | None,     # 特殊机制：达到该等级后不再抓取
                 }
         """
         def _check_single_condition(item: dict) -> bool:
@@ -251,7 +335,18 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                 "level_span": raw.get("level_span", 1),
                 "max_level": raw.get("max_level", MAX_POTENTIAL_LEVEL),
                 "refresh": raw.get("refresh", 0),
-                "priority": index + 1,
+                # 基础优先级（越小越优先，可为负）；缺省为 None，此时完全沿用行号排名
+                "priority": raw.get("priority"),
+                # 未配置 priority 时使用的行号排名
+                "line_rank": index + 1,
+                # 等级跃升时不按公式提升优先级
+                "no_upgrade": raw.get("no_upgrade", False),
+                # 强化时不选择该潜能
+                "no_enhance": raw.get("no_enhance", False),
+                # 特殊机制标记：dark_afterimage / salute_double / mirror_current
+                "special": raw.get("special"),
+                # 特殊机制：达到该等级后不再抓取
+                "special_cap_level": raw.get("special_cap_level"),
             })
 
         return valid_entries

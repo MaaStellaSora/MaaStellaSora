@@ -215,6 +215,8 @@ class Potential:
     sub_rank: int = -1
     score: int | float = 0
     probability: float = 0
+    in_preset: bool = False  # json 优先级模式：是否命中优先级规则
+    in_owned: bool = False  # json 优先级模式：是否已拥有（优先级相同时未拥有优先）
 
     @property
     def core(self) -> bool:

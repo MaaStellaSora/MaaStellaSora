@@ -12,6 +12,7 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        args: ["--config", "tools/format/.prettierrc"]
         types_or:
           - yaml
           - json

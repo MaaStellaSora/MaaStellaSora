@@ -7,8 +7,8 @@ on:
       - "**/*.py"
       - "requirements*.txt"
       - "**/requirements*.txt"
-      - "package.json"
-      - "package-lock.json"
+      - "tools/format/package.json"
+      - "tools/format/package-lock.json"
   push:
     branches:
       - main
@@ -17,8 +17,8 @@ on:
       - "**/*.py"
       - "requirements*.txt"
       - "**/requirements*.txt"
-      - "package.json"
-      - "package-lock.json"
+      - "tools/format/package.json"
+      - "tools/format/package-lock.json"
   schedule:
     - cron: "23 18 * * 3"
   workflow_dispatch:

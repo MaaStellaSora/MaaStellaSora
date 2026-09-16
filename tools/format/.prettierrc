@@ -6,14 +6,14 @@
     "bracketSpacing": false,
     "endOfLine": "auto",
     "plugins": [
-        "prettier-plugin-multiline-arrays"
+        "./node_modules/prettier-plugin-multiline-arrays/dist/index.js"
     ],
     "multilineArraysWrapThreshold": 1,
     "overrides": [
         {
             "files": [
-                "**/*.yml",
-                "**/*.yaml"
+                "*.yml",
+                "*.yaml"
             ],
             "options": {
                 "parser": "yaml",

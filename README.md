@@ -39,7 +39,7 @@ QQ交流群：**1063132902**  密码：**星塔旅人**
 
 ## 参与开发或贡献
 
-详见 [参与 MaaStellaSora 贡献](./CONTRIBUTING.md)
+详见 [参与 MaaStellaSora 贡献](.github/CONTRIBUTING.md)
 
 ## 鸣谢
 

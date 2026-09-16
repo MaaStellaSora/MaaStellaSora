@@ -14,7 +14,8 @@ on:
       - "assets/interface.json"
       - "assets/interface/**"
       - "assets/resource/**"
-      - "requirements.txt"
+      - "assets/requirements.txt"
+      - "assets/CONTACT"
       - "tools/ci/**"
   workflow_dispatch:
 
@@ -201,7 +202,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          ./install/python/python.exe -m pip install --no-index --find-links=install/deps --pre -r requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
+          ./install/python/python.exe -m pip install --no-index --find-links=install/deps --pre -r assets/requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install
         shell: bash
@@ -286,7 +287,7 @@ jobs:
         run: >-
           ./install/python/python.exe -m pip install
           --no-index --find-links=install/deps --pre
-          -r requirements.txt
+          -r assets/requirements.txt
           "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Assemble MXU package
@@ -460,7 +461,7 @@ jobs:
         shell: bash
         run: >-
           python -m pip install --pre
-          -r requirements.txt
+          -r assets/requirements.txt
           "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install on Linux
@@ -563,7 +564,7 @@ jobs:
       - name: Install Python dependencies on macOS
         shell: bash
         run: |
-          ./install/python/bin/python3 -m pip install --no-index --find-links=install/deps --pre -r requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
+          ./install/python/bin/python3 -m pip install --no-index --find-links=install/deps --pre -r assets/requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install on macOS
         shell: bash

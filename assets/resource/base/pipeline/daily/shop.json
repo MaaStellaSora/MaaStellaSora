@@ -1,108 +1,108 @@
 {
-  "采购_入口": {
-    "action": {
-      "param": {},
-      "type": "DoNothing"
-    },
-    "next": [
-      "采购_判断是否在主页",
-      {
-        "jump_back": true,
-        "name": "通用_返回主页"
-      }
-    ]
-  },
-  "采购_判断是否在主页": {
-    "recognition": {
-      "param": {
-        "template": [
-          "menu.png"
-        ],
-        "roi": [
-          1180,
-          0,
-          100,
-          80
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "next": [
-      "[JumpBack]采购_前往采购",
-      "[JumpBack]采购_前往商城",
-      "采购_任务完成"
-    ],
-    "timeout": 3000
-  },
-  "采购_前往采购": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Action.Starting": "正在前往采购"
-    },
-    "next": [
-      "采购_领取每日赠礼"
-    ],
-    "recognition": {
-      "param": {
-        "template": [
-          "procurement.png"
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "max_hit": 1
-  },
-  "采购_前往商城": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Action.Starting": "正在前往商城"
-    },
-    "next": [
-      "采购_领取每日赠礼"
-    ],
-    "recognition": {
-      "param": {
-        "template": [
-          "shop/shop.png"
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "max_hit": 1
-  },
-  "采购_领取每日赠礼": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "focus": {
-      "Node.Action.Starting": "正在领取每日赠礼"
-    },
-    "next": [
-      "通用_返回主页"
-    ],
-    "recognition": {
-      "param": {
-        "template": [
-          "shop/daily_gift_1.png",
-          "shop/daily_gift_2.png",
-          "shop/daily_gift_1_obtained.png",
-          "shop/daily_gift_2_obtained.png"
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "pre_delay": 1000 // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
-  },
-  "采购_任务完成": {
-    "action": {
-      "type": "DoNothing"
-    }
-  }
+	"采购_入口": {
+		"action": {
+			"param": {},
+			"type": "DoNothing"
+		},
+		"next": [
+			"采购_判断是否在主页",
+			{
+				"jump_back": true,
+				"name": "通用_返回主页"
+			}
+		]
+	},
+	"采购_判断是否在主页": {
+		"recognition": {
+			"param": {
+				"template": [
+					"menu.png"
+				],
+				"roi": [
+					1180,
+					0,
+					100,
+					80
+				]
+			},
+			"type": "TemplateMatch"
+		},
+		"next": [
+			"[JumpBack]采购_前往采购",
+			"[JumpBack]采购_前往商城",
+			"采购_任务完成"
+		],
+		"timeout": 3000
+	},
+	"采购_前往采购": {
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"focus": {
+			"Node.Action.Starting": "正在前往采购"
+		},
+		"next": [
+			"采购_领取每日赠礼"
+		],
+		"recognition": {
+			"param": {
+				"template": [
+					"procurement.png"
+				]
+			},
+			"type": "TemplateMatch"
+		},
+		"max_hit": 1
+	},
+	"采购_前往商城": {
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"focus": {
+			"Node.Action.Starting": "正在前往商城"
+		},
+		"next": [
+			"采购_领取每日赠礼"
+		],
+		"recognition": {
+			"param": {
+				"template": [
+					"shop/shop.png"
+				]
+			},
+			"type": "TemplateMatch"
+		},
+		"max_hit": 1
+	},
+	"采购_领取每日赠礼": {
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"focus": {
+			"Node.Action.Starting": "正在领取每日赠礼"
+		},
+		"next": [
+			"通用_返回主页"
+		],
+		"recognition": {
+			"param": {
+				"template": [
+					"shop/daily_gift_1.png",
+					"shop/daily_gift_2.png",
+					"shop/daily_gift_1_obtained.png",
+					"shop/daily_gift_2_obtained.png"
+				]
+			},
+			"type": "TemplateMatch"
+		},
+		"pre_delay": 1000 // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
+	},
+	"采购_任务完成": {
+		"action": {
+			"type": "DoNothing"
+		}
+	}
 }

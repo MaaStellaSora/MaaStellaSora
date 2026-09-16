@@ -1,252 +1,252 @@
 {
-  "基金_入口": {
-    "action": {
-      "param": {},
-      "type": "DoNothing"
-    },
-    "next": [
-      "基金_判断是否在主页",
-      {
-        "jump_back": true,
-        "name": "通用_返回主页"
-      }
-    ]
-  },
-  "基金_判断是否在主页": {
-    "action": {
-      "param": {},
-      "type": "DoNothing"
-    },
-    "recognition": {
-      "param": {
-        "template": [
-          "menu.png"
-        ],
-        "roi": [
-          1180,
-          0,
-          100,
-          80
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "next": [
-      "基金_打开基金"
-    ],
-    "timeout": 3000
-  },
-  "基金_打开基金": {
-    "recognition": {
-      "param": {
-        "template": [
-          "grant/grant.png"
-        ]
-      },
-      "type": "TemplateMatch"
-    },
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "next": [
-      "基金_判断是否已进入基金"
-    ]
-  },
-  "基金_判断是否已进入基金": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "基金"
-        ],
-        "roi": [
-          0,
-          0,
-          300,
-          100
-        ]
-      },
-      "type": "OCR"
-    },
-    "next": [
-      "[JumpBack]基金_跳过月初皮肤展示",
-      "基金_核实是否处于营业目标",
-      "基金_核实是否处于基金补贴"
-    ],
-    "post_wait_freezes": {
-      "time": 200,
-      "target": [
-        538,
-        561,
-        204,
-        74
-      ]
-    }
-  },
-  "基金_跳过月初皮肤展示": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "基金"
-        ],
-        "roi": [
-          538,
-          561,
-          204,
-          74
-        ]
-      },
-      "type": "OCR"
-    },
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "post_wait_freezes": 100
-  },
-  "基金_核实是否处于营业目标": {
-    "next": [
-      "基金_营业目标全部领取",
-      "基金_返回主页"
-    ],
-    "recognition": {
-      "param": {
-        "roi": [
-          900,
-          115,
-          55,
-          35
-        ],
-        "lower": [
-          20,
-          47,
-          90
-        ],
-        "upper": [
-          48,
-          76,
-          130
-        ],
-        "count": 100
-      },
-      "type": "ColorMatch"
-    }
-  },
-  "基金_营业目标全部领取": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "next": [
-      "基金_核实是否处于基金补贴",
-      "[JumpBack]基金_进入基金补贴",
-      "[JumpBack]基金_基金等级提升"
-    ],
-    "recognition": {
-      "param": {
-        "expected": [
-          "全部领取"
-        ]
-      },
-      "type": "OCR"
-    },
-    "post_wait_freezes": {
-      "time": 700,
-      "target": [
-        570,
-        175,
-        55,
-        50
-      ]
-    }
-  },
-  "基金_基金等级提升": {
-    "action": {
-      "param": {
-        "target": [
-          480,
-          600,
-          370,
-          100
-        ]
-      },
-      "type": "Click"
-    },
-    "max_hit": 10,
-    "post_wait_freezes": 100
-  },
-  "基金_进入基金补贴": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "recognition": {
-      "param": {
-        "expected": [
-          "基金补贴"
-        ],
-        "roi": [
-          500,
-          100,
-          380,
-          60
-        ]
-      },
-      "type": "OCR"
-    }
-  },
-  "基金_核实是否处于基金补贴": {
-    "next": [
-      "基金_基金补贴全部领取",
-      "基金_返回主页"
-    ],
-    "recognition": {
-      "param": {
-        "roi": [
-          780,
-          115,
-          55,
-          35
-        ],
-        "lower": [
-          19,
-          46,
-          90
-        ],
-        "upper": [
-          48,
-          76,
-          130
-        ],
-        "count": 100
-      },
-      "type": "ColorMatch"
-    }
-  },
-  "基金_基金补贴全部领取": {
-    "action": {
-      "param": {},
-      "type": "Click"
-    },
-    "next": [
-      "基金_返回主页"
-    ],
-    "recognition": {
-      "param": {
-        "expected": [
-          "全部领取"
-        ]
-      },
-      "type": "OCR"
-    }
-  },
-  "基金_返回主页": {
-    "next": [
-      "通用_返回主页",
-      {
-        "jump_back": true,
-        "name": "通用_点击空白处继续"
-      }
-    ]
-  }
+	"基金_入口": {
+		"action": {
+			"param": {},
+			"type": "DoNothing"
+		},
+		"next": [
+			"基金_判断是否在主页",
+			{
+				"jump_back": true,
+				"name": "通用_返回主页"
+			}
+		]
+	},
+	"基金_判断是否在主页": {
+		"action": {
+			"param": {},
+			"type": "DoNothing"
+		},
+		"recognition": {
+			"param": {
+				"template": [
+					"menu.png"
+				],
+				"roi": [
+					1180,
+					0,
+					100,
+					80
+				]
+			},
+			"type": "TemplateMatch"
+		},
+		"next": [
+			"基金_打开基金"
+		],
+		"timeout": 3000
+	},
+	"基金_打开基金": {
+		"recognition": {
+			"param": {
+				"template": [
+					"grant/grant.png"
+				]
+			},
+			"type": "TemplateMatch"
+		},
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"next": [
+			"基金_判断是否已进入基金"
+		]
+	},
+	"基金_判断是否已进入基金": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"基金"
+				],
+				"roi": [
+					0,
+					0,
+					300,
+					100
+				]
+			},
+			"type": "OCR"
+		},
+		"next": [
+			"[JumpBack]基金_跳过月初皮肤展示",
+			"基金_核实是否处于营业目标",
+			"基金_核实是否处于基金补贴"
+		],
+		"post_wait_freezes": {
+			"time": 200,
+			"target": [
+				538,
+				561,
+				204,
+				74
+			]
+		}
+	},
+	"基金_跳过月初皮肤展示": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"基金"
+				],
+				"roi": [
+					538,
+					561,
+					204,
+					74
+				]
+			},
+			"type": "OCR"
+		},
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"post_wait_freezes": 100
+	},
+	"基金_核实是否处于营业目标": {
+		"next": [
+			"基金_营业目标全部领取",
+			"基金_返回主页"
+		],
+		"recognition": {
+			"param": {
+				"roi": [
+					900,
+					115,
+					55,
+					35
+				],
+				"lower": [
+					20,
+					47,
+					90
+				],
+				"upper": [
+					48,
+					76,
+					130
+				],
+				"count": 100
+			},
+			"type": "ColorMatch"
+		}
+	},
+	"基金_营业目标全部领取": {
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"next": [
+			"基金_核实是否处于基金补贴",
+			"[JumpBack]基金_进入基金补贴",
+			"[JumpBack]基金_基金等级提升"
+		],
+		"recognition": {
+			"param": {
+				"expected": [
+					"全部领取"
+				]
+			},
+			"type": "OCR"
+		},
+		"post_wait_freezes": {
+			"time": 700,
+			"target": [
+				570,
+				175,
+				55,
+				50
+			]
+		}
+	},
+	"基金_基金等级提升": {
+		"action": {
+			"param": {
+				"target": [
+					480,
+					600,
+					370,
+					100
+				]
+			},
+			"type": "Click"
+		},
+		"max_hit": 10,
+		"post_wait_freezes": 100
+	},
+	"基金_进入基金补贴": {
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"recognition": {
+			"param": {
+				"expected": [
+					"基金补贴"
+				],
+				"roi": [
+					500,
+					100,
+					380,
+					60
+				]
+			},
+			"type": "OCR"
+		}
+	},
+	"基金_核实是否处于基金补贴": {
+		"next": [
+			"基金_基金补贴全部领取",
+			"基金_返回主页"
+		],
+		"recognition": {
+			"param": {
+				"roi": [
+					780,
+					115,
+					55,
+					35
+				],
+				"lower": [
+					19,
+					46,
+					90
+				],
+				"upper": [
+					48,
+					76,
+					130
+				],
+				"count": 100
+			},
+			"type": "ColorMatch"
+		}
+	},
+	"基金_基金补贴全部领取": {
+		"action": {
+			"param": {},
+			"type": "Click"
+		},
+		"next": [
+			"基金_返回主页"
+		],
+		"recognition": {
+			"param": {
+				"expected": [
+					"全部领取"
+				]
+			},
+			"type": "OCR"
+		}
+	},
+	"基金_返回主页": {
+		"next": [
+			"通用_返回主页",
+			{
+				"jump_back": true,
+				"name": "通用_点击空白处继续"
+			}
+		]
+	}
 }

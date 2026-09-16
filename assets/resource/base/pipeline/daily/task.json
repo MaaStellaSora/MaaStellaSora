@@ -1,15 +1,11 @@
 {
 	"任务_入口": {
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"任务_判断是否在主页",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页"
-			}
+			"[JumpBack]通用_返回主页"
 		]
 	},
 	"任务_判断是否在主页": {
@@ -28,8 +24,7 @@
 			}
 		},
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"任务_与旅人互动"
@@ -70,8 +65,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": 100,
 		"timeout": 5000,
@@ -89,8 +83,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -102,20 +95,10 @@
 			]
 		},
 		"next": [
-			{
-				"jump_back": true,
-				"name": "任务_一键领取"
-			},
-			{
-				"jump_back": true,
-				"name": "任务_领取额外奖励"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_关闭升级界面"
-			},
+			"[JumpBack]任务_一键领取",
+			"[JumpBack]任务_领取额外奖励",
+			"[JumpBack]通用_关闭升级界面",
 			"通用_返回主页"
-
 		]
 	},
 	"任务_每周事务": {
@@ -128,8 +111,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 200,
@@ -141,20 +123,10 @@
 			]
 		},
 		"next": [
-			{
-				"jump_back": true,
-				"name": "任务_一键领取"
-			},
-			{
-				"jump_back": true,
-				"name": "任务_领取额外奖励"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_关闭升级界面"
-			},
+			"[JumpBack]任务_一键领取",
+			"[JumpBack]任务_领取额外奖励",
+			"[JumpBack]通用_关闭升级界面",
 			"任务_魔王养成"
-
 		]
 	},
 	"任务_领取任务": {
@@ -167,8 +139,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"任务_每周事务"
@@ -194,8 +165,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": 100,
 		"timeout": 5000,
@@ -213,8 +183,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 200,
@@ -226,20 +195,10 @@
 			]
 		},
 		"next": [
-			{
-				"jump_back": true,
-				"name": "任务_一键领取"
-			},
-			{
-				"jump_back": true,
-				"name": "任务_领取额外奖励"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_关闭升级界面"
-			},
+			"[JumpBack]任务_一键领取",
+			"[JumpBack]任务_领取额外奖励",
+			"[JumpBack]通用_关闭升级界面",
 			"任务_今日事务"
-
 		]
 	}
 }

@@ -9,8 +9,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"timeout": 1500,
 		"next": [
@@ -22,8 +21,7 @@
 	},
 	"通用_换算快速作战次数": {
 		"recognition": {
-			"type": "DirectHit",
-			"param": {}
+			"type": "DirectHit"
 		},
 		"action": {
 			"type": "Custom",
@@ -39,34 +37,13 @@
 		"max_hit": 10,
 		"next": [
 			"通用_主页标记",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页按钮"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_点击空白处继续"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_关闭按钮"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_返回按钮"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_关闭心链按钮"
-			},
-			{
-				"jump_back": true,
-				"name": "通用_关闭升级界面"
-			},
-			{
-				"jump_back": true,
-				"name": "心链_默契提升"
-			}
+			"[JumpBack]通用_返回主页按钮",
+			"[JumpBack]通用_点击空白处继续",
+			"[JumpBack]通用_关闭按钮",
+			"[JumpBack]通用_返回按钮",
+			"[JumpBack]通用_关闭心链按钮",
+			"[JumpBack]通用_关闭升级界面",
+			"[JumpBack]心链_默契提升"
 		]
 	},
 	"通用_主页标记": {
@@ -102,8 +79,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -129,8 +105,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -153,8 +128,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -218,8 +192,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -237,8 +210,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"活动快速战斗_开始战斗"

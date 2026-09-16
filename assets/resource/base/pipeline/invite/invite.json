@@ -9,8 +9,7 @@
 			}
 		},
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"邀约_打开心链"
@@ -26,8 +25,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"邀约_前往邀约"
@@ -52,18 +50,13 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"timeout": 3000,
 		"next": [
 			"邀约_地点",
-			{
-				"jump_back": true,
-				"name": "邀约_点击确认按钮"
-			},
+			"[JumpBack]邀约_点击确认按钮",
 			"邀约_开始邀约"
-
 		],
 		"focus": {
 			"Node.Recognition.Succeeded": "开始邀约"
@@ -86,8 +79,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"attach": {
 			"gift": "no"
@@ -110,8 +102,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"attach": {
 			"gift": "no"
@@ -134,8 +125,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"attach": {
 			"gift": "no"
@@ -158,8 +148,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"attach": {
 			"gift": "no"
@@ -182,8 +171,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"attach": {
 			"gift": "no"
@@ -214,10 +202,7 @@
 	"邀约_入口": {
 		"next": [
 			"邀约_判断是否在主页",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页"
-			}
+			"[JumpBack]通用_返回主页"
 		],
 		"focus": {
 			"Node.Recognition.Succeeded": "执行邀约"
@@ -240,8 +225,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"邀约_主界面",
@@ -347,8 +331,7 @@
 		},
 		"pre_delay": 0,
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_delay": 300,
 		"next": [
@@ -419,8 +402,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"focus": {
 			"Node.Action.Succeeded": "点击邀约确认按钮"
@@ -443,8 +425,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": 1000
 	},
@@ -464,8 +445,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"邀约_跳过",
@@ -491,16 +471,12 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": 1000,
 		"next": [
 			"邀约_已回到邀约界面",
-			{
-				"jump_back": true,
-				"name": "邀约_默契提升"
-			}
+			"[JumpBack]邀约_默契提升"
 		],
 		"focus": {
 			"Node.Recognition.Succeeded": "还是算了"
@@ -522,20 +498,13 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"timeout": 30000,
 		"next": [
 			"邀约_已回到邀约界面",
-			{
-				"jump_back": true,
-				"name": "邀约_点击空白"
-			},
-			{
-				"jump_back": true,
-				"name": "邀约_默契提升"
-			}
+			"[JumpBack]邀约_点击空白",
+			"[JumpBack]邀约_默契提升"
 		],
 		"focus": {
 			"Node.Recognition.Succeeded": "邀约_送出礼物"
@@ -558,8 +527,7 @@
 		},
 		"pre_wait_freezes": 200,
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": 100,
 		"next": [
@@ -588,10 +556,7 @@
 		"timeout": 5000,
 		"next": [
 			"邀约_选择礼物成功",
-			{
-				"jump_back": true,
-				"name": "邀约_选择礼物"
-			}
+			"[JumpBack]邀约_选择礼物"
 		],
 		"on_error": [
 			"邀约_还是算了"
@@ -614,8 +579,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 200,
@@ -664,8 +628,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		}
 	},
 	"邀约_达上限": {

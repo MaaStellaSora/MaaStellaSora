@@ -1,144 +1,144 @@
 {
 	"心链_入口": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
+		"recognition": {
+			"type": "DirectHit",
+			"param": {}
 		},
+		"pre_delay": 0,
+		"action": {
+			"type": "DoNothing",
+			"param": {}
+		},
+		"post_delay": 0,
 		"next": [
 			"心链_判断是否在主页",
 			{
 				"jump_back": true,
 				"name": "通用_返回主页"
 			}
-		],
-		"post_delay": 0,
-		"pre_delay": 0,
-		"recognition": {
-			"param": {},
-			"type": "DirectHit"
-		}
+		]
 	},
 	"心链_判断是否在主页": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "DoNothing",
+			"param": {}
 		},
 		"next": [
 			"心链_打开心链"
 		]
 	},
 	"心链_打开心链": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在打开心链"
-		},
-		"next": [
-			"心链_点击邮寄"
-		],
-		"post_wait_freezes": 2000,
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"Invite/heartlink.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"post_wait_freezes": 2000,
+		"next": [
+			"心链_点击邮寄"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在打开心链"
 		}
 	},
 	"心链_点击邮寄": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在点击邮寄按钮"
-		},
-		"next": [
-			"心链_选择礼物"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"邮寄"
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"心链_选择礼物"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在点击邮寄按钮"
 		}
 	},
 	"心链_赠送礼物": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在赠送礼物"
-		},
-		"next": [
-			"心链_默契提升",
-			"通用_返回主页"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"赠送礼物"
 				]
-			},
-			"type": "OCR"
+			}
 		},
-		"timeout": 5000
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"timeout": 5000,
+		"next": [
+			"心链_默契提升",
+			"通用_返回主页"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在赠送礼物"
+		}
 	},
 	"心链_选择礼物": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Failed": "没有找到礼物图标 可能是没有礼物 跳过",
-			"Node.Recognition.Starting": "正在选择礼物"
-		},
-		"next": [
-			"心链_赠送礼物"
-		],
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"gift_good.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
-		"timeout": 3000
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"timeout": 3000,
+		"next": [
+			"心链_赠送礼物"
+		],
+		"focus": {
+			"Node.Recognition.Failed": "没有找到礼物图标 可能是没有礼物 跳过",
+			"Node.Recognition.Starting": "正在选择礼物"
+		}
 	},
 	"心链_默契提升": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在关闭弹窗"
-		},
-		"next": [
-			"通用_返回主页"
-		],
-		"pre_wait_freezes": 1000,
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"默契提升"
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"pre_wait_freezes": 1000,
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"通用_返回主页"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在关闭弹窗"
 		}
 	}
 }

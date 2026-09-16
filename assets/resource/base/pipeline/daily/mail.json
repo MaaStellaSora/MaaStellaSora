@@ -1,79 +1,79 @@
 {
 	"邮箱_入口": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
+		"recognition": {
+			"type": "DirectHit",
+			"param": {}
 		},
+		"pre_delay": 0,
+		"action": {
+			"type": "DoNothing",
+			"param": {}
+		},
+		"post_delay": 0,
 		"next": [
 			"邮箱_判断是否在主页",
 			{
 				"jump_back": true,
 				"name": "通用_返回主页"
 			}
-		],
-		"post_delay": 0,
-		"pre_delay": 0,
-		"recognition": {
-			"param": {},
-			"type": "DirectHit"
-		}
+		]
 	},
 	"邮箱_判断是否在主页": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "DoNothing",
+			"param": {}
 		},
 		"next": [
 			"邮箱_打开邮箱"
 		]
 	},
 	"邮箱_打开邮箱": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在打开邮箱"
-		},
-		"next": [
-			"邮箱_一键领取"
-		],
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"email.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"邮箱_一键领取"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在打开邮箱"
 		}
 	},
 	"邮箱_一键领取": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在尝试一键领取"
-		},
-		"next": [
-			"通用_返回主页"
-		],
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"quick_claim.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
-		"timeout": 2000
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"timeout": 2000,
+		"next": [
+			"通用_返回主页"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在尝试一键领取"
+		}
 	}
 }

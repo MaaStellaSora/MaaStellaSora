@@ -1,67 +1,67 @@
 {
 	"活动_从主页进入战斗关卡": {
+		"max_hit": 1,
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"活动_打开活动",
 			"[JumpBack]通用_返回主页"
-		],
-		"pre_delay": 0,
-		"post_delay": 0,
-		"max_hit": 1
+		]
 	},
 	"活动_打开活动": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"activity/banner.png"
+				]
+			}
+		},
 		"action": {
 			"type": "Click"
 		},
 		"next": [
 			"活动_活动界面"
-		],
-		"recognition": {
-			"param": {
-				"template": [
-					"activity/banner.png"
-				]
-			},
-			"type": "TemplateMatch"
-		}
+		]
 	},
 	"活动_活动界面": {
 		"recognition": {
+			"type": "And",
 			"param": {
 				"all_of": [
 					"__活动_战斗关卡按钮"
 				]
-			},
-			"type": "And"
+			}
 		},
-		"next": [
-			"活动_点击活动战斗关卡"
-		],
 		"post_wait_freezes": {
 			"time": 100,
 			"timeout": 2000
-		}
-	},
-	"活动_点击活动战斗关卡": {
-		"action": {
-			"type": "Click"
 		},
 		"next": [
-			"活动_战斗关卡界面",
 			"活动_点击活动战斗关卡"
-		],
+		]
+	},
+	"活动_点击活动战斗关卡": {
+		"max_hit": 10,
 		"recognition": {
+			"type": "And",
 			"param": {
 				"all_of": [
 					"__活动_战斗关卡按钮"
 				]
-			},
-			"type": "And"
+			}
+		},
+		"action": {
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 100,
 			"timeout": 1000
 		},
-		"max_hit": 10
+		"next": [
+			"活动_战斗关卡界面",
+			"活动_点击活动战斗关卡"
+		]
 	},
 	"活动_战斗关卡界面": {
 		"recognition": {
@@ -82,6 +82,7 @@
 	},
 	"__活动_战斗关卡按钮": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"战斗关卡"
@@ -92,8 +93,7 @@
 					1280,
 					630
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	}
 }

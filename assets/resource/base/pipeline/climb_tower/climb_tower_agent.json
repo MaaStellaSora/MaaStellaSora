@@ -9,6 +9,7 @@
 	},
 	"星塔_开始爬塔_检测背包按钮_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
@@ -20,8 +21,7 @@
 					85
 				],
 				"threshold": 0.8
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"next": [
 			"星塔_爬塔流程_agent"
@@ -29,6 +29,7 @@
 	},
 	"星塔_开始爬塔_检测商店购物界面_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_商店主界面__442_338_66_145__392_288_166_245.png"
@@ -40,8 +41,7 @@
 					468
 				],
 				"threshold": 0.8
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"next": [
 			"星塔_节点_商店_购物_返回商店层_agent"
@@ -69,10 +69,10 @@
 				]
 			}
 		},
+		"timeout": 5000,
 		"next": [
 			"星塔_节点_选择潜能_agent"
-		],
-		"timeout": 5000
+		]
 	},
 	"星塔_节点_选择潜能_agent": {
 		"recognition": {
@@ -85,6 +85,7 @@
 			"type": "DoNothing"
 			// 因为设置为recognition方便debug，但实际操作不一定会点击，所以交给识别函数点击了
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"星塔_节点_选择潜能_拿走_agent"
 		],
@@ -104,11 +105,11 @@
 			// threshold_decay_str为刷新阈值衰减系数，0-1之间，0表示不衰减，0.01表示每刷新一次衰减1%
 			"threshold_coef_str": "0.8",
 			"threshold_decay_str": "0.05"
-		},
-		"post_wait_freezes": 100
+		}
 	},
 	"星塔_节点_选择潜能_拿走_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_buff选择_拿走__214_585_164_38__164_535_264_138.png"
@@ -121,24 +122,23 @@
 					70
 				],
 				"threshold": 0.6
-			},
-			"type": "TemplateMatch"
+			}
 		},
+		"pre_delay": 0,
 		"action": {
 			"type": "Click"
 		},
+		"post_delay": 300,
 		"next": [
 			"星塔_节点_选择潜能_拿走_agent",
 			"星塔_节点_选择潜能_已确认拿走_agent"
-		],
-		"pre_delay": 0,
-		"post_delay": 300
+		]
 	},
 	"星塔_节点_选择潜能_已确认拿走_agent": {
+		"pre_delay": 0,
 		"action": {
 			"type": "DoNothing"
 		},
-		"pre_delay": 0,
 		"post_delay": 500
 	},
 	"星塔_节点_进入对话_agent": {
@@ -179,35 +179,33 @@
 				]
 			}
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"星塔_节点_进行对话选择_agent"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"星塔_节点_进行对话选择_agent": {
+		"recognition": {
+			"type": "Custom",
+			"param": {
+				"custom_recognition": "event_recognition"
+			}
+		},
 		"action": {
 			"type": "Click"
 		},
-		"recognition": {
-			"param": {
-				"custom_recognition": "event_recognition"
-			},
-			"type": "Custom"
-		},
+		"post_delay": 500,
 		"attach": {
 			"lang_type": "cn",
 			"rules": [],
 			"last_question": "",
 			"last_choice": "",
 			"last_consequence": ""
-		},
-		"post_delay": 500
+		}
 	},
 	"星塔_节点_进行对话选择_待移除_agent": {
-		"action": {
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"就试试",
@@ -239,12 +237,15 @@
 					452
 				],
 				"order_by": "Expected"
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click"
 		}
 	},
 	"星塔_节点_进入商店_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"商店购物"
@@ -255,8 +256,7 @@
 					580,
 					330
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"next": [
 			"星塔_节点_商店_购物_agent"
@@ -304,6 +304,7 @@
 	},
 	"星塔_节点_商店_购物_返回商店层_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/星塔_商店_返回__50_17_37_38__0_0_137_105.png",
@@ -315,8 +316,7 @@
 					201,
 					89
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -325,6 +325,7 @@
 	},
 	"星塔_节点_回到商店层_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"商店购物"
@@ -335,8 +336,7 @@
 					580,
 					330
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"next": [
 			"星塔_节点_商店_强化_agent"
@@ -432,6 +432,7 @@
 	},
 	"星塔_确认_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_记录保存确认按钮.png"
@@ -442,8 +443,7 @@
 					352,
 					143
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -451,6 +451,7 @@
 	},
 	"星塔_默契提升_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"默契",
@@ -462,18 +463,15 @@
 					257,
 					102
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
 		}
 	},
 	"星塔_点击空白处关闭_agent": {
-		"action": {
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"点击",
@@ -486,8 +484,10 @@
 					340,
 					130
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click"
 		},
 		"post_delay": 500
 	},
@@ -509,6 +509,7 @@
 	},
 	"星塔_回到难度选择界面_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"快速战斗"
@@ -519,8 +520,7 @@
 					222,
 					65
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"next": [
 			"星塔_循环用节点_agent"
@@ -528,6 +528,7 @@
 	},
 	"星塔_回到出发界面_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"星塔探索"
@@ -538,8 +539,7 @@
 					161,
 					75
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"next": [
 			"星塔_循环用节点_agent"
@@ -547,6 +547,7 @@
 	},
 	"星塔_回到主页_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
@@ -557,8 +558,7 @@
 					100,
 					80
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"next": [
 			"星塔_循环用节点_agent"

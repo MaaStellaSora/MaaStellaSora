@@ -1,50 +1,44 @@
 {
 	"邀约_判断是否在主页": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "DoNothing",
+			"param": {}
 		},
 		"next": [
 			"邀约_打开心链"
 		]
 	},
 	"邀约_打开心链": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在打开心链"
-		},
-		"next": [
-			"邀约_前往邀约"
-		],
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"Invite/heartlink.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"邀约_前往邀约"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在打开心链"
 		}
 	},
 	"邀约_开始邀约": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Succeeded": "开始邀约"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"roi": [
 					833,
@@ -55,9 +49,13 @@
 				"template": [
 					"Invite/邀约按钮.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"timeout": 3000,
 		"next": [
 			"邀约_地点",
 			{
@@ -67,15 +65,14 @@
 			"邀约_开始邀约"
 
 		],
-		"timeout": 3000
+		"focus": {
+			"Node.Recognition.Succeeded": "开始邀约"
+		}
 	},
 	"邀约_1号": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"max_hit": 2,
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"希娅"
@@ -86,20 +83,20 @@
 					377,
 					390
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"attach": {
 			"gift": "no"
 		}
 	},
 	"邀约_2号": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"max_hit": 2,
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"雾语"
@@ -110,20 +107,20 @@
 					377,
 					390
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"attach": {
 			"gift": "no"
 		}
 	},
 	"邀约_3号": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"max_hit": 2,
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"苍兰"
@@ -134,20 +131,20 @@
 					377,
 					390
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"attach": {
 			"gift": "no"
 		}
 	},
 	"邀约_4号": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"max_hit": 2,
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"冬香"
@@ -158,20 +155,20 @@
 					377,
 					390
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"attach": {
 			"gift": "no"
 		}
 	},
 	"邀约_5号": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"max_hit": 2,
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"夏花"
@@ -182,21 +179,19 @@
 					377,
 					390
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"attach": {
 			"gift": "no"
 		}
 	},
 	"邀约_主界面": {
-		"focus": {
-			"Node.Recognition.Succeeded": "邀约_主界面"
-		},
-		"next": [
-			"邀约_总循环"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"邀约"
@@ -207,35 +202,30 @@
 					70,
 					40
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"next": [
+			"邀约_总循环"
+		],
+		"focus": {
+			"Node.Recognition.Succeeded": "邀约_主界面"
 		}
 	},
 	"邀约_入口": {
-		"focus": {
-			"Node.Recognition.Succeeded": "执行邀约"
-		},
 		"next": [
 			"邀约_判断是否在主页",
 			{
 				"jump_back": true,
 				"name": "通用_返回主页"
 			}
-		]
+		],
+		"focus": {
+			"Node.Recognition.Succeeded": "执行邀约"
+		}
 	},
 	"邀约_前往邀约": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Succeeded": "邀约_前往邀约"
-		},
-		"next": [
-			"邀约_主界面",
-			"邀约_前往邀约"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"邀约",
@@ -247,12 +237,23 @@
 					388,
 					79
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"邀约_主界面",
+			"邀约_前往邀约"
+		],
+		"focus": {
+			"Node.Recognition.Succeeded": "邀约_前往邀约"
 		}
 	},
 	"邀约_地点": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"选择"
@@ -263,13 +264,8 @@
 					122,
 					398
 				]
-			},
-			"type": "OCR"
+			}
 		},
-		"next": [
-			"邀约_特殊回忆",
-			"邀约_选择默认地点"
-		],
 		"post_wait_freezes": {
 			"time": 100,
 			"target": [
@@ -278,10 +274,15 @@
 				590,
 				415
 			]
-		}
+		},
+		"next": [
+			"邀约_特殊回忆",
+			"邀约_选择默认地点"
+		]
 	},
 	"邀约_特殊回忆": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"特殊回忆"
@@ -292,17 +293,17 @@
 					190,
 					435
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"邀约_选择回忆地点"
-		],
-		"pre_delay": 0,
-		"post_delay": 0
+		]
 	},
 	"邀约_选择默认地点": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"选择"
@@ -313,31 +314,24 @@
 					122,
 					398
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"pre_delay": 0,
 		"action": {
 			"type": "Click"
 		},
+		"post_delay": 300,
 		"next": [
 			"邀约_跳过",
 			"邀约_选择默认地点"
 		],
 		"focus": {
 			"Node.Recognition.Succeeded": "选择默认地点"
-		},
-		"pre_delay": 0,
-		"post_delay": 300
+		}
 	},
 	"邀约_选择回忆地点": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Succeeded": "选择回忆地点"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"选择"
@@ -349,22 +343,28 @@
 					54,
 					101
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"pre_delay": 0,
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"post_delay": 300,
 		"next": [
 			"邀约_跳过",
 			"邀约_选择回忆地点"
 		],
-		"pre_delay": 0,
-		"post_delay": 300
+		"focus": {
+			"Node.Recognition.Succeeded": "选择回忆地点"
+		}
 	},
 	"邀约_总循环": {
 		"action": {
+			"type": "Custom",
 			"param": {
 				"custom_action": "InviteAuto"
-			},
-			"type": "Custom"
+			}
 		},
 		"next": [
 			"通用_返回主页"
@@ -372,6 +372,7 @@
 	},
 	"邀约_未收集回忆": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"Invite/邀约_未收集回忆.png"
@@ -382,12 +383,12 @@
 					530,
 					390
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"邀约_已回到邀约界面": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"邀约"
@@ -399,19 +400,12 @@
 					109
 				],
 				"threshold": 0.9
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"邀约_点击确认按钮": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Succeeded": "点击邀约确认按钮"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"roi": [
 					663,
@@ -422,16 +416,19 @@
 				"template": [
 					"ok.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"focus": {
+			"Node.Action.Succeeded": "点击邀约确认按钮"
 		}
 	},
 	"邀约_点击空白": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"点击空白",
@@ -443,20 +440,17 @@
 					335,
 					216
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": 1000
 	},
 	"邀约_跳过": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Succeeded": "跳过邀约"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"roi": [
 					1152,
@@ -467,23 +461,23 @@
 				"template": [
 					"Invite/邀约跳过.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"next": [
 			"邀约_跳过",
 			"邀约_送礼"
-		]
+		],
+		"focus": {
+			"Node.Recognition.Succeeded": "跳过邀约"
+		}
 	},
 	"邀约_还是算了": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Succeeded": "还是算了"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"还是算了"
@@ -494,9 +488,13 @@
 					151,
 					58
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"post_wait_freezes": 1000,
 		"next": [
 			"邀约_已回到邀约界面",
 			{
@@ -504,17 +502,13 @@
 				"name": "邀约_默契提升"
 			}
 		],
-		"post_wait_freezes": 1000
+		"focus": {
+			"Node.Recognition.Succeeded": "还是算了"
+		}
 	},
 	"邀约_送出礼物": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Succeeded": "邀约_送出礼物"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"送出礼物"
@@ -525,9 +519,13 @@
 					133,
 					41
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"timeout": 30000,
 		"next": [
 			"邀约_已回到邀约界面",
 			{
@@ -539,17 +537,13 @@
 				"name": "邀约_默契提升"
 			}
 		],
-		"timeout": 30000
+		"focus": {
+			"Node.Recognition.Succeeded": "邀约_送出礼物"
+		}
 	},
 	"邀约_送礼": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Recognition.Succeeded": "正在送礼"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"送出礼物"
@@ -560,18 +554,25 @@
 					458,
 					154
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"pre_wait_freezes": 200,
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"post_wait_freezes": 100,
 		"next": [
 			"邀约_送礼流程",
 			"邀约_送礼"
 		],
-		"pre_wait_freezes": 200,
-		"post_wait_freezes": 100
+		"focus": {
+			"Node.Recognition.Succeeded": "正在送礼"
+		}
 	},
 	"邀约_送礼流程": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"0.?1"
@@ -582,9 +583,9 @@
 					200,
 					90
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"timeout": 5000,
 		"next": [
 			"邀约_选择礼物成功",
 			{
@@ -594,15 +595,11 @@
 		],
 		"on_error": [
 			"邀约_还是算了"
-		],
-		"timeout": 5000
+		]
 	},
 	"邀约_选择礼物": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"roi": [
 					750,
@@ -614,8 +611,11 @@
 					"Invite/邀约_喜好图标.png"
 				],
 				"order_by": "Vertical"
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": {
 			"time": 200,
@@ -628,10 +628,8 @@
 		}
 	},
 	"邀约_选择礼物成功": {
-		"next": [
-			"邀约_送出礼物"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"1.?1"
@@ -642,17 +640,16 @@
 					200,
 					90
 				]
-			},
-			"type": "OCR"
+			}
 		},
-		"post_wait_freezes": 200
+		"post_wait_freezes": 200,
+		"next": [
+			"邀约_送出礼物"
+		]
 	},
 	"邀约_默契提升": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"默契",
@@ -664,12 +661,16 @@
 					268,
 					81
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		}
 	},
 	"邀约_达上限": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"5.?5"
@@ -680,12 +681,12 @@
 					190,
 					60
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"邀约_左方识别邀约对象": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"InviteAuto函数专用节点"
@@ -696,12 +697,12 @@
 					385,
 					459
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"邀约_向下滑动": {
 		"action": {
+			"type": "Swipe",
 			"param": {
 				"begin": [
 					270,
@@ -713,13 +714,13 @@
 				],
 				"duration": 800,
 				"end_hold": 500
-			},
-			"type": "Swipe"
+			}
 		},
 		"post_wait_freezes": 500
 	},
 	"邀约_向上滑动": {
 		"action": {
+			"type": "Swipe",
 			"param": {
 				"begin": [
 					270,
@@ -731,35 +732,34 @@
 				],
 				"duration": 800,
 				"end_hold": 500
-			},
-			"type": "Swipe"
+			}
 		},
 		"post_wait_freezes": 500
 	},
 	"邀约_已滑动到底部": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": "invite_scroll_down_template",
 				"threshold": 0.99
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"邀约_已滑动到顶部": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": "invite_scroll_up_template",
 				"threshold": 0.99
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"邀约_回忆收集_循环": {
 		"action": {
+			"type": "Custom",
 			"param": {
 				"custom_action": "InviteMemory"
-			},
-			"type": "Custom"
+			}
 		},
 		"next": [
 			"邀约_送礼"
@@ -767,6 +767,7 @@
 	},
 	"邀约_对话选项按钮": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"roi": [
 					760,
@@ -777,12 +778,12 @@
 				"template": [
 					"Invite/邀约_对话选项按钮.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"邀约_读取选项文本": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"InviteMemory函数专用节点"
@@ -793,8 +794,7 @@
 					450,
 					200
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	}
 }

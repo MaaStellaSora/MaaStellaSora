@@ -20,11 +20,11 @@
 				]
 			}
 		},
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"活动挑战_执行循环"
-		],
-		"pre_delay": 0,
-		"post_delay": 0
+		]
 	},
 	"活动挑战_执行循环": {
 		"recognition": {
@@ -70,10 +70,10 @@
 		"action": {
 			"type": "Click"
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"活动挑战_随机选择关卡"
 		],
-		"post_wait_freezes": 100,
 		"focus": {
 			"Node.Action.Starting": "正在选择活动挑战难度"
 		}
@@ -105,11 +105,11 @@
 				"custom_action": "activity_challenge_random_stage"
 			}
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"活动挑战_出发",
 			"活动挑战_随机选择关卡"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"活动挑战_出发": {
 		"recognition": {
@@ -129,10 +129,10 @@
 		"action": {
 			"type": "Click"
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"选择纪录_进入主界面"
 		],
-		"post_wait_freezes": 100,
 		"focus": {
 			"Node.Action.Starting": "正在点击活动挑战出发"
 		}
@@ -149,12 +149,12 @@
 		"action": {
 			"type": "Click"
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"活动挑战_回到战斗关卡列表",
 			"[JumpBack]通用_关闭升级界面",
 			"[JumpBack]通用_点击空白处继续"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"活动挑战_回到战斗关卡列表": {
 		"recognition": {

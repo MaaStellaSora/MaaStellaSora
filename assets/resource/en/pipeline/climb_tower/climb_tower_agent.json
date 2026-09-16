@@ -6,6 +6,7 @@
 	},
 	"星塔_节点_进行对话选择_待移除_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Just a try",
@@ -35,18 +36,17 @@
 						"'"
 					]
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_进入商店_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Purchase at the shop"
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_购物_agent": {
@@ -56,12 +56,12 @@
 	},
 	"星塔_节点_回到商店层_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Purchase at the shop"
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_离开商店_agent": {
@@ -96,6 +96,7 @@
 	},
 	"星塔_默契提升_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Affinity",
@@ -107,46 +108,46 @@
 					1280,
 					720
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_点击空白处关闭_agent": {
-		"action": {
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Select anywhere",
 					"continue"
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click"
 		}
 	},
 	"星塔_回到难度选择界面_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Quick Battle"
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_回到出发界面_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Ascension"
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_确认_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"Confirm"
@@ -157,8 +158,7 @@
 					352,
 					143
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	}
 }

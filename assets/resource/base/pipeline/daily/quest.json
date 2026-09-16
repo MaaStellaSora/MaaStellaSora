@@ -1,90 +1,98 @@
 {
 	"委托_入口": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
+		"recognition": {
+			"type": "DirectHit",
+			"param": {}
 		},
+		"pre_delay": 0,
+		"action": {
+			"type": "DoNothing",
+			"param": {}
+		},
+		"post_delay": 0,
 		"next": [
 			"委托_判断是否在主页",
 			{
 				"jump_back": true,
 				"name": "通用_返回主页"
 			}
-		],
-		"post_delay": 0,
-		"pre_delay": 0,
-		"recognition": {
-			"param": {},
-			"type": "DirectHit"
-		}
+		]
 	},
 	"委托_判断是否在主页": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "DoNothing",
+			"param": {}
 		},
 		"next": [
 			"委托_前往委托"
 		]
 	},
 	"委托_再次派遣": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"next": [
-			"通用_返回主页"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"再次派遣"
 				]
-			},
-			"type": "OCR"
-		}
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"通用_返回主页"
+		]
 	},
 	"委托_前往委托": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"entrust.png"
+				]
+			}
+		},
 		"action": {
-			"param": {},
-			"type": "Click"
+			"type": "Click",
+			"param": {}
 		},
-		"focus": {
-			"Node.Action.Succeeded": "前往委托"
-		},
+		"post_wait_freezes": 1000,
+		"timeout": 5000,
 		"next": [
 			"委托_一键领取"
 		],
 		"on_error": [
 			"通用_返回主页"
 		],
-		"recognition": {
-			"param": {
-				"template": [
-					"entrust.png"
-				]
-			},
-			"type": "TemplateMatch"
-		},
-		"post_wait_freezes": 1000,
-		"timeout": 5000
+		"focus": {
+			"Node.Action.Succeeded": "前往委托"
+		}
 	},
 	"委托_一键领取": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"quick_claim.png"
+				],
+				"threshold": 0.8
+			}
+		},
 		"action": {
-			"param": {},
-			"type": "Click"
+			"type": "Click",
+			"param": {}
 		},
-		"focus": {
-			"Node.Action.Starting": "正在尝试一键领取"
-		},
+		"post_wait_freezes": 1500,
+		"timeout": 5000,
 		"next": [
 			{
 				"jump_back": true,
@@ -96,33 +104,25 @@
 				"name": "通用_关闭升级界面"
 			}
 		],
-		"recognition": {
-			"param": {
-				"template": [
-					"quick_claim.png"
-				],
-				"threshold": 0.8
-			},
-			"type": "TemplateMatch"
-		},
-		"post_wait_freezes": 1500,
-		"timeout": 5000
+		"focus": {
+			"Node.Action.Starting": "正在尝试一键领取"
+		}
 	},
 	"委托_跳过": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"next": [
-			"通用_点击空白处继续"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"跳过"
 				]
-			},
-			"type": "OCR"
-		}
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"通用_点击空白处继续"
+		]
 	}
 }

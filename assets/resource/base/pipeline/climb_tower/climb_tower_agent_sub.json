@@ -1,6 +1,7 @@
 {
 	"星塔_编队角色_识别旅人名称_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"\\w+"
@@ -12,12 +13,12 @@
 					55
 				],
 				"threshold": 0.6
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_点击商店购物_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"商店购物"
@@ -28,20 +29,20 @@
 					580,
 					330
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"星塔_节点_商店_进入购物界面_agent",
 			"星塔_节点_商店_点击商店购物_agent"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"星塔_节点_商店_进入购物界面_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
@@ -53,12 +54,12 @@
 					47
 				],
 				"threshold": 0.8
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"星塔_通用_识别当前金币_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"\\d+"
@@ -77,12 +78,12 @@
 				],
 				"threshold": 0.6,
 				"only_rec": true
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_购物_识别物品价格_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"\\d+"
@@ -101,22 +102,22 @@
 				],
 				"threshold": 0.6
 				// "color_filter": "星塔_节点_商店_购物_识别物品内容_价格滤色器_agent"
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_购物_识别物品内容_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					".+"
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_购物_识别旅人限定特饮_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_商店_非指定旅人潜能特饮.png"
@@ -128,12 +129,12 @@
 					190
 				],
 				"threshold": 0.75
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"星塔_节点_商店_购物_识别物品内容_价格滤色器_agent": {
 		"recognition": {
+			"type": "ColorMatch",
 			"param": {
 				"method": 4,
 				"lower": [
@@ -146,21 +147,21 @@
 					170,
 					170
 				]
-			},
-			"type": "ColorMatch"
+			}
 		}
 	},
 	"星塔_节点_商店_购物_购买道具_agent": {
 		"action": {
 			"type": "Click"
 		},
+		"timeout": 2000,
 		"next": [
 			"星塔_节点_商店_购物_购买道具_确认购买_agent"
-		],
-		"timeout": 2000
+		]
 	},
 	"星塔_节点_商店_购物_购买道具_确认购买_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"购买"
@@ -171,24 +172,24 @@
 					98,
 					52
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
+		},
+		"post_wait_freezes": {
+			"time": 200,
+			"timeout": 2000
 		},
 		"next": [
 			"星塔_节点_商店_进入购物界面_agent",
 			"[JumpBack]星塔_节点_进入潜能选择_agent",
 			"[JumpBack]星塔_点击空白处关闭_agent"
-		],
-		"post_wait_freezes": {
-			"time": 200,
-			"timeout": 2000
-		}
+		]
 	},
 	"星塔_节点_商店_购物_识别可刷新次数_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"\\d+"
@@ -206,12 +207,12 @@
 					]
 				]
 			},
-			"threshold": 0.6,
-			"type": "OCR"
+			"threshold": 0.6
 		}
 	},
 	"星塔_通用_识别刷新花费_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"\\d+"
@@ -229,12 +230,12 @@
 					]
 				],
 				"threshold": 0.6
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_点击刷新_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_商店刷新按钮__1199_609_45_41__1149_559_131_141.png"
@@ -245,8 +246,7 @@
 					190,
 					170
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -255,6 +255,7 @@
 	},
 	"星塔_节点_商店_识别强化所需金币_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"\\d+"
@@ -288,12 +289,12 @@
 					]
 
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_点击强化_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"强化"
@@ -304,16 +305,15 @@
 					435,
 					93
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"星塔_节点_商店_强化_进入潜能选择_agent"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"星塔_节点_商店_强化_进入潜能选择_agent": {
 		"recognition": {
@@ -328,14 +328,15 @@
 				]
 			}
 		},
+		"timeout": 5000,
 		"next": [
 			"星塔_节点_商店_强化_回到商店层_agent",
 			"[JumpBack]星塔_节点_选择潜能_agent"
-		],
-		"timeout": 5000
+		]
 	},
 	"星塔_节点_商店_强化_回到商店层_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"商店购物"
@@ -346,21 +347,21 @@
 					580,
 					330
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_购买协奏音符_agent": {
 		"action": {
 			"type": "Click"
 		},
+		"timeout": 2000,
 		"next": [
 			"星塔_节点_商店_购买协奏音符_检查确认框_agent"
-		],
-		"timeout": 2000
+		]
 	},
 	"星塔_节点_商店_购买协奏音符_检查确认框_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"购买"
@@ -371,12 +372,12 @@
 					98,
 					52
 				]
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_购买协奏音符_核实协奏_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"协奏",
@@ -389,8 +390,7 @@
 					165,
 					43
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"next": [
 			"星塔_节点_商店_购物_购买道具_确认购买_agent"
@@ -398,6 +398,7 @@
 	},
 	"星塔_节点_商店_购买协奏音符_核实数量_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"\\d+"
@@ -416,12 +417,12 @@
 				],
 				"threshold": 0.6,
 				"only_rec": true
-			},
-			"type": "OCR"
+			}
 		}
 	},
 	"星塔_节点_商店_购买协奏音符_核实红色_agent": {
 		"recognition": {
+			"type": "ColorMatch",
 			"param": {
 				"roi": [
 					863,
@@ -441,12 +442,12 @@
 				],
 				"count": 40,
 				"connected": true
-			},
-			"type": "ColorMatch"
+			}
 		}
 	},
 	"星塔_节点_商店_购买协奏音符_退出购买_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"close.png"
@@ -457,26 +458,25 @@
 					117,
 					111
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"action": {
 			"type": "Click"
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"星塔_节点_商店_进入购物界面_agent"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"星塔_节点_进行对话选择_寻找650金币选项_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"650"
 				],
 				"threshold": 0.6
-			},
-			"type": "OCR"
+			}
 		}
 	}
 }

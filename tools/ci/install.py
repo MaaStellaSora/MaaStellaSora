@@ -9,6 +9,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 
 from configure import configure_ocr_model
+from resource_layout import copy_resources, validate_staging_directory
 
 # from generate_manifest_cache import generate_manifest_cache
 
@@ -50,9 +51,13 @@ def install_resource():
 
     configure_ocr_model()
 
-    shutil.copytree(
+    copy_resources(
         working_dir / "assets" / "resource",
         install_path / "resource",
+    )
+    shutil.copytree(
+        working_dir / "assets" / "interface",
+        install_path / "interface",
         dirs_exist_ok=True,
     )
     shutil.copy2(
@@ -129,6 +134,7 @@ def install_agent():
 
 
 if __name__ == "__main__":
+    validate_staging_directory(working_dir, install_path)
     install_deps(platform_tag)
     install_resource()
     install_chores()

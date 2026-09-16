@@ -25,7 +25,7 @@ def check(dirs: List[Path]) -> bool:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python check_resource.py <directories...>")
+        print("Usage: python tools/checks/check_resource.py <directories...>")
         sys.exit(1)
 
     Tasker.set_stdout_level(LoggingLevelEnum.All)

@@ -73,22 +73,22 @@
         }
     ],
     "import": [
-		"resource/tasks/login.json",
-		"resource/tasks/shop.json",
-		"resource/tasks/talk.json",
-		"resource/tasks/invite.json",
-		"resource/tasks/activity.json",
-		"resource/tasks/activity_challenge.json",
-		"resource/tasks/fight.json",
-		"resource/tasks/quest.json",
-		"resource/tasks/friend.json",
-		"resource/tasks/task.json",
-		"resource/tasks/mail.json",
-		"resource/tasks/grant.json",
-        "resource/tasks/operation.json",
-        "resource/tasks/proving_grounds.json",
-        "resource/tasks/climb_tower.json",
-        "resource/tasks/climb_tower_presets.json"
+		"interface/tasks/login.json",
+		"interface/tasks/shop.json",
+		"interface/tasks/talk.json",
+		"interface/tasks/invite.json",
+		"interface/tasks/activity.json",
+		"interface/tasks/activity_challenge.json",
+		"interface/tasks/fight.json",
+		"interface/tasks/quest.json",
+		"interface/tasks/friend.json",
+		"interface/tasks/task.json",
+		"interface/tasks/mail.json",
+		"interface/tasks/grant.json",
+        "interface/tasks/operation.json",
+        "interface/tasks/proving_grounds.json",
+        "interface/tasks/climb_tower.json",
+        "interface/tasks/climb_tower_presets.json"
     ],
     "option": {
         "自定义快速作战次数": {

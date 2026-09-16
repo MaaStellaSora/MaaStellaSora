@@ -57,14 +57,14 @@ class InstallMxuTests(unittest.TestCase):
                     ],
                 },
             ],
-            "import": ["resource/tasks/login.json"],
+            "import": ["interface/tasks/login.json"],
         }
         self._write(
             self.root / "assets" / "interface.json",
             json.dumps(interface, ensure_ascii=False),
         )
         self._write(self.root / "assets" / "logo.ico")
-        self._write(self.root / "assets" / "resource" / "tasks" / "login.json")
+        self._write(self.root / "assets" / "interface" / "tasks" / "login.json")
         self._write(self.root / "assets" / "resource" / "windows" / "base.json")
         self._write(self.root / "assets" / "resource" / "en" / "base.json")
         for name in install_mxu.REQUIRED_OCR_FILES:
@@ -155,7 +155,7 @@ class InstallMxuTests(unittest.TestCase):
     def test_validation_rejects_missing_interface_path(self) -> None:
         with patch.object(install_mxu, "configure_ocr_model"):
             output = install_mxu.build_package("v1.2.3", working_dir=self.root)
-        (output / "resource" / "tasks" / "login.json").unlink()
+        (output / "interface" / "tasks" / "login.json").unlink()
 
         with self.assertRaisesRegex(FileNotFoundError, "references missing file"):
             install_mxu.validate_package(output)

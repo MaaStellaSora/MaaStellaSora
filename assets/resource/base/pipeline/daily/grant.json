@@ -1,15 +1,11 @@
 {
 	"基金_入口": {
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"基金_判断是否在主页",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页"
-			}
+			"[JumpBack]通用_返回主页"
 		]
 	},
 	"基金_判断是否在主页": {
@@ -28,8 +24,7 @@
 			}
 		},
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"timeout": 3000,
 		"next": [
@@ -46,8 +41,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"基金_判断是否已进入基金"
@@ -99,8 +93,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": 100
 	},
@@ -142,8 +135,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": {
 			"time": 700,
@@ -191,8 +183,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		}
 	},
 	"基金_核实是否处于基金补贴": {
@@ -233,8 +224,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"基金_返回主页"
@@ -243,10 +233,7 @@
 	"基金_返回主页": {
 		"next": [
 			"通用_返回主页",
-			{
-				"jump_back": true,
-				"name": "通用_点击空白处继续"
-			}
+			"[JumpBack]通用_点击空白处继续"
 		]
 	}
 }

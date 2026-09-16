@@ -1,21 +1,16 @@
 {
 	"心链_入口": {
 		"recognition": {
-			"type": "DirectHit",
-			"param": {}
+			"type": "DirectHit"
 		},
 		"pre_delay": 0,
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"post_delay": 0,
 		"next": [
 			"心链_判断是否在主页",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页"
-			}
+			"[JumpBack]通用_返回主页"
 		]
 	},
 	"心链_判断是否在主页": {
@@ -28,8 +23,7 @@
 			}
 		},
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"心链_打开心链"
@@ -45,8 +39,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_wait_freezes": 2000,
 		"next": [
@@ -66,8 +59,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"心链_选择礼物"
@@ -86,8 +78,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"timeout": 5000,
 		"next": [
@@ -108,8 +99,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"timeout": 3000,
 		"next": [
@@ -131,8 +121,7 @@
 		},
 		"pre_wait_freezes": 1000,
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"通用_返回主页"

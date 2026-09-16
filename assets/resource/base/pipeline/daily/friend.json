@@ -9,8 +9,7 @@
 			}
 		},
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"好友_前往好友页"
@@ -26,17 +25,12 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"post_delay": 500,
 		"next": [
-			{
-				"jump_back": true,
-				"name": "通用_点击空白处继续"
-			},
+			"[JumpBack]通用_点击空白处继续",
 			"通用_返回主页"
-
 		],
 		"focus": {
 			"Node.Recognition.Failed": "没有找到一键获取按钮",
@@ -53,8 +47,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"好友_一键获取"
@@ -66,21 +59,16 @@
 	},
 	"好友_入口": {
 		"recognition": {
-			"type": "DirectHit",
-			"param": {}
+			"type": "DirectHit"
 		},
 		"pre_delay": 0,
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"post_delay": 0,
 		"next": [
 			"好友_判断是否在主页",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页"
-			}
+			"[JumpBack]通用_返回主页"
 		]
 	},
 	"好友_前往好友页": {
@@ -94,8 +82,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"好友_好友列表"
@@ -114,8 +101,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"好友_一键赠送"

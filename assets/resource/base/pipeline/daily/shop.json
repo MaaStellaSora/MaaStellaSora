@@ -1,15 +1,11 @@
 {
 	"采购_入口": {
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"采购_判断是否在主页",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页"
-			}
+			"[JumpBack]通用_返回主页"
 		]
 	},
 	"采购_判断是否在主页": {
@@ -45,8 +41,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"采购_领取每日赠礼"
@@ -66,8 +61,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"采购_领取每日赠礼"
@@ -90,8 +84,7 @@
 		},
 		"pre_delay": 1000, // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"通用_返回主页"

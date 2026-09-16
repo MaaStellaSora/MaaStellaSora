@@ -120,9 +120,6 @@
 					"continue"
 				]
 			}
-		},
-		"action": {
-			"type": "Click"
 		}
 	},
 	"星塔_回到难度选择界面_agent": {

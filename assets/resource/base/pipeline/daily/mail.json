@@ -1,21 +1,16 @@
 {
 	"邮箱_入口": {
 		"recognition": {
-			"type": "DirectHit",
-			"param": {}
+			"type": "DirectHit"
 		},
 		"pre_delay": 0,
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"post_delay": 0,
 		"next": [
 			"邮箱_判断是否在主页",
-			{
-				"jump_back": true,
-				"name": "通用_返回主页"
-			}
+			"[JumpBack]通用_返回主页"
 		]
 	},
 	"邮箱_判断是否在主页": {
@@ -28,8 +23,7 @@
 			}
 		},
 		"action": {
-			"type": "DoNothing",
-			"param": {}
+			"type": "DoNothing"
 		},
 		"next": [
 			"邮箱_打开邮箱"
@@ -45,8 +39,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"next": [
 			"邮箱_一键领取"
@@ -65,8 +58,7 @@
 			}
 		},
 		"action": {
-			"type": "Click",
-			"param": {}
+			"type": "Click"
 		},
 		"timeout": 2000,
 		"next": [

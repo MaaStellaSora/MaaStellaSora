@@ -6,7 +6,7 @@ on:
       - "**"
     paths:
       - ".github/workflows/check.yml"
-      - "check_resource.py"
+      - "tools/checks/check_resource.py"
       - "requirements-ci.txt"
       - "assets/resource/**"
   pull_request:
@@ -14,7 +14,7 @@ on:
       - "**"
     paths:
       - ".github/workflows/check.yml"
-      - "check_resource.py"
+      - "tools/checks/check_resource.py"
       - "requirements-ci.txt"
       - "assets/resource/**"
   workflow_dispatch:
@@ -48,23 +48,23 @@ jobs:
 
       - name: Check Resource (BASE)
         run: |
-          python ./check_resource.py ./assets/resource/base/
+          python ./tools/checks/check_resource.py ./assets/resource/base/
 
       - name: Check Resource (TW)
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/tw/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/tw/
 
       - name: Check Resource (EN)
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/en/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/en/
 
       - name: Check Resource (JP)
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/jp/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/jp/
 
       - name: Check desktop resource overlays
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/windows/
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/tw/ ./assets/resource/windows/
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/en/ ./assets/resource/windows/
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/jp/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/tw/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/en/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/jp/ ./assets/resource/windows/

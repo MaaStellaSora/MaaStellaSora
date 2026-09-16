@@ -17,6 +17,10 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from configure import configure_ocr_model  # noqa: E402
+from resource_layout import (  # noqa: E402
+    copy_resources,
+    validate_staging_directory,
+)
 
 
 COPY_IGNORE = shutil.ignore_patterns(
@@ -30,7 +34,6 @@ COPY_IGNORE = shutil.ignore_patterns(
     ".mypy_cache",
 )
 TOP_LEVEL_RUNTIME_DIRS = ("cache", "config", "debug", "logs")
-ALLOWED_STAGING_ENTRIES = ("deps", "python")
 PROJECT_FILES = ("README.md", "LICENSE", "CONTACT", "requirements.txt")
 THIRD_PARTY_LICENSES = ("LICENSE-MaaFramework", "LICENSE-MaaCommonAssets")
 REQUIRED_MAAFW_FILES = (
@@ -157,7 +160,10 @@ def _copy_project_payload(working_dir: Path, install_dir: Path, version: str) ->
     configure_ocr_model()
 
     assets_dir = working_dir / "assets"
-    _copy_tree(assets_dir / "resource", install_dir / "resource")
+    copy_resources(
+        assets_dir / "resource", install_dir / "resource", ignore=COPY_IGNORE
+    )
+    _copy_tree(assets_dir / "interface", install_dir / "interface")
     _copy_tree(working_dir / "agent", install_dir / "agent")
 
     logo = assets_dir / "logo.ico"
@@ -366,8 +372,7 @@ def validate_staging_paths(
     working_dir: Path, install_dir: Path, deps_dir: Path, mxu_dir: Path
 ) -> None:
     """Restrict cleanup and merged copies to a fresh package staging directory."""
-    if install_dir == working_dir or not install_dir.is_relative_to(working_dir):
-        raise ValueError("install_dir must be a strict child of working_dir")
+    validate_staging_directory(working_dir, install_dir)
 
     for label, source_dir in (("deps_dir", deps_dir), ("mxu_dir", mxu_dir)):
         if (
@@ -376,18 +381,6 @@ def validate_staging_paths(
             or source_dir in install_dir.parents
         ):
             raise ValueError(f"install_dir must not overlap {label}")
-
-    if install_dir.exists():
-        unexpected = sorted(
-            path.name
-            for path in install_dir.iterdir()
-            if path.name not in ALLOWED_STAGING_ENTRIES
-        )
-        if unexpected:
-            raise ValueError(
-                "install_dir must be a fresh staging directory containing only "
-                f"{ALLOWED_STAGING_ENTRIES}: {unexpected}"
-            )
 
 
 def build_package(

@@ -19,6 +19,7 @@
 	},
 	"星塔_出发_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"出发"
@@ -29,8 +30,7 @@
 					83,
 					39
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -47,6 +47,7 @@
 	},
 	"星塔_星塔探索按钮_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"星塔探索"
@@ -57,8 +58,7 @@
 					161,
 					75
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -70,6 +70,7 @@
 	},
 	"星塔_属性塔选择_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
@@ -81,8 +82,7 @@
 					391
 				],
 				"order_by": "Score"
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -94,6 +94,7 @@
 	},
 	"星塔_进入星塔按钮_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"进入星塔"
@@ -104,8 +105,7 @@
 					225,
 					75
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -118,6 +118,7 @@
 	},
 	"星塔_快速战斗按钮_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"快速战斗"
@@ -128,8 +129,7 @@
 					222,
 					65
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -140,12 +140,12 @@
 	},
 	"星塔_回到未完成的星塔探索_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"确认"
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -157,6 +157,7 @@
 	},
 	"星塔_编队角色_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"下",
@@ -168,8 +169,7 @@
 					180,
 					50
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"next": [
 			"星塔_编队角色_选择队伍_agent"
@@ -192,6 +192,7 @@
 	},
 	"星塔_编队角色_点击下一步_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"下",
@@ -203,8 +204,7 @@
 					180,
 					50
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -216,6 +216,7 @@
 	},
 	"星塔_编队秘纹_agent": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"开始战斗"
@@ -226,8 +227,7 @@
 					180,
 					50
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"action": {
 			"type": "Click"

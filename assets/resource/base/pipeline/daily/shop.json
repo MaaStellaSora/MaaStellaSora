@@ -1,8 +1,8 @@
 {
 	"采购_入口": {
 		"action": {
-			"param": {},
-			"type": "DoNothing"
+			"type": "DoNothing",
+			"param": {}
 		},
 		"next": [
 			"采购_判断是否在主页",
@@ -14,6 +14,7 @@
 	},
 	"采购_判断是否在主页": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
@@ -24,70 +25,60 @@
 					100,
 					80
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
+		"timeout": 3000,
 		"next": [
 			"[JumpBack]采购_前往采购",
 			"[JumpBack]采购_前往商城",
 			"采购_任务完成"
-		],
-		"timeout": 3000
+		]
 	},
 	"采购_前往采购": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在前往采购"
-		},
-		"next": [
-			"采购_领取每日赠礼"
-		],
+		"max_hit": 1,
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"procurement.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
-		"max_hit": 1
-	},
-	"采购_前往商城": {
 		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在前往商城"
+			"type": "Click",
+			"param": {}
 		},
 		"next": [
 			"采购_领取每日赠礼"
 		],
+		"focus": {
+			"Node.Action.Starting": "正在前往采购"
+		}
+	},
+	"采购_前往商城": {
+		"max_hit": 1,
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"shop/shop.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
-		"max_hit": 1
-	},
-	"采购_领取每日赠礼": {
 		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在领取每日赠礼"
+			"type": "Click",
+			"param": {}
 		},
 		"next": [
-			"通用_返回主页"
+			"采购_领取每日赠礼"
 		],
+		"focus": {
+			"Node.Action.Starting": "正在前往商城"
+		}
+	},
+	"采购_领取每日赠礼": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"shop/daily_gift_1.png",
@@ -95,10 +86,19 @@
 					"shop/daily_gift_1_obtained.png",
 					"shop/daily_gift_2_obtained.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
-		"pre_delay": 1000 // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
+		"pre_delay": 1000, // 简单应对商城界面拉取礼包信息时无法点击每日赠礼的问题
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"通用_返回主页"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在领取每日赠礼"
+		}
 	},
 	"采购_任务完成": {
 		"action": {

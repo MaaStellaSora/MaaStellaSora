@@ -1,41 +1,42 @@
 {
 	"通用_一键领取": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在尝试一键领取"
-		},
-		"next": [
-			"通用_点击空白处继续"
-		],
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"quick_claim.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
-		"timeout": 1500
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"timeout": 1500,
+		"next": [
+			"通用_点击空白处继续"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在尝试一键领取"
+		}
 	},
 	"通用_换算快速作战次数": {
+		"recognition": {
+			"type": "DirectHit",
+			"param": {}
+		},
 		"action": {
+			"type": "Custom",
 			"param": {
 				"custom_action": "utool_calc_repeat"
-			},
-			"type": "Custom"
+			}
 		},
 		"next": [
 			"活动快速战斗_添加战斗次数"
-		],
-		"recognition": {
-			"param": {},
-			"type": "DirectHit"
-		}
+		]
 	},
 	"通用_返回主页": {
+		"max_hit": 10,
 		"next": [
 			"通用_主页标记",
 			{
@@ -66,11 +67,11 @@
 				"jump_back": true,
 				"name": "心链_默契提升"
 			}
-		],
-		"max_hit": 10
+		]
 	},
 	"通用_主页标记": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
@@ -81,16 +82,12 @@
 					100,
 					80
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"通用_返回按钮": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"Base/通用_返回按钮_方形.png",
@@ -102,8 +99,11 @@
 					120,
 					90
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -111,11 +111,8 @@
 		}
 	},
 	"通用_返回主页按钮": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"Base/通用_返回主页按钮1.png",
@@ -129,8 +126,11 @@
 					450,
 					90
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -138,11 +138,8 @@
 		}
 	},
 	"通用_关闭心链按钮": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"chat_shutdown.png"
@@ -153,8 +150,11 @@
 					100,
 					100
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -162,18 +162,8 @@
 		}
 	},
 	"通用_点击空白处继续": {
-		"action": {
-			"param": {
-				"target_offset": [
-					0,
-					25,
-					0,
-					0
-				]
-			},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"点击空白处继.*",
@@ -188,12 +178,22 @@
 					340,
 					220
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"pre_wait_freezes": {
 			"time": 100,
 			"timeout": 2000
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target_offset": [
+					0,
+					25,
+					0,
+					0
+				]
+			}
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -201,11 +201,8 @@
 		}
 	},
 	"通用_关闭按钮": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"Base/通用_关闭公告按钮.png",
@@ -218,8 +215,11 @@
 					640,
 					360
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -227,37 +227,26 @@
 		}
 	},
 	"通用_消耗所有干劲": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"next": [
-			"活动快速战斗_开始战斗"
-		],
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"max.png"
 				],
 				"threshold": 0.8
-			},
-			"type": "TemplateMatch"
-		}
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"活动快速战斗_开始战斗"
+		]
 	},
 	"通用_关闭升级界面": {
-		"action": {
-			"param": {
-				"target": [
-					640,
-					700
-				]
-			},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在关闭升级界面"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"roi": [
 					187,
@@ -268,12 +257,23 @@
 				"expected": [
 					"权限等级"
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target": [
+					640,
+					700
+				]
+			}
 		},
 		"post_wait_freezes": {
 			"time": 100,
 			"timeout": 1500
+		},
+		"focus": {
+			"Node.Action.Starting": "正在关闭升级界面"
 		}
 	},
 	"通用_主页_出发": {

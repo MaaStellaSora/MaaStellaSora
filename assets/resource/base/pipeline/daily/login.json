@@ -1,10 +1,7 @@
 {
 	"登录_初次进入主页": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
@@ -15,9 +12,13 @@
 					100,
 					80
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
+		"action": {
+			"type": "DoNothing",
+			"param": {}
+		},
+		"post_delay": 2000,
 		"next": [
 			"登录_二次确认进入主页",
 			{
@@ -36,11 +37,11 @@
 				"jump_back": true,
 				"name": "登录_通用签到"
 			}
-		],
-		"post_delay": 2000
+		]
 	},
 	"登录_二次确认进入主页": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
@@ -51,16 +52,12 @@
 					100,
 					80
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"登录_点击关闭按钮": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"close.png", // 公告
@@ -74,8 +71,11 @@
 					640,
 					720
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -83,13 +83,8 @@
 		}
 	},
 	"登录_点击任意区域进入游戏": {
-		"action": {
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在尝试进入游戏"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": "点击任意区域进入游戏",
 				"roi": [
@@ -98,9 +93,13 @@
 					510,
 					80
 				]
-			},
-			"type": "OCR"
+			}
 		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 500,
+		"timeout": 30000,
 		"next": [
 			"登录_初次进入主页",
 			{
@@ -120,14 +119,16 @@
 				"name": "登录_通用签到"
 			}
 		],
-		"post_delay": 500,
-		"timeout": 30000
+		"focus": {
+			"Node.Action.Starting": "正在尝试进入游戏"
+		}
 	},
 	"登录_登录": {
 		"action": {
-			"param": {},
-			"type": "DoNothing"
+			"type": "DoNothing",
+			"param": {}
 		},
+		"timeout": 120000,
 		"next": [
 			"登录_点击任意区域进入游戏",
 			{
@@ -143,34 +144,30 @@
 				"jump_back": true,
 				"name": "登录_启动游戏"
 			}
-		],
-		"timeout": 120000
+		]
 	},
 	"登录_登录悠星账号": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Starting": "正在尝试登录悠星账号"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"login.png",
 					"login_2.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
-		"timeout": 10000
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"timeout": 10000,
+		"focus": {
+			"Node.Action.Starting": "正在尝试登录悠星账号"
+		}
 	},
 	"登录_点击文字": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"可领取", // 活动签到时获得道具
@@ -178,8 +175,11 @@
 					"点击任意区域进入游戏" // 登录界面
 
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": {
 			"time": 100,
@@ -187,11 +187,8 @@
 		}
 	},
 	"登录_确认下载资源": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ok.png"
@@ -202,8 +199,11 @@
 					640,
 					720
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"next": [
 			"登录_下载完成_图片",
@@ -215,13 +215,14 @@
 		]
 	},
 	"登录_等待下载": {
+		"max_hit": 27000,
 		// 先默认等待15分钟，后续考虑做个选项给用户自定义
 		"pre_delay": 0,
-		"post_delay": 2000,
-		"max_hit": 27000
+		"post_delay": 2000
 	},
 	"登录_下载完成_图片": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"login.png",
@@ -233,14 +234,14 @@
 					1280,
 					360
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"pre_delay": 0,
 		"post_delay": 0
 	},
 	"登录_下载完成_文字": {
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"点击任意区域进入游戏"
@@ -251,39 +252,38 @@
 					510,
 					80
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"pre_delay": 0,
 		"post_delay": 0
 	},
 	"登录_启动游戏": {
+		"max_hit": 20,
 		"action": {
 			"type": "StartApp",
 			"param": {
 				"package": "com.RoamingStar.StellaSora"
 			}
 		},
-		"post_delay": 3000,
-		"max_hit": 20
+		"post_delay": 3000
 	},
 	"登录_通用签到": {
+		"max_hit": 10,
+		"recognition": {
+			"type": "DirectHit"
+		},
 		"action": {
+			"type": "Click",
 			"param": {
 				"target": [
 					640,
 					700
 				]
-			},
-			"type": "Click"
-		},
-		"recognition": {
-			"type": "DirectHit"
+			}
 		},
 		"post_wait_freezes": {
 			"time": 100,
 			"timeout": 2000
-		},
-		"max_hit": 10
+		}
 	}
 }

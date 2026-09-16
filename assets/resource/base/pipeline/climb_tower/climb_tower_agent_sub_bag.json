@@ -1,11 +1,11 @@
 {
 	"星塔_打开背包界面_agent": {
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"星塔_背包_核实背包界面_agent",
 			"[JumpBack]星塔_点击背包按钮_agent"
-		],
-		"pre_delay": 0,
-		"post_delay": 0
+		]
 	},
 	"星塔_背包_核实背包界面_agent": {
 		"recognition": {
@@ -26,6 +26,7 @@
 	},
 	"星塔_点击背包按钮_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
@@ -37,23 +38,23 @@
 					85
 				],
 				"threshold": 0.8
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"action": {
 			"type": "Click"
 		}
 	},
 	"星塔_关闭背包界面_agent": {
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"星塔_核实关闭背包界面_agent",
 			"[JumpBack]星塔_背包_点击退出按钮_agent"
-		],
-		"pre_delay": 0,
-		"post_delay": 0
+		]
 	},
 	"星塔_背包_点击退出按钮_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_背包返回__34_16_54_49__0_0_138_115.png"
@@ -64,8 +65,7 @@
 					201,
 					89
 				]
-			},
-			"type": "TemplateMatch"
+			}
 		},
 		"action": {
 			"type": "Click"
@@ -74,6 +74,7 @@
 	},
 	"星塔_核实关闭背包界面_agent": {
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"ClimbTower_agent/爬塔_背包按钮__121_15_38_41__71_0_138_106.png"
@@ -85,8 +86,7 @@
 					85
 				],
 				"threshold": 0.8
-			},
-			"type": "TemplateMatch"
+			}
 		}
 	},
 	"星塔_背包_潜能标记_agent": {
@@ -214,6 +214,7 @@
 	},
 	"星塔_背包_向下滑动_agent": {
 		"action": {
+			"type": "Swipe",
 			"param": {
 				"begin": [
 					270,
@@ -225,8 +226,7 @@
 				],
 				"duration": 800,
 				"end_hold": 500
-			},
-			"type": "Swipe"
+			}
 		},
 		"post_wait_freezes": 500
 	},

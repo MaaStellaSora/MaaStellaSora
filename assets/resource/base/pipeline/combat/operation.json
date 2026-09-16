@@ -1,12 +1,12 @@
 {
 	"猎影合围_入口": {
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"猎影合围_出发",
 			"猎影合围_主界面",
 			"[JumpBack]通用_返回主页"
-		],
-		"post_delay": 0,
-		"pre_delay": 0
+		]
 	},
 	"猎影合围_出发": {
 		"recognition": {
@@ -39,10 +39,10 @@
 				]
 			}
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"猎影合围_点击入口图标"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"猎影合围_点击入口图标": {
 		"recognition": {
@@ -81,12 +81,12 @@
 				]
 			}
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"[JumpBack]猎影合围_协助讨伐",
 			"[JumpBack]猎影合围_追踪目标",
 			"猎影合围_任务完成"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"猎影合围_任务完成": {
 		"pre_delay": 0,
@@ -123,6 +123,9 @@
 		}
 	},
 	"猎影合围_追踪目标": {
+		"max_hit": 1,
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"[JumpBack]通用_点击空白处继续",
 			"[JumpBack]猎影合围_围猎等级提升",
@@ -134,9 +137,6 @@
 			"猎影合围_追踪目标_不等待讨伐完成",
 			"[JumpBack]猎影合围_追踪目标_点击跳过按钮"
 		],
-		"pre_delay": 0,
-		"post_delay": 0,
-		"max_hit": 1,
 		"focus": {
 			"Node.Action.Succeeded": "开始追踪目标"
 		}
@@ -262,10 +262,10 @@
 				]
 			}
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"猎影合围_追踪目标_进入战斗"
 		],
-		"post_wait_freezes": 100,
 		"focus": {
 			"Node.Action.Succeeded": "追踪目标成功，前往讨伐"
 		}
@@ -365,12 +365,12 @@
 				"custom_recognition": "lack_of_tracking_permit_recognition"
 			}
 		},
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"猎影合围_是否处于主界面",
 			"[JumpBack]猎影合围_追踪目标_返回主界面"
 		],
-		"pre_delay": 0,
-		"post_delay": 0,
 		"focus": {
 			"Node.Action.Succeeded": "追踪委托书不足，结束追踪目标任务"
 		}
@@ -387,6 +387,7 @@
 		"post_wait_freezes": 100
 	},
 	"猎影合围_追踪目标_返回主界面": {
+		"max_hit": 1,
 		"recognition": {
 			"type": "And",
 			"param": {
@@ -397,10 +398,10 @@
 		},
 		"action": {
 			"type": "Click"
-		},
-		"max_hit": 1
+		}
 	},
 	"猎影合围_协助讨伐": {
+		"max_hit": 1,
 		"recognition": {
 			"type": "TemplateMatch",
 			"param": {
@@ -418,13 +419,12 @@
 		"action": {
 			"type": "Click"
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"猎影合围_协助_协助讨伐主界面",
 			"[JumpBack]猎影合围_协助_点击进入协助讨伐" // 新赛季开始时初次进入界面会有一个弹窗把点击吃掉，这里做一个兜底
 
 		],
-		"max_hit": 1,
-		"post_wait_freezes": 100,
 		"focus": {
 			"Node.Action.Succeeded": "开始协助讨伐"
 		}
@@ -444,13 +444,13 @@
 				]
 			}
 		},
+		"post_wait_freezes": 100,
 		"next": [
 			"猎影合围_协助_点击协助讨伐",
 			"猎影合围_协助_围猎许可证不足",
 			"[JumpBack]猎影合围_协助_没有可以讨伐的目标",
 			"[JumpBack]猎影合围_关闭添加好友界面"
-		],
-		"post_wait_freezes": 100
+		]
 	},
 	"猎影合围_协助_协助讨伐按钮": {
 		"recognition": {
@@ -475,10 +475,10 @@
 				"custom_recognition": "enough_hunt_license_recognition"
 			}
 		},
+		"pre_wait_freezes": 100,
 		"action": {
 			"type": "Click"
 		},
-		"pre_wait_freezes": 100,
 		"next": [
 			"[JumpBack]选择纪录_进入主界面",
 			"猎影合围_协助_战斗结束"
@@ -491,12 +491,12 @@
 				"custom_recognition": "lack_of_hunt_license_recognition"
 			}
 		},
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"[JumpBack]猎影合围_关闭添加好友界面",
 			"猎影合围_协助_返回主界面"
 		],
-		"pre_delay": 0,
-		"post_delay": 0,
 		"focus": {
 			"Node.Action.Succeeded": "围猎许可证不足，协助讨伐完成"
 		}
@@ -519,6 +519,7 @@
 		}
 	},
 	"猎影合围_协助_没有可以讨伐的目标": {
+		"max_hit": 30,
 		"recognition": {
 			"type": "And",
 			"param": {
@@ -537,8 +538,7 @@
 		],
 		"focus": {
 			"Node.Action.Succeeded": "没有可以讨伐的目标，尝试等待"
-		},
-		"max_hit": 30
+		}
 	},
 	"猎影合围_协助_等待1分钟": {
 		"pre_delay": 0,
@@ -589,14 +589,14 @@
 				]
 			}
 		},
+		"pre_delay": 0,
+		"post_delay": 0,
 		"next": [
 			"猎影合围_协助_协助讨伐主界面",
 			"[JumpBack]通用_点击空白处继续",
 			"[JumpBack]猎影合围_围猎等级提升",
 			"[JumpBack]猎影合围_关闭添加好友界面"
-		],
-		"pre_delay": 0,
-		"post_delay": 0
+		]
 	},
 	"猎影合围_关闭添加好友界面": {
 		"recognition": {

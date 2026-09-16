@@ -1,52 +1,43 @@
 {
 	"战斗_入口": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
+		"recognition": {
+			"type": "DirectHit",
+			"param": {}
 		},
+		"pre_delay": 0,
+		"action": {
+			"type": "DoNothing",
+			"param": {}
+		},
+		"post_delay": 0,
 		"next": [
 			"战斗_判断是否在主页",
 			{
 				"jump_back": true,
 				"name": "通用_返回主页"
 			}
-		],
-		"post_delay": 0,
-		"pre_delay": 0,
-		"recognition": {
-			"param": {},
-			"type": "DirectHit"
-		}
+		]
 	},
 	"战斗_判断是否在主页": {
-		"action": {
-			"param": {},
-			"type": "DoNothing"
-		},
 		"recognition": {
+			"type": "TemplateMatch",
 			"param": {
 				"template": [
 					"menu.png"
 				]
-			},
-			"type": "TemplateMatch"
+			}
+		},
+		"action": {
+			"type": "DoNothing",
+			"param": {}
 		},
 		"next": [
 			"战斗_出发"
 		]
 	},
 	"战斗_出发": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Succeeded": "前往出发"
-		},
-		"next": [
-			"战斗_悬赏试炼"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"出发"
@@ -57,22 +48,22 @@
 					83,
 					39
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"战斗_悬赏试炼"
+		],
+		"focus": {
+			"Node.Action.Succeeded": "前往出发"
 		}
 	},
 	"战斗_快速战斗": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Succeeded": "进入快速战斗"
-		},
-		"next": [
-			"通用_换算快速作战次数"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"快速战斗"
@@ -83,23 +74,23 @@
 					530,
 					120
 				]
-			},
-			"type": "OCR"
+			}
 		},
-		"post_wait_freezes": 100
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"post_wait_freezes": 100,
+		"next": [
+			"通用_换算快速作战次数"
+		],
+		"focus": {
+			"Node.Action.Succeeded": "进入快速战斗"
+		}
 	},
 	"战斗_悬赏试炼": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Succeeded": "进入悬赏试炼"
-		},
-		"next": [
-			"战斗_选择试炼"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"悬赏试炼"
@@ -110,19 +101,33 @@
 					230,
 					185
 				]
-			},
-			"type": "OCR"
+			}
 		},
 		"pre_wait_freezes": 100,
-		"post_wait_freezes": 100
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"post_wait_freezes": 100,
+		"next": [
+			"战斗_选择试炼"
+		],
+		"focus": {
+			"Node.Action.Succeeded": "进入悬赏试炼"
+		}
 	},
 	"战斗_试炼出发": {
-		"action": {
-			"param": {},
-			"type": "Click"
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"出发"
+				]
+			}
 		},
-		"focus": {
-			"Node.Action.Succeeded": "进入试炼出发"
+		"action": {
+			"type": "Click",
+			"param": {}
 		},
 		"post_wait_freezes": 100,
 		"next": [
@@ -132,26 +137,23 @@
 				"name": "战斗_选择试炼子菜单"
 			}
 		],
-		"recognition": {
-			"param": {
-				"expected": [
-					"出发"
-				]
-			},
-			"type": "OCR"
+		"focus": {
+			"Node.Action.Succeeded": "进入试炼出发"
 		}
 	},
 	"战斗_选择试炼": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"fight/basic_trial.png"
+				]
+			}
+		},
 		"action": {
-			"param": {},
-			"type": "Click"
+			"type": "Click",
+			"param": {}
 		},
-		"focus": {
-			"Node.Action.Succeeded": "进入对应试炼"
-		},
-		"next": [
-			"战斗_试炼出发"
-		],
 		"post_wait_freezes": {
 			"time": 200,
 			"target": [
@@ -161,52 +163,50 @@
 				170
 			]
 		},
-		"recognition": {
-			"param": {
-				"template": [
-					"fight/basic_trial.png"
-				]
-			},
-			"type": "TemplateMatch"
+		"next": [
+			"战斗_试炼出发"
+		],
+		"focus": {
+			"Node.Action.Succeeded": "进入对应试炼"
 		}
 	},
 	"战斗_选择试炼子菜单": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
 		"enabled": false,
-		"focus": {
-			"Node.Action.Succeeded": "进入试炼子菜单"
-		},
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					""
 				]
-			},
-			"type": "OCR"
+			}
 		},
-		"post_wait_freezes": 500
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"post_wait_freezes": 500,
+		"focus": {
+			"Node.Action.Succeeded": "进入试炼子菜单"
+		}
 	},
 	"战斗_选择难度": {
-		"action": {
-			"param": {},
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Succeeded": "选择指定难度"
-		},
-		"next": [
-			"战斗_快速战斗"
-		],
 		"recognition": {
+			"type": "OCR",
 			"param": {
 				"expected": [
 					"(难度|難度|難易度|Difficulty)1(?!\\d)"
 				]
-			},
-			"type": "OCR"
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {}
+		},
+		"next": [
+			"战斗_快速战斗"
+		],
+		"focus": {
+			"Node.Action.Succeeded": "选择指定难度"
 		}
 	}
 }

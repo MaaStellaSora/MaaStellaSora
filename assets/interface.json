@@ -1,78 +1,78 @@
 {
-    "interface_version": 2,
-    "name": "MaaStellaSora",
-    "description": "星塔助手（MaaStellaSora）提供对于游戏《星塔旅人》的自动签到、清理日常等功能，由 MaaFramework 强力驱动",
-    "contact": "QQ交流群：1063132902  密码：星塔旅人",
-    "license": "MIT",
-    "welcome": "首次使用！欢迎使用 MaaStellaSora",
-    "github": "https://github.com/MaaStellaSora/MaaStellaSora",
-    "version": "0.9.5",
-    "custom_title": "星塔助手",
-    "mirrorchyan_rid": "SSAH",
-    "mirrorchyan_multiplatform": true,
-    "agent": {
-        "child_exec": "python",
-        "child_args": [
-            "-u",
-            "./../agent/main.py"
-        ],
-        "timeout": -1
-    },
-    "controller": [
-        {
-            "name": "桌面端",
-            "type": "Win32",
-            "win32": {
-                "class_regex": "UnityWndClass",
-                "window_regex": "xtlr|星塔旅人|ステラソラ|StellaSora",
-                "screencap": "FramePool",
-                "mouse": "SendMessageWithCursorPos",
-                "keyboard": "SendMessageWithCursorPos"
-            },
-            "permission_required": true,
-            "attach_resource_path": [
-                "{PROJECT_DIR}/resource/windows"
-            ]
-        },
-        {
-            "name": "安卓端",
-            "type": "Adb"
-        },
-        {
-            "name": "PlayCover",
-            "type": "PlayCover"
-        }
-    ],
-    "resource": [
-        {
-            "name": "官服",
-            "path": [
-                "{PROJECT_DIR}/resource/base"
-            ]
-        },
-        {
-            "name": "台服",
-            "path": [
-                "{PROJECT_DIR}/resource/base",
-                "{PROJECT_DIR}/resource/tw"
-            ]
-        },
-        {
-            "name": "国际服",
-            "path": [
-                "{PROJECT_DIR}/resource/base",
-                "{PROJECT_DIR}/resource/en"
-            ]
-        },
-        {
-            "name": "日服",
-            "path": [
-                "{PROJECT_DIR}/resource/base",
-                "{PROJECT_DIR}/resource/jp"
-            ]
-        }
-    ],
-    "import": [
+	"interface_version": 2,
+	"name": "MaaStellaSora",
+	"description": "星塔助手（MaaStellaSora）提供对于游戏《星塔旅人》的自动签到、清理日常等功能，由 MaaFramework 强力驱动",
+	"contact": "QQ交流群：1063132902  密码：星塔旅人",
+	"license": "MIT",
+	"welcome": "首次使用！欢迎使用 MaaStellaSora",
+	"github": "https://github.com/MaaStellaSora/MaaStellaSora",
+	"version": "0.9.5",
+	"custom_title": "星塔助手",
+	"mirrorchyan_rid": "SSAH",
+	"mirrorchyan_multiplatform": true,
+	"agent": {
+		"child_exec": "python",
+		"child_args": [
+			"-u",
+			"./../agent/main.py"
+		],
+		"timeout": -1
+	},
+	"controller": [
+		{
+			"name": "桌面端",
+			"type": "Win32",
+			"win32": {
+				"class_regex": "UnityWndClass",
+				"window_regex": "xtlr|星塔旅人|ステラソラ|StellaSora",
+				"screencap": "FramePool",
+				"mouse": "SendMessageWithCursorPos",
+				"keyboard": "SendMessageWithCursorPos"
+			},
+			"permission_required": true,
+			"attach_resource_path": [
+				"{PROJECT_DIR}/resource/windows"
+			]
+		},
+		{
+			"name": "安卓端",
+			"type": "Adb"
+		},
+		{
+			"name": "PlayCover",
+			"type": "PlayCover"
+		}
+	],
+	"resource": [
+		{
+			"name": "官服",
+			"path": [
+				"{PROJECT_DIR}/resource/base"
+			]
+		},
+		{
+			"name": "台服",
+			"path": [
+				"{PROJECT_DIR}/resource/base",
+				"{PROJECT_DIR}/resource/tw"
+			]
+		},
+		{
+			"name": "国际服",
+			"path": [
+				"{PROJECT_DIR}/resource/base",
+				"{PROJECT_DIR}/resource/en"
+			]
+		},
+		{
+			"name": "日服",
+			"path": [
+				"{PROJECT_DIR}/resource/base",
+				"{PROJECT_DIR}/resource/jp"
+			]
+		}
+	],
+	"import": [
 		"interface/tasks/login.json",
 		"interface/tasks/shop.json",
 		"interface/tasks/talk.json",
@@ -85,36 +85,36 @@
 		"interface/tasks/task.json",
 		"interface/tasks/mail.json",
 		"interface/tasks/grant.json",
-        "interface/tasks/operation.json",
-        "interface/tasks/proving_grounds.json",
-        "interface/tasks/climb_tower.json",
-        "interface/tasks/climb_tower_presets.json"
-    ],
-    "option": {
-        "自定义快速作战次数": {
-            "type": "input",
-            "label": "自定义快速作战次数",
-            "inputs": [
-                {
-                    "name": "次数",
-                    "label": "次数",
-                    "description": "打几次就填几",
-                    "default": "1",
-                    "pipeline_type": "int",
-                    "verify": "^[1-9]\\d*$"
-                }
-            ],
-            "pipeline_override": {
-                "通用_换算快速作战次数": {
-                    "action": {
-                        "type": "Custom",
-                        "param": {
-                            "custom_action": "utool_calc_repeat",
-                            "custom_action_param": "{次数}"
-                        }
-                    }
-                }
-            }
-        }
-    }
+		"interface/tasks/operation.json",
+		"interface/tasks/proving_grounds.json",
+		"interface/tasks/climb_tower.json",
+		"interface/tasks/climb_tower_presets.json"
+	],
+	"option": {
+		"自定义快速作战次数": {
+			"type": "input",
+			"label": "自定义快速作战次数",
+			"inputs": [
+				{
+					"name": "次数",
+					"label": "次数",
+					"description": "打几次就填几",
+					"default": "1",
+					"pipeline_type": "int",
+					"verify": "^[1-9]\\d*$"
+				}
+			],
+			"pipeline_override": {
+				"通用_换算快速作战次数": {
+					"action": {
+						"type": "Custom",
+						"param": {
+							"custom_action": "utool_calc_repeat",
+							"custom_action_param": "{次数}"
+						}
+					}
+				}
+			}
+		}
+	}
 }

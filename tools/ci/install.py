@@ -85,10 +85,15 @@ def install_resource():
 
 
 def install_chores():
-    for file in ["README.md", "LICENSE", "CONTACT", "requirements.txt"]:
+    for source, destination in {
+        "README.md": "README.md",
+        "LICENSE": "LICENSE",
+        "assets/CONTACT": "CONTACT",
+        "assets/requirements.txt": "requirements.txt",
+    }.items():
         shutil.copy2(
-            working_dir / file,
-            install_path,
+            working_dir / source,
+            install_path / destination,
         )
     # shutil.copytree(
     #     working_dir / "docs",

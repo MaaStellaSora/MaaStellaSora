@@ -34,7 +34,12 @@ COPY_IGNORE = shutil.ignore_patterns(
     ".mypy_cache",
 )
 TOP_LEVEL_RUNTIME_DIRS = ("cache", "config", "debug", "logs")
-PROJECT_FILES = ("README.md", "LICENSE", "CONTACT", "requirements.txt")
+PROJECT_FILES = {
+    "README.md": "README.md",
+    "LICENSE": "LICENSE",
+    "assets/CONTACT": "CONTACT",
+    "assets/requirements.txt": "requirements.txt",
+}
 THIRD_PARTY_LICENSES = ("LICENSE-MaaFramework", "LICENSE-MaaCommonAssets")
 REQUIRED_MAAFW_FILES = (
     "MaaFramework.dll",
@@ -128,10 +133,10 @@ def transform_interface(interface: dict[str, Any], version: str) -> dict[str, An
 
 
 def _copy_project_files(working_dir: Path, install_dir: Path) -> None:
-    for name in PROJECT_FILES:
+    for name, destination in PROJECT_FILES.items():
         source = working_dir / name
         _require_file(source)
-        shutil.copy2(source, install_dir / name)
+        shutil.copy2(source, install_dir / destination)
 
 
 def _copy_mxu(mxu_dir: Path, install_dir: Path) -> None:

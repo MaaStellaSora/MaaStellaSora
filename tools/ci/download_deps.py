@@ -17,6 +17,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
+REQUIREMENTS_FILE = Path(__file__).resolve().parents[2] / "assets" / "requirements.txt"
 MAAFW_VERSION_PATTERN = re.compile(
     r"^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
     r"(?:(?:a|b|rc)(?:0|[1-9]\d*))?$"
@@ -78,14 +79,13 @@ def build_download_command(
     deps_path, platform_tag=None, *, python_version=None, maafw_version=None
 ):
     """构造 pip download 命令。"""
-    requirements_file = Path("requirements.txt")
     cmd = [
         sys.executable,
         "-m",
         "pip",
         "download",
         "-r",
-        str(requirements_file),
+        str(REQUIREMENTS_FILE),
         "-d",
         str(deps_path),
         "--only-binary=:all:",
@@ -132,10 +132,9 @@ def download_dependencies(
 
     print(f"开始下载平台 {platform_tag} 的依赖到 {deps_dir}")
 
-    # 从requirements.txt读取依赖
-    requirements_file = Path("requirements.txt")
-    if not requirements_file.exists():
-        print("错误: requirements.txt 文件不存在")
+    # 从发行资源目录读取运行依赖，不依赖当前工作目录。
+    if not REQUIREMENTS_FILE.exists():
+        print(f"错误: {REQUIREMENTS_FILE} 文件不存在")
         return False
 
     # 首先尝试下载平台特定的wheel文件

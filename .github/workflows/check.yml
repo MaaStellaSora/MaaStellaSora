@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/check.yml"
       - "tools/checks/check_resource.py"
-      - "requirements-ci.txt"
+      - "tools/checks/requirements.txt"
       - "assets/resource/**"
   pull_request:
     branches:
@@ -15,7 +15,7 @@ on:
     paths:
       - ".github/workflows/check.yml"
       - "tools/checks/check_resource.py"
-      - "requirements-ci.txt"
+      - "tools/checks/requirements.txt"
       - "assets/resource/**"
   workflow_dispatch:
 
@@ -44,7 +44,7 @@ jobs:
 
       - name: Install resource checker dependencies
         run: |
-          python -m pip install --disable-pip-version-check --upgrade --pre --requirement requirements-ci.txt
+          python -m pip install --disable-pip-version-check --upgrade --pre --requirement tools/checks/requirements.txt
 
       - name: Check Resource (BASE)
         run: |

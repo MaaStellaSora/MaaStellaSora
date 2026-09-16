@@ -16,7 +16,7 @@ Sourcery 提供 AI Review，GitHub Actions 提供确定性检查；最终结论�
 
 - Python、工作流或依赖配置变更运行 `Static checks`、`Dependency review` 和 `CodeQL / python`。
 - 资源变更运行 `Resource checks`，始终使用包含预发行版的最新版 MaaFw。
-- PR 仅在安装工作流、`tools/ci/**`、`requirements.txt` 或 `assets/interface.json` 变化时构建六个平台。
+- PR 仅在安装工作流、`tools/ci/**`、`assets/requirements.txt`、`assets/CONTACT`、`assets/interface.json`、`assets/interface/**` 或 `assets/resource/**` 变化时构建六个平台。
 - 正式标签始终构建全部六个平台。
 - Sourcery 审查指向 `main` 的 PR，但不作为必需检查。
 

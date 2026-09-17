@@ -19,7 +19,12 @@ class ActivityChallengeRandomStage(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
+        if context.tasker.stopping:
+            return False
         image = context.tasker.controller.post_screencap().wait().get()
+        if image is None or image.size == 0:
+            logger.error("活动挑战截图失败")
+            return False
         reco_detail = context.run_recognition("活动挑战_识别可选关卡", image)
 
         if not reco_detail or not reco_detail.hit:
@@ -36,7 +41,11 @@ class ActivityChallengeRandomStage(CustomAction):
         click_x = x + width // 2
         click_y = y + height // 2
 
-        context.tasker.controller.post_click(click_x, click_y).wait()
+        if context.tasker.stopping:
+            return False
+        if not context.tasker.controller.post_click(click_x, click_y).wait().succeeded:
+            logger.error("点击活动挑战关卡失败")
+            return False
         logger.info(
             "随机选择活动挑战关卡：%s（候选 %d 个，点击坐标 %d,%d）",
             stage.text,
@@ -70,6 +79,8 @@ class ActivityChallengeBattleLoop(CustomAction):
                 logger.error("第 %d/%d 次活动挑战未能完成战斗", current, count)
                 return False
 
+            if context.tasker.stopping:
+                return False
             settle_result = context.run_task("活动挑战_结算并返回")
             if not settle_result or not settle_result.status.succeeded:
                 logger.error("第 %d/%d 次活动挑战未能返回关卡列表", current, count)

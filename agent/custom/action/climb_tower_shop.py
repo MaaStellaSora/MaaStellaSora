@@ -8,6 +8,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
+from custom.reco.melody_scan import scan_melody_counts
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_shop")
 
@@ -150,17 +151,15 @@ def check_shop_type(
 def is_assist_skill_unlocked(
     context: Context,
     image: Optional[numpy.ndarray] = None,
-    target: Optional[int] = None,
 ) -> bool:
-    """检查协奏音符是否已够（未解锁则要买）。
+    """检查协奏技能是否已解锁。
 
     Args:
         context: 任务上下文。
         image: 截图，为 None 时自动截图。
-        target: 协奏音符目标数量；传入后按“当前数量 >= target 视为已够”判断。
 
     Returns:
-        bool: True 表示已够/无需购买；False 表示还没到目标、需要买。
+        bool: 是否已解锁。
     """
     lv0_melody = (10, 15)
 
@@ -195,10 +194,6 @@ def is_assist_skill_unlocked(
         required_melody = int(text[-2:])
         logger.debug(f"识别到的现有音符数量：{current_melody}，协奏技能升级要求数量：{required_melody}")
 
-        # 按用户设定的目标数量判断：当前 >= 目标 即视为已够，不再买
-        if target is not None:
-            return current_melody >= target
-
         # 协奏技能未解锁，需要符合：
         # 1. 升级要求音符数量为 lv0_melody 中的值
         # 2. 且当前音符数量小于升级要求数量
@@ -225,33 +220,20 @@ class Data:
     buy_assist_at_final_only: bool = False
     regular_shop_refresh_threshold: int = 1500
     full_price_buy_reserve_base: int = 500
-    # 每种音符的目标数量（到达该数量即视为够，不再买；0 = 不考虑该音符）
-    melody_target_aqua: int = 0
-    melody_target_ignis: int = 0
-    melody_target_terra: int = 0
-    melody_target_ventus: int = 0
-    melody_target_lux: int = 0
-    melody_target_umbra: int = 0
-    melody_target_focus: int = 0
-    melody_target_skill: int = 0
-    melody_target_ultimate: int = 0
-    melody_target_pummel: int = 0
-    melody_target_luck: int = 0
-    melody_target_burst: int = 0
-    melody_target_stamina: int = 0
-    melody_of_aqua: bool = False
-    melody_of_ignis: bool = False
-    melody_of_terra: bool = False
-    melody_of_ventus: bool = False
-    melody_of_lux: bool = False
-    melody_of_umbra: bool = False
-    melody_of_focus: bool = False
-    melody_of_skill: bool = False
-    melody_of_ultimate: bool = False
-    melody_of_pummel: bool = False
-    melody_of_luck: bool = False
-    melody_of_burst: bool = False
-    melody_of_stamina: bool = False
+    # 每种音符期望购买到的目标数量（0 = 不购买该音符；>0 = 买到该数量为止）
+    melody_of_aqua: int = 0
+    melody_of_ignis: int = 0
+    melody_of_terra: int = 0
+    melody_of_ventus: int = 0
+    melody_of_lux: int = 0
+    melody_of_umbra: int = 0
+    melody_of_focus: int = 0
+    melody_of_skill: int = 0
+    melody_of_ultimate: int = 0
+    melody_of_pummel: int = 0
+    melody_of_luck: int = 0
+    melody_of_burst: int = 0
+    melody_of_stamina: int = 0
     # 强化设置
     initial_cost: int = 60
     max_cost: int = 180
@@ -275,24 +257,30 @@ class Data:
                 setattr(self, k, v)
 
     def get_melody_target(self, item_name: str) -> int:
-        """根据音符内部名（如 melody_of_aqua）返回该音符的目标数量；无对应则 0。
+        """取某个音符的目标数量。
+
+        目标数量直接写在 melody_of_xxx 字段上（0 = 不购买该音符）。
+        任务配置传入的是字符串，这里统一转换为整数，非法值按 0 处理。
 
         Args:
             item_name: 音符内部名，如 "melody_of_aqua"。
 
         Returns:
-            int: 该音符的目标数量，未设置时返回 0。
+            int: 该音符的目标数量；非音符或未设置时返回 0。
         """
-        match = re.match(r"melody_of_(.+)", item_name)
-        if not match:
+        if not item_name.startswith("melody_of_"):
             return 0
-        return int(getattr(self, f"melody_target_{match.group(1)}", 0) or 0)
+        try:
+            return int(getattr(self, item_name, 0) or 0)
+        except (TypeError, ValueError):
+            return 0
 
     @property
     def target_melodies(self) -> list[str]:
+        """设置了目标数量（> 0）的音符内部名列表。"""
         return [
-            name for name, value in self.__dict__.items()
-            if name.startswith("melody_of_") and value is True
+            name for name in self.__dict__
+            if name.startswith("melody_of_") and self.get_melody_target(name) > 0
         ]
 
     @property
@@ -452,12 +440,13 @@ class GridInfo:
         reserve = self.get_reserved_coin(data)
         return (data.current_coin - reserve) >= self.item_price
 
-    def is_match_normal_buy_plan(self, item_type: str, data: Data) -> str:
+    def is_match_normal_buy_plan(self, item_type: str, data: Data, current_melodies: dict[str, int]) -> str:
         """判定当前格子是否符合正常购买方案条件
 
         Args:
             item_type (str): 商品类型，"drink" 或 "melody"。
             data (Data): 用户策略数据。
+            current_melodies (dict[str, int]): 进商店时读到的各音符持有数量。
 
         Returns:
             str: 如果符合正常购买方案，返回 "normal" 或 "assist_melody"；否则返回空字符串。
@@ -478,15 +467,15 @@ class GridInfo:
             if discount_limit is None or self.discount > discount_limit:
                 return ""
 
-            # 有目标数量 → 作为"需要补到目标数"的音符买（走补货验证）
+            # 设定了目标数量的音符：按普通商品购买，买到目标数为止
             if target > 0:
+                if current_melodies.get(self.item_name, 0) >= target:
+                    return ""  # 已达目标数量，不再购买
                 if data.buy_assist_at_final_only and data.shop_type != "final":
                     return ""  # 只在最终商店补齐目标音符，中途商店不补
-                return "assist_melody"
-
-            if self.item_name in data.target_melodies:
                 return "normal"
 
+            # 未设定目标数量的音符：沿用原有的协奏音符购买策略
             if data.buy_assist_melody and not data.buy_assist_at_final_only:
                 return "assist_melody"
 
@@ -499,10 +488,18 @@ class GridInfo:
 class ShopHandler:
     priority_counter: int = 1
 
-    def __init__(self, grids: list[GridInfo], context: Optional[Context] = None, data: Optional[Data] = None):
+    def __init__(
+        self,
+        grids: list[GridInfo],
+        context: Optional[Context] = None,
+        data: Optional[Data] = None,
+        current_melodies: Optional[dict[str, int]] = None,
+    ):
         self._grids = grids
         self.context = context
         self.data = data
+        # 本轮商店各音符的持有数量（进商店时读取一次，购买后本地累加）
+        self.current_melodies: dict[str, int] = current_melodies or {}
 
     def __iter__(self):
         return iter(self._grids)
@@ -537,13 +534,13 @@ class ShopHandler:
         target_grids = []
         for target_type in self.data.priority:
             for grid in self._grids:
-                buy_type = grid.is_match_normal_buy_plan(target_type, self.data)
+                buy_type = grid.is_match_normal_buy_plan(target_type, self.data, self.current_melodies)
                 if buy_type:
                     grid.buy_type = buy_type
                     grid.buy_priority = self.__class__.priority_counter
                     self.__class__.priority_counter += 1
                     target_grids.append(grid)
-        return ShopHandler(target_grids, self.context, self.data)
+        return ShopHandler(target_grids, self.context, self.data, self.current_melodies)
 
     def high_price_drinks_buy_plan(self) -> Self:
         grids = sorted(
@@ -556,7 +553,7 @@ class ShopHandler:
             grid.buy_type = "dynamic_drink"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return ShopHandler(grids, self.context, self.data)
+        return ShopHandler(grids, self.context, self.data, self.current_melodies)
 
     def remaining_drinks_buy_plan(self) -> Self:
         grids = sorted(
@@ -569,7 +566,7 @@ class ShopHandler:
             grid.buy_type = "normal"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return ShopHandler(grids, self.context, self.data)
+        return ShopHandler(grids, self.context, self.data, self.current_melodies)
 
     def remainder_buy_plan(self) -> Self:
         grids = sorted(
@@ -581,7 +578,7 @@ class ShopHandler:
             grid.buy_type = "final_remainder"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return ShopHandler(grids, self.context, self.data)
+        return ShopHandler(grids, self.context, self.data, self.current_melodies)
 
     def buy(self) -> bool:
         """对实例中的所有格子依次执行购买操作，购买成功成标记 bought 为 True。
@@ -619,6 +616,9 @@ class ShopHandler:
 
             if success:
                 grid.bought = True
+                # 购买成功后即时累加，同一次商店内的后续判断才能用上最新数量
+                if grid.item_name in self.current_melodies:
+                    self.current_melodies[grid.item_name] += grid.item_quantity
             else:
                 logger.debug(f"购买失败，跳过第{grid.grid_num}个格子")
 
@@ -684,18 +684,10 @@ class ShopHandler:
         if not(reco_detail and reco_detail.hit):
             logger.debug("该音符不是协奏音符")
             passed = False
-        else:
-            # 设定了目标数量的音符：够了就不再买（与 buy_assist_before_unlock 无关，
-            # 因为 is_match_normal_buy_plan 只凭目标数量就会把该音符路由到这里）
-            target = self.data.get_melody_target(grid.item_name)
-            if target > 0:
-                if is_assist_skill_unlocked(self.context, image, target):
-                    logger.debug(f"音符 {grid.item_name} 已到目标数量 {target}，无需购买")
-                    passed = False
-            # 未设定目标数量时，沿用原有的解锁判断
-            elif self.data.buy_assist_before_unlock and is_assist_skill_unlocked(self.context, image):
-                logger.debug("协奏技能已解锁，无需购买")
-                passed = False
+        # 验证协奏技能是否解锁
+        elif self.data.buy_assist_before_unlock and is_assist_skill_unlocked(self.context, image):
+            logger.debug("协奏技能已解锁，无需购买")
+            passed = False
 
         # 如果没有通过验证，关闭确认框
         grid.checked = True
@@ -911,6 +903,12 @@ class ShopAction(CustomAction):
             bool: 正常完成返回 True；用户中止返回 False。
         """
         data = self._get_data(context, argv.node_name)
+
+        # 进商店时读取各音符持有数量；未设置任何音符目标时不读取
+        current_melodies = scan_melody_counts(context, data)
+        if current_melodies:
+            logger.debug(f"当前音符数量: {current_melodies}")
+
         logger.debug(
             f"当前强化费用: {data.current_cost}, "
             f"最大当前强化费用: {data.max_cost}, 初始强化费用: {data.initial_cost}"
@@ -924,7 +922,7 @@ class ShopAction(CustomAction):
             data.refresh_remaining = self._get_refresh_remaining(context, image)
             data.refresh_cost = self._get_refresh_cost(context, image)
             grids = self._get_grids(context, data, image)
-            handler = ShopHandler(grids, context, data)
+            handler = ShopHandler(grids, context, data, current_melodies)
 
             handler.normal_buy_plan().buy()
             handler.high_price_drinks_buy_plan().buy()

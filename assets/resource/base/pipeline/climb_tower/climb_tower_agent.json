@@ -50,8 +50,6 @@
   "星塔_爬塔流程_agent": {
     "anchor": "星塔总循环",
     "next": [
-      "[JumpBack]星塔_弹窗点空白_agent",
-      "[JumpBack]星塔_节点_读协奏音符_agent",
       "星塔_节点_进入商店_agent",
       "[JumpBack]星塔_节点_进入潜能选择_agent",
       "[JumpBack]星塔_节点_进入对话_agent",
@@ -401,24 +399,14 @@
       "type": "Click"
     },
     "next": [
-      "星塔_结算_点空白继续_agent",
+      "星塔_记录_读取数值_agent",
+      "星塔_保存记录_agent",
       "[JumpBack]星塔_确认_agent",
       "[JumpBack]星塔_点击空白处关闭_agent",
       "[JumpBack]星塔_默契提升_agent"
     ]
   },
-  "星塔_结算_点空白继续_agent": {
-    "action": {
-      "type": "Custom",
-      "param": {
-        "custom_action": "settle_click_through"
-      }
-    },
-    "next": [
-      "星塔_检查记录达标_agent"
-    ]
-  },
-  "星塔_检查记录达标_agent": {
+  "星塔_记录_读取数值_agent": {
     "recognition": {
       "type": "OCR",
       "param": {
@@ -436,85 +424,48 @@
     "action": {
       "type": "Custom",
       "param": {
-        "custom_action": "record_stop_check"
+        "custom_action": "record_scan"
       }
-    },
-    "attach": {
-      "min_potential_count": 80,
-      "min_record_level": 30
     },
     "next": [
       "星塔_保存记录_agent"
     ],
     "timeout": 5000
   },
-  "星塔_记录_识别数字_agent": {
+  "星塔_记录_识别等级_agent": {
     "recognition": {
       "type": "OCR",
       "param": {
         "expected": [
-          "\\d+"
+          "^\\d+$"
+        ],
+        "roi": [
+          45,
+          25,
+          80,
+          145
         ],
         "threshold": 0.45
       }
     }
   },
-  "星塔_节点_读协奏音符_agent": {
+  "星塔_记录_识别潜能数_agent": {
     "recognition": {
       "type": "OCR",
       "param": {
         "expected": [
-          "星塔商店"
+          "^\\d+$"
         ],
         "roi": [
-          0,
-          0,
-          1280,
-          720
-        ]
-      }
-    },
-    "action": {
-      "type": "Custom",
-      "param": {
-        "custom_action": "read_melody_counts"
-      }
-    },
-    "next": [
-      "星塔_节点_进入商店_agent"
-    ]
-  },
-  "星塔_弹窗点空白_agent": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "获得音符",
-          "获得道具",
-          "探索完成",
-          "默契提升",
-          "点击空白处继续",
-          "激活协奏技能",
-          "点击.*继续"
+          130,
+          220,
+          250,
+          55
         ],
-        "roi": [
-          0,
-          0,
-          1280,
-          720
-        ]
+        "threshold": 0.45,
+        "order_by": "Horizontal"
       }
-    },
-    "action": {
-      "type": "Custom",
-      "param": {
-        "custom_action": "click_blank"
-      }
-    },
-    "next": [
-      "星塔_爬塔流程_agent"
-    ],
-    "timeout": 3000
+    }
   },
   "星塔_保存记录_agent": {
     "recognition": {

@@ -228,6 +228,143 @@
     },
     "post_wait_freezes": 500
   },
+  "星塔_背包_打开秘纹技能_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "秘纹技能"
+        ],
+        "roi": [
+          0,
+          0,
+          260,
+          720
+        ],
+        "threshold": 0.6
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 300
+  },
+  "星塔_背包_打开技能音符说明_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "音符说明"
+        ],
+        "roi": [
+          1000,
+          0,
+          280,
+          120
+        ],
+        "threshold": 0.6
+      }
+    },
+    "action": {
+      "type": "Click"
+    },
+    "post_wait_freezes": 300
+  },
+  "星塔_背包_关闭技能音符说明_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "音符说明"
+        ],
+        "roi": [
+          300,
+          60,
+          700,
+          140
+        ],
+        "threshold": 0.6
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {
+        "target_offset": [
+          380,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "post_wait_freezes": 300
+  },
+  "星塔_背包_识别音符名称_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "水之音",
+          "火之音",
+          "地之音",
+          "土之音",
+          "风之音",
+          "光之音",
+          "暗之音",
+          "专注之音",
+          "技巧之音",
+          "绝招之音",
+          "强攻之音",
+          "幸运之音",
+          "暴发之音",
+          "体力之音"
+        ],
+        "replace": [
+          ["水之音", "aqua"],
+          ["火之音", "ignis"],
+          ["地之音", "terra"],
+          ["土之音", "terra"],
+          ["风之音", "ventus"],
+          ["光之音", "lux"],
+          ["暗之音", "umbra"],
+          ["专注之音", "focus"],
+          ["技巧之音", "skill"],
+          ["绝招之音", "ultimate"],
+          ["强攻之音", "pummel"],
+          ["幸运之音", "luck"],
+          ["暴发之音", "burst"],
+          ["体力之音", "stamina"],
+          ["[^a-z]", ""]
+        ],
+        "roi": [
+          300,
+          205,
+          130,
+          445
+        ],
+        "order_by": "Vertical",
+        "threshold": 0.6
+      }
+    }
+  },
+  "星塔_背包_识别音符数量_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "^\\d+$"
+        ],
+        "roi": [
+          430,
+          205,
+          70,
+          445
+        ],
+        "order_by": "Vertical",
+        "threshold": 0.6
+      }
+    }
+  },
   "星塔_测试用节点_agent": {
     "recognition": {
       "type": "Custom",

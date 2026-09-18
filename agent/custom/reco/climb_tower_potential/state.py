@@ -329,7 +329,6 @@ class State:
     trekkers: list[Trekker] = []
     owned_potentials: OwnedPotentials = OwnedPotentials()
     potential_draw_info: PotentialDrawInfo = PotentialDrawInfo()
-    melody_counts: dict = {}  # 音符名 -> 数量（进商店前从背包读取）
 
     @classmethod
     def reset(cls):

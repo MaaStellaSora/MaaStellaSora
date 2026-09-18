@@ -116,12 +116,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
             else:
                 actual_priority = base_priority - (level_span - 1)
 
-            # 4. 特殊机制：只在特定等级跨度/刷新次数下抓取，条件不满足则整条规则跳过
-            special = entry["special"]
-            if special and not self._check_special_rule(special, entry, potential):
-                continue
-
-            # 5. 取实际优先级最小（最优先）的规则
+            # 4. 取实际优先级最小（最优先）的规则
             if best_entry is None or actual_priority < best_priority:
                 best_entry = entry
                 best_priority = actual_priority
@@ -131,39 +126,6 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
             return -1, -1, "", False
 
         return best_priority, best_sub_rank, best_entry["trekker"], True
-
-    def _check_special_rule(self, special: str, entry: dict, potential: Potential) -> bool:
-        """判断特殊机制规则在当前潜能上是否成立。
-
-        这类潜能的价值取决于「等级跨度」与「刷新次数」，并非无条件抓取；
-        达到 special_cap_level 后直接放弃。
-
-        Args:
-            special: 特殊机制标记
-            entry: 当前规则
-            potential: 待选潜能
-
-        Returns:
-            bool: True 表示满足条件可参与选择；False 表示跳过该规则
-        """
-        old = potential.old_level
-        span = potential.level_span
-        cap = entry["special_cap_level"]
-
-        # 已经抓到上限等级（或以上）就不再抓
-        if cap is not None and old >= cap:
-            return False
-
-        if special == "dark_afterimage":
-            # 暗·蜃影：0→1 的跃升时抓取，或刷新次数足够多时抓取
-            return (old == 0 and span == 1) or self.data.refresh_count > 3
-        if special == "salute_double":
-            # 礼炮双响：仅 0→1 的跃升时抓取
-            return old == 0 and span == 1
-        if special == "mirror_current":
-            # 镜水归潮：低等级起步的跃升（0→2 以内）时抓取
-            return old == 0 and span <= 2
-        return True
 
     def _find_sub_rank(self, name: str, rule_names: list[str]) -> int:
         """通过潜能名称获取最优排名数值"""
@@ -211,9 +173,11 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
             return False
 
         # 普通潜能，组合匹配规则
+        max_span = entry["max_level_span"]
         checks = [
             potential.old_level < entry["max_level"],
             potential.level_span >= entry["level_span"],
+            max_span is None or potential.level_span <= max_span,
             self.data.refresh_count >= entry["refresh"]
         ]
         return all(checks)
@@ -254,8 +218,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                                             #   不填则沿用列表行号排名，且不做等级跃升提升
                     "no_upgrade": bool,     # 可选，默认 False，为 True 时等级跃升不提升优先级
                     "no_enhance": bool,     # 可选，默认 False，为 True 时强化阶段不选该潜能
-                    "special": str,         # 可选，特殊机制标记，见 _check_special_rule
-                    "special_cap_level": int,     # 可选，特殊机制：达到该等级后不再抓取
+                    "max_level_span": int,  # 可选，升级跨度上限（不填=不限制）
                     "condition": list       # 可选，生效条件，元素为 dict 时 AND，为 list 时 OR
                 }
             owned_potentials: 已拥有潜能状态。
@@ -272,8 +235,7 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                     "line_rank": int,       # 未配置 priority 时使用的行号排名
                     "no_upgrade": bool,     # 等级跃升不提升优先级
                     "no_enhance": bool,     # 强化阶段不选该潜能
-                    "special": str | None,  # 特殊机制标记
-                    "special_cap_level": int | None,     # 特殊机制：达到该等级后不再抓取
+                    "max_level_span": int | None,        # 升级跨度上限，None 表示不限制
                 }
         """
         def _check_single_condition(item: dict) -> bool:
@@ -343,10 +305,8 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
                 "no_upgrade": raw.get("no_upgrade", False),
                 # 强化时不选择该潜能
                 "no_enhance": raw.get("no_enhance", False),
-                # 特殊机制标记：dark_afterimage / salute_double / mirror_current
-                "special": raw.get("special"),
-                # 特殊机制：达到该等级后不再抓取
-                "special_cap_level": raw.get("special_cap_level"),
+                # 升级跨度上限（不填=不限制）；与 level_span 配合可表达“仅在 N 级跃升时生效”
+                "max_level_span": raw.get("max_level_span"),
             })
 
         return valid_entries

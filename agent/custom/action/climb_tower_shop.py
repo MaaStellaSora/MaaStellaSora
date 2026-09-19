@@ -622,10 +622,7 @@ class GridInfo:
                 return "normal"
 
             # 未设定目标数量的音符：沿用原有的协奏音符购买策略
-            if data.buy_assist_melody and not data.buy_melody_at_final_only:
-                return "assist_melody"
-
-            if data.buy_assist_melody and data.buy_melody_at_final_only and data.shop_type == "final":
+            if data.buy_assist_melody and (not data.buy_melody_at_final_only or data.shop_type == "final"):
                 return "assist_melody"
 
         return ""

@@ -10,13 +10,15 @@
                 "新版爬塔_属性塔",
                 "新版爬塔_潜能选择模式",
                 "新版爬塔_潜能最大刷新次数",
-                "新版爬塔_商店_购买音符策略",
-                "新版爬塔_商店_其他音符策略",
+                "新版爬塔_商店_购买音符时机",
+                "新版爬塔_商店_自动购买协奏音符",
+                "新版爬塔_商店_音符策略",
                 "新版爬塔_商店_中途商店刷新最小金额",
                 "新版爬塔_商店_潜能特饮折扣",
                 "新版爬塔_商店_5个音符折扣",
                 "新版爬塔_商店_15个音符折扣",
                 "新版爬塔_选项策略文件",
+                "新版爬塔_爬塔目标",
                 "新版爬塔_商店_最大强化金额",
                 "新版爬塔_商店_初始强化金额"
             ]
@@ -277,213 +279,144 @@
                 }
             }
         },
-        "新版爬塔_商店_购买音符策略": {
+        "新版爬塔_爬塔目标": {
+            "type": "input",
+            "label": "爬塔目标",
+            "description": "在爬塔次数内达到以下目标时，仍然会停止爬塔",
+            "inputs": [
+                {
+                    "name": "潜能数目标",
+                    "pipeline_type": "int",
+                    "default": "999",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入潜能数目标(≥0)"
+                },
+                {
+                    "name": "记录等级目标",
+                    "pipeline_type": "int",
+                    "default": "99",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入记录等级目标(≥0)"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_循环用节点_agent": {
+                    "attach": {
+                        "min_potential_count": "{潜能数目标}",
+                        "min_record_level": "{记录等级目标}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_商店_购买音符时机": {
             "type": "select",
-            "label": "购买音符策略",
-            "default_case": "仅激活1级协奏",
+            "label": "购买音符时机",
+            "description": "选择在哪里购买音符<br>当前只支持选择是否只在最终商店购买",
+            "default_case": "不限",
             "cases": [
                 {
-                    "name": "无",
+                    "name": "不限",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "buy_assist_melody": false,
-                                "buy_assist_before_unlock": false,
-                                "buy_assist_at_final_only": false
+                                "buy_melody_at_final_only": false
                             }
                         }
                     }
                 },
                 {
-                    "name": "激活协奏",
-                    "description": "只买与协奏有关的音符（需要符合折扣要求）",
+                    "name": "只在最终商店购买",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "buy_assist_melody": true,
-                                "buy_assist_before_unlock": false,
-                                "buy_assist_at_final_only": false
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "仅激活1级协奏",
-                    "description": "只买与协奏有关的音符，且协奏技能到达1级后不再购买（需要符合折扣要求）",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "buy_assist_melody": true,
-                                "buy_assist_before_unlock": true,
-                                "buy_assist_at_final_only": false
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "仅在最终商店激活1级协奏",
-                    "description": "只在最终商店购买与协奏有关的音符，且协奏技能到达1级后不再购买（需要符合折扣要求）",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "buy_assist_melody": true,
-                                "buy_assist_before_unlock": true,
-                                "buy_assist_at_final_only": true
+                                "buy_melody_at_final_only": true
                             }
                         }
                     }
                 }
             ]
         },
-        "新版爬塔_商店_其他音符策略": {
-            "type": "checkbox",
-            "label": "其他音符策略",
-            "description": "这里勾选的音符，只要符合折扣要求就会购买",
+        "新版爬塔_商店_自动购买协奏音符": {
+            "type": "select",
+            "label": "自动购买协奏音符",
+            "description": "该功能与音符策略功能同时生效，请注意不要出现冲突",
+            "default_case": "激活1级协奏",
             "cases": [
                 {
-                    "name": "水之音",
-                    "description": "增加水属性伤害",
+                    "name": "不自动购买",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "melody_of_aqua": true
+                                "buy_assist_melody": false,
+                                "buy_assist_before_unlock": false
                             }
                         }
                     }
                 },
                 {
-                    "name": "火之音",
-                    "description": "增加火属性伤害",
+                    "name": "激活1级协奏",
+                    "description": "检测到为协奏音符后，会自动购买直到音符数量达到15个",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "melody_of_ignis": true
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": true
                             }
                         }
                     }
                 },
                 {
-                    "name": "地之音",
-                    "description": "增加地属性伤害",
+                    "name": "不限量购买",
+                    "description": "检测到为协奏音符后，会自动购买",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
-                                "melody_of_terra": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "风之音",
-                    "description": "增加风属性伤害",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_ventus": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "光之音",
-                    "description": "增加光属性伤害",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_lux": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "暗之音",
-                    "description": "增加暗属性伤害",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_umbra": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "专注之音",
-                    "description": "增加普攻伤害",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_focus": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "技巧之音",
-                    "description": "增加技能伤害",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_skill": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "绝招之音",
-                    "description": "增加绝招伤害",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_ultimate": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "强攻之音",
-                    "description": "增加攻击力",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_pummel": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "幸运之音",
-                    "description": "增加暴击率",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_luck": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "暴发之音",
-                    "description": "增加暴击伤害",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_burst": true
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "体力之音",
-                    "description": "增加体力",
-                    "pipeline_override": {
-                        "星塔_节点_商店_购物_agent": {
-                            "attach": {
-                                "melody_of_stamina": true
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": false
                             }
                         }
                     }
                 }
             ]
+        },
+        "新版爬塔_商店_音符策略": {
+            "type": "input",
+            "label": "音符策略",
+            "description": "每种音符期望购买到的目标数量：填 0 = 不购买该音符；填 N = 买到持有数量达到 N 为止（仍需符合折扣及时机要求）",
+            "inputs": [
+                {"name": "水之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "火之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "地之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "风之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "光之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "暗之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "专注之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "技巧之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "绝招之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "强攻之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "幸运之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "暴发之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "体力之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"}
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_购物_agent": {
+                    "attach": {
+                        "melody_of_aqua": "{水之音}",
+                        "melody_of_ignis": "{火之音}",
+                        "melody_of_terra": "{地之音}",
+                        "melody_of_ventus": "{风之音}",
+                        "melody_of_lux": "{光之音}",
+                        "melody_of_umbra": "{暗之音}",
+                        "melody_of_focus": "{专注之音}",
+                        "melody_of_skill": "{技巧之音}",
+                        "melody_of_ultimate": "{绝招之音}",
+                        "melody_of_pummel": "{强攻之音}",
+                        "melody_of_luck": "{幸运之音}",
+                        "melody_of_burst": "{暴发之音}",
+                        "melody_of_stamina": "{体力之音}"
+                    }
+                }
+            }
         },
         "新版爬塔_商店_中途商店刷新最小金额": {
             "type": "input",

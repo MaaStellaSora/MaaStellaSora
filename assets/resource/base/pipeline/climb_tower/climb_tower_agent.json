@@ -286,20 +286,20 @@
       "full_price_buy_reserve_base": 500,
       "buy_assist_melody": true,
       "buy_assist_before_unlock": true,
-      "buy_assist_at_final_only": false,
-      "melody_of_aqua": false,
-      "melody_of_ignis": false,
-      "melody_of_terra": false,
-      "melody_of_ventus": false,
-      "melody_of_lux": false,
-      "melody_of_umbra": false,
-      "melody_of_focus": false,
-      "melody_of_skill": false,
-      "melody_of_ultimate": false,
-      "melody_of_pummel": false,
-      "melody_of_luck": false,
-      "melody_of_burst": false,
-      "melody_of_stamina": false
+      "buy_melody_at_final_only": false,
+      "melody_of_aqua": 0,
+      "melody_of_ignis": 0,
+      "melody_of_terra": 0,
+      "melody_of_ventus": 0,
+      "melody_of_lux": 0,
+      "melody_of_umbra": 0,
+      "melody_of_focus": 0,
+      "melody_of_skill": 0,
+      "melody_of_ultimate": 0,
+      "melody_of_pummel": 0,
+      "melody_of_luck": 0,
+      "melody_of_burst": 0,
+      "melody_of_stamina": 0
     }
   },
   "星塔_节点_商店_购物_返回商店层_agent": {
@@ -399,11 +399,37 @@
       "type": "Click"
     },
     "next": [
-      "星塔_保存记录_agent",
+      "星塔_记录_读取数值_agent",
       "[JumpBack]星塔_确认_agent",
       "[JumpBack]星塔_点击空白处关闭_agent",
       "[JumpBack]星塔_默契提升_agent"
     ]
+  },
+  "星塔_记录_读取数值_agent": {
+    "recognition": {
+      "type": "OCR",
+      "param": {
+        "expected": [
+          "保存纪录"
+        ],
+        "roi": [
+          1076,
+          623,
+          135,
+          57
+        ]
+      }
+    },
+    "action": {
+      "type": "Custom",
+      "param": {
+        "custom_action": "record_scan"
+      }
+    },
+    "next": [
+      "星塔_保存记录_agent"
+    ],
+    "timeout": 5000
   },
   "星塔_保存记录_agent": {
     "recognition": {

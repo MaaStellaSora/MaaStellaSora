@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field, fields
 from typing import Optional, Any, Self
@@ -8,8 +10,153 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
+from custom.reco.melody_scan import scan_melody_counts
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_shop")
+
+
+GRID_ROIS = [
+    {
+        "item_roi": [625, 130, 150, 190],
+        "price_roi": [645, 242, 110, 35],
+        "name_roi": [645, 275, 110, 25],
+    },
+    {
+        "item_roi": [775, 130, 150, 190],
+        "price_roi": [795, 242, 110, 35],
+        "name_roi": [795, 275, 110, 25],
+    },
+    {
+        "item_roi": [925, 130, 150, 190],
+        "price_roi": [945, 242, 110, 35],
+        "name_roi": [945, 275, 110, 25],
+    },
+    {
+        "item_roi": [1075, 130, 150, 190],
+        "price_roi": [1095, 242, 110, 35],
+        "name_roi": [1095, 275, 110, 25],
+    },
+    {
+        "item_roi": [625, 330, 150, 190],
+        "price_roi": [645, 440, 110, 35],
+        "name_roi": [645, 475, 110, 25],
+    },
+    {
+        "item_roi": [775, 330, 150, 190],
+        "price_roi": [795, 440, 110, 35],
+        "name_roi": [795, 475, 110, 25],
+    },
+    {
+        "item_roi": [925, 330, 150, 190],
+        "price_roi": [945, 440, 110, 35],
+        "name_roi": [945, 475, 110, 25],
+    },
+    {
+        "item_roi": [1075, 330, 150, 190],
+        "price_roi": [1095, 440, 110, 35],
+        "name_roi": [1095, 475, 110, 25],
+    },
+]
+
+ITEM_NAMES = {
+    "potential_drink": {
+        "cn": ["潜能特饮", "能特", "特饮"],
+        "tw": ["潛能特飲", "能特"],
+        "en": ["Potential Drink", "Drink"],
+        "jp": ["素質メザメール", "メザ", "メサ", "メール"]
+    },
+    "melody_of_aqua": {
+        "cn": ["水之音"],
+        "tw": ["水之音"],
+        "en": ["Melody of Water"],
+        "jp": ["水の音符"]
+    },
+    "melody_of_ignis": {
+        "cn": ["火之音"],
+        "tw": ["火之音"],
+        "en": ["Melody of Ignis"],
+        "jp": ["火の音符"]
+    },
+    "melody_of_terra": {
+        "cn": ["地之音"],
+        "tw": ["地之音"],
+        "en": ["Melody of Terra"],
+        "jp": ["地の音符"]
+    },
+    "melody_of_ventus": {
+        "cn": ["风之音"],
+        "tw": ["風之音"],
+        "en": ["Melody of Ventus"],
+        "jp": ["風の音符"]
+    },
+    "melody_of_lux": {
+        "cn": ["光之音"],
+        "tw": ["光之音"],
+        "en": ["Melody of Lux"],
+        "jp": ["光の音符"]
+    },
+    "melody_of_umbra": {
+        "cn": ["暗之音"],
+        "tw": ["暗之音"],
+        "en": ["Melody of Umbra"],
+        "jp": ["闇の音符"]
+    },
+    "melody_of_focus": {
+        "cn": ["专注之音"],
+        "tw": ["專注之音"],
+        "en": ["Melody of Focus"],
+        "jp": ["集中の音符"]
+    },
+    "melody_of_skill": {
+        "cn": ["技巧之音"],
+        "tw": ["技巧之音"],
+        "en": ["Melody of Skill"],
+        "jp": ["器用の音符"]
+    },
+    "melody_of_ultimate": {
+        "cn": ["绝招之音"],
+        "tw": ["絕招之音"],
+        "en": ["Melody of Ultimate"],
+        "jp": ["必殺の音符"]
+    },
+    "melody_of_pummel": {
+        "cn": ["强攻之音"],
+        "tw": ["強攻之音"],
+        "en": ["Melody of Pummel"],
+        "jp": ["強撃の音符"]
+    },
+    "melody_of_luck": {
+        "cn": ["幸运之音"],
+        "tw": ["幸運之音"],
+        "en": ["Melody of Luck"],
+        "jp": ["幸運の音符"]
+    },
+    "melody_of_burst": {
+        "cn": ["暴发之音"],
+        "tw": ["爆發之音"],
+        "en": ["Melody of Burst"],
+        "jp": ["爆発の音符"]
+    },
+    "melody_of_stamina": {
+        "cn": ["体力之音"],
+        "tw": ["體力之音"],
+        "en": ["Melody of Stamina"],
+        "jp": ["体力の音符"]
+    }
+}
+
+ITEM_STANDARD_PRICES: dict[str, int] = {
+    "potential_drink": 200,
+    "melody_5": 90,
+    "melody_15": 400,
+}
+
+DISCOUNT_TEXT = {
+    "cn": ["优惠"],
+    "tw": ["優惠"],
+    "en": ["SALE"],
+    "jp": ["割引"]
+}
 
 
 def get_current_coin(
@@ -216,22 +363,24 @@ class Data:
     melody_15_discount_threshold: float = 0.5
     buy_assist_melody: bool = False
     buy_assist_before_unlock: bool = False
-    buy_assist_at_final_only: bool = False
+    buy_melody_at_final_only: bool = False
     regular_shop_refresh_threshold: int = 1500
     full_price_buy_reserve_base: int = 500
-    melody_of_aqua: bool = False
-    melody_of_ignis: bool = False
-    melody_of_terra: bool = False
-    melody_of_ventus: bool = False
-    melody_of_lux: bool = False
-    melody_of_umbra: bool = False
-    melody_of_focus: bool = False
-    melody_of_skill: bool = False
-    melody_of_ultimate: bool = False
-    melody_of_pummel: bool = False
-    melody_of_luck: bool = False
-    melody_of_burst: bool = False
-    melody_of_stamina: bool = False
+    # 每种音符期望购买到的目标数量（0 = 不购买该音符；>0 = 买到该数量为止）
+    melody_of_aqua: int = 0
+    melody_of_ignis: int = 0
+    melody_of_terra: int = 0
+    melody_of_ventus: int = 0
+    melody_of_lux: int = 0
+    melody_of_umbra: int = 0
+    melody_of_focus: int = 0
+    melody_of_skill: int = 0
+    melody_of_ultimate: int = 0
+    melody_of_pummel: int = 0
+    melody_of_luck: int = 0
+    melody_of_burst: int = 0
+    melody_of_stamina: int = 0
+    current_melodies: dict[str, int] = field(default_factory=dict)
     # 强化设置
     initial_cost: int = 60
     max_cost: int = 180
@@ -254,11 +403,31 @@ class Data:
             if k in cls_fields:
                 setattr(self, k, v)
 
+    def get_melody_target(self, item_name: str) -> int:
+        """取某个音符的目标数量。
+
+        目标数量直接写在 melody_of_xxx 字段上（0 = 不购买该音符）。
+        任务配置传入的是字符串，这里统一转换为整数，非法值按 0 处理。
+
+        Args:
+            item_name: 音符内部名，如 "melody_of_aqua"。
+
+        Returns:
+            int: 该音符的目标数量；非音符或未设置时返回 0。
+        """
+        if not item_name.startswith("melody_of_"):
+            return 0
+        try:
+            return int(getattr(self, item_name, 0) or 0)
+        except (TypeError, ValueError):
+            return 0
+
     @property
     def target_melodies(self) -> list[str]:
+        """设置了目标数量（> 0）的音符内部名列表。"""
         return [
-            name for name, value in self.__dict__.items()
-            if name.startswith("melody_of_") and value is True
+            name for name in self.__dict__
+            if name.startswith("melody_of_") and self.get_melody_target(name) > 0
         ]
 
     @property
@@ -278,7 +447,7 @@ class Data:
         prices = []
         if "drink" in self.priority:
             prices.append(
-                ShopAction.ITEM_STANDARD_PRICES["potential_drink"] * self.drink_discount_threshold
+                ITEM_STANDARD_PRICES["potential_drink"] * self.drink_discount_threshold
             )
         # if "melody" in self.priority and (self.target_melodies or self.buy_assist_melody):
         #     prices.append(
@@ -349,7 +518,7 @@ class GridInfo:
         Returns:
             list[int, int, int, int]: 道具ROI区域的坐标，(x, y, w, h)。
         """
-        return ShopAction.GRID_ROIS[self.grid_num-1]["item_roi"]
+        return GRID_ROIS[self.grid_num-1]["item_roi"]
 
     @property
     def price_roi(self) -> list[int]:
@@ -358,7 +527,7 @@ class GridInfo:
         Returns:
             list[int, int, int, int]: 道具价格ROI区域的坐标，(x, y, w, h)。
         """
-        return ShopAction.GRID_ROIS[self.grid_num-1]["price_roi"]
+        return GRID_ROIS[self.grid_num-1]["price_roi"]
 
     @property
     def name_roi(self) -> list[int]:
@@ -367,7 +536,7 @@ class GridInfo:
         Returns:
             list[int, int, int, int]: 道具名称ROI区域的坐标，(x, y, w, h)。
         """
-        return ShopAction.GRID_ROIS[self.grid_num-1]["name_roi"]
+        return GRID_ROIS[self.grid_num-1]["name_roi"]
 
     @property
     def discount(self) -> float:
@@ -377,15 +546,15 @@ class GridInfo:
             float: 折扣比值，值越低越划算；无法计算时返回 1.0。
         """
         if self.item_name == "potential_drink":
-            std = ShopAction.ITEM_STANDARD_PRICES["potential_drink"]
+            std = ITEM_STANDARD_PRICES["potential_drink"]
             return self.item_price / std
 
         if "melody" in self.item_name and self.item_quantity == 5:
-            std = ShopAction.ITEM_STANDARD_PRICES["melody_5"]
+            std = ITEM_STANDARD_PRICES["melody_5"]
             return self.item_price / std
 
         if "melody" in self.item_name and self.item_quantity == 15:
-            std = ShopAction.ITEM_STANDARD_PRICES["melody_15"]
+            std = ITEM_STANDARD_PRICES["melody_15"]
             return self.item_price / std
 
         return 1.0
@@ -437,19 +606,23 @@ class GridInfo:
             return ""
 
         if item_type == "melody" and "melody" in self.item_name:
+            target = data.get_melody_target(self.item_name)
             thresholds = {5: data.melody_5_discount_threshold, 15: data.melody_15_discount_threshold}
             discount_limit = thresholds.get(self.item_quantity)
 
             if discount_limit is None or self.discount > discount_limit:
                 return ""
 
-            if self.item_name in data.target_melodies:
+            # 设定了目标数量的音符：按普通商品购买，买到目标数为止
+            if target > 0:
+                if data.current_melodies.get(self.item_name, 0) >= target:
+                    return ""  # 已达目标数量，不再购买
+                if data.buy_melody_at_final_only and data.shop_type != "final":
+                    return ""  # 只在最终商店补齐目标音符，中途商店不补
                 return "normal"
 
-            if data.buy_assist_melody and not data.buy_assist_at_final_only:
-                return "assist_melody"
-
-            if data.buy_assist_melody and data.buy_assist_at_final_only and data.shop_type == "final":
+            # 未设定目标数量的音符：沿用原有的协奏音符购买策略
+            if data.buy_assist_melody and (not data.buy_melody_at_final_only or data.shop_type == "final"):
                 return "assist_melody"
 
         return ""
@@ -458,7 +631,12 @@ class GridInfo:
 class ShopHandler:
     priority_counter: int = 1
 
-    def __init__(self, grids: list[GridInfo], context: Optional[Context] = None, data: Optional[Data] = None):
+    def __init__(
+        self,
+        grids: list[GridInfo],
+        context: Context,
+        data: Data
+    ):
         self._grids = grids
         self.context = context
         self.data = data
@@ -481,7 +659,7 @@ class ShopHandler:
         self.data = data
         return self
 
-    def normal_buy_plan(self) -> Self:
+    def normal_buy_plan(self) -> ShopHandler:
         """按 priority 顺序对格子打标，写入 buy_type 和 buy_priority。
 
         打标前按价格升序排列。
@@ -504,7 +682,7 @@ class ShopHandler:
                     target_grids.append(grid)
         return ShopHandler(target_grids, self.context, self.data)
 
-    def high_price_drinks_buy_plan(self) -> Self:
+    def high_price_drinks_buy_plan(self) -> ShopHandler:
         grids = sorted(
             [g for g in self._grids
              if not g.bought
@@ -517,7 +695,7 @@ class ShopHandler:
             self.__class__.priority_counter += 1
         return ShopHandler(grids, self.context, self.data)
 
-    def remaining_drinks_buy_plan(self) -> Self:
+    def remaining_drinks_buy_plan(self) -> ShopHandler:
         grids = sorted(
             [g for g in self._grids
              if not g.bought
@@ -530,7 +708,7 @@ class ShopHandler:
             self.__class__.priority_counter += 1
         return ShopHandler(grids, self.context, self.data)
 
-    def remainder_buy_plan(self) -> Self:
+    def remainder_buy_plan(self) -> ShopHandler:
         grids = sorted(
             [g for g in self._grids if not g.bought],
             key=lambda g: g.item_price,
@@ -564,6 +742,12 @@ class ShopHandler:
                 continue
 
             if grid.buy_type in ["normal", "dynamic_drink"]:
+                # 因为音符的数量是动态变化的，但筛选的时候音符数量是静态的，所以这里先打个补丁，判断是否已达目标数量
+                target = self.data.get_melody_target(grid.item_name)
+                if 0 < target <= self.data.current_melodies.get(grid.item_name, 0):
+                    logger.debug(f"音符 {grid.item_name} 已达目标数量 {target}，跳过第{grid.grid_num}个格子")
+                    continue
+                # 潜能特饮跟音符共用买入方法
                 success = self._buy_item(grid)
             elif grid.buy_type == "assist_melody":
                 if grid.checked:
@@ -578,6 +762,11 @@ class ShopHandler:
 
             if success:
                 grid.bought = True
+                # 购买成功后即时累加，同一次商店内的后续判断才能用上最新数量
+                if "melody" in grid.item_name:
+                    self.data.current_melodies[grid.item_name] = (
+                            self.data.current_melodies.get(grid.item_name, 0) + grid.item_quantity
+                    )
             else:
                 logger.debug(f"购买失败，跳过第{grid.grid_num}个格子")
 
@@ -701,149 +890,6 @@ class ShopHandler:
 @AgentServer.custom_action("shop_action")
 class ShopAction(CustomAction):
 
-    GRID_ROIS = [
-        {
-            "item_roi": [625, 130, 150, 190],
-            "price_roi": [645, 242, 110, 35],
-            "name_roi": [645, 275, 110, 25],
-        },
-        {
-            "item_roi": [775, 130, 150, 190],
-            "price_roi": [795, 242, 110, 35],
-            "name_roi": [795, 275, 110, 25],
-        },
-        {
-            "item_roi": [925, 130, 150, 190],
-            "price_roi": [945, 242, 110, 35],
-            "name_roi": [945, 275, 110, 25],
-        },
-        {
-            "item_roi": [1075, 130, 150, 190],
-            "price_roi": [1095, 242, 110, 35],
-            "name_roi": [1095, 275, 110, 25],
-        },
-        {
-            "item_roi": [625, 330, 150, 190],
-            "price_roi": [645, 440, 110, 35],
-            "name_roi": [645, 475, 110, 25],
-        },
-        {
-            "item_roi": [775, 330, 150, 190],
-            "price_roi": [795, 440, 110, 35],
-            "name_roi": [795, 475, 110, 25],
-        },
-        {
-            "item_roi": [925, 330, 150, 190],
-            "price_roi": [945, 440, 110, 35],
-            "name_roi": [945, 475, 110, 25],
-        },
-        {
-            "item_roi": [1075, 330, 150, 190],
-            "price_roi": [1095, 440, 110, 35],
-            "name_roi": [1095, 475, 110, 25],
-        },
-    ]
-
-    ITEM_NAMES= {
-        "potential_drink": {
-            "cn": ["潜能特饮", "能特", "特饮"],
-            "tw": ["潛能特飲", "能特"],
-            "en": ["Potential Drink", "Drink"],
-            "jp": ["素質メザメール","メザ", "メサ", "メール"]
-        },
-        "melody_of_aqua": {
-            "cn": ["水之音"],
-            "tw": ["水之音"],
-            "en": ["Melody of Water"],
-            "jp": ["水の音符"]
-        },
-        "melody_of_ignis": {
-            "cn": ["火之音"],
-            "tw": ["火之音"],
-            "en": ["Melody of Ignis"],
-            "jp": ["火の音符"]
-        },
-        "melody_of_terra": {
-            "cn": ["地之音"],
-            "tw": ["地之音"],
-            "en": ["Melody of Terra"],
-            "jp": ["地の音符"]
-        },
-        "melody_of_ventus": {
-            "cn": ["风之音"],
-            "tw": ["風之音"],
-            "en": ["Melody of Ventus"],
-            "jp": ["風の音符"]
-        },
-        "melody_of_lux": {
-            "cn": ["光之音"],
-            "tw": ["光之音"],
-            "en": ["Melody of Lux"],
-            "jp": ["光の音符"]
-        },
-        "melody_of_umbra": {
-            "cn": ["暗之音"],
-            "tw": ["暗之音"],
-            "en": ["Melody of Umbra"],
-            "jp": ["闇の音符"]
-        },
-        "melody_of_focus": {
-            "cn": ["专注之音"],
-            "tw": ["專注之音"],
-            "en": ["Melody of Focus"],
-            "jp": ["集中の音符"]
-        },
-        "melody_of_skill": {
-            "cn": ["技巧之音"],
-            "tw": ["技巧之音"],
-            "en": ["Melody of Skill"],
-            "jp": ["器用の音符"]
-        },
-        "melody_of_ultimate": {
-            "cn": ["绝招之音"],
-            "tw": ["絕招之音"],
-            "en": ["Melody of Ultimate"],
-            "jp": ["必殺の音符"]
-        },
-        "melody_of_pummel": {
-            "cn": ["强攻之音"],
-            "tw": ["強攻之音"],
-            "en": ["Melody of Pummel"],
-            "jp": ["強撃の音符"]
-        },
-        "melody_of_luck": {
-            "cn": ["幸运之音"],
-            "tw": ["幸運之音"],
-            "en": ["Melody of Luck"],
-            "jp": ["幸運の音符"]
-        },
-        "melody_of_burst": {
-            "cn": ["暴发之音"],
-            "tw": ["爆發之音"],
-            "en": ["Melody of Burst"],
-            "jp": ["爆発の音符"]
-        },
-        "melody_of_stamina": {
-            "cn": ["体力之音"],
-            "tw": ["體力之音"],
-            "en": ["Melody of Stamina"],
-            "jp": ["体力の音符"]
-        }
-    }
-
-    ITEM_STANDARD_PRICES: dict[str, int] = {
-        "potential_drink": 200,
-        "melody_5": 90,
-        "melody_15": 400,
-    }
-
-    DISCOUNT_TEXT = {
-        "cn": ["优惠"],
-        "tw": ["優惠"],
-        "en": ["SALE"],
-        "jp": ["割引"]
-    }
-
     def run(
         self,
         context: Context,
@@ -862,6 +908,12 @@ class ShopAction(CustomAction):
             bool: 正常完成返回 True；用户中止返回 False。
         """
         data = self._get_data(context, argv.node_name)
+
+        # 进商店时读取各音符持有数量；未设置任何音符目标时不读取
+        data.current_melodies = scan_melody_counts(context, data)
+        if data.current_melodies:
+            logger.debug(f"当前音符数量: {data.current_melodies}")
+
         logger.debug(
             f"当前强化费用: {data.current_cost}, "
             f"最大当前强化费用: {data.max_cost}, 初始强化费用: {data.initial_cost}"
@@ -947,7 +999,7 @@ class ShopAction(CustomAction):
         grids_info = []
         lang_type = data.lang_type
 
-        for i, grid_roi in enumerate(self.GRID_ROIS):
+        for i, grid_roi in enumerate(GRID_ROIS):
             logger.debug(f"正在识别第 {i + 1} 个格子")
             item_name, item_quantity, item_price, trekker_specified = self._get_single_grid_info(
                 context, grid_roi["item_roi"], grid_roi["price_roi"], grid_roi["name_roi"], lang_type, image
@@ -959,7 +1011,7 @@ class ShopAction(CustomAction):
                     item_quantity=item_quantity,
                     item_price=item_price,
                     trekker_specified=trekker_specified,
-                    display_name=ShopAction.ITEM_NAMES.get(item_name, {}).get(data.lang_type, ["?"])[0]
+                    display_name=ITEM_NAMES.get(item_name, {}).get(data.lang_type, ["?"])[0]
                 ))
             else:
                 logger.error(
@@ -1086,7 +1138,7 @@ class ShopAction(CustomAction):
             if match.group(2):
                 item_quantity = int(match.group(2).strip())
 
-        if item_name not in self.ITEM_NAMES:
+        if item_name not in ITEM_NAMES:
             for m in mapping:
                 if m in item_name:
                     item_name = mapping[m]
@@ -1189,7 +1241,7 @@ class ShopAction(CustomAction):
             dict[str, str]: 显示名 → 内部通用名的映射字典。
         """
         reverse_map = {}
-        for key, translations in self.ITEM_NAMES.items():
+        for key, translations in ITEM_NAMES.items():
             for name in translations.get(lang_type, []):
                 reverse_map[name] = key
         return reverse_map

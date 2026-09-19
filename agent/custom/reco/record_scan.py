@@ -29,7 +29,7 @@ class RecordScan(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        image = context.tasker.controller.post_screencap().wait().get()
+        image = context.tasker.controller.cached_image
 
         level = self._read_ints(context, image, LEVEL_NODE)
         parts = self._read_ints(context, image, POTENTIAL_NODE)

@@ -68,28 +68,32 @@ class InviteAuto(CustomAction):
 
             names = self._auto_find_uncollected(context, max_find_count)
             for n in names:
-                queue.append((n, auto_gift))
+                queue.append(([n], auto_gift))
             # 自动查找后重置回顶部，衔接下方 _click_trekker “从顶部开始找”的前提
             self._scroll_to_top(context)
 
         # 追加用户手填名字（不重复，保持原有 1~5 号顺序）
         # 去重统一按规范化后的名字比较，避免全角/半角括号、空格差异导致重复邀约
-        selected = {self._normalize_name(t) for t, _ in queue}
+        selected = {self._normalize_name(names[0]) for names, _ in queue}
         for node in invite_nodes:
-            trekker_name, choose_gift = self._get_trekker_info(context, node)
-            if not trekker_name or trekker_name in ("x", "X"):
+            trekker_names, choose_gift = self._get_trekker_info(context, node)
+            if not trekker_names:
+                continue
+            trekker_name = trekker_names[0]
+            if trekker_name in ("x", "X"):
                 continue
             if self._normalize_name(trekker_name) in selected:
                 self.logger.info(f"邀约对象 '{trekker_name}' 已由自动查找记录，跳过手填重复项")
                 continue
             selected.add(self._normalize_name(trekker_name))
-            queue.append((trekker_name, choose_gift))
+            queue.append((trekker_names, choose_gift))
 
         # 每日上限 5 人
         queue = queue[:5]
-        self.logger.info(f"邀约名单：{", ".join([name for name, _ in queue])}")
+        self.logger.info(f"邀约名单：{", ".join([names[0] for names, _ in queue])}")
 
-        for trekker_name, choose_gift in queue:
+        for trekker_names, choose_gift in queue:
+            trekker_name = trekker_names[0]
             # 检查邀约对象是否达到上限
             if self._hit_daily_limit(context):
                 return True
@@ -98,7 +102,7 @@ class InviteAuto(CustomAction):
             need_reset = False
             # 执行邀约流程
             while not context.tasker.stopping:
-                if self._click_trekker(context, trekker_name):
+                if self._click_trekker(context, trekker_names):
                     # 成功点击邀约对象后，按照choose_gift情况获取送礼流程，然后尝试执行邀约
                     pipeline_override = self._get_choose_gift_pipeline(choose_gift)
                     if memory_mode:
@@ -144,42 +148,45 @@ class InviteAuto(CustomAction):
             return True
         return False
 
-    def _get_trekker_info(self, context: Context, node) -> tuple[str, str]:
+    def _get_trekker_info(self, context: Context, node) -> tuple[list[str], str]:
         """
-            获取邀约对象名字及送礼选项
+            获取邀约对象名字（可含多语言别名）及送礼选项
+
+            expected 支持写多个名字，数组中的每一项都会参与匹配，
+            因此同一角色在不同服务器的译名可以并列写在一起。
 
             Args:
                 context: maa.context.Context
                 node: string，需要提取内容的节点名称
 
             Returns:
-                str: 邀约对象名字
+                list[str]: 邀约对象名字，第一个为主名（用于日志与回忆收集）
                 str: 送礼选项
         """
         trekker_info = context.get_node_data(node)
 
         try:
-            trekker_name = trekker_info['recognition']['param']['expected'][0]
-            trekker_name = trekker_name.strip()
+            raw_names = trekker_info['recognition']['param']['expected']
+            trekker_names = [n.strip() for n in raw_names if isinstance(n, str) and n.strip()]
             choose_gift = trekker_info['attach']['gift']
         except (TypeError, KeyError, IndexError, AttributeError) as e:
             self.logger.warning(f"提取节点'{node}'的文本过程中出现问题: {e}")
-            trekker_name = ""
+            trekker_names = []
             choose_gift = ""
 
-        return trekker_name, choose_gift
+        return trekker_names, choose_gift
 
     def _click_trekker(
             self,
             context: Context,
-            trekker_name: str
+            trekker_names: list[str]
     ) -> bool:
         """
             识别并点击邀约对象
 
             Args:
                 context: maa.context.Context
-                trekker_name: 旅人名字
+                trekker_names: 旅人名字列表（可含多语言别名），任一命中即视为找到
 
             Returns:
                 bool: 选择到目标对象时返回True，未能选择到目标对象时返回False
@@ -194,7 +201,7 @@ class InviteAuto(CustomAction):
             ' ': None,
             '　': None
         })
-        formatted_name = trekker_name.translate(translate_table)
+        candidates = [n.translate(translate_table) for n in trekker_names if n]
 
         # 识别对象
         image = context.tasker.controller.post_screencap().wait().get()
@@ -206,16 +213,16 @@ class InviteAuto(CustomAction):
 
         # 比较文本相似程度，如果相似程度高，则点击，并返回True，否则返回False
         for result in results:
-            # 使用difflib库计算文本相似度
             formatted_result = result['text'].translate(translate_table)
-            similarity = difflib.SequenceMatcher(None, formatted_result, formatted_name).ratio()
-
-            if similarity >= similarity_limit:
-                self.logger.debug(f"识别成功！预期: {formatted_name}, 识别结果: {formatted_result}, 相似度: {similarity:.2f}")
-                context.tasker.controller.post_click(result['x'], result['y']).wait()
-                self.logger.debug(f"点击坐标{result['x']},{result['y']}完成")
-                return True
-            self.logger.debug(f"识别失败！预期: {formatted_name}, 识别结果: {formatted_result}, 相似度: {similarity:.2f}")
+            # 逐个别名比较，任一别名相似度达标即命中
+            for candidate in candidates:
+                similarity = difflib.SequenceMatcher(None, formatted_result, candidate).ratio()
+                if similarity >= similarity_limit:
+                    self.logger.debug(f"识别成功！预期: {candidate}, 识别结果: {formatted_result}, 相似度: {similarity:.2f}")
+                    context.tasker.controller.post_click(result['x'], result['y']).wait()
+                    self.logger.debug(f"点击坐标{result['x']},{result['y']}完成")
+                    return True
+            self.logger.debug(f"识别失败！预期: {candidates}, 识别结果: {formatted_result}")
         return False
 
     @staticmethod

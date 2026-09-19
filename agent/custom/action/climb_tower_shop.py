@@ -363,7 +363,7 @@ class Data:
     melody_15_discount_threshold: float = 0.5
     buy_assist_melody: bool = False
     buy_assist_before_unlock: bool = False
-    buy_assist_at_final_only: bool = False
+    buy_melody_at_final_only: bool = False
     regular_shop_refresh_threshold: int = 1500
     full_price_buy_reserve_base: int = 500
     # 每种音符期望购买到的目标数量（0 = 不购买该音符；>0 = 买到该数量为止）
@@ -617,15 +617,15 @@ class GridInfo:
             if target > 0:
                 if data.current_melodies.get(self.item_name, 0) >= target:
                     return ""  # 已达目标数量，不再购买
-                if data.buy_assist_at_final_only and data.shop_type != "final":
+                if data.buy_melody_at_final_only and data.shop_type != "final":
                     return ""  # 只在最终商店补齐目标音符，中途商店不补
                 return "normal"
 
             # 未设定目标数量的音符：沿用原有的协奏音符购买策略
-            if data.buy_assist_melody and not data.buy_assist_at_final_only:
+            if data.buy_assist_melody and not data.buy_melody_at_final_only:
                 return "assist_melody"
 
-            if data.buy_assist_melody and data.buy_assist_at_final_only and data.shop_type == "final":
+            if data.buy_assist_melody and data.buy_melody_at_final_only and data.shop_type == "final":
                 return "assist_melody"
 
         return ""

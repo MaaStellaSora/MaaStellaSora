@@ -20,9 +20,9 @@
           360,
           80
         ]
-      },
-      "post_wait_freezes": 100
-    }
+      }
+    },
+    "post_wait_freezes": 100
   },
   "星塔_点击背包按钮_agent": {
     "recognition": {
@@ -47,7 +47,8 @@
   "星塔_关闭背包界面_agent": {
     "next": [
       "星塔_核实关闭背包界面_agent",
-      "[JumpBack]星塔_背包_点击退出按钮_agent"
+      "[JumpBack]星塔_背包_点击退出按钮_agent",
+      "[JumpBack]星塔_背包_关闭音符效果窗口_agent"
     ],
     "pre_delay": 0,
     "post_delay": 0
@@ -228,6 +229,27 @@
     },
     "post_wait_freezes": 500
   },
+  "星塔_背包_扫描音符_打开背包界面_agent": {
+    "next": [
+      "星塔_背包_扫描音符_核实背包界面_agent",
+      "[JumpBack]星塔_点击背包按钮_agent"
+    ],
+    "pre_delay": 0,
+    "post_delay": 0
+  },
+  "星塔_背包_扫描音符_核实背包界面_agent": {
+    "recognition": {
+      "type": "And",
+      "param": {
+        "all_of": [
+          "星塔_背包_核实背包界面_agent"
+        ]
+      }
+    },
+    "next": [
+      "星塔_背包_打开秘纹技能_agent"
+    ]
+  },
   "星塔_背包_打开秘纹技能_agent": {
     "recognition": {
       "type": "OCR",
@@ -247,14 +269,17 @@
     "action": {
       "type": "Click"
     },
+    "next": [
+      "星塔_背包_打开音符效果窗口_agent"
+    ],
     "post_wait_freezes": 300
   },
-  "星塔_背包_打开技能音符说明_agent": {
+  "星塔_背包_打开音符效果窗口_agent": {
     "recognition": {
-      "type": "OCR",
+      "type": "TemplateMatch",
       "param": {
-        "expected": [
-          "音符说明"
+        "template": [
+          "ClimbTower_agent/爬塔_音符效果按钮.png"
         ],
         "roi": [
           1000,
@@ -262,7 +287,7 @@
           280,
           120
         ],
-        "threshold": 0.6
+        "green_mask": true
       }
     },
     "action": {
@@ -270,32 +295,23 @@
     },
     "post_wait_freezes": 300
   },
-  "星塔_背包_关闭技能音符说明_agent": {
+  "星塔_背包_关闭音符效果窗口_agent": {
     "recognition": {
-      "type": "OCR",
+      "type": "TemplateMatch",
       "param": {
-        "expected": [
-          "音符说明"
+        "template": [
+          "close.png"
         ],
         "roi": [
-          300,
-          60,
-          700,
-          140
+          960,
+          90,
+          120,
+          100
         ],
-        "threshold": 0.6
       }
     },
     "action": {
-      "type": "Click",
-      "param": {
-        "target_offset": [
-          380,
-          0,
-          0,
-          0
-        ]
-      }
+      "type": "Click"
     },
     "post_wait_freezes": 300
   },
@@ -304,37 +320,77 @@
       "type": "OCR",
       "param": {
         "expected": [
-          "水之音",
-          "火之音",
-          "地之音",
-          "土之音",
-          "风之音",
-          "光之音",
-          "暗之音",
-          "专注之音",
-          "技巧之音",
-          "绝招之音",
-          "强攻之音",
-          "幸运之音",
-          "暴发之音",
-          "体力之音"
+          "aqua",
+          "ignis",
+          "terra",
+          "ventus",
+          "lux",
+          "umbra",
+          "focus",
+          "skill",
+          "ultimate",
+          "pummel",
+          "luck",
+          "burst",
+          "stamina"
         ],
         "replace": [
-          ["水之音", "aqua"],
-          ["火之音", "ignis"],
-          ["地之音", "terra"],
-          ["土之音", "terra"],
-          ["风之音", "ventus"],
-          ["光之音", "lux"],
-          ["暗之音", "umbra"],
-          ["专注之音", "focus"],
-          ["技巧之音", "skill"],
-          ["绝招之音", "ultimate"],
-          ["强攻之音", "pummel"],
-          ["幸运之音", "luck"],
-          ["暴发之音", "burst"],
-          ["体力之音", "stamina"],
-          ["[^a-z]", ""]
+          [
+            "水之音",
+            "aqua"
+          ],
+          [
+            "火之音",
+            "ignis"
+          ],
+          [
+            "地之音",
+            "terra"
+          ],
+          [
+            "风之音",
+            "ventus"
+          ],
+          [
+            "光之音",
+            "lux"
+          ],
+          [
+            "暗之音",
+            "umbra"
+          ],
+          [
+            "专注之音",
+            "focus"
+          ],
+          [
+            "技巧之音",
+            "skill"
+          ],
+          [
+            "绝招之音",
+            "ultimate"
+          ],
+          [
+            "强攻之音",
+            "pummel"
+          ],
+          [
+            "幸运之音",
+            "luck"
+          ],
+          [
+            "暴发之音",
+            "burst"
+          ],
+          [
+            "体力之音",
+            "stamina"
+          ],
+          [
+            "[^a-z]",
+            ""
+          ]
         ],
         "roi": [
           300,
@@ -348,11 +404,30 @@
     }
   },
   "星塔_背包_识别音符数量_agent": {
+    "comment": "还差国际服的适配",
     "recognition": {
       "type": "OCR",
       "param": {
         "expected": [
-          "^\\d+$"
+          "\\d+"
+        ],
+        "replace": [
+          [
+            "禾",
+            "未"
+          ],
+          [
+            "未获得",
+            "0"
+          ],
+          [
+            "未獲得",
+            "0"
+          ],
+          [
+            "\\D+",
+            ""
+          ]
         ],
         "roi": [
           430,

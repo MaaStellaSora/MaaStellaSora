@@ -19,11 +19,8 @@ MELODY_KEYS = (
     "focus", "skill", "ultimate", "pummel", "luck", "burst", "stamina",
 )
 
-OPEN_BAG_NODE = "星塔_打开背包界面_agent"
+OPEN_BAG_NODE = "星塔_背包_扫描音符_打开背包界面_agent"
 CLOSE_BAG_NODE = "星塔_关闭背包界面_agent"
-SECRET_SKILL_NODE = "星塔_背包_打开秘纹技能_agent"
-DETAIL_NODE = "星塔_背包_打开技能音符说明_agent"
-CLOSE_DETAIL_NODE = "星塔_背包_关闭技能音符说明_agent"
 SCROLL_NODE = "星塔_背包_向下滑动_agent"
 NAME_NODE = "星塔_背包_识别音符名称_agent"
 COUNT_NODE = "星塔_背包_识别音符数量_agent"
@@ -65,7 +62,6 @@ def scan_melody_counts(context: Context, data) -> dict[str, int]:
     except Exception as exc:
         logger.error(f"读取音符数量失败：{exc}")
     finally:
-        _run(context, CLOSE_DETAIL_NODE)
         _run(context, CLOSE_BAG_NODE)
 
     if counts:
@@ -77,10 +73,9 @@ def scan_melody_counts(context: Context, data) -> dict[str, int]:
 
 def _open_melody_detail(context: Context) -> bool:
     """依次打开 背包 -> 秘纹技能 -> 技能音符说明，任一步失败即放弃。"""
-    for node in (OPEN_BAG_NODE, SECRET_SKILL_NODE, DETAIL_NODE):
-        if not _run(context, node):
-            logger.error("打开音符说明界面失败")
-            return False
+    if not _run(context, OPEN_BAG_NODE):
+        logger.error("打开音符说明界面失败")
+        return False
     return True
 
 

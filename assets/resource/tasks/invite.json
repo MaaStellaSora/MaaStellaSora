@@ -59,7 +59,7 @@
         "邀约旅人_下拉_1号": {
             "type": "select",
             "label": "1号旅人（下拉选择）",
-            "description": "从列表中选择该号位的邀约对象；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。列表项中的名字支持数组写法，可按需补充该角色在其他服务器的译名。",
+            "description": "从列表中选择该号位的邀约对象（当前为简中服译名）；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。",
             "default_case": "使用手动输入",
             "cases": [
                 {"name": "使用手动输入", "label": "使用手动输入", "pipeline_override": {"邀约_1号": {"recognition": {"param": {"expected": ["{1号}"]}}, "focus": {"Node.Recognition.Succeeded": "尝试邀约_使用手动输入"}}}},
@@ -107,7 +107,7 @@
         "邀约旅人_下拉_2号": {
             "type": "select",
             "label": "2号旅人（下拉选择）",
-            "description": "从列表中选择该号位的邀约对象；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。列表项中的名字支持数组写法，可按需补充该角色在其他服务器的译名。",
+            "description": "从列表中选择该号位的邀约对象（当前为简中服译名）；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。",
             "default_case": "使用手动输入",
             "cases": [
                 {"name": "使用手动输入", "label": "使用手动输入", "pipeline_override": {"邀约_2号": {"recognition": {"param": {"expected": ["{2号}"]}}, "focus": {"Node.Recognition.Succeeded": "尝试邀约_使用手动输入"}}}},
@@ -155,7 +155,7 @@
         "邀约旅人_下拉_3号": {
             "type": "select",
             "label": "3号旅人（下拉选择）",
-            "description": "从列表中选择该号位的邀约对象；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。列表项中的名字支持数组写法，可按需补充该角色在其他服务器的译名。",
+            "description": "从列表中选择该号位的邀约对象（当前为简中服译名）；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。",
             "default_case": "使用手动输入",
             "cases": [
                 {"name": "使用手动输入", "label": "使用手动输入", "pipeline_override": {"邀约_3号": {"recognition": {"param": {"expected": ["{3号}"]}}, "focus": {"Node.Recognition.Succeeded": "尝试邀约_使用手动输入"}}}},
@@ -203,7 +203,7 @@
         "邀约旅人_下拉_4号": {
             "type": "select",
             "label": "4号旅人（下拉选择）",
-            "description": "从列表中选择该号位的邀约对象；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。列表项中的名字支持数组写法，可按需补充该角色在其他服务器的译名。",
+            "description": "从列表中选择该号位的邀约对象（当前为简中服译名）；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。",
             "default_case": "使用手动输入",
             "cases": [
                 {"name": "使用手动输入", "label": "使用手动输入", "pipeline_override": {"邀约_4号": {"recognition": {"param": {"expected": ["{4号}"]}}, "focus": {"Node.Recognition.Succeeded": "尝试邀约_使用手动输入"}}}},
@@ -251,7 +251,7 @@
         "邀约旅人_下拉_5号": {
             "type": "select",
             "label": "5号旅人（下拉选择）",
-            "description": "从列表中选择该号位的邀约对象；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。列表项中的名字支持数组写法，可按需补充该角色在其他服务器的译名。",
+            "description": "从列表中选择该号位的邀约对象（当前为简中服译名）；选择“使用手动输入”时改用上方“邀约旅人”里填写的名字。",
             "default_case": "使用手动输入",
             "cases": [
                 {"name": "使用手动输入", "label": "使用手动输入", "pipeline_override": {"邀约_5号": {"recognition": {"param": {"expected": ["{5号}"]}}, "focus": {"Node.Recognition.Succeeded": "尝试邀约_使用手动输入"}}}},

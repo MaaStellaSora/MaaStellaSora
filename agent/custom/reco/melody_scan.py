@@ -97,13 +97,16 @@ def _read_screen(context: Context, image, targets: list[str]) -> dict[str, int]:
 def _read_names(context: Context, image) -> dict[str, list[int]]:
     """识别当前一屏的音符名 -> 名称框；pipeline 已把显示名替换成内部名。"""
     results = _recognize(context, NAME_NODE, image)
+    logger.debug(f"识别到音符名称：{results}")
     return {r.text: r.box for r in results if r.text}
 
 
 def _read_counts(context: Context, image) -> list[tuple[int, list[int]]]:
     """识别当前一屏的数量 -> 数字框。"""
     out: list[tuple[int, list[int]]] = []
-    for r in _recognize(context, COUNT_NODE, image):
+    results = _recognize(context, COUNT_NODE, image)
+    logger.debug(f"识别到音符数量：{results}")
+    for r in results:
         if r.text and r.text.isdigit():
             out.append((int(r.text), r.box))
     return out

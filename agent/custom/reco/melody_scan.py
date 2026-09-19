@@ -79,6 +79,7 @@ def _open_melody_detail(context: Context) -> bool:
     """依次打开 背包 -> 秘纹技能 -> 技能音符说明，任一步失败即放弃。"""
     for node in (OPEN_BAG_NODE, SECRET_SKILL_NODE, DETAIL_NODE):
         if not _run(context, node):
+            logger.error("打开音符说明界面失败")
             return False
     return True
 
@@ -144,6 +145,5 @@ def _run(context: Context, node: str) -> bool:
     """执行一个 pipeline 节点。"""
     result = context.run_task(node)
     if not result or not result.status.succeeded:
-        logger.error(f"执行节点 {node} 失败")
         return False
     return True

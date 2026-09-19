@@ -400,7 +400,6 @@
     },
     "next": [
       "星塔_记录_读取数值_agent",
-      "星塔_保存记录_agent",
       "[JumpBack]星塔_确认_agent",
       "[JumpBack]星塔_点击空白处关闭_agent",
       "[JumpBack]星塔_默契提升_agent"

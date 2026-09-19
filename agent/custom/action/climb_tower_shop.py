@@ -763,8 +763,10 @@ class ShopHandler:
             if success:
                 grid.bought = True
                 # 购买成功后即时累加，同一次商店内的后续判断才能用上最新数量
-                if grid.item_name in self.data.current_melodies:
-                    self.data.current_melodies[grid.item_name] += grid.item_quantity
+                if "melody" in grid.item_name:
+                    self.data.current_melodies[grid.item_name] = (
+                            self.data.current_melodies.get(grid.item_name, 0) + grid.item_quantity
+                    )
             else:
                 logger.debug(f"购买失败，跳过第{grid.grid_num}个格子")
 

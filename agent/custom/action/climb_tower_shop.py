@@ -380,6 +380,7 @@ class Data:
     melody_of_luck: int = 0
     melody_of_burst: int = 0
     melody_of_stamina: int = 0
+    current_melodies: dict[str, int] = field(default_factory=dict)
     # 强化设置
     initial_cost: int = 60
     max_cost: int = 180
@@ -586,13 +587,12 @@ class GridInfo:
         reserve = self.get_reserved_coin(data)
         return (data.current_coin - reserve) >= self.item_price
 
-    def is_match_normal_buy_plan(self, item_type: str, data: Data, current_melodies: dict[str, int]) -> str:
+    def is_match_normal_buy_plan(self, item_type: str, data: Data) -> str:
         """判定当前格子是否符合正常购买方案条件
 
         Args:
             item_type (str): 商品类型，"drink" 或 "melody"。
             data (Data): 用户策略数据。
-            current_melodies (dict[str, int]): 进商店时读到的各音符持有数量。
 
         Returns:
             str: 如果符合正常购买方案，返回 "normal" 或 "assist_melody"；否则返回空字符串。
@@ -615,7 +615,7 @@ class GridInfo:
 
             # 设定了目标数量的音符：按普通商品购买，买到目标数为止
             if target > 0:
-                if current_melodies.get(self.item_name, 0) >= target:
+                if data.current_melodies.get(self.item_name, 0) >= target:
                     return ""  # 已达目标数量，不再购买
                 if data.buy_assist_at_final_only and data.shop_type != "final":
                     return ""  # 只在最终商店补齐目标音符，中途商店不补
@@ -637,15 +637,12 @@ class ShopHandler:
     def __init__(
         self,
         grids: list[GridInfo],
-        context: Optional[Context] = None,
-        data: Optional[Data] = None,
-        current_melodies: Optional[dict[str, int]] = None,
+        context: Context,
+        data: Data
     ):
         self._grids = grids
         self.context = context
         self.data = data
-        # 本轮商店各音符的持有数量（进商店时读取一次，购买后本地累加）
-        self.current_melodies: dict[str, int] = current_melodies or {}
 
     def __iter__(self):
         return iter(self._grids)
@@ -680,13 +677,13 @@ class ShopHandler:
         target_grids = []
         for target_type in self.data.priority:
             for grid in self._grids:
-                buy_type = grid.is_match_normal_buy_plan(target_type, self.data, self.current_melodies)
+                buy_type = grid.is_match_normal_buy_plan(target_type, self.data)
                 if buy_type:
                     grid.buy_type = buy_type
                     grid.buy_priority = self.__class__.priority_counter
                     self.__class__.priority_counter += 1
                     target_grids.append(grid)
-        return ShopHandler(target_grids, self.context, self.data, self.current_melodies)
+        return ShopHandler(target_grids, self.context, self.data)
 
     def high_price_drinks_buy_plan(self) -> ShopHandler:
         grids = sorted(
@@ -699,7 +696,7 @@ class ShopHandler:
             grid.buy_type = "dynamic_drink"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return ShopHandler(grids, self.context, self.data, self.current_melodies)
+        return ShopHandler(grids, self.context, self.data)
 
     def remaining_drinks_buy_plan(self) -> ShopHandler:
         grids = sorted(
@@ -712,7 +709,7 @@ class ShopHandler:
             grid.buy_type = "normal"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return ShopHandler(grids, self.context, self.data, self.current_melodies)
+        return ShopHandler(grids, self.context, self.data)
 
     def remainder_buy_plan(self) -> ShopHandler:
         grids = sorted(
@@ -724,7 +721,7 @@ class ShopHandler:
             grid.buy_type = "final_remainder"
             grid.buy_priority = self.__class__.priority_counter
             self.__class__.priority_counter += 1
-        return ShopHandler(grids, self.context, self.data, self.current_melodies)
+        return ShopHandler(grids, self.context, self.data)
 
     def buy(self) -> bool:
         """对实例中的所有格子依次执行购买操作，购买成功成标记 bought 为 True。
@@ -763,8 +760,8 @@ class ShopHandler:
             if success:
                 grid.bought = True
                 # 购买成功后即时累加，同一次商店内的后续判断才能用上最新数量
-                if grid.item_name in self.current_melodies:
-                    self.current_melodies[grid.item_name] += grid.item_quantity
+                if grid.item_name in self.data.current_melodies:
+                    self.data.current_melodies[grid.item_name] += grid.item_quantity
             else:
                 logger.debug(f"购买失败，跳过第{grid.grid_num}个格子")
 
@@ -908,9 +905,9 @@ class ShopAction(CustomAction):
         data = self._get_data(context, argv.node_name)
 
         # 进商店时读取各音符持有数量；未设置任何音符目标时不读取
-        current_melodies = scan_melody_counts(context, data)
-        if current_melodies:
-            logger.debug(f"当前音符数量: {current_melodies}")
+        data.current_melodies = scan_melody_counts(context, data)
+        if data.current_melodies:
+            logger.debug(f"当前音符数量: {data.current_melodies}")
 
         logger.debug(
             f"当前强化费用: {data.current_cost}, "
@@ -925,7 +922,7 @@ class ShopAction(CustomAction):
             data.refresh_remaining = self._get_refresh_remaining(context, image)
             data.refresh_cost = self._get_refresh_cost(context, image)
             grids = self._get_grids(context, data, image)
-            handler = ShopHandler(grids, context, data, current_melodies)
+            handler = ShopHandler(grids, context, data)
 
             handler.normal_buy_plan().buy()
             handler.high_price_drinks_buy_plan().buy()

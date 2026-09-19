@@ -745,6 +745,12 @@ class ShopHandler:
                 continue
 
             if grid.buy_type in ["normal", "dynamic_drink"]:
+                # 因为音符的数量是动态变化的，但筛选的时候音符数量是静态的，所以这里先打个补丁，判断是否已达目标数量
+                target = self.data.get_melody_target(grid.item_name)
+                if 0 < target <= self.data.current_melodies.get(grid.item_name, 0):
+                    logger.debug(f"音符 {grid.item_name} 已达目标数量 {target}，跳过第{grid.grid_num}个格子")
+                    continue
+                # 潜能特饮跟音符共用买入方法
                 success = self._buy_item(grid)
             elif grid.buy_type == "assist_melody":
                 if grid.checked:

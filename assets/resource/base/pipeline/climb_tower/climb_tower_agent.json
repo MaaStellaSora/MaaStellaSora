@@ -431,41 +431,6 @@
     ],
     "timeout": 5000
   },
-  "星塔_记录_识别等级_agent": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "^\\d+$"
-        ],
-        "roi": [
-          45,
-          25,
-          80,
-          145
-        ],
-        "threshold": 0.45
-      }
-    }
-  },
-  "星塔_记录_识别潜能数_agent": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "^\\d+$"
-        ],
-        "roi": [
-          130,
-          220,
-          250,
-          55
-        ],
-        "threshold": 0.45,
-        "order_by": "Horizontal"
-      }
-    }
-  },
   "星塔_保存记录_agent": {
     "recognition": {
       "type": "OCR",

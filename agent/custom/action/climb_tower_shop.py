@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field, fields
 from typing import Optional, Any, Self
@@ -663,7 +665,7 @@ class ShopHandler:
         self.data = data
         return self
 
-    def normal_buy_plan(self) -> Self:
+    def normal_buy_plan(self) -> ShopHandler:
         """按 priority 顺序对格子打标，写入 buy_type 和 buy_priority。
 
         打标前按价格升序排列。
@@ -686,7 +688,7 @@ class ShopHandler:
                     target_grids.append(grid)
         return ShopHandler(target_grids, self.context, self.data, self.current_melodies)
 
-    def high_price_drinks_buy_plan(self) -> Self:
+    def high_price_drinks_buy_plan(self) -> ShopHandler:
         grids = sorted(
             [g for g in self._grids
              if not g.bought
@@ -699,7 +701,7 @@ class ShopHandler:
             self.__class__.priority_counter += 1
         return ShopHandler(grids, self.context, self.data, self.current_melodies)
 
-    def remaining_drinks_buy_plan(self) -> Self:
+    def remaining_drinks_buy_plan(self) -> ShopHandler:
         grids = sorted(
             [g for g in self._grids
              if not g.bought
@@ -712,7 +714,7 @@ class ShopHandler:
             self.__class__.priority_counter += 1
         return ShopHandler(grids, self.context, self.data, self.current_melodies)
 
-    def remainder_buy_plan(self) -> Self:
+    def remainder_buy_plan(self) -> ShopHandler:
         grids = sorted(
             [g for g in self._grids if not g.bought],
             key=lambda g: g.item_price,

@@ -192,6 +192,13 @@ jobs:
         run: |
           python tools/ci/setup_embed_python.py
 
+      - name: Prepare MaaFramework Python wheel
+        shell: bash
+        run: >-
+          python tools/ci/prepare_maafw.py
+          --maafw-tag "${{ needs.meta.outputs.maafw_tag }}"
+          --platform-tag "${{ matrix.arch == 'x86_64' && 'win_amd64' || 'win_arm64' }}"
+
       - name: Download Python dependencies
         shell: bash
         run: |
@@ -200,7 +207,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          ./install/python/python.exe -m pip install --no-index --find-links=install/deps --pre -r assets/requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
+          ./install/python/python.exe -m pip install --no-index --find-links=install/deps -r assets/requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install
         shell: bash
@@ -271,6 +278,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Prepare MaaFramework Python wheel
+        shell: bash
+        run: >-
+          python tools/ci/prepare_maafw.py
+          --maafw-tag "${{ needs.meta.outputs.maafw_tag }}"
+          --platform-tag "manylinux2014_${{ matrix.arch }}"
+
       - name: Download Python dependencies
         shell: bash
         run: |
@@ -286,13 +300,6 @@ jobs:
           else
             echo "::notice::Optional drop_core downloader or token is unavailable; skipping"
           fi
-
-      - name: Install host Python dependencies
-        shell: bash
-        run: >-
-          python -m pip install --pre
-          -r assets/requirements.txt
-          "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install on Linux
         shell: bash
@@ -375,6 +382,13 @@ jobs:
             echo "Warning: Embedded Python executable not found at $EMBED_PYTHON_PATH. Skipping chmod."
           fi
 
+      - name: Prepare MaaFramework Python wheel
+        shell: bash
+        run: >-
+          python3 tools/ci/prepare_maafw.py
+          --maafw-tag "${{ needs.meta.outputs.maafw_tag }}"
+          --platform-tag "macosx_13_0_${{ matrix.arch == 'aarch64' && 'arm64' || 'x86_64' }}"
+
       - name: Download Python dependencies
         shell: bash
         run: |
@@ -394,7 +408,7 @@ jobs:
       - name: Install Python dependencies on macOS
         shell: bash
         run: |
-          ./install/python/bin/python3 -m pip install --no-index --find-links=install/deps --pre -r assets/requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
+          ./install/python/bin/python3 -m pip install --no-index --find-links=install/deps -r assets/requirements.txt "maafw==${{ needs.meta.outputs.maafw_python_version }}"
 
       - name: Install on macOS
         shell: bash

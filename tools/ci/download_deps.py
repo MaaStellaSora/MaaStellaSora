@@ -53,11 +53,11 @@ def get_platform_tag():
     elif os_type == "Darwin":  # macOS
         # 映射platform.machine()到pip的平台标签
         arch_mapping = {
-            "x86_64": "macosx_10_9_x86_64",
-            "arm64": "macosx_11_0_arm64",
-            "aarch64": "macosx_11_0_arm64",
+            "x86_64": "macosx_13_0_x86_64",
+            "arm64": "macosx_13_0_arm64",
+            "aarch64": "macosx_13_0_arm64",
         }
-        platform_tag = arch_mapping.get(os_arch, f"macosx_10_9_{os_arch}")
+        platform_tag = arch_mapping.get(os_arch, f"macosx_13_0_{os_arch}")
 
     elif os_type == "Linux":
         # 映射platform.machine()到pip的平台标签
@@ -97,7 +97,7 @@ def build_download_command(
     if maafw_version:
         if not MAAFW_VERSION_PATTERN.fullmatch(maafw_version):
             raise ValueError(f"无效的 MaaFramework Python 版本: {maafw_version}")
-        cmd.extend(["--pre", f"maafw=={maafw_version}"])
+        cmd.extend(["--find-links", str(deps_path), f"maafw=={maafw_version}"])
     return cmd
 
 

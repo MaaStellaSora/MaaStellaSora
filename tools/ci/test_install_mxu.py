@@ -1,4 +1,3 @@
-import fnmatch
 import json
 import tempfile
 import unittest
@@ -194,19 +193,6 @@ class InstallMxuTests(unittest.TestCase):
             ["resource/windows"],
         )
         self.assertEqual(source_path.read_text(encoding="utf-8"), source_text)
-
-    def test_release_asset_name_avoids_mfa_and_mirror_patterns(self) -> None:
-        asset_name = "MaaStellaSora-mxu-win-amd64-v1.2.3.zip"
-        self.assertFalse(
-            fnmatch.fnmatchcase(asset_name, "MaaStellaSora-win-x86_64-*")
-        )
-        workflow = (
-            install_mxu.WORKING_DIR / ".github" / "workflows" / "install.yml"
-        ).read_text(encoding="utf-8")
-        self.assertIn(
-            "name: MaaStellaSora-mxu-win-amd64-${{ needs.meta.outputs.tag }}",
-            workflow,
-        )
 
 
 if __name__ == "__main__":

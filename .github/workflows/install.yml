@@ -16,6 +16,10 @@ on:
       - "assets/resource/**"
       - "assets/requirements.txt"
       - "assets/CONTACT"
+      - "agent/**"
+      - "assets/logo.ico"
+      - "README.md"
+      - "LICENSE"
       - "tools/ci/**"
   workflow_dispatch:
 
@@ -30,6 +34,7 @@ jobs:
   tag:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       actions: write
       contents: write
@@ -143,6 +148,7 @@ jobs:
 
   windows:
     needs: meta
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -218,21 +224,22 @@ jobs:
       - name: Copy MFA files to main version
         shell: bash
         run: |
-          if [ -d "MFA" ]; then
-            echo "Copying MFA files to install directory..."
-            mkdir -p install
-            cp -rpvn MFA/. install/
-          else
-            echo "MFA directory not found, skipping copy."
-          fi
+          test -s MFA/MFAAvalonia.exe
+          cp -rpvn MFA/. install/
+          test -s install/MFAAvalonia.exe
+          test -s install/interface.json
+          test -s install/agent/main.py
+          test -s "install/runtimes/win-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/MaaFramework.dll"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
+          if-no-files-found: error
 
   linux:
     needs: meta
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -312,21 +319,22 @@ jobs:
       - name: Copy MFA files to main version
         shell: bash
         run: |
-          if [ -d "MFA" ]; then
-            echo "Copying MFA files to install directory on Linux..."
-            mkdir -p install
-            rsync -av --ignore-existing MFA/ install/
-          else
-            echo "MFA directory not found on Linux, skipping copy."
-          fi
+          test -s MFA/MFAAvalonia
+          rsync -av --ignore-existing MFA/ install/
+          test -s install/MFAAvalonia
+          test -s install/interface.json
+          test -s install/agent/main.py
+          test -s "install/runtimes/linux-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.so"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-linux-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
+          if-no-files-found: error
 
   macos:
     needs: meta
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -421,23 +429,24 @@ jobs:
       - name: Copy MFA files to main version
         shell: bash
         run: |
-          if [ -d "MFA" ]; then
-            echo "Copying MFA files to install directory on macOS..."
-            mkdir -p install
-            rsync -av --ignore-existing MFA/ install/ # Using rsync like on Linux
-          else
-            echo "MFA directory not found on macOS, skipping copy."
-          fi
+          test -s MFA/MFAAvalonia
+          rsync -av --ignore-existing MFA/ install/
+          test -s install/MFAAvalonia
+          test -s install/interface.json
+          test -s install/agent/main.py
+          test -s "install/runtimes/osx-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.dylib"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-macos-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
           path: "install"
+          if-no-files-found: error
 
   changelog:
     name: Generate changelog
     needs: meta
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       release_body: ${{ steps.git-cliff.outputs.content }}
     steps:
@@ -465,6 +474,7 @@ jobs:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
     needs: [meta, windows, linux, macos, changelog]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       actions: write
       contents: write

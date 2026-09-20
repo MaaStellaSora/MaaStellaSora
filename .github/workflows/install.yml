@@ -73,6 +73,7 @@ jobs:
           gh workflow run install.yml --ref "${TAG}"
 
   meta:
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -297,17 +298,6 @@ jobs:
         run: |
           python tools/ci/download_deps.py --deps-dir install/deps --platform-tag manylinux2014_${{ matrix.arch }} --python-version 3.12 --maafw-version "${{ needs.meta.outputs.maafw_python_version }}"
 
-      - name: Download drop_core module
-        shell: bash
-        env:
-          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
-        run: |
-          if [[ -f tools/ci/download_drop_core.py && -n "${PRIVATE_REPO_TOKEN}" ]]; then
-            python tools/ci/download_drop_core.py --os linux --arch ${{ matrix.arch }}
-          else
-            echo "::notice::Optional drop_core downloader or token is unavailable; skipping"
-          fi
-
       - name: Install on Linux
         shell: bash
         run: |
@@ -402,17 +392,6 @@ jobs:
         run: |
           ./install/python/bin/python3 tools/ci/download_deps.py --deps-dir install/deps --maafw-version "${{ needs.meta.outputs.maafw_python_version }}"
 
-      - name: Download drop_core module
-        shell: bash
-        env:
-          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
-        run: |
-          if [[ -f tools/ci/download_drop_core.py && -n "${PRIVATE_REPO_TOKEN}" ]]; then
-            ./install/python/bin/python3 tools/ci/download_drop_core.py --os darwin --arch ${{ matrix.arch }}
-          else
-            echo "::notice::Optional drop_core downloader or token is unavailable; skipping"
-          fi
-
       - name: Install Python dependencies on macOS
         shell: bash
         run: |
@@ -444,6 +423,7 @@ jobs:
 
   changelog:
     name: Generate changelog
+    if: needs.meta.outputs.is_release == 'true'
     needs: meta
     runs-on: ubuntu-latest
     timeout-minutes: 10

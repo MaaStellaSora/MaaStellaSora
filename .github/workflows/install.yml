@@ -83,7 +83,7 @@ jobs:
         id: upstream
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python tools/ci/resolve_releases.py
+        run: python tools/ci/resolve_releases.py --skip-mxu
 
       - id: set_tag
         env:
@@ -228,6 +228,7 @@ jobs:
 
   mxu_windows:
     name: MXU (Windows x86_64)
+    if: ${{ false }}
     needs: meta
     runs-on: windows-latest
     timeout-minutes: 30
@@ -619,7 +620,7 @@ jobs:
 
   release:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
-    needs: [meta, windows, mxu_windows, linux, macos, changelog]
+    needs: [meta, windows, linux, macos, changelog]
     runs-on: ubuntu-latest
     permissions:
       actions: write

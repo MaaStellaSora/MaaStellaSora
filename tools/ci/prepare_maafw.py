@@ -15,6 +15,10 @@ import zipfile
 from resolve_releases import maafw_tag_to_pep440
 
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+
 WHEEL_PLATFORMS = {
     "win_amd64", "win_arm64",
     "manylinux2014_x86_64", "manylinux2014_aarch64",
@@ -89,12 +93,13 @@ def prepare_maafw_wheel(tag: str, sdk_dir: Path, deps_dir: Path, platform_tag: s
             raise ValueError("MaaFramework Python 源码的版本字段不符合预期")
         project.write_text(
             text
-            + '\n[tool.hatch.build.targets.wheel.force-include]\n"maa/bin" = "maa/bin"\n'
+            + '\n[tool.hatch.build.targets.wheel.force-include]\n"../native" = "maa/bin"\n'
             + '\n[tool.hatch.build.hooks.custom]\npath = "ci_wheel_hook.py"\n',
             encoding="utf-8",
         )
+        # 在包目录外暂存原生库，由路径映射统一收集，避免重复打包。
         shutil.copytree(
-            sdk_bin, source / "maa" / "bin",
+            sdk_bin, work / "native",
             ignore=shutil.ignore_patterns("MaaPiCli*", "MaaNode*"),
         )
         # 在上游声明的隔离构建环境中设置目标平台，支持 Linux 交叉打包。

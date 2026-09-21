@@ -8,12 +8,14 @@
 
 - Pipeline 按功能归入 `common/`、`daily/`、`combat/`、`activity/`、`invite/`、`climb_tower/`，具体职责见[项目结构](项目结构.md#目录与入口)。相关流程优先放在已有模块文件中。
 - `base` 保存基础流程；`tw`、`en`、`jp` 保存区服差异；`windows` 保存桌面控制器差异。覆盖文件沿用对应基础文件的相对路径，便于对照。
-- 节点名采用现有的“模块*用途”形式，例如 `邮箱*打开邮箱`、`通用\_返回主页`。同一资源包内节点名唯一，跨资源包的同名节点用于覆盖。
+- 节点名采用现有的 `模块_用途` 形式，例如 `邮箱_打开邮箱`、`通用_返回主页`。同一资源包内节点名唯一，跨资源包的同名节点用于覆盖。
 - 文件内节点按流程组织，入口及其相关步骤相邻。整理既有文件时保留节点定义顺序，使 diff 集中在实际变化上。
 - 图片引用相对于资源包的 `image/` 目录，文件名大小写与实际文件一致。
 - 新增界面任务文件时，在 `assets/interface.json` 的 `import` 中登记；新增或移动 Pipeline 文件时，核对 `tools/ci/resource_layout.py` 的发行路径映射。
 
 节点名也是界面 `entry`、`next`、Agent 动态调用和覆盖的引用标识。重命名时同步核对这些引用；任务、选项和 case 的 `name` 还用于配置关联，界面文案优先通过 `label` 表达。
+
+阅读流程时，从界面任务的 `entry` 进入节点图，再检查选项的 `pipeline_override`；遇到 Custom 节点，按 `custom_action` 或 `custom_recognition` 注册名定位 Python 模块。
 
 ## v2 节点写法
 
@@ -60,9 +62,9 @@
 
 这是阅读顺序；实际执行顺序由框架定义。例如等待画面稳定发生在对应的固定延迟之前。新增字段按用途归入相应分组，并同步更新此表。
 
-- 无参数的识别或动作只保留 `type`，省略空 `param`。已有的显式 `DirectHit`、`DoNothing`、`Click` 等类型保留，直接表达节点意图。
+- 无参数的识别或动作只保留 `type`，省略空 `param`。
 - `expected`、`template`、`roi`、`threshold` 等属于识别参数；`target`、`duration` 等动作参数随相应动作类型放置。
-- 稳定等待字段使用 `pre_wait_freezes`、`post_wait_freezes`、`repeat_wait_freezes`。既有字段的拼写修正可能让原先未生效的配置开始生效，按行为修改验证。
+- 稳定等待字段使用 `pre_wait_freezes`、`post_wait_freezes`、`repeat_wait_freezes`。
 - `attach`、`custom_action_param`、`custom_recognition_param` 的内部结构由使用它们的模块定义，保持对应的数据类型、键名和数组含义。
 
 ## 节点引用与执行顺序
@@ -102,7 +104,7 @@
 }
 ```
 
-省略字段表示沿用已加载节点或默认配置。与基础节点相同的覆盖字段，经核对加载结果后可以移除；`0`、`false`、空数组和空对象分别按所在字段的协议含义处理。识别类型发生变化时，按新类型配置所需参数。
+省略字段表示沿用已加载节点或默认配置。覆盖只声明所需差异字段；`0`、`false`、空数组和空对象分别按所在字段的协议含义处理。识别类型发生变化时，按新类型配置所需参数。
 
 界面中的 `pipeline_override` 以节点名为键，值为节点的局部定义。输入使用 `{输入名}` 占位符，`inputs` 中的 `pipeline_type` 决定替换后的类型，`verify` 表达合法输入范围。例如 `assets/interface.json` 中的快速作战次数以整数传入 `action.param.custom_action_param`，对应覆盖如下：
 
@@ -126,14 +128,7 @@
 
 ## 格式化与修改范围
 
-JSON 文件使用 Tab 缩进，数组布局由 `tools/format/.prettierrc` 和已锁定的 Prettier 插件统一生成。格式化工具的安装与编辑器配置见[个性化配置](个性化配置.md#代码格式化工具)。
-
-在仓库根目录对本次修改的文件执行以下命令，将 `<文件>` 替换为实际路径：
-
-```sh
-node tools/format/node_modules/prettier/bin/prettier.cjs --config tools/format/.prettierrc --write <文件>
-node tools/format/node_modules/prettier/bin/prettier.cjs --config tools/format/.prettierrc --check <文件>
-```
+JSON 文件使用 Tab 缩进，数组布局由 `tools/format/.prettierrc` 和已锁定的 Prettier 插件统一生成。安装、针对改动文件的格式化命令及编辑器配置见[个性化配置](个性化配置.md#格式化与提交检查)。
 
 Prettier 负责缩进、换行等排版；字段顺序、v2 参数层级和覆盖范围在编辑与审查时核对。
 
@@ -142,7 +137,7 @@ Prettier 负责缩进、换行等排版；字段顺序、v2 参数层级和覆�
 ## 提交前验证
 
 1. 检查改动文件的格式、重复键、节点引用和图片路径。编辑器使用 `deps/tools/` 中对应的 Pipeline、Interface 或 Interface import Schema 辅助检查，局部覆盖结合基础节点核对。
-2. 使用与目标发行包一致的 MaaFramework 和 Python 绑定执行真实资源加载。受影响的区服同时检查自身组合与 Windows 叠加；公共节点变更覆盖全部八组组合，命令见[资源加载检查入口](项目结构.md#开发工具)。
+2. 使用与目标发行包一致的 MaaFramework 和 Python 绑定执行真实资源加载。受影响的区服同时检查自身组合与 Windows 叠加；公共节点变更覆盖全部八组组合。按[资源加载顺序](项目结构.md#资源加载)调用 `tools/checks/check_resource.py`。
 3. 界面修改验证默认选项、相关 case、输入替换及组合覆盖；动态覆盖还验证同一上下文中的连续执行，确认后继和参数随当前输入更新。
-4. 流程修改通过客户端实机检查任务启动、关键分支、完成退出，以及受影响的失败和停止路径。记录实际测试的区服、控制器和选项；资源加载成功说明可解析，实机运行用于确认功能。
-5. 新增或移动资源文件时检查发行包内的路径和加载结果。提交说明写明修改目的、实际验证范围及结果，供审查者核对。
+4. 流程修改通过客户端实机检查任务启动、关键分支、完成退出，以及受影响的失败和停止路径。记录实际测试的区服、控制器和选项；资源加载成功说明可解析，实机运行用于确认功能。问题定位所需的[截图与日志](../CONTRIBUTING.md#调试截图与日志)按贡献指南收集。
+5. 新增或移动资源文件时检查发行包内的路径和加载结果。按贡献指南中的[提交 PR](../CONTRIBUTING.md#提交-pr)说明记录修改目的、实际验证范围及结果，供审查者核对。

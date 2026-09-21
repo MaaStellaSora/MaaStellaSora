@@ -41,6 +41,8 @@ QQ交流群：**1063132902**  密码：**星塔旅人**
 
 详见 [参与 MaaStellaSora 贡献](.github/CONTRIBUTING.md)
 
+开发文档：[项目结构](docs/zh_cn/项目结构.md) · [Pipeline 编写规范](docs/zh_cn/Pipeline编写规范.md)
+
 ## 鸣谢
 
 本项目由 **[MaaFramework](https://github.com/MaaXYZ/MaaFramework)** 强力驱动！

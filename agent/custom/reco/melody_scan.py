@@ -21,7 +21,7 @@ MELODY_KEYS = (
 
 OPEN_BAG_NODE = "星塔_背包_扫描音符_打开背包界面_agent"
 CLOSE_BAG_NODE = "星塔_关闭背包界面_agent"
-SCROLL_NODE = "星塔_背包_向下滑动_agent"
+SCROLL_NODE = "星塔_背包_音符效果界面_向下滑动_agent"
 NAME_NODE = "星塔_背包_识别音符名称_agent"
 COUNT_NODE = "星塔_背包_识别音符数量_agent"
 

@@ -168,6 +168,9 @@ class AscensionPreparation(CustomAction):
                                         "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
                                     ]
                                 }
+                            },
+                            "attach": {
+                                "active_melodies": ["melody_of_aqua", "melody_of_ventus"]
                             }
                         }
                     })
@@ -180,6 +183,9 @@ class AscensionPreparation(CustomAction):
                                         "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
                                     ]
                                 }
+                            },
+                            "attach": {
+                                "active_melodies": ["melody_of_ignis", "melody_of_umbra"]
                             }
                         }
                     })
@@ -192,6 +198,9 @@ class AscensionPreparation(CustomAction):
                                         "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
                                     ]
                                 }
+                            },
+                            "attach": {
+                                "active_melodies": ["melody_of_lux", "melody_of_terra"]
                             }
                         }
                     })

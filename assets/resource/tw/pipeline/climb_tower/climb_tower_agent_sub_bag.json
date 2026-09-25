@@ -1,0 +1,12 @@
+{
+    "星塔_背包_打开秘纹技能_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "秘[纹紋]技能"
+                ]
+            }
+        }
+    }
+}

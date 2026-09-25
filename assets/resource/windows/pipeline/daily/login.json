@@ -1,5 +1,5 @@
 {
-	"登录_启动游戏": {
-		"enabled": false
-	}
+    "登录_启动游戏": {
+        "enabled": false
+    }
 }

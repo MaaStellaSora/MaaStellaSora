@@ -1,11 +1,11 @@
 {
-	"委托_跳过": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"跳過"
-				]
-			}
-		}
-	}
+    "委托_跳过": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "跳過"
+                ]
+            }
+        }
+    }
 }

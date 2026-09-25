@@ -1,38 +1,38 @@
 {
-	"活动快速战斗_开启快速战斗": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"掃討"
-				]
-			}
-		}
-	},
-	"活动快速战斗_开始战斗": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"戦闘開始"
-				]
-			}
-		}
-	},
-	"活动快速战斗_选择活动难度": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"マル"
-				]
-			}
-		}
-	},
-	"活动快速战斗_确认": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"確認"
-				]
-			}
-		}
-	}
+    "活动快速战斗_开启快速战斗": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "掃討"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_开始战斗": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "戦闘開始"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_选择活动难度": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "マル"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_确认": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "確認"
+                ]
+            }
+        }
+    }
 }

@@ -1,763 +1,763 @@
 {
-	"邀约_判断是否在主页": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"template": [
-					"menu.png"
-				]
-			}
-		},
-		"action": {
-			"type": "DoNothing"
-		},
-		"next": [
-			"邀约_打开心链"
-		]
-	},
-	"邀约_打开心链": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"template": [
-					"Invite/heartlink.png"
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"next": [
-			"邀约_前往邀约"
-		],
-		"focus": {
-			"Node.Action.Starting": "正在打开心链"
-		}
-	},
-	"邀约_开始邀约": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"roi": [
-					833,
-					629,
-					128,
-					40
-				],
-				"template": [
-					"Invite/邀约按钮.png"
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"timeout": 3000,
-		"next": [
-			"邀约_地点",
-			"[JumpBack]邀约_点击确认按钮",
-			"邀约_开始邀约"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "开始邀约"
-		}
-	},
-	"邀约_1号": {
-		"max_hit": 2,
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"希娅"
-				],
-				"roi": [
-					84,
-					215,
-					377,
-					390
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"attach": {
-			"gift": "no"
-		}
-	},
-	"邀约_2号": {
-		"max_hit": 2,
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"雾语"
-				],
-				"roi": [
-					84,
-					215,
-					377,
-					390
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"attach": {
-			"gift": "no"
-		}
-	},
-	"邀约_3号": {
-		"max_hit": 2,
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"苍兰"
-				],
-				"roi": [
-					84,
-					215,
-					377,
-					390
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"attach": {
-			"gift": "no"
-		}
-	},
-	"邀约_4号": {
-		"max_hit": 2,
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"冬香"
-				],
-				"roi": [
-					84,
-					215,
-					377,
-					390
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"attach": {
-			"gift": "no"
-		}
-	},
-	"邀约_5号": {
-		"max_hit": 2,
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"夏花"
-				],
-				"roi": [
-					84,
-					215,
-					377,
-					390
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"attach": {
-			"gift": "no"
-		}
-	},
-	"邀约_主界面": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"邀约"
-				],
-				"roi": [
-					82,
-					128,
-					70,
-					40
-				]
-			}
-		},
-		"next": [
-			"邀约_总循环"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "邀约_主界面"
-		}
-	},
-	"邀约_入口": {
-		"next": [
-			"邀约_判断是否在主页",
-			"[JumpBack]通用_返回主页"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "执行邀约"
-		}
-	},
-	"邀约_前往邀约": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"邀约",
-					"邀約"
-				],
-				"roi": [
-					72,
-					612,
-					388,
-					79
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"next": [
-			"邀约_主界面",
-			"邀约_前往邀约"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "邀约_前往邀约"
-		}
-	},
-	"邀约_地点": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"选择"
-				],
-				"roi": [
-					1071,
-					200,
-					122,
-					398
-				]
-			}
-		},
-		"post_wait_freezes": {
-			"time": 100,
-			"target": [
-				615,
-				195,
-				590,
-				415
-			]
-		},
-		"next": [
-			"邀约_特殊回忆",
-			"邀约_选择默认地点"
-		]
-	},
-	"邀约_特殊回忆": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"特殊回忆"
-				],
-				"roi": [
-					600,
-					190,
-					190,
-					435
-				]
-			}
-		},
-		"pre_delay": 0,
-		"post_delay": 0,
-		"next": [
-			"邀约_选择回忆地点"
-		]
-	},
-	"邀约_选择默认地点": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"选择"
-				],
-				"roi": [
-					1071,
-					200,
-					122,
-					398
-				]
-			}
-		},
-		"pre_delay": 0,
-		"action": {
-			"type": "Click"
-		},
-		"post_delay": 300,
-		"next": [
-			"邀约_跳过",
-			"邀约_选择默认地点"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "选择默认地点"
-		}
-	},
-	"邀约_选择回忆地点": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"选择"
-				],
-				"roi": "邀约_特殊回忆",
-				"roi_offset": [
-					436,
-					-8,
-					54,
-					101
-				]
-			}
-		},
-		"pre_delay": 0,
-		"action": {
-			"type": "Click"
-		},
-		"post_delay": 300,
-		"next": [
-			"邀约_跳过",
-			"邀约_选择回忆地点"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "选择回忆地点"
-		}
-	},
-	"邀约_总循环": {
-		"action": {
-			"type": "Custom",
-			"param": {
-				"custom_action": "InviteAuto"
-			}
-		},
-		"next": [
-			"通用_返回主页"
-		]
-	},
-	"邀约_未收集回忆": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"template": [
-					"Invite/邀约_未收集回忆.png"
-				],
-				"roi": [
-					625,
-					216,
-					530,
-					390
-				]
-			}
-		}
-	},
-	"邀约_已回到邀约界面": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"邀约"
-				],
-				"roi": [
-					63,
-					63,
-					414,
-					109
-				],
-				"threshold": 0.9
-			}
-		}
-	},
-	"邀约_点击确认按钮": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"roi": [
-					663,
-					472,
-					234,
-					73
-				],
-				"template": [
-					"ok.png"
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"focus": {
-			"Node.Action.Succeeded": "点击邀约确认按钮"
-		}
-	},
-	"邀约_点击空白": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"点击空白",
-					"处继续"
-				],
-				"roi": [
-					471,
-					486,
-					335,
-					216
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"post_wait_freezes": 1000
-	},
-	"邀约_跳过": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"roi": [
-					1152,
-					39,
-					76,
-					73
-				],
-				"template": [
-					"Invite/邀约跳过.png"
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"next": [
-			"邀约_跳过",
-			"邀约_送礼"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "跳过邀约"
-		}
-	},
-	"邀约_还是算了": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"还是算了"
-				],
-				"roi": [
-					795,
-					606,
-					151,
-					58
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"post_wait_freezes": 1000,
-		"next": [
-			"邀约_已回到邀约界面",
-			"[JumpBack]邀约_默契提升"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "还是算了"
-		}
-	},
-	"邀约_送出礼物": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"送出礼物"
-				],
-				"roi": [
-					1041,
-					613,
-					133,
-					41
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"timeout": 30000,
-		"next": [
-			"邀约_已回到邀约界面",
-			"[JumpBack]邀约_点击空白",
-			"[JumpBack]邀约_默契提升"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "邀约_送出礼物"
-		}
-	},
-	"邀约_送礼": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"送出礼物"
-				],
-				"roi": [
-					751,
-					476,
-					458,
-					154
-				]
-			}
-		},
-		"pre_wait_freezes": 200,
-		"action": {
-			"type": "Click"
-		},
-		"post_wait_freezes": 100,
-		"next": [
-			"邀约_送礼流程",
-			"邀约_送礼"
-		],
-		"focus": {
-			"Node.Recognition.Succeeded": "正在送礼"
-		}
-	},
-	"邀约_送礼流程": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"0.?1"
-				],
-				"roi": [
-					1000,
-					580,
-					200,
-					90
-				]
-			}
-		},
-		"timeout": 5000,
-		"next": [
-			"邀约_选择礼物成功",
-			"[JumpBack]邀约_选择礼物"
-		],
-		"on_error": [
-			"邀约_还是算了"
-		]
-	},
-	"邀约_选择礼物": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"roi": [
-					750,
-					239,
-					460,
-					194
-				],
-				"template": [
-					"Invite/邀约_喜好图标.png"
-				],
-				"order_by": "Vertical"
-			}
-		},
-		"action": {
-			"type": "Click"
-		},
-		"post_wait_freezes": {
-			"time": 200,
-			"target": [
-				905,
-				160,
-				297,
-				44
-			]
-		}
-	},
-	"邀约_选择礼物成功": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"1.?1"
-				],
-				"roi": [
-					1000,
-					580,
-					200,
-					90
-				]
-			}
-		},
-		"post_wait_freezes": 200,
-		"next": [
-			"邀约_送出礼物"
-		]
-	},
-	"邀约_默契提升": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"默契",
-					"提升"
-				],
-				"roi": [
-					789,
-					200,
-					268,
-					81
-				]
-			}
-		},
-		"action": {
-			"type": "Click"
-		}
-	},
-	"邀约_达上限": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"5.?5"
-				],
-				"roi": [
-					1000,
-					630,
-					190,
-					60
-				]
-			}
-		}
-	},
-	"邀约_左方识别邀约对象": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"InviteAuto函数专用节点"
-				],
-				"roi": [
-					81,
-					168,
-					385,
-					459
-				]
-			}
-		}
-	},
-	"邀约_向下滑动": {
-		"action": {
-			"type": "Swipe",
-			"param": {
-				"begin": [
-					270,
-					706
-				],
-				"end": [
-					270,
-					224
-				],
-				"duration": 800,
-				"end_hold": 500
-			}
-		},
-		"post_wait_freezes": 500
-	},
-	"邀约_向上滑动": {
-		"action": {
-			"type": "Swipe",
-			"param": {
-				"begin": [
-					270,
-					224
-				],
-				"end": [
-					270,
-					706
-				],
-				"duration": 800,
-				"end_hold": 500
-			}
-		},
-		"post_wait_freezes": 500
-	},
-	"邀约_已滑动到底部": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"template": "invite_scroll_down_template",
-				"threshold": 0.99
-			}
-		}
-	},
-	"邀约_已滑动到顶部": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"template": "invite_scroll_up_template",
-				"threshold": 0.99
-			}
-		}
-	},
-	"邀约_回忆收集_循环": {
-		"action": {
-			"type": "Custom",
-			"param": {
-				"custom_action": "InviteMemory"
-			}
-		},
-		"next": [
-			"邀约_送礼"
-		]
-	},
-	"邀约_对话选项按钮": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"roi": [
-					760,
-					330,
-					450,
-					200
-				],
-				"template": [
-					"Invite/邀约_对话选项按钮.png"
-				]
-			}
-		}
-	},
-	"邀约_读取选项文本": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"expected": [
-					"InviteMemory函数专用节点"
-				],
-				"roi": [
-					760,
-					330,
-					450,
-					200
-				]
-			}
-		}
-	}
+    "邀约_判断是否在主页": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "menu.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "DoNothing"
+        },
+        "next": [
+            "邀约_打开心链"
+        ]
+    },
+    "邀约_打开心链": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "Invite/heartlink.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "邀约_前往邀约"
+        ],
+        "focus": {
+            "Node.Action.Starting": "正在打开心链"
+        }
+    },
+    "邀约_开始邀约": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    833,
+                    629,
+                    128,
+                    40
+                ],
+                "template": [
+                    "Invite/邀约按钮.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "timeout": 3000,
+        "next": [
+            "邀约_地点",
+            "[JumpBack]邀约_点击确认按钮",
+            "邀约_开始邀约"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "开始邀约"
+        }
+    },
+    "邀约_1号": {
+        "max_hit": 2,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "希娅"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "attach": {
+            "gift": "no"
+        }
+    },
+    "邀约_2号": {
+        "max_hit": 2,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "雾语"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "attach": {
+            "gift": "no"
+        }
+    },
+    "邀约_3号": {
+        "max_hit": 2,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "苍兰"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "attach": {
+            "gift": "no"
+        }
+    },
+    "邀约_4号": {
+        "max_hit": 2,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "冬香"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "attach": {
+            "gift": "no"
+        }
+    },
+    "邀约_5号": {
+        "max_hit": 2,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "夏花"
+                ],
+                "roi": [
+                    84,
+                    215,
+                    377,
+                    390
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "attach": {
+            "gift": "no"
+        }
+    },
+    "邀约_主界面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "邀约"
+                ],
+                "roi": [
+                    82,
+                    128,
+                    70,
+                    40
+                ]
+            }
+        },
+        "next": [
+            "邀约_总循环"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "邀约_主界面"
+        }
+    },
+    "邀约_入口": {
+        "next": [
+            "邀约_判断是否在主页",
+            "[JumpBack]通用_返回主页"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "执行邀约"
+        }
+    },
+    "邀约_前往邀约": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "邀约",
+                    "邀約"
+                ],
+                "roi": [
+                    72,
+                    612,
+                    388,
+                    79
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "邀约_主界面",
+            "邀约_前往邀约"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "邀约_前往邀约"
+        }
+    },
+    "邀约_地点": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "选择"
+                ],
+                "roi": [
+                    1071,
+                    200,
+                    122,
+                    398
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 100,
+            "target": [
+                615,
+                195,
+                590,
+                415
+            ]
+        },
+        "next": [
+            "邀约_特殊回忆",
+            "邀约_选择默认地点"
+        ]
+    },
+    "邀约_特殊回忆": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "特殊回忆"
+                ],
+                "roi": [
+                    600,
+                    190,
+                    190,
+                    435
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "邀约_选择回忆地点"
+        ]
+    },
+    "邀约_选择默认地点": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "选择"
+                ],
+                "roi": [
+                    1071,
+                    200,
+                    122,
+                    398
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 300,
+        "next": [
+            "邀约_跳过",
+            "邀约_选择默认地点"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "选择默认地点"
+        }
+    },
+    "邀约_选择回忆地点": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "选择"
+                ],
+                "roi": "邀约_特殊回忆",
+                "roi_offset": [
+                    436,
+                    -8,
+                    54,
+                    101
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 300,
+        "next": [
+            "邀约_跳过",
+            "邀约_选择回忆地点"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "选择回忆地点"
+        }
+    },
+    "邀约_总循环": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "InviteAuto"
+            }
+        },
+        "next": [
+            "通用_返回主页"
+        ]
+    },
+    "邀约_未收集回忆": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "Invite/邀约_未收集回忆.png"
+                ],
+                "roi": [
+                    625,
+                    216,
+                    530,
+                    390
+                ]
+            }
+        }
+    },
+    "邀约_已回到邀约界面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "邀约"
+                ],
+                "roi": [
+                    63,
+                    63,
+                    414,
+                    109
+                ],
+                "threshold": 0.9
+            }
+        }
+    },
+    "邀约_点击确认按钮": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    663,
+                    472,
+                    234,
+                    73
+                ],
+                "template": [
+                    "ok.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "focus": {
+            "Node.Action.Succeeded": "点击邀约确认按钮"
+        }
+    },
+    "邀约_点击空白": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "点击空白",
+                    "处继续"
+                ],
+                "roi": [
+                    471,
+                    486,
+                    335,
+                    216
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 1000
+    },
+    "邀约_跳过": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    1152,
+                    39,
+                    76,
+                    73
+                ],
+                "template": [
+                    "Invite/邀约跳过.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "邀约_跳过",
+            "邀约_送礼"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "跳过邀约"
+        }
+    },
+    "邀约_还是算了": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "还是算了"
+                ],
+                "roi": [
+                    795,
+                    606,
+                    151,
+                    58
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 1000,
+        "next": [
+            "邀约_已回到邀约界面",
+            "[JumpBack]邀约_默契提升"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "还是算了"
+        }
+    },
+    "邀约_送出礼物": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "送出礼物"
+                ],
+                "roi": [
+                    1041,
+                    613,
+                    133,
+                    41
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "timeout": 30000,
+        "next": [
+            "邀约_已回到邀约界面",
+            "[JumpBack]邀约_点击空白",
+            "[JumpBack]邀约_默契提升"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "邀约_送出礼物"
+        }
+    },
+    "邀约_送礼": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "送出礼物"
+                ],
+                "roi": [
+                    751,
+                    476,
+                    458,
+                    154
+                ]
+            }
+        },
+        "pre_wait_freezes": 200,
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "邀约_送礼流程",
+            "邀约_送礼"
+        ],
+        "focus": {
+            "Node.Recognition.Succeeded": "正在送礼"
+        }
+    },
+    "邀约_送礼流程": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "0.?1"
+                ],
+                "roi": [
+                    1000,
+                    580,
+                    200,
+                    90
+                ]
+            }
+        },
+        "timeout": 5000,
+        "next": [
+            "邀约_选择礼物成功",
+            "[JumpBack]邀约_选择礼物"
+        ],
+        "on_error": [
+            "邀约_还是算了"
+        ]
+    },
+    "邀约_选择礼物": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    750,
+                    239,
+                    460,
+                    194
+                ],
+                "template": [
+                    "Invite/邀约_喜好图标.png"
+                ],
+                "order_by": "Vertical"
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 200,
+            "target": [
+                905,
+                160,
+                297,
+                44
+            ]
+        }
+    },
+    "邀约_选择礼物成功": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "1.?1"
+                ],
+                "roi": [
+                    1000,
+                    580,
+                    200,
+                    90
+                ]
+            }
+        },
+        "post_wait_freezes": 200,
+        "next": [
+            "邀约_送出礼物"
+        ]
+    },
+    "邀约_默契提升": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "默契",
+                    "提升"
+                ],
+                "roi": [
+                    789,
+                    200,
+                    268,
+                    81
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "邀约_达上限": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "5.?5"
+                ],
+                "roi": [
+                    1000,
+                    630,
+                    190,
+                    60
+                ]
+            }
+        }
+    },
+    "邀约_左方识别邀约对象": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "InviteAuto函数专用节点"
+                ],
+                "roi": [
+                    81,
+                    168,
+                    385,
+                    459
+                ]
+            }
+        }
+    },
+    "邀约_向下滑动": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    270,
+                    706
+                ],
+                "end": [
+                    270,
+                    224
+                ],
+                "duration": 800,
+                "end_hold": 500
+            }
+        },
+        "post_wait_freezes": 500
+    },
+    "邀约_向上滑动": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    270,
+                    224
+                ],
+                "end": [
+                    270,
+                    706
+                ],
+                "duration": 800,
+                "end_hold": 500
+            }
+        },
+        "post_wait_freezes": 500
+    },
+    "邀约_已滑动到底部": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "invite_scroll_down_template",
+                "threshold": 0.99
+            }
+        }
+    },
+    "邀约_已滑动到顶部": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "invite_scroll_up_template",
+                "threshold": 0.99
+            }
+        }
+    },
+    "邀约_回忆收集_循环": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "InviteMemory"
+            }
+        },
+        "next": [
+            "邀约_送礼"
+        ]
+    },
+    "邀约_对话选项按钮": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    760,
+                    330,
+                    450,
+                    200
+                ],
+                "template": [
+                    "Invite/邀约_对话选项按钮.png"
+                ]
+            }
+        }
+    },
+    "邀约_读取选项文本": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "InviteMemory函数专用节点"
+                ],
+                "roi": [
+                    760,
+                    330,
+                    450,
+                    200
+                ]
+            }
+        }
+    }
 }

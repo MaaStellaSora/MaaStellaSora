@@ -1,90 +1,90 @@
 {
-	"星塔_节点_对话选择_定位问题位置_agent": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"template": [
-					"ClimbTower_agent/爬塔_对话问题图标.png"
-				],
-				"roi": [
-					670,
-					0,
-					610,
-					720
-				],
-				"order_by": "Score"
-			}
-		}
-	},
-	"星塔_节点_对话选择_识别问题文本_agent": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"roi": "星塔_节点_对话选择_定位问题位置_agent",
-				"roi_offset": [
-					25,
-					-40,
-					500,
-					80
-				],
-				"threshold": 0.7,
-				"order_by": "Vertical"
-			}
-		}
-	},
-	"星塔_节点_对话选择_定位选项位置_agent": {
-		"recognition": {
-			"type": "TemplateMatch",
-			"param": {
-				"template": [
-					"ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
-				],
-				"roi": [
-					670,
-					0,
-					610,
-					720
-				],
-				"order_by": "Vertical"
-			}
-		}
-	},
-	"星塔_节点_对话选择_识别选项文本_agent": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"roi": "星塔_节点_对话选择_定位选项位置_agent",
-				"roi_offset": [
-					30,
-					-21,
-					465,
-					37
-				],
-				"threshold": 0.7,
-				"order_by": "Vertical",
-				"replace": [
-					[
-						"\\+",
-						""
-					]
-				]
-			}
-		}
-	},
-	"星塔_节点_对话选择_识别选项后果_agent": {
-		"recognition": {
-			"type": "OCR",
-			"param": {
-				"roi": "星塔_节点_对话选择_定位选项位置_agent",
-				"roi_offset": [
-					-9,
-					38,
-					508,
-					10
-				],
-				"threshold": 0.7,
-				"order_by": "Vertical"
-			}
-		}
-	}
+    "星塔_节点_对话选择_定位问题位置_agent": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_对话问题图标.png"
+                ],
+                "roi": [
+                    670,
+                    0,
+                    610,
+                    720
+                ],
+                "order_by": "Score"
+            }
+        }
+    },
+    "星塔_节点_对话选择_识别问题文本_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "星塔_节点_对话选择_定位问题位置_agent",
+                "roi_offset": [
+                    25,
+                    -40,
+                    500,
+                    80
+                ],
+                "threshold": 0.7,
+                "order_by": "Vertical"
+            }
+        }
+    },
+    "星塔_节点_对话选择_定位选项位置_agent": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_对话选项按钮__624_278_44_46__574_228_144_146.png"
+                ],
+                "roi": [
+                    670,
+                    0,
+                    610,
+                    720
+                ],
+                "order_by": "Vertical"
+            }
+        }
+    },
+    "星塔_节点_对话选择_识别选项文本_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "星塔_节点_对话选择_定位选项位置_agent",
+                "roi_offset": [
+                    30,
+                    -21,
+                    465,
+                    37
+                ],
+                "threshold": 0.7,
+                "order_by": "Vertical",
+                "replace": [
+                    [
+                        "\\+",
+                        ""
+                    ]
+                ]
+            }
+        }
+    },
+    "星塔_节点_对话选择_识别选项后果_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "星塔_节点_对话选择_定位选项位置_agent",
+                "roi_offset": [
+                    -9,
+                    38,
+                    508,
+                    10
+                ],
+                "threshold": 0.7,
+                "order_by": "Vertical"
+            }
+        }
+    }
 }

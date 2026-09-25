@@ -1,38 +1,38 @@
 {
-	"活动快速战斗_开启快速战斗": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"Quick Battle"
-				]
-			}
-		}
-	},
-	"活动快速战斗_开始战斗": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"Start Battle"
-				]
-			}
-		}
-	},
-	"活动快速战斗_选择活动难度": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"Normal"
-				]
-			}
-		}
-	},
-	"活动快速战斗_确认": {
-		"recognition": {
-			"param": {
-				"expected": [
-					"Confirm"
-				]
-			}
-		}
-	}
+    "活动快速战斗_开启快速战斗": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Quick Battle"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_开始战斗": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Start Battle"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_选择活动难度": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Normal"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_确认": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Confirm"
+                ]
+            }
+        }
+    }
 }

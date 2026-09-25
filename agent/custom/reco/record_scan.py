@@ -30,6 +30,11 @@ class RecordScan(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
+        # 如果未激活记录等级或潜能数的目标选项，直接返回
+        if not self._is_options_active(context, LOOP_NODE):
+            return True
+
+        # 读取记录等级与潜能数
         image = context.tasker.controller.cached_image
 
         level = self._read_ints(context, image, LEVEL_NODE)
@@ -49,6 +54,13 @@ class RecordScan(CustomAction):
         if attach["potential_count"] == UNKNOWN:
             logger.error(f"潜能数识别失败：{parts}")
         return True
+
+    @staticmethod
+    def _is_options_active(context: Context, node: str) -> bool:
+        """检查是否激活了记录等级或潜能数的目标选项。"""
+        node_data = context.get_node_data(node) or {}
+        attachment = node_data.get("attach", {})
+        return attachment.get("min_record_level", 0) > 0 or attachment.get("min_potential_count", 0) > 0
 
     @staticmethod
     def _read_ints(context: Context, image, node: str) -> list[int]:

@@ -21,7 +21,7 @@ class BuildDownloadCommandTest(unittest.TestCase):
             maafw_version="5.13.0b5",
         )
 
-        self.assertIn("--pre", command)
+        self.assertNotIn("--pre", command)
         self.assertIn("maafw==5.13.0b5", command)
         self.assertEqual(command[command.index("--platform") + 1], "win_amd64")
         self.assertEqual(command[command.index("--python-version") + 1], "3.12")

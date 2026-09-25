@@ -17,6 +17,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
+REQUIREMENTS_FILE = Path(__file__).resolve().parents[2] / "assets" / "requirements.txt"
 MAAFW_VERSION_PATTERN = re.compile(
     r"^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)"
     r"(?:(?:a|b|rc)(?:0|[1-9]\d*))?$"
@@ -52,11 +53,11 @@ def get_platform_tag():
     elif os_type == "Darwin":  # macOS
         # 映射platform.machine()到pip的平台标签
         arch_mapping = {
-            "x86_64": "macosx_10_9_x86_64",
-            "arm64": "macosx_11_0_arm64",
-            "aarch64": "macosx_11_0_arm64",
+            "x86_64": "macosx_13_0_x86_64",
+            "arm64": "macosx_13_0_arm64",
+            "aarch64": "macosx_13_0_arm64",
         }
-        platform_tag = arch_mapping.get(os_arch, f"macosx_10_9_{os_arch}")
+        platform_tag = arch_mapping.get(os_arch, f"macosx_13_0_{os_arch}")
 
     elif os_type == "Linux":
         # 映射platform.machine()到pip的平台标签
@@ -78,14 +79,13 @@ def build_download_command(
     deps_path, platform_tag=None, *, python_version=None, maafw_version=None
 ):
     """构造 pip download 命令。"""
-    requirements_file = Path("requirements.txt")
     cmd = [
         sys.executable,
         "-m",
         "pip",
         "download",
         "-r",
-        str(requirements_file),
+        str(REQUIREMENTS_FILE),
         "-d",
         str(deps_path),
         "--only-binary=:all:",
@@ -97,7 +97,7 @@ def build_download_command(
     if maafw_version:
         if not MAAFW_VERSION_PATTERN.fullmatch(maafw_version):
             raise ValueError(f"无效的 MaaFramework Python 版本: {maafw_version}")
-        cmd.extend(["--pre", f"maafw=={maafw_version}"])
+        cmd.extend(["--find-links", str(deps_path), f"maafw=={maafw_version}"])
     return cmd
 
 
@@ -132,10 +132,9 @@ def download_dependencies(
 
     print(f"开始下载平台 {platform_tag} 的依赖到 {deps_dir}")
 
-    # 从requirements.txt读取依赖
-    requirements_file = Path("requirements.txt")
-    if not requirements_file.exists():
-        print("错误: requirements.txt 文件不存在")
+    # 从发行资源目录读取运行依赖，不依赖当前工作目录。
+    if not REQUIREMENTS_FILE.exists():
+        print(f"错误: {REQUIREMENTS_FILE} 文件不存在")
         return False
 
     # 首先尝试下载平台特定的wheel文件

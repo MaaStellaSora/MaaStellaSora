@@ -1,0 +1,271 @@
+{
+	"通用_一键领取": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"quick_claim.png"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"timeout": 1500,
+		"next": [
+			"通用_点击空白处继续"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在尝试一键领取"
+		}
+	},
+	"通用_换算快速作战次数": {
+		"recognition": {
+			"type": "DirectHit"
+		},
+		"action": {
+			"type": "Custom",
+			"param": {
+				"custom_action": "utool_calc_repeat"
+			}
+		},
+		"next": [
+			"活动快速战斗_添加战斗次数"
+		]
+	},
+	"通用_返回主页": {
+		"max_hit": 10,
+		"next": [
+			"通用_主页标记",
+			"[JumpBack]通用_返回主页按钮",
+			"[JumpBack]通用_点击空白处继续",
+			"[JumpBack]通用_关闭按钮",
+			"[JumpBack]通用_返回按钮",
+			"[JumpBack]通用_关闭心链按钮",
+			"[JumpBack]通用_关闭升级界面",
+			"[JumpBack]心链_默契提升"
+		]
+	},
+	"通用_主页标记": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"menu.png"
+				],
+				"roi": [
+					1180,
+					0,
+					100,
+					80
+				]
+			}
+		}
+	},
+	"通用_返回按钮": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"Base/通用_返回按钮_方形.png",
+					"Base/通用_返回按钮_圆形.png"
+				],
+				"roi": [
+					0,
+					0,
+					120,
+					90
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_wait_freezes": {
+			"time": 100,
+			"timeout": 1500
+		}
+	},
+	"通用_返回主页按钮": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"Base/通用_返回主页按钮1.png",
+					"Base/通用_返回主页按钮2.png" // 出发界面
+
+				],
+				"threshold": 0.8,
+				"roi": [
+					0,
+					0,
+					450,
+					90
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_wait_freezes": {
+			"time": 100,
+			"timeout": 1500
+		}
+	},
+	"通用_关闭心链按钮": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"chat_shutdown.png"
+				],
+				"roi": [
+					1180,
+					0,
+					100,
+					100
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_wait_freezes": {
+			"time": 100,
+			"timeout": 1500
+		}
+	},
+	"通用_点击空白处继续": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"点击空白处继.*",
+					"点击空白处关.*",
+					"点击任意位置领取",
+					"点击",
+					"任意位置"
+				],
+				"roi": [
+					470,
+					500,
+					340,
+					220
+				]
+			}
+		},
+		"pre_wait_freezes": {
+			"time": 100,
+			"timeout": 2000
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target_offset": [
+					0,
+					25,
+					0,
+					0
+				]
+			}
+		},
+		"post_wait_freezes": {
+			"time": 100,
+			"timeout": 1500
+		}
+	},
+	"通用_关闭按钮": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"Base/通用_关闭公告按钮.png",
+					"Base/通用_关闭活动按钮.png",
+					"Base/通用_关闭每日签到按钮.png"
+				],
+				"roi": [
+					640,
+					0,
+					640,
+					360
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_wait_freezes": {
+			"time": 100,
+			"timeout": 1500
+		}
+	},
+	"通用_消耗所有干劲": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"max.png"
+				],
+				"threshold": 0.8
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"next": [
+			"活动快速战斗_开始战斗"
+		]
+	},
+	"通用_关闭升级界面": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"roi": [
+					187,
+					302,
+					578,
+					132
+				],
+				"expected": [
+					"权限等级"
+				]
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target": [
+					640,
+					700
+				]
+			}
+		},
+		"post_wait_freezes": {
+			"time": 100,
+			"timeout": 1500
+		},
+		"focus": {
+			"Node.Action.Starting": "正在关闭升级界面"
+		}
+	},
+	"通用_主页_出发": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"出发"
+				],
+				"roi": [
+					1122,
+					656,
+					64,
+					32
+				],
+				"only_rec": true
+			}
+		},
+		"action": {
+			"type": "Click"
+		}
+	}
+}

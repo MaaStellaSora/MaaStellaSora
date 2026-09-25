@@ -17,21 +17,23 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from configure import configure_ocr_model  # noqa: E402
-
-
-COPY_IGNORE = shutil.ignore_patterns(
-    "*.pdb",
-    "*.PDB",
-    "*.pyc",
-    "*.pyo",
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-    ".mypy_cache",
+from package_common import (  # noqa: E402
+    COPY_IGNORE,
+    PROJECT_FILES,
+    REQUIRED_OCR_FILES,
+    copy_project_files as _copy_project_files,
+    copy_tree as _copy_tree,
+    remove_build_artifacts,
+    require_dir as _require_dir,
+    require_file as _require_file,
 )
+from resource_layout import (  # noqa: E402
+    copy_resources,
+    validate_staging_directory,
+)
+
+
 TOP_LEVEL_RUNTIME_DIRS = ("cache", "config", "debug", "logs")
-ALLOWED_STAGING_ENTRIES = ("deps", "python")
-PROJECT_FILES = ("README.md", "LICENSE", "CONTACT", "requirements.txt")
 THIRD_PARTY_LICENSES = ("LICENSE-MaaFramework", "LICENSE-MaaCommonAssets")
 REQUIRED_MAAFW_FILES = (
     "MaaFramework.dll",
@@ -41,29 +43,8 @@ REQUIRED_MAAFW_FILES = (
     "MaaAgentClient.dll",
     "MaaAgentServer.dll",
 )
-REQUIRED_OCR_FILES = ("det.onnx", "rec.onnx", "keys.txt")
 REQUIRED_AGENT_BINARY_DIRS = ("maatouch", "minitouch")
 PROJECT_DIR_PREFIX = "{PROJECT_DIR}/"
-
-
-def _require_file(path: Path) -> None:
-    if not path.is_file():
-        raise FileNotFoundError(f"Required file not found: {path}")
-
-
-def _require_dir(path: Path) -> None:
-    if not path.is_dir():
-        raise FileNotFoundError(f"Required directory not found: {path}")
-
-
-def _copy_tree(source: Path, destination: Path) -> None:
-    _require_dir(source)
-    shutil.copytree(
-        source,
-        destination,
-        dirs_exist_ok=True,
-        ignore=COPY_IGNORE,
-    )
 
 
 def _strip_project_dir(path: str) -> str:
@@ -124,13 +105,6 @@ def transform_interface(interface: dict[str, Any], version: str) -> dict[str, An
     return transformed
 
 
-def _copy_project_files(working_dir: Path, install_dir: Path) -> None:
-    for name in PROJECT_FILES:
-        source = working_dir / name
-        _require_file(source)
-        shutil.copy2(source, install_dir / name)
-
-
 def _copy_mxu(mxu_dir: Path, install_dir: Path) -> None:
     mxu_executable = mxu_dir / "mxu.exe"
     mxu_license = mxu_dir / "LICENSE"
@@ -153,11 +127,14 @@ def _copy_maafw(deps_dir: Path, install_dir: Path) -> None:
 
 
 def _copy_project_payload(working_dir: Path, install_dir: Path, version: str) -> None:
-    # Keep using the shared OCR import behavior before copying project resources.
-    configure_ocr_model()
-
     assets_dir = working_dir / "assets"
-    _copy_tree(assets_dir / "resource", install_dir / "resource")
+    copy_resources(
+        assets_dir / "resource", install_dir / "resource", ignore=COPY_IGNORE
+    )
+    configure_ocr_model(
+        assets_dir, install_dir / "resource" / "base" / "model" / "ocr"
+    )
+    _copy_tree(assets_dir / "interface", install_dir / "interface")
     _copy_tree(working_dir / "agent", install_dir / "agent")
 
     logo = assets_dir / "logo.ico"
@@ -184,20 +161,6 @@ def _copy_project_payload(working_dir: Path, install_dir: Path, version: str) ->
         file.write("\n")
 
     _copy_project_files(working_dir, install_dir)
-
-
-def remove_build_artifacts(install_dir: Path) -> None:
-    """Remove files that must not be shipped, without touching package code."""
-    for path in sorted(install_dir.rglob("*"), reverse=True):
-        if path.is_file() and path.suffix.lower() in {".pdb", ".pyc", ".pyo"}:
-            path.unlink()
-        elif path.is_dir() and path.name in {
-            "__pycache__",
-            ".pytest_cache",
-            ".ruff_cache",
-            ".mypy_cache",
-        }:
-            shutil.rmtree(path)
 
 
 def _package_path(install_dir: Path, value: str, label: str) -> Path:
@@ -366,8 +329,7 @@ def validate_staging_paths(
     working_dir: Path, install_dir: Path, deps_dir: Path, mxu_dir: Path
 ) -> None:
     """Restrict cleanup and merged copies to a fresh package staging directory."""
-    if install_dir == working_dir or not install_dir.is_relative_to(working_dir):
-        raise ValueError("install_dir must be a strict child of working_dir")
+    validate_staging_directory(working_dir, install_dir)
 
     for label, source_dir in (("deps_dir", deps_dir), ("mxu_dir", mxu_dir)):
         if (
@@ -376,18 +338,6 @@ def validate_staging_paths(
             or source_dir in install_dir.parents
         ):
             raise ValueError(f"install_dir must not overlap {label}")
-
-    if install_dir.exists():
-        unexpected = sorted(
-            path.name
-            for path in install_dir.iterdir()
-            if path.name not in ALLOWED_STAGING_ENTRIES
-        )
-        if unexpected:
-            raise ValueError(
-                "install_dir must be a fresh staging directory containing only "
-                f"{ALLOWED_STAGING_ENTRIES}: {unexpected}"
-            )
 
 
 def build_package(

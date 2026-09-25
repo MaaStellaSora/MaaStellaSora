@@ -1,0 +1,34 @@
+{
+    "tabWidth": 4,
+    "printWidth": 120,
+    "useTabs": false,
+    "bracketSameLine": true,
+    "bracketSpacing": false,
+    "endOfLine": "auto",
+    "plugins": [
+        "./node_modules/prettier-plugin-multiline-arrays/dist/index.js"
+    ],
+    "multilineArraysWrapThreshold": 1,
+    "overrides": [
+        {
+            "files": [
+                "*.yml",
+                "*.yaml"
+            ],
+            "options": {
+                "parser": "yaml",
+                "tabWidth": 2
+            }
+        },
+        {
+            "files": [
+                "*.json"
+            ],
+            "options": {
+                "parser": "json",
+                "useTabs": true,
+                "bracketSameLine": false
+            }
+        }
+    ]
+}

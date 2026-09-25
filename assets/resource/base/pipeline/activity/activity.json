@@ -1,0 +1,182 @@
+{
+	"活动快速战斗_入口": {
+		"recognition": {
+			"type": "DirectHit"
+		},
+		"action": {
+			"type": "DoNothing"
+		},
+		"next": [
+			"[JumpBack]活动_从主页进入战斗关卡",
+			"活动快速战斗_战斗关卡界面"
+		]
+	},
+	"活动快速战斗_开启快速战斗": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"快速战斗"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_wait_freezes": 100,
+		"next": [
+			"通用_换算快速作战次数",
+			"通用_返回主页"
+		]
+	},
+	"活动快速战斗_战斗关卡界面": {
+		"recognition": {
+			"type": "And",
+			"param": {
+				"all_of": [
+					"活动_战斗关卡界面"
+				]
+			}
+		},
+		"pre_delay": 0,
+		"post_delay": 0,
+		"next": [
+			"活动快速战斗_选择活动难度"
+		]
+	},
+	"活动快速战斗_开始战斗": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"开始战斗"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"next": [
+			"活动快速战斗_确认",
+			"[JumpBack]通用_关闭升级界面"
+		],
+		"focus": {
+			"Node.Action.Starting": "点击开始战斗"
+		}
+	},
+	"活动快速战斗_添加战斗次数": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"add.png"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"repeat": 1,
+		"repeat_delay": 1000,
+		"next": [
+			"活动快速战斗_开始战斗"
+		],
+		"on_error": [
+			"通用_返回主页"
+		],
+		"focus": {
+			"Node.Recognition.Failed": "检测到没有通关活动关卡 继续下一步",
+			"Node.Action.Starting": "正在添加战斗次数"
+		}
+	},
+	"活动快速战斗_选择活动难度": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"普通"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_wait_freezes": 100,
+		"next": [
+			"活动快速战斗_选择活动关卡"
+		]
+	},
+	"活动快速战斗_确认": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"确认"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"next": [
+			"通用_返回主页",
+			"[JumpBack]通用_关闭升级界面"
+		],
+		"focus": {
+			"Node.Action.Succeeded": "正在点击确认"
+		}
+	},
+	"活动快速战斗_选择活动关卡": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"1-1"
+				],
+				"replace": [
+					[
+						"Ⅰ",
+						"I"
+					],
+					[
+						"Ⅱ",
+						"II"
+					],
+					[
+						"Ⅲ",
+						"III"
+					],
+					[
+						"Ⅳ",
+						"IV"
+					],
+					[
+						"Ⅴ",
+						"V"
+					],
+					[
+						"Ⅵ",
+						"VI"
+					],
+					[
+						"Ⅶ",
+						"VII"
+					],
+					[
+						"Ⅷ",
+						"VIII"
+					]
+
+				],
+				"threshold": 0.6
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_wait_freezes": 100,
+		"next": [
+			"活动快速战斗_开启快速战斗"
+		]
+	}
+}

@@ -1,0 +1,113 @@
+{
+	"好友_判断是否在主页": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"menu.png"
+				]
+			}
+		},
+		"action": {
+			"type": "DoNothing"
+		},
+		"next": [
+			"好友_前往好友页"
+		]
+	},
+	"好友_一键获取": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"键获取"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 500,
+		"next": [
+			"[JumpBack]通用_点击空白处继续",
+			"通用_返回主页"
+		],
+		"focus": {
+			"Node.Recognition.Failed": "没有找到一键获取按钮",
+			"Node.Action.Succeeded": "一键获取完毕"
+		}
+	},
+	"好友_一键赠送": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"键赠送"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"next": [
+			"好友_一键获取"
+		],
+		"focus": {
+			"Node.Recognition.Failed": "没有找到一键赠送按钮",
+			"Node.Action.Succeeded": "一键赠送完毕"
+		}
+	},
+	"好友_入口": {
+		"recognition": {
+			"type": "DirectHit"
+		},
+		"pre_delay": 0,
+		"action": {
+			"type": "DoNothing"
+		},
+		"post_delay": 0,
+		"next": [
+			"好友_判断是否在主页",
+			"[JumpBack]通用_返回主页"
+		]
+	},
+	"好友_前往好友页": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"friends.png"
+				],
+				"threshold": 0.65
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"next": [
+			"好友_好友列表"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在前往好友页"
+		}
+	},
+	"好友_好友列表": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"好友列表"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"next": [
+			"好友_一键赠送"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在前往好友列表"
+		}
+	}
+}

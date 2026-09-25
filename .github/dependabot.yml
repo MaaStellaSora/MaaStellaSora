@@ -20,7 +20,8 @@ updates:
 
   - package-ecosystem: "pip"
     directories:
-      - "/"
+      - "/assets"
+      - "/tools/checks"
       - "/agent"
       - "/tools/ci"
     schedule:
@@ -40,7 +41,7 @@ updates:
       prefix: "chore(deps)"
 
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/tools/format"
     schedule:
       interval: "weekly"
       day: "monday"

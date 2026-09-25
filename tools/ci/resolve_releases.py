@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""解析双 GUI 发布所需的最新上游 Release。"""
+"""解析客户端发布所需的最新上游 Release。"""
 
 from __future__ import annotations
 
@@ -191,12 +191,18 @@ def resolve_project(
     return release, assets
 
 
-def resolve_all(token: str | None) -> tuple[dict[str, str], list[dict[str, Any]]]:
-    """解析三个上游项目，生成 workflow outputs 和摘要数据。"""
+def resolve_all(
+    token: str | None, *, skip_mxu: bool = False, maafw_only: bool = False
+) -> tuple[dict[str, str], list[dict[str, Any]]]:
+    """解析构建所需的上游项目，生成 workflow outputs 和摘要数据。"""
     outputs: dict[str, str] = {}
     summary_rows: list[dict[str, Any]] = []
 
     for key, config in PROJECTS.items():
+        if maafw_only and key != "maafw":
+            continue
+        if skip_mxu and key == "mxu":
+            continue
         release, assets = resolve_project(
             config["repository"], config["assets"], token
         )
@@ -245,7 +251,18 @@ def append_github_summary(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="解析双 GUI 构建使用的上游 Release")
+    parser = argparse.ArgumentParser(description="解析客户端构建使用的上游 Release")
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument(
+        "--skip-mxu",
+        action="store_true",
+        help="仅解析 MaaFramework 与 MFAAvalonia 的上游 Release",
+    )
+    scope.add_argument(
+        "--maafw-only",
+        action="store_true",
+        help="仅解析资源检查使用的 MaaFramework Release",
+    )
     parser.add_argument(
         "--github-output",
         default=os.environ.get("GITHUB_OUTPUT"),
@@ -264,7 +281,9 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        outputs, summary_rows = resolve_all(args.github_token)
+        outputs, summary_rows = resolve_all(
+            args.github_token, skip_mxu=args.skip_mxu, maafw_only=args.maafw_only,
+        )
         for key, value in outputs.items():
             print(f"{key}={value}")
         if args.github_output:

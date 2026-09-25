@@ -1,0 +1,438 @@
+{
+	"task": [
+		{
+			"name": "邀约",
+			"entry": "邀约_入口",
+			"description": "自动邀约<br>由于选项过多，可能需要下拉菜单才能看到其他选项",
+			"option": [
+				"邀约_回忆收集模式",
+				"邀约旅人",
+				"邀约旅人_1号_送礼",
+				"邀约旅人_2号_送礼",
+				"邀约旅人_3号_送礼",
+				"邀约旅人_4号_送礼",
+				"邀约旅人_5号_送礼"
+			]
+		}
+	],
+	"option": {
+		"邀约旅人": {
+			"type": "input",
+			"inputs": [
+				{
+					"name": "1号",
+					"pipeline_type": "string",
+					"default": "希娅",
+					"description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+				},
+				{
+					"name": "2号",
+					"pipeline_type": "string",
+					"default": "雾语",
+					"description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+				},
+				{
+					"name": "3号",
+					"pipeline_type": "string",
+					"default": "苍兰",
+					"description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+				},
+				{
+					"name": "4号",
+					"pipeline_type": "string",
+					"default": "冬香",
+					"description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+				},
+				{
+					"name": "5号",
+					"pipeline_type": "string",
+					"default": "夏花",
+					"description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+				}
+			],
+			"pipeline_override": {
+				"邀约_1号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{1号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{1号}"
+					}
+				},
+				"邀约_2号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{2号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{2号}"
+					}
+				},
+				"邀约_3号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{3号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{3号}"
+					}
+				},
+				"邀约_4号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{4号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{4号}"
+					}
+				},
+				"邀约_5号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{5号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{5号}"
+					}
+				}
+			}
+		},
+		"邀约旅人_1号_送礼": {
+			"type": "select",
+			"label": "1号送礼类型",
+			"description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"pipeline_override": {
+						"邀约_1号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"pipeline_override": {
+						"邀约_1号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"pipeline_override": {
+						"邀约_1号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_2号_送礼": {
+			"type": "select",
+			"label": "2号送礼类型",
+			"description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"pipeline_override": {
+						"邀约_2号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"pipeline_override": {
+						"邀约_2号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"pipeline_override": {
+						"邀约_2号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_3号_送礼": {
+			"type": "select",
+			"label": "3号送礼类型",
+			"description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"pipeline_override": {
+						"邀约_3号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"pipeline_override": {
+						"邀约_3号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"pipeline_override": {
+						"邀约_3号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_4号_送礼": {
+			"type": "select",
+			"label": "4号送礼类型",
+			"description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"pipeline_override": {
+						"邀约_4号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"pipeline_override": {
+						"邀约_4号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"pipeline_override": {
+						"邀约_4号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_5号_送礼": {
+			"type": "select",
+			"label": "5号送礼类型",
+			"description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"pipeline_override": {
+						"邀约_5号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"pipeline_override": {
+						"邀约_5号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"pipeline_override": {
+						"邀约_5号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约_回忆收集模式": {
+			"type": "switch",
+			"label": "回忆收集模式",
+			"resource": ["官服"],
+			"description": "开启后不再快进对话，改为逐句推进并选择特殊选项以收集角色特殊回忆。",
+			"default_case": "No",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"memory_mode": false
+							}
+						}
+					}
+				},
+				{
+					"name": "Yes",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"memory_mode": true
+							}
+						},
+						"邀约_选择默认地点": {
+							"next": [
+								"邀约_回忆收集_循环"
+							]
+						},
+						"邀约_选择回忆地点": {
+							"next": [
+								"邀约_回忆收集_循环"
+							]
+						}
+					},
+					"option": [
+						"邀约_自动查找未收集"
+					]
+				}
+			]
+		},
+		"邀约_自动查找未收集": {
+			"type": "switch",
+			"label": "自动查找未收集回忆",
+			"description": "开启后自动遍历左侧角色列表，找出有未收集回忆的角色并优先邀约。",
+			"default_case": "No",
+			"cases": [
+				{
+					"name": "No",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_find": false
+							}
+						}
+					}
+				},
+				{
+					"name": "Yes",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_find": true
+							}
+						}
+					},
+					"option": [
+						"邀约_自动查找_最多查找人数",
+						"邀约_自动收集_送礼类型"
+					]
+				}
+			]
+		},
+		"邀约_自动查找_最多查找人数": {
+			"type": "input",
+			"inputs": [
+				{
+					"name": "人数",
+					"label": "最多查找人数",
+					"pipeline_type": "int",
+					"verify": "^[1-9]\\d*$",
+					"default": "5"
+				}
+			],
+			"pipeline_override": {
+				"邀约_总循环": {
+					"attach": {
+						"max_find_count": "{人数}"
+					}
+				}
+			}
+		},
+		"邀约_自动收集_送礼类型": {
+			"type": "select",
+			"label": "自动收集送礼类型",
+			"description": "自动找到的角色统一使用该送礼类型。",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_gift": "no"
+							}
+						}
+					}
+				}
+			]
+		}
+	}
+}

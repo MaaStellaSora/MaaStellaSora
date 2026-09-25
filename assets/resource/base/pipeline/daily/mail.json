@@ -1,0 +1,71 @@
+{
+	"邮箱_入口": {
+		"recognition": {
+			"type": "DirectHit"
+		},
+		"pre_delay": 0,
+		"action": {
+			"type": "DoNothing"
+		},
+		"post_delay": 0,
+		"next": [
+			"邮箱_判断是否在主页",
+			"[JumpBack]通用_返回主页"
+		]
+	},
+	"邮箱_判断是否在主页": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"menu.png"
+				]
+			}
+		},
+		"action": {
+			"type": "DoNothing"
+		},
+		"next": [
+			"邮箱_打开邮箱"
+		]
+	},
+	"邮箱_打开邮箱": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"email.png"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"next": [
+			"邮箱_一键领取"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在打开邮箱"
+		}
+	},
+	"邮箱_一键领取": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"quick_claim.png"
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"timeout": 2000,
+		"next": [
+			"通用_返回主页"
+		],
+		"focus": {
+			"Node.Action.Starting": "正在尝试一键领取"
+		}
+	}
+}

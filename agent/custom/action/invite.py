@@ -46,6 +46,8 @@ class InviteAuto(CustomAction):
         """
             邀约功能总控制节点
         """
+        if context.tasker.stopping:
+            return False
 
         # 邀约对象的任务列表
         invite_nodes = ["邀约_1号", "邀约_2号", "邀约_3号", "邀约_4号", "邀约_5号"]
@@ -67,6 +69,8 @@ class InviteAuto(CustomAction):
             auto_gift = attach.get("auto_gift", "all") or "all"
 
             names = self._auto_find_uncollected(context, max_find_count)
+            if context.tasker.stopping:
+                return False
             for n in names:
                 queue.append((n, auto_gift))
             # 自动查找后重置回顶部，衔接下方 _click_trekker “从顶部开始找”的前提
@@ -90,6 +94,8 @@ class InviteAuto(CustomAction):
         self.logger.info(f"邀约名单：{", ".join([name for name, _ in queue])}")
 
         for trekker_name, choose_gift in queue:
+            if context.tasker.stopping:
+                return False
             # 检查邀约对象是否达到上限
             if self._hit_daily_limit(context):
                 return True
@@ -105,12 +111,9 @@ class InviteAuto(CustomAction):
                         pipeline_override = self._merge_memory_override(
                             pipeline_override, trekker_name
                         )
-                    res = context.run_task("邀约_开始邀约", pipeline_override)
-
-                    # 成功识别到邀约按钮时，不需要手动重置位置
-                    # 2026/9/3观察到邀约成功时游戏没有重置滚动位置，只能手动翻回第一页了
-                    # if res and res.status.succeeded:
-                    #     need_reset = False
+                    if context.tasker.stopping:
+                        return False
+                    context.run_task("邀约_开始邀约", pipeline_override)
 
                     break # 无论任务结果如何，只要点到了人，就停止向下翻页
 
@@ -137,7 +140,11 @@ class InviteAuto(CustomAction):
 
     def _hit_daily_limit(self, context: Context) -> bool:
         """识别当日邀约次数是否已达上限。"""
+        if context.tasker.stopping:
+            return False
         image = context.tasker.controller.post_screencap().wait().get()
+        if image is None or image.size == 0:
+            return False
         reco_detail = context.run_recognition("邀约_达上限", image)
         if reco_detail and reco_detail.hit:
             self.logger.info("邀约次数已达到本日上限")
@@ -188,17 +195,17 @@ class InviteAuto(CustomAction):
         similarity_limit = 0.8 # 文本相似度阈值
 
         # 处理旅人名字的文本问题，把全角括号都换成半角括号，把空格都取消
-        translate_table = str.maketrans({
-            '（': '(',
-            '）': ')',
-            ' ': None,
-            '　': None
-        })
-        formatted_name = trekker_name.translate(translate_table)
+        formatted_name = self._normalize_name(trekker_name)
 
         # 识别对象
+        if context.tasker.stopping:
+            return False
         image = context.tasker.controller.post_screencap().wait().get()
+        if image is None or image.size == 0:
+            return False
         reco_detail = context.run_recognition("邀约_左方识别邀约对象", image)
+        if reco_detail is None:
+            return False
 
         # 整理识别结果
         results = self._get_refined_merge(reco_detail.all_results)
@@ -207,10 +214,12 @@ class InviteAuto(CustomAction):
         # 比较文本相似程度，如果相似程度高，则点击，并返回True，否则返回False
         for result in results:
             # 使用difflib库计算文本相似度
-            formatted_result = result['text'].translate(translate_table)
+            formatted_result = self._normalize_name(result['text'])
             similarity = difflib.SequenceMatcher(None, formatted_result, formatted_name).ratio()
 
             if similarity >= similarity_limit:
+                if context.tasker.stopping:
+                    return False
                 self.logger.debug(f"识别成功！预期: {formatted_name}, 识别结果: {formatted_result}, 相似度: {similarity:.2f}")
                 context.tasker.controller.post_click(result['x'], result['y']).wait()
                 self.logger.debug(f"点击坐标{result['x']},{result['y']}完成")
@@ -284,18 +293,28 @@ class InviteAuto(CustomAction):
             Returns:
                 bool: 已滑到底部或无法判断是否划到底部时，返回True；未滑到底部时，返回False
         """
-        if not image:
+        if context.tasker.stopping:
+            return True
+        if image is None:
             image = context.tasker.controller.post_screencap().wait().get()
+        if image is None or image.size == 0:
+            return True
 
         if not context.override_image("invite_scroll_down_template", image):
             self.logger.error("截图错误，将无法判断是否滑动到底部")
             return True
 
+        if context.tasker.stopping:
+            return True
         context.run_task("邀约_向下滑动")
 
         image = context.tasker.controller.post_screencap().wait().get()
+        if image is None or image.size == 0:
+            return True
         reco_result = context.run_recognition("邀约_已滑动到底部", image)
-        if reco_result and len(reco_result.all_results) > 0:
+        if reco_result is None:
+            return True
+        if reco_result.all_results:
             self.logger.debug(f"向下滑动识别分数：{reco_result.all_results[0].score}")
         if reco_result and reco_result.hit:
             self.logger.debug(f"已滑动到底部")
@@ -316,17 +335,27 @@ class InviteAuto(CustomAction):
                     已滑到顶部时，返回True；
                     未滑到顶部，无法判断是否滑到顶部，又或者任务被中止时，返回False
         """
+        if context.tasker.stopping:
+            return False
         image = context.tasker.controller.post_screencap().wait().get()
-        while True:
+        while not context.tasker.stopping:
+            if image is None or image.size == 0:
+                return False
             if not context.override_image("invite_scroll_up_template", image):
                 self.logger.error("截图错误，将无法判断是否滑动到顶部")
                 return False
 
+            if context.tasker.stopping:
+                return False
             context.run_task("邀约_向上滑动")
 
             image = context.tasker.controller.post_screencap().wait().get()
+            if image is None or image.size == 0:
+                return False
             reco_result = context.run_recognition("邀约_已滑动到顶部", image)
-            if reco_result and len(reco_result.all_results) > 0:
+            if reco_result is None:
+                return False
+            if reco_result.all_results:
                 self.logger.debug(f"向上滑动识别分数：{reco_result.all_results[0].score}")
             if reco_result and reco_result.hit:
                 self.logger.debug(f"已滑动到顶部")
@@ -335,10 +364,11 @@ class InviteAuto(CustomAction):
             # 检测任务中止的情况，防止卡死，检测成功时返回False
             if context.tasker.stopping:
                 return False
+        return False
 
     @staticmethod
     def _normalize_name(name: str) -> str:
-        """名称规范化，与 _click_trekker 的 translate_table 保持一致。"""
+        """统一全角括号并移除半角、全角空格。"""
         translate_table = str.maketrans({
             '（': '(',
             '）': ')',
@@ -367,12 +397,18 @@ class InviteAuto(CustomAction):
 
         while not context.tasker.stopping:
             image = context.tasker.controller.post_screencap().wait().get()
+            if image is None or image.size == 0:
+                break
             reco_detail = context.run_recognition("邀约_左方识别邀约对象", image)
+            if reco_detail is None:
+                break
             results = self._get_refined_merge(reco_detail.all_results)
             if not results:
                 break
 
             for r in results:
+                if context.tasker.stopping:
+                    return pending
                 key = self._normalize_name(r['text'])
                 if key in seen:
                     # 跨半页翻页重复出现的角色，跳过，避免重复点击/重复记录
@@ -384,8 +420,12 @@ class InviteAuto(CustomAction):
 
                 context.tasker.controller.post_click(r['x'], r['y']).wait()
                 time.sleep(0.5)
+                if context.tasker.stopping:
+                    return pending
 
                 image = context.tasker.controller.post_screencap().wait().get()
+                if image is None or image.size == 0:
+                    return pending
                 hit = context.run_recognition("邀约_未收集回忆", image)
                 if hit and hit.hit:
                     pending.append(r['text'])
@@ -515,6 +555,10 @@ class InviteMemory(CustomAction):
 
             image = context.tasker.controller.post_screencap().wait().get()
 
+            if image is None or image.size == 0:
+                self.logger.error("回忆收集截图失败")
+                return False
+
             # 1. 结束面板检测优先级最高
             if self._hit_gift_panel(context, image):
                 self.logger.info("识别到送出礼物结束面板，退出回忆收集循环")
@@ -529,6 +573,8 @@ class InviteMemory(CustomAction):
                 continue
 
             # 3. 非选项状态，点推进点
+            if context.tasker.stopping:
+                return False
             context.tasker.controller.post_click(*self.ADVANCE_CLICK).wait()
 
         return context.tasker.stopping is False
@@ -549,11 +595,15 @@ class InviteMemory(CustomAction):
             return False
 
         for y in self.OPTION_ROWS:
+            if context.tasker.stopping:
+                return False
             texts = self._ocr_row(context, image, y)
             row_text = "".join(texts)
             if not row_text:
                 continue
             if self._match_special(row_text, special_options):
+                if context.tasker.stopping:
+                    return False
                 self.logger.info(f"命中特殊选项：{row_text}，点击行 y={y}")
                 context.tasker.controller.post_click(
                     self.OPTION_ROW_X + self.OPTION_ROW_WIDTH // 2,
@@ -564,6 +614,8 @@ class InviteMemory(CustomAction):
 
     def _click_first_option(self, context: Context) -> None:
         """兜底：点击首个（最下 y=470 那行）选项，保证对话继续。"""
+        if context.tasker.stopping:
+            return
         y = self.OPTION_ROWS[0]
         self.logger.info("未命中特殊选项，点击首个选项")
         context.tasker.controller.post_click(

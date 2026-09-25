@@ -7,8 +7,8 @@ on:
       - "**/*.py"
       - "requirements*.txt"
       - "**/requirements*.txt"
-      - "package.json"
-      - "package-lock.json"
+      - "tools/format/package.json"
+      - "tools/format/package-lock.json"
   push:
     branches:
       - main
@@ -17,8 +17,8 @@ on:
       - "**/*.py"
       - "requirements*.txt"
       - "**/requirements*.txt"
-      - "package.json"
-      - "package-lock.json"
+      - "tools/format/package.json"
+      - "tools/format/package-lock.json"
   schedule:
     - cron: "23 18 * * 3"
   workflow_dispatch:
@@ -34,6 +34,7 @@ jobs:
   static-checks:
     name: Static checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -68,6 +69,7 @@ jobs:
     name: Dependency review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
@@ -84,6 +86,7 @@ jobs:
   codeql:
     name: CodeQL / python
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       actions: read
       contents: read

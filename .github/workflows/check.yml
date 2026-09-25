@@ -3,19 +3,23 @@ name: check
 on:
   push:
     branches:
-      - "**"
+      - main
     paths:
       - ".github/workflows/check.yml"
-      - "check_resource.py"
-      - "requirements-ci.txt"
+      - "tools/checks/check_resource.py"
+      - "tools/checks/requirements.txt"
+      - "tools/ci/resolve_releases.py"
+      - "tools/ci/prepare_maafw.py"
       - "assets/resource/**"
   pull_request:
     branches:
       - "**"
     paths:
       - ".github/workflows/check.yml"
-      - "check_resource.py"
-      - "requirements-ci.txt"
+      - "tools/checks/check_resource.py"
+      - "tools/checks/requirements.txt"
+      - "tools/ci/resolve_releases.py"
+      - "tools/ci/prepare_maafw.py"
       - "assets/resource/**"
   workflow_dispatch:
 
@@ -34,7 +38,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Python
@@ -42,29 +45,46 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Resolve MaaFramework release
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/ci/resolve_releases.py --maafw-only
+
+      - name: Download MaaFramework
+        uses: robinraju/release-downloader@28fc21f50d76778e7023361aa1f863e717d3d56f # v1
+        with:
+          repository: MaaXYZ/MaaFramework
+          tag: ${{ steps.upstream.outputs.maafw_tag }}
+          fileName: ${{ steps.upstream.outputs.maafw_macos_aarch64_asset }}
+          token: ${{ github.token }}
+          out-file-path: "deps"
+          extract: true
+
       - name: Install resource checker dependencies
         run: |
-          python -m pip install --disable-pip-version-check --upgrade --pre --requirement requirements-ci.txt
+          python tools/ci/prepare_maafw.py --maafw-tag "${{ steps.upstream.outputs.maafw_tag }}" --platform-tag macosx_13_0_arm64
+          python -m pip install --disable-pip-version-check --find-links install/deps --requirement tools/checks/requirements.txt "maafw==${{ steps.upstream.outputs.maafw_python_version }}"
 
       - name: Check Resource (BASE)
         run: |
-          python ./check_resource.py ./assets/resource/base/
+          python ./tools/checks/check_resource.py ./assets/resource/base/
 
       - name: Check Resource (TW)
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/tw/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/tw/
 
       - name: Check Resource (EN)
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/en/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/en/
 
       - name: Check Resource (JP)
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/jp/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/jp/
 
       - name: Check desktop resource overlays
         run: |
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/windows/
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/tw/ ./assets/resource/windows/
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/en/ ./assets/resource/windows/
-          python ./check_resource.py ./assets/resource/base/ ./assets/resource/jp/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/tw/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/en/ ./assets/resource/windows/
+          python ./tools/checks/check_resource.py ./assets/resource/base/ ./assets/resource/jp/ ./assets/resource/windows/

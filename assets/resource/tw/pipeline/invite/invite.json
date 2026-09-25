@@ -1,0 +1,104 @@
+{
+	"邀约_前往邀约": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"邀約"
+				]
+			}
+		}
+	},
+	"邀约_主界面": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"邀約"
+				]
+			}
+		}
+	},
+	"邀约_已回到邀约界面": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"邀約"
+				]
+			}
+		}
+	},
+	"邀约_地点": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"選擇"
+				]
+			}
+		}
+	},
+	"邀约_特殊回忆": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"特殊回憶"
+				]
+			}
+		}
+	},
+	"邀约_选择默认地点": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"選擇"
+				]
+			}
+		}
+	},
+	"邀约_选择回忆地点": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"選擇"
+				]
+			}
+		}
+	},
+	"邀约_还是算了": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"還是算了"
+				]
+			}
+		}
+	},
+	"邀约_点击空白": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"點選空白",
+					"處繼續"
+				]
+			}
+		}
+	},
+	"邀约_送出礼物": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"送出禮物",
+					"贈送禮物"
+				]
+			}
+		}
+	},
+	"邀约_送礼": {
+		"recognition": {
+			"param": {
+				"expected": [
+					"送出禮物",
+					"贈送禮物"
+				]
+			}
+		}
+	}
+}

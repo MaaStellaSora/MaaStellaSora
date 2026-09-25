@@ -17,7 +17,7 @@ UNKNOWN = -1
 
 @AgentServer.custom_action("record_scan")
 class RecordScan(CustomAction):
-    """读取结算界面的记录等级与潜能总数。
+    """读取结算界面的纪录等级与潜能总数。
 
     只负责读取，不做任何判定与停止：结果写入 星塔_循环用节点_agent 的 attach，
     由 AscensionLoop 在回到主页后统一判断是否达标。
@@ -30,11 +30,11 @@ class RecordScan(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        # 如果未激活记录等级或潜能数的目标选项，直接返回
+        # 如果未激活纪录等级或纪录潜能数的目标选项，直接返回
         if not self._is_options_active(context, LOOP_NODE):
             return True
 
-        # 读取记录等级与潜能数
+        # 读取纪录等级与纪录潜能数
         image = context.tasker.controller.cached_image
 
         level = self._read_ints(context, image, LEVEL_NODE)
@@ -46,18 +46,18 @@ class RecordScan(CustomAction):
         context.override_pipeline({LOOP_NODE: {"attach": attach}})
 
         logger.debug(
-            f"[记录读取] 记录等级={attach['record_level']} "
+            f"[纪录读取] 纪录等级={attach['record_level']} "
             f"潜能数={attach['potential_count']}（分项 {parts}）"
         )
         if attach["record_level"] == UNKNOWN:
-            logger.error(f"记录等级识别失败：{level}")
+            logger.error(f"纪录等级识别失败：{level}")
         if attach["potential_count"] == UNKNOWN:
-            logger.error(f"潜能数识别失败：{parts}")
+            logger.error(f"纪录潜能数识别失败：{parts}")
         return True
 
     @staticmethod
     def _is_options_active(context: Context, node: str) -> bool:
-        """检查是否激活了记录等级或潜能数的目标选项。"""
+        """检查是否激活了纪录等级或潜能数的目标选项。"""
         node_data = context.get_node_data(node) or {}
         attachment = node_data.get("attach", {})
         return attachment.get("min_record_level", 0) > 0 or attachment.get("min_potential_count", 0) > 0

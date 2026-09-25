@@ -17,7 +17,7 @@ class AscensionLoop(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        """检查剩余循环次数与记录目标，决定是否退出爬塔流程
+        """检查剩余循环次数与纪录目标，决定是否退出爬塔流程
 
         Args:
             context: 任务上下文。
@@ -37,16 +37,16 @@ class AscensionLoop(CustomAction):
         loop_count = attachment.get("loop_count", 1)
         loop_count -= 1
 
-        # 记录目标识别失败：直接停止爬塔流程
+        # 纪录目标识别失败：直接停止爬塔流程
         if attachment.get("record_level", -1) < 0 or attachment.get("potential_count", -1) < 0:
-            logger.error("记录等级或潜能数识别失败，为保证爬塔质量，将结束爬塔")
+            logger.error("纪录等级或纪录潜能数识别失败，为保证爬塔质量，将结束爬塔")
             context.override_next(argv.node_name, [HOME_NODE])
             return True
 
-        # 已达到记录目标：与爬塔次数用尽一样，正常回到主页结束
+        # 已达到纪录目标：与爬塔次数用尽一样，正常回到主页结束
         if self._reached_record_target(attachment):
             logger.info(
-                f"记录等级 {attachment.get('record_level')}、潜能数 "
+                f"纪录等级 {attachment.get('record_level')}、纪录潜能数 "
                 f"{attachment.get('potential_count')} 已达设定目标，结束爬塔"
             )
             context.override_next(argv.node_name, [HOME_NODE])
@@ -68,7 +68,7 @@ class AscensionLoop(CustomAction):
 
     @staticmethod
     def _reached_record_target(attachment: dict) -> bool:
-        """判断本次结算是否达到设定的记录目标。
+        """判断本次结算是否达到设定的纪录目标。
 
         目标值由任务选项写入 attach，未设置（0）的项不参与判断；
         本次未读到（-1）时一律视为不达标，避免识别失败导致误停。

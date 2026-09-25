@@ -1,34 +1,30 @@
 """进入商店前读取各音符的持有数量。
 
-界面操作全部通过 pipeline 节点完成（打开背包 / 秘纹技能 / 技能音符说明 / 滑动 / 关闭），
-本模块只负责调度这些节点、并按垂直位置把“音符名”与“数量”配对，
-不发送任何裸坐标点击，也不在代码中出现音符的显示名称。
-
-音符显示名 -> 内部名（aqua 等）的映射写在 pipeline 节点的 replace 里，
-因此多服务器只需各自维护资源文件即可。
+界面操作全部通过 pipeline 节点完成（打开背包 / 秘纹技能 / 关闭），
+本模块只负责调度这些节点，不发送任何裸坐标点击，也不在代码中出现音符的显示名称。
 """
-
+import numpy as np
 from maa.context import Context
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("melody_scan")
 
-# 与 Data.melody_of_xxx 的 xxx 一一对应
-MELODY_KEYS = (
-    "aqua", "ignis", "terra", "ventus", "lux", "umbra",
-    "focus", "skill", "ultimate", "pummel", "luck", "burst", "stamina",
+# 主要音符，与 Data.melody_of_xxx 名字一致，不含属性音符，因为属性音符会根据塔属性动态变化
+MAIN_MELODIES = (
+    "melody_of_focus",
+    "melody_of_skill",
+    "melody_of_ultimate",
+    "melody_of_pummel",
+    "melody_of_luck",
+    "melody_of_burst",
+    "melody_of_stamina",
 )
 
+ELEMENT_NODE = "星塔_属性塔选择_agent"
 OPEN_BAG_NODE = "星塔_背包_扫描音符_打开背包界面_agent"
 CLOSE_BAG_NODE = "星塔_关闭背包界面_agent"
-SCROLL_NODE = "星塔_背包_音符效果界面_向下滑动_agent"
-NAME_NODE = "星塔_背包_识别音符名称_agent"
+MELODY_NODE = "星塔_背包_识别音符_agent"
 COUNT_NODE = "星塔_背包_识别音符数量_agent"
-
-# 一屏放不下全部音符，最多向下翻这么多屏
-MAX_SCROLL = 5
-# 名字与数量垂直中心相差在此范围内视为同一行
-ROW_TOLERANCE = 30
 
 
 def scan_melody_counts(context: Context, data) -> dict[str, int]:
@@ -44,7 +40,11 @@ def scan_melody_counts(context: Context, data) -> dict[str, int]:
     Returns:
         dict[str, int]: {melody_of_xxx: 持有数量}；未设目标或读取失败时为空字典。
     """
-    targets = [k for k in MELODY_KEYS if data.get_melody_target(f"melody_of_{k}") > 0]
+    # 获取属性音符，整合成正确的音符列表
+    active_element_melodies = _get_element_melodies(context, ELEMENT_NODE)
+    melodies = [*MAIN_MELODIES, *active_element_melodies]
+
+    targets = [m for m in melodies if data.get_melody_target(m) > 0]
     if not targets:
         logger.debug("未设置音符数量目标，跳过音符读取")
         return {}
@@ -53,14 +53,16 @@ def scan_melody_counts(context: Context, data) -> dict[str, int]:
     try:
         if not _open_melody_detail(context):
             return {}
-        for _ in range(MAX_SCROLL):
-            image = context.tasker.controller.post_screencap().wait().get()
-            counts.update(_read_screen(context, image, targets))
-            if len(counts) >= len(targets):
-                break
-            _run(context, SCROLL_NODE)
+        image = context.tasker.controller.post_screencap().wait().get()
+        for melody in targets:
+            counts[melody] = _read_melody_count(context, image, melody)
+            if counts[melody] == -1:
+                logger.error(f"读取音符{melody}的数量时出现问题，为保证爬塔质量，将结束任务")
+                context.tasker.post_stop()
+                return {}
     except Exception as exc:
-        logger.error(f"读取音符数量失败：{exc}")
+        logger.error(f"读取音符数量时出现程序异常：{exc}，为保证爬塔质量，将结束任务")
+        context.tasker.post_stop()
     finally:
         _run(context, CLOSE_BAG_NODE)
 
@@ -71,72 +73,49 @@ def scan_melody_counts(context: Context, data) -> dict[str, int]:
     return counts
 
 
+def _get_element_melodies(context: Context, node: str) -> list[str]:
+    """获取属性塔节点的属性音符名称，该节点只记录塔里会有什么属性音符，不记录用户设置的音符数量。"""
+    node_data = context.get_node_data(node) or {}
+    element_melodies = node_data.get("attach", {}).get("active_melodies", [])
+    if not element_melodies:
+        logger.error(f"属性塔节点未配置属性音符，请检查设置是否正确。如你不是开发者，请联系开发人员")
+        context.tasker.post_stop()
+    return element_melodies
+
+
 def _open_melody_detail(context: Context) -> bool:
-    """依次打开 背包 -> 秘纹技能 -> 技能音符说明，任一步失败即放弃。"""
+    """依次打开 背包 -> 秘纹技能，任一步失败即放弃。"""
     if not _run(context, OPEN_BAG_NODE):
         logger.error("打开音符说明界面失败")
         return False
     return True
 
 
-def _read_screen(context: Context, image, targets: list[str]) -> dict[str, int]:
-    """读取当前一屏内的音符数量。"""
-    names = _read_names(context, image)
-    numbers = _read_counts(context, image)
-    found: dict[str, int] = {}
-    for key in targets:
-        box = names.get(key)
-        if box is None:
-            continue
-        count = _match_row(box, numbers)
-        if count is not None:
-            found[f"melody_of_{key}"] = count
-    return found
+def _read_melody_count(context: Context, image: np.ndarray, melody: str) -> int:
+    """读取指定音符数量，数量位置通过pipeline的节点联动获取"""
+    pipeline_override = _make_pipeline_override(MELODY_NODE, melody)
+    template_results = _recognize(context, MELODY_NODE, image, pipeline_override)
+    if not template_results:
+        logger.error(f"未识别到音符{melody}的位置，请检查属性塔设置是否选择正确")
+        return -1
+    ocr_results = _recognize(context, COUNT_NODE, image)
+    if not ocr_results:
+        logger.error(f"未识别到音符{melody}的数量")
+        return -1
+    logger.debug(f"识别到音符{melody}的数量为：{ocr_results}")
+    return int(ocr_results[0].text)
 
 
-def _read_names(context: Context, image) -> dict[str, list[int]]:
-    """识别当前一屏的音符名 -> 名称框；pipeline 已把显示名替换成内部名。"""
-    results = _recognize(context, NAME_NODE, image)
-    logger.debug(f"识别到音符名称：{results}")
-    return {r.text: r.box for r in results if r.text}
+def _make_pipeline_override(node: str, melody: str) -> dict:
+    """根据音符名称生成 pipeline override。"""
+    return {node: {"recognition": {"param": {"template": [f"ClimbTower_agent/melodies/{melody}.png"]}}}}
 
 
-def _read_counts(context: Context, image) -> list[tuple[int, list[int]]]:
-    """识别当前一屏的数量 -> 数字框。"""
-    out: list[tuple[int, list[int]]] = []
-    results = _recognize(context, COUNT_NODE, image)
-    logger.debug(f"识别到音符数量：{results}")
-    for r in results:
-        if r.text and r.text.isdigit():
-            out.append((int(r.text), r.box))
-    return out
-
-
-def _recognize(context: Context, node: str, image) -> list:
-    detail = context.run_recognition(node, image)
+def _recognize(context: Context, node: str, image: np.ndarray, pipeline_override: dict | None = None) -> list:
+    if pipeline_override is None:
+        pipeline_override = {}
+    detail = context.run_recognition(node, image, pipeline_override)
     return list(detail.filtered_results) if detail and detail.hit else []
-
-
-def _match_row(box: list[int], numbers: list[tuple[int, list[int]]]) -> int | None:
-    """取与名称同一行（垂直中心最近）的数量。
-
-    Args:
-        box: 名称的识别框。
-        numbers: 本屏识别到的 (数量, 框) 列表。
-
-    Returns:
-        int | None: 匹配到的数量，没有同行项时返回 None。
-    """
-    center = box[1] + box[3] / 2
-    best: tuple[int, float] | None = None
-    for count, nbox in numbers:
-        ncenter = nbox[1] + nbox[3] / 2
-        offset = abs(center - ncenter)
-        if offset > ROW_TOLERANCE:
-            continue
-        if best is None or offset < best[1]:
-            best = (count, offset)
-    return best[0] if best else None
 
 
 def _run(context: Context, node: str) -> bool:

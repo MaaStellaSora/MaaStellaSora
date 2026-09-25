@@ -912,7 +912,12 @@ class ShopAction(CustomAction):
         # 进商店时读取各音符持有数量；未设置任何音符目标时不读取
         data.current_melodies = scan_melody_counts(context, data)
         if data.current_melodies:
-            logger.debug(f"当前音符数量: {data.current_melodies}")
+            lang = data.lang_type
+            logger.info(f"当前有购买需求的音符数量:")
+            for melody, count in data.current_melodies.items():
+                display_name = ITEM_NAMES.get(melody, {}).get(lang, [melody])[0]
+                required_count = getattr(data, melody, -1)
+                logger.info(f"{display_name}: {count}/{required_count}")
 
         logger.debug(
             f"当前强化费用: {data.current_cost}, "

@@ -478,5 +478,50 @@
                 "threshold": 0.6
             }
         }
+    },
+    "星塔_记录_识别等级_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^\\d+$"
+                ],
+                "roi": [
+                    60,
+                    35,
+                    90,
+                    90
+                ],
+                "threshold": 0.5
+            }
+        }
+    },
+    "星塔_记录_识别潜能数_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^\\d+$"
+                ],
+                "replace": [
+                    [
+                        "\\D+",
+                        ""
+                    ],
+                    [
+                        "^0+(\\d+)$",
+                        "$1"
+                    ]
+                ],
+                "roi": [
+                    130,
+                    220,
+                    250,
+                    55
+                ],
+                "threshold": 0.6,
+                "order_by": "Horizontal"
+            }
+        }
     }
 }

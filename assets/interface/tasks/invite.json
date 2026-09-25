@@ -60,6 +60,68 @@
                     "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
                 }
             ],
+            "pipeline_override": {
+                "邀约_1号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{1号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Succeeded": "尝试邀约_{1号}"
+                    }
+                },
+                "邀约_2号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{2号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Succeeded": "尝试邀约_{2号}"
+                    }
+                },
+                "邀约_3号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{3号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Succeeded": "尝试邀约_{3号}"
+                    }
+                },
+                "邀约_4号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{4号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Succeeded": "尝试邀约_{4号}"
+                    }
+                },
+                "邀约_5号": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{5号}"
+                            ]
+                        }
+                    },
+                    "focus": {
+                        "Node.Recognition.Succeeded": "尝试邀约_{5号}"
+                    }
+                }
+            }
         },
         "邀约旅人_1号_送礼": {
             "type": "select",

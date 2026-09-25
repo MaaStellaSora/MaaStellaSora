@@ -230,6 +230,129 @@
         },
         "post_wait_freezes": 500
     },
+    "星塔_背包_扫描音符_打开背包界面_agent": {
+        "next": [
+            "星塔_背包_扫描音符_核实背包界面_agent",
+            "[JumpBack]星塔_点击背包按钮_agent"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "星塔_背包_扫描音符_核实背包界面_agent": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_背包_核实背包界面_agent"
+                ]
+            }
+        },
+        "next": [
+            "星塔_背包_打开秘纹技能_agent"
+        ]
+    },
+    "星塔_背包_打开秘纹技能_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "秘[纹紋]技能"
+                ],
+                "roi": [
+                    0,
+                    0,
+                    260,
+                    720
+                ],
+                "threshold": 0.6
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_背包_秘纹技能界面_agent"
+        ]
+    },
+    "星塔_背包_秘纹技能界面_agent": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_音符效果按钮.png"
+                ],
+                "roi": [
+                    1000,
+                    0,
+                    280,
+                    120
+                ],
+                "green_mask": true
+            }
+        }
+    },
+    "星塔_背包_关闭音符效果窗口_agent": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "close.png"
+                ],
+                "roi": [
+                    960,
+                    90,
+                    120,
+                    100
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "星塔_背包_识别音符_agent": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/melodies/melody_of_skill.png"
+                ],
+                "roi": [
+                    650,
+                    0,
+                    630,
+                    80
+                ],
+                "green_mask": true,
+                "order_by": "Score"
+            }
+        }
+    },
+    "星塔_背包_识别音符数量_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [
+                    [
+                        "\\D+",
+                        ""
+                    ]
+                ],
+                "roi": "星塔_背包_识别音符_agent",
+                "roi_offset": [
+                    0,
+                    30,
+                    0,
+                    -14
+                ],
+                "threshold": 0.6,
+                "only_rec": true
+            }
+        }
+    },
     "星塔_测试用节点_agent": {
         "recognition": {
             "type": "Custom",

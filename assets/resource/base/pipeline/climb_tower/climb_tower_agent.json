@@ -399,11 +399,37 @@
             "type": "Click"
         },
         "next": [
-            "星塔_保存记录_agent",
+            "星塔_记录_读取数值_agent",
             "[JumpBack]星塔_确认_agent",
             "[JumpBack]星塔_点击空白处关闭_agent",
             "[JumpBack]星塔_默契提升_agent"
         ]
+    },
+    "星塔_记录_读取数值_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "保存纪录"
+                ],
+                "roi": [
+                    1076,
+                    623,
+                    135,
+                    57
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "record_scan"
+            }
+        },
+        "next": [
+            "星塔_保存记录_agent"
+        ],
+        "timeout": 5000
     },
     "星塔_保存记录_agent": {
         "recognition": {

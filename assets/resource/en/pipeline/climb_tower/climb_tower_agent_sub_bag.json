@@ -1,21 +1,21 @@
 {
-  "星塔_背包_核实背包界面_agent": {
-    "recognition": {
-      "param": {
-        "expected": [
-          "Monolith Bag"
-        ]
-      }
+    "星塔_背包_核实背包界面_agent": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "Monolith Bag"
+                ]
+            }
+        }
+    },
+    "星塔_背包_打开秘纹技能_agent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "Disc Skills"
+                ]
+            }
+        }
     }
-  },
-  "星塔_背包_打开秘纹技能_agent": {
-    "recognition": {
-      "type": "OCR",
-      "param": {
-        "expected": [
-          "Disc Skills"
-        ]
-      }
-    }
-  }
 }

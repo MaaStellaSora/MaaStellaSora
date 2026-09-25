@@ -1,6 +1,7 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
+from maa.define import OCRResult
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("record_scan")
@@ -43,6 +44,10 @@ class RecordScan(CustomAction):
             f"[记录读取] 记录等级={attach['record_level']} "
             f"潜能数={attach['potential_count']}（分项 {parts}）"
         )
+        if attach["record_level"] == UNKNOWN:
+            logger.error(f"记录等级识别失败：{level}")
+        if attach["potential_count"] == UNKNOWN:
+            logger.error(f"潜能数识别失败：{parts}")
         return True
 
     @staticmethod
@@ -51,5 +56,5 @@ class RecordScan(CustomAction):
         detail = context.run_recognition(node, image)
         if not (detail and detail.hit):
             return []
-        texts = [r.text for r in (detail.filtered_results or [])]
+        texts = [r.text for r in (detail.filtered_results or []) if isinstance(r, OCRResult)]
         return [int(t) for t in texts if t and t.isdigit()]

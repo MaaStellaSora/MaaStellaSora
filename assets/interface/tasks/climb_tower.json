@@ -291,19 +291,19 @@
         "新版爬塔_爬塔目标": {
             "type": "input",
             "label": "爬塔目标",
-            "description": "在爬塔次数内达到以下目标时，仍然会停止爬塔",
+            "description": "在爬塔次数内达到以下目标时，仍然会停止爬塔。0为不生效。",
             "inputs": [
                 {
                     "name": "潜能数目标",
                     "pipeline_type": "int",
-                    "default": "999",
+                    "default": "0",
                     "verify": "^\\d+$",
                     "pattern_msg": "请输入潜能数目标(≥0)"
                 },
                 {
                     "name": "记录等级目标",
                     "pipeline_type": "int",
-                    "default": "99",
+                    "default": "0",
                     "verify": "^\\d+$",
                     "pattern_msg": "请输入记录等级目标(≥0)"
                 }

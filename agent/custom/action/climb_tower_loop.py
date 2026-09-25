@@ -37,6 +37,12 @@ class AscensionLoop(CustomAction):
         loop_count = attachment.get("loop_count", 1)
         loop_count -= 1
 
+        # 记录目标识别失败：直接停止爬塔流程
+        if attachment.get("record_level", -1) < 0 or attachment.get("potential_count", -1) < 0:
+            logger.error("记录等级或潜能数识别失败，为保证爬塔质量，将结束爬塔")
+            context.override_next(argv.node_name, [HOME_NODE])
+            return True
+
         # 已达到记录目标：与爬塔次数用尽一样，正常回到主页结束
         if self._reached_record_target(attachment):
             logger.info(

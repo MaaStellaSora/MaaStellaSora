@@ -4,7 +4,7 @@ from maa.context import Context
 from maa.define import OCRResult
 
 from utils import logger as logger_module
-logger = logger_module.get_logger("record_scan")
+logger = logger_module.get_logger("climb_tower_record_scan")
 
 # 运行时数值与目标配置的汇合节点（同时也是 loop_count 的载体）
 LOOP_NODE = "星塔_循环用节点_agent"
@@ -68,5 +68,5 @@ class RecordScan(CustomAction):
         detail = context.run_recognition(node, image)
         if not (detail and detail.hit):
             return []
-        texts = [r.text for r in (detail.filtered_results or []) if isinstance(r, OCRResult)]
+        texts = [r.text for r in detail.filtered_results if isinstance(r, OCRResult)]
         return [int(t) for t in texts if t and t.isdigit()]

@@ -8,7 +8,7 @@ from custom.reco.climb_tower_potential.interactor import PotentialInteractor
 from custom.reco.climb_tower_potential.state import OwnedPotential, Trekker
 
 from utils import logger as logger_module
-logger = logger_module.get_logger("climb_tower_potential_bag")
+logger = logger_module.get_logger("climb_tower_potential_scan")
 
 # 潜能卡片具体定位参数
 POTENTIAL_XS = [358, 475, 593, 710, 828]

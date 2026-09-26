@@ -7,7 +7,7 @@ import numpy as np
 from maa.context import Context
 
 from utils import logger as logger_module
-logger = logger_module.get_logger("melody_scan")
+logger = logger_module.get_logger("climb_tower_melody_scan")
 
 # 主要音符，与 Data.melody_of_xxx 名字一致，不含属性音符，因为属性音符会根据塔属性动态变化
 MAIN_MELODIES = (

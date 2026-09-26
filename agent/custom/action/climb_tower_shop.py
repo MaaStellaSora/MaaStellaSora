@@ -10,7 +10,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
-from custom.reco.melody_scan import scan_melody_counts
+from custom.reco.climb_tower_melody_scan import scan_melody_counts
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_shop")
 

@@ -16,7 +16,7 @@ UNKNOWN = -1
 
 
 @AgentServer.custom_action("record_scan")
-class RecordScan(CustomAction):
+class RecordScanAction(CustomAction):
     """读取结算界面的纪录等级与潜能总数。
 
     只负责读取，不做任何判定与停止：结果写入 星塔_循环用节点_agent 的 attach，

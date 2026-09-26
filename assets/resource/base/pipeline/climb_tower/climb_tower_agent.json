@@ -399,24 +399,18 @@
             "type": "Click"
         },
         "next": [
-            "星塔_记录_读取数值_agent",
+            "星塔_记录界面_读取数值_agent",
             "[JumpBack]星塔_确认_agent",
             "[JumpBack]星塔_点击空白处关闭_agent",
             "[JumpBack]星塔_默契提升_agent"
         ]
     },
-    "星塔_记录_读取数值_agent": {
+    "星塔_记录界面_读取数值_agent": {
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "expected": [
-                    "保存纪录"
-                ],
-                "roi": [
-                    1076,
-                    623,
-                    135,
-                    57
+                "all_of": [
+                    "星塔_保存记录_agent"
                 ]
             }
         },
@@ -428,8 +422,7 @@
         },
         "next": [
             "星塔_保存记录_agent"
-        ],
-        "timeout": 5000
+        ]
     },
     "星塔_保存记录_agent": {
         "recognition": {
@@ -439,10 +432,10 @@
                     "保存纪录"
                 ],
                 "roi": [
-                    1076,
-                    623,
-                    135,
-                    57
+                    1025,
+                    625,
+                    225,
+                    60
                 ]
             }
         },
@@ -530,7 +523,11 @@
             "星塔_出发_agent"
         ],
         "attach": {
-            "loop_count": 1
+            "loop_count": 1,
+            "min_record_level": 0,
+            "min_potential_count": 0,
+            "record_level": 0,
+            "potential_count": 0
         }
     },
     "星塔_回到难度选择界面_agent": {

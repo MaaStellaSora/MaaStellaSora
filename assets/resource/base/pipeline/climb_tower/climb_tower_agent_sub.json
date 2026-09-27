@@ -496,7 +496,23 @@
             }
         }
     },
-    "星塔_记录_识别潜能数_agent": {
+    "星塔_记录_定位潜能数量位置_agent": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/星塔_纪录数标记.png"
+                ],
+                "roi": [
+                    67,
+                    165,
+                    310,
+                    97
+                ]
+            }
+        }
+    },
+    "星塔_记录_识别潜能数量_agent": {
         "recognition": {
             "type": "OCR",
             "param": {
@@ -507,20 +523,17 @@
                     [
                         "\\D+",
                         ""
-                    ],
-                    [
-                        "^0+(\\d+)$",
-                        "$1"
                     ]
                 ],
-                "roi": [
-                    130,
-                    220,
-                    250,
-                    55
+                "roi": "星塔_记录_定位潜能数量位置_agent",
+                "roi_offset": [
+                    15,
+                    -5,
+                    15,
+                    10
                 ],
                 "threshold": 0.6,
-                "order_by": "Horizontal"
+                "only_rec": true
             }
         }
     }

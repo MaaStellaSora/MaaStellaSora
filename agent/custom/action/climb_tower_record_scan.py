@@ -1,16 +1,17 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.define import OCRResult
+from maa.define import OCRResult, BoxAndScoreResult
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_record_scan")
 
 # 运行时数值与目标配置的汇合节点（同时也是 loop_count 的载体）
 LOOP_NODE = "星塔_循环用节点_agent"
-# 结算页的两个识别节点（ROI 在 pipeline 里定义）
+# 结算页的三个识别节点（ROI 在 pipeline 里定义）
 LEVEL_NODE = "星塔_记录_识别等级_agent"
-POTENTIAL_NODE = "星塔_记录_识别潜能数_agent"
+POTENTIAL_LOCATION_NODE = "星塔_记录_定位潜能数量位置_agent"
+POTENTIAL_RECOGNITION_NODE = "星塔_记录_识别潜能数量_agent"
 
 UNKNOWN = -1
 
@@ -37,11 +38,11 @@ class RecordScanAction(CustomAction):
         # 读取纪录等级与纪录潜能数
         image = context.tasker.controller.cached_image
 
-        level = self._read_ints(context, image, LEVEL_NODE)
-        parts = self._read_ints(context, image, POTENTIAL_NODE)
+        level = self._read_record_level(context, image, LEVEL_NODE)
+        parts = self._read_potential_counts(context, image, POTENTIAL_LOCATION_NODE, POTENTIAL_RECOGNITION_NODE)
 
-        attach = dict((context.get_node_data(LOOP_NODE) or {}).get("attach") or {})
-        attach["record_level"] = level[0] if level else UNKNOWN
+        attach = (context.get_node_data(LOOP_NODE) or {}).get("attach", {})
+        attach["record_level"] = level
         attach["potential_count"] = sum(parts) if parts else UNKNOWN
         context.override_pipeline({LOOP_NODE: {"attach": attach}})
 
@@ -63,10 +64,33 @@ class RecordScanAction(CustomAction):
         return attachment.get("min_record_level", 0) > 0 or attachment.get("min_potential_count", 0) > 0
 
     @staticmethod
-    def _read_ints(context: Context, image, node: str) -> list[int]:
-        """按 pipeline 节点识别数字，返回识别到的整数列表（失败为空列表）。"""
+    def _read_record_level(context: Context, image, node: str) -> int:
+        """按 pipeline 节点识别纪录等级，返回识别到的整数（失败为 -1）。"""
         detail = context.run_recognition(node, image)
-        if not (detail and detail.hit):
+        if not (detail and detail.hit and isinstance(detail.best_result, OCRResult)):
+            return UNKNOWN
+        return int(detail.best_result.text) if detail.best_result.text.isdigit() else UNKNOWN
+
+    @staticmethod
+    def _read_potential_counts(context: Context, image, location_node: str, recognition_node: str) -> list[int]:
+        """使用 pipeline 节点识别潜能数，先定位记录潜能数量的位置，然后根据位置偏移分别读取潜能数量（失败为空列表）。"""
+        location_detail = context.run_recognition(location_node, image)
+        if not (location_detail and location_detail.hit):
+            logger.error("定位潜能数量位置失败")
             return []
-        texts = [r.text for r in detail.filtered_results if isinstance(r, OCRResult)]
-        return [int(t) for t in texts if t and t.isdigit()]
+        if len(location_detail.filtered_results) != 3:
+            logger.error(f"识别潜能数的旅人数量有误，预期为3个，实际为{len(location_detail.filtered_results)}个")
+            return []
+
+        counts = []
+        for i, r in enumerate(location_detail.filtered_results):
+            if not isinstance(r, BoxAndScoreResult):
+                logger.error(f"第{i+1}个旅人的潜能数量位置结果 {r} 不是 BoxAndScoreResult 类型。如你没有修改过代码，请联系开发人员。")
+                return []
+            pipeline_override = {recognition_node: {"recognition": {"param": {"roi": r.box}}}}
+            reco_result = context.run_recognition(recognition_node, image, pipeline_override)
+            if not (reco_result and reco_result.hit and isinstance(reco_result.best_result, OCRResult)):
+                logger.error(f"第{i+1}个旅人的潜能数量识别失败")
+                return []
+            counts.append(int(reco_result.best_result.text))
+        return counts

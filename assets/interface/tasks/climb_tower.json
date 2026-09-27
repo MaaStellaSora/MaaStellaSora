@@ -393,19 +393,19 @@
             "label": "音符策略",
             "description": "每种音符期望购买到的目标数量：填 0 = 不购买该音符；填 N = 买到持有数量达到 N 为止（仍需符合折扣及时机要求）",
             "inputs": [
+                {"name": "强攻之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "幸运之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "暴发之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "体力之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "专注之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "技巧之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "绝招之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
                 {"name": "水之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
                 {"name": "火之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
                 {"name": "地之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
                 {"name": "风之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
                 {"name": "光之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "暗之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "专注之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "技巧之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "绝招之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "强攻之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "幸运之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "暴发之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "体力之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"}
+                {"name": "暗之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"}
             ],
             "pipeline_override": {
                 "星塔_节点_商店_购物_agent": {
@@ -451,22 +451,21 @@
             "type": "select",
             "label": "潜能特饮折扣",
             "description": "买入不高于该折扣的潜能特饮，除非符合动态溢购情况或离开最终商店前",
-            "default_case": "潜能特饮折扣_8折",
+            "default_case": "8折",
             "cases": [
                 {
-                    "name": "潜能特饮折扣_全价",
-                    "label": "全价",
+                    "name": "全价",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
+                                "drink_discount_threshold": 1.0,
                                 "full_price_buy_reserve_base": 0
                             }
                         }
                     }
                 },
                 {
-                    "name": "潜能特饮折扣_8折",
-                    "label": "8折",
+                    "name": "8折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -479,8 +478,7 @@
                     ]
                 },
                 {
-                    "name": "潜能特饮折扣_5折",
-                    "label": "5折",
+                    "name": "5折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -520,12 +518,17 @@
             "default_case": "全价",
             "cases": [
                 {
-                    "name": "5个音符折扣_全价",
-                    "label": "全价"
+                    "name": "全价",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_5_discount_threshold": 1.0
+                            }
+                        }
+                    }
                 },
                 {
-                    "name": "5个音符折扣_8折",
-                    "label": "8折",
+                    "name": "8折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -535,8 +538,7 @@
                     }
                 },
                 {
-                    "name": "5个音符折扣_5折",
-                    "label": "5折",
+                    "name": "5折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -551,15 +553,20 @@
             "type": "select",
             "label": "15个音符折扣",
             "description": "买入不高于该折扣的音符",
-            "default_case": "15个音符折扣_5折",
+            "default_case": "5折",
             "cases": [
                 {
-                    "name": "15个音符折扣_全价",
-                    "label": "全价"
+                    "name": "全价",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_15_discount_threshold": 1.0
+                            }
+                        }
+                    }
                 },
                 {
-                    "name": "15个音符折扣_8折",
-                    "label": "8折",
+                    "name": "8折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {
@@ -569,8 +576,7 @@
                     }
                 },
                 {
-                    "name": "15个音符折扣_5折",
-                    "label": "5折",
+                    "name": "5折",
                     "pipeline_override": {
                         "星塔_节点_商店_购物_agent": {
                             "attach": {

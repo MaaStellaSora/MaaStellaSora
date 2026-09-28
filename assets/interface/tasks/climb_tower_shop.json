@@ -1,0 +1,297 @@
+{
+    "option": {
+        "新版爬塔_商店_自定义选项开关": {
+            "label": "商店购买自定义选项",
+            "description": "关闭时，星塔助手默认以不超过8折潜能特饮、5折15个音符、全价5个音符的价格购买商品，并自动购买协奏音符到15个",
+            "type": "switch",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                },
+                {
+                    "name": "Yes",
+                    "option": [
+                        "新版爬塔_商店_潜能特饮折扣",
+                        "新版爬塔_商店_5个音符折扣",
+                        "新版爬塔_商店_15个音符折扣",
+                        "新版爬塔_商店_中途商店刷新最小金额",
+                        "新版爬塔_商店_购买音符时机",
+                        "新版爬塔_商店_自动购买协奏音符",
+                        "新版爬塔_商店_音符策略"
+                    ]
+                }
+            ]
+        },
+        "新版爬塔_商店_潜能特饮折扣": {
+            "type": "select",
+            "label": "潜能特饮折扣",
+            "description": "买入不高于该折扣的潜能特饮，除非符合动态溢购情况或离开最终商店前",
+            "default_case": "8折",
+            "cases": [
+                {
+                    "name": "全价",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "drink_discount_threshold": 1.0,
+                                "full_price_buy_reserve_base": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "8折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "drink_discount_threshold": 0.8
+                            }
+                        }
+                    },
+                    "option": [
+                        "新版爬塔_商店_动态溢购"
+                    ]
+                },
+                {
+                    "name": "5折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "drink_discount_threshold": 0.5
+                            }
+                        }
+                    },
+                    "option": [
+                        "新版爬塔_商店_动态溢购"
+                    ]
+                }
+            ]
+        },
+        "新版爬塔_商店_动态溢购": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "动态溢购",
+                    "description": "基于可刷新次数动态预留金币，并自动用溢出部分购买高价潜能特饮<br>如设置400，那么在可刷新次数为1时，会预留800金币<br>在最终商店时，仍会用光预留金币",
+                    "pipeline_type": "int",
+                    "verify": "^\\d+$",
+                    "default": "500"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_购物_agent": {
+                    "attach": {
+                        "full_price_buy_reserve_base": "{动态溢购}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_商店_5个音符折扣": {
+            "type": "select",
+            "label": "5个音符折扣",
+            "description": "买入不高于该折扣的音符",
+            "default_case": "全价",
+            "cases": [
+                {
+                    "name": "全价",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_5_discount_threshold": 1.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "8折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_5_discount_threshold": 0.8
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_5_discount_threshold": 0.5
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_商店_15个音符折扣": {
+            "type": "select",
+            "label": "15个音符折扣",
+            "description": "买入不高于该折扣的音符",
+            "default_case": "5折",
+            "cases": [
+                {
+                    "name": "全价",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_15_discount_threshold": 1.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "8折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_15_discount_threshold": 0.8
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5折",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "melody_15_discount_threshold": 0.5
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_商店_购买音符时机": {
+            "type": "select",
+            "label": "购买音符时机",
+            "description": "选择在哪里购买音符<br>当前只支持选择是否只在最终商店购买",
+            "default_case": "不限",
+            "cases": [
+                {
+                    "name": "不限",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_melody_at_final_only": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "只在最终商店购买",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_melody_at_final_only": true
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_商店_自动购买协奏音符": {
+            "type": "select",
+            "label": "自动购买协奏音符",
+            "description": "该功能与音符策略功能同时生效，请注意不要出现冲突",
+            "default_case": "激活1级协奏",
+            "cases": [
+                {
+                    "name": "不自动购买",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_assist_melody": false,
+                                "buy_assist_before_unlock": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "激活1级协奏",
+                    "description": "检测到为协奏音符后，会自动购买直到音符数量达到15个",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "不限量购买",
+                    "description": "检测到为协奏音符后，会自动购买",
+                    "pipeline_override": {
+                        "星塔_节点_商店_购物_agent": {
+                            "attach": {
+                                "buy_assist_melody": true,
+                                "buy_assist_before_unlock": false
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "新版爬塔_商店_音符策略": {
+            "type": "input",
+            "label": "音符策略",
+            "description": "每种音符期望购买到的目标数量：填 0 = 不购买该音符；填 N = 买到持有数量达到 N 为止（仍需符合折扣及时机要求）",
+            "inputs": [
+                {"name": "强攻之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "幸运之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "暴发之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "体力之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "专注之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "技巧之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "绝招之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "水之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "火之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "地之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "风之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "光之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
+                {"name": "暗之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"}
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_购物_agent": {
+                    "attach": {
+                        "melody_of_aqua": "{水之音}",
+                        "melody_of_ignis": "{火之音}",
+                        "melody_of_terra": "{地之音}",
+                        "melody_of_ventus": "{风之音}",
+                        "melody_of_lux": "{光之音}",
+                        "melody_of_umbra": "{暗之音}",
+                        "melody_of_focus": "{专注之音}",
+                        "melody_of_skill": "{技巧之音}",
+                        "melody_of_ultimate": "{绝招之音}",
+                        "melody_of_pummel": "{强攻之音}",
+                        "melody_of_luck": "{幸运之音}",
+                        "melody_of_burst": "{暴发之音}",
+                        "melody_of_stamina": "{体力之音}"
+                    }
+                }
+            }
+        },
+        "新版爬塔_商店_中途商店刷新最小金额": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "中途商店刷新最小金额",
+                    "description": "只在中途商店生效。在最终商店会无视该金额，尽可能刷新。",
+                    "pipeline_type": "int",
+                    "default": "1500",
+                    "verify": "^\\d+$",
+                    "pattern_msg": "请输入中途商店刷新最小金额"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_节点_商店_购物_agent": {
+                    "attach": {
+                        "regular_shop_refresh_threshold": "{中途商店刷新最小金额}"
+                    }
+                }
+            }
+        }
+    }
+}

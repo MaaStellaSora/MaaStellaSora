@@ -4,6 +4,7 @@ import numpy as np
 from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
+from maa.define import OCRResult, BoxAndScoreResult
 
 from utils import logger as logger_module
 from utils.dev_config import DEV_IMAGES_SAVE_ENABLED
@@ -38,7 +39,7 @@ class EventRecognition(CustomRecognition):
             argv: CustomRecognition.AnalyzeArg,
     ) -> CustomRecognition.AnalyzeResult:
         # 获取选项规则，选项规则在AscensionPreparation动作节点读取并存储在本节点的attach中rules中
-        node_data = context.get_node_data(argv.node_name)
+        node_data = context.get_node_data(argv.node_name) or {}
         rules = node_data.get("attach", {}).get("rules", [])
         lang_type = node_data.get("attach", {}).get("lang_type", "cn")
 
@@ -50,11 +51,11 @@ class EventRecognition(CustomRecognition):
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 根据规则遍历选项列表，找到匹配的选项，匹配方法只使用正则表达式
-        # 每一条规则包含 "question"、"choices"、"consequences" 三个字段，分别对应问题、选项、选项后果
+        # 每一条规则包含 "question"、"choices"、"consequences"、"custom" 四个字段，分别对应问题、选项、选项后果、自定义规则
         # 还有一个 "description" 字段，用于描述该规则的作用
         # 这些字段均为列表，每个元素为一个字符串
         # 如字段不为空，则必须匹配到列表中的任意一个元素才算成功（为空时直接算作匹配成功）
-        # 如三个字段都不为空，则必须三个字段都匹配到元素才能算成功
+        # 如四个字段都不为空，则必须三个字段都匹配到元素且自定义规则返回True才能算成功
         result_box = None
         result_choice = ""
         result_consequence = ""
@@ -122,15 +123,15 @@ class EventRecognition(CustomRecognition):
     @staticmethod
     def _get_question_text(context: Context, image: np.ndarray, lang_type: str) -> str:
         reco_result = context.run_recognition("星塔_节点_对话选择_定位问题位置_agent", image)
-        if not reco_result or not reco_result.hit:
+        if not (reco_result and reco_result.hit):
             return ""
         # 在pipeline直接抓取识别结果，所以这里不需要把识别结果传递给下一个节点
         reco_result = context.run_recognition("星塔_节点_对话选择_识别问题文本_agent", image)
-        if not reco_result or not reco_result.hit:
+        if not (reco_result and reco_result.hit):
             return ""
         # 合并文本，根据语言类型选择不同的分割符
         split_text = " " if lang_type == "en" else ""
-        return split_text.join([r.text for r in reco_result.filtered_results])
+        return split_text.join([r.text for r in reco_result.filtered_results if isinstance(r, OCRResult)])
 
     @staticmethod
     def _get_choice_texts(context: Context, image: np.ndarray, lang_type: str) -> tuple[list, list, list]:
@@ -143,7 +144,7 @@ class EventRecognition(CustomRecognition):
         choice_boxes = []
         split_text = " " if lang_type == "en" else ""
         for r in reco_result.filtered_results:
-            box = r.box
+            box = list(r.box) if isinstance(r, BoxAndScoreResult) else [0, 0, 0, 0]
             choice_boxes.append(box)
 
             # 节点覆写，指定roi为当前选项的box
@@ -156,13 +157,15 @@ class EventRecognition(CustomRecognition):
             # 开始识别
             reco_choice = context.run_recognition(choice_node, image, pipeline_override=override_choice)
             if reco_choice and reco_choice.hit:
-                choices.append(split_text.join([r.text for r in reco_choice.filtered_results]))
+                filtered_texts = [r.text for r in reco_choice.filtered_results if isinstance(r, OCRResult)]
+                choices.append(split_text.join(filtered_texts))
             else:
                 choices.append("")
 
             reco_consequence = context.run_recognition(consequence_node, image, pipeline_override=override_consequence)
             if reco_consequence and reco_consequence.hit:
-                consequences.append(split_text.join([r.text for r in reco_consequence.filtered_results]))
+                filtered_texts = [r.text for r in reco_consequence.filtered_results if isinstance(r, OCRResult)]
+                consequences.append(split_text.join(filtered_texts))
             else:
                 consequences.append("")
 

@@ -1,5 +1,4 @@
-from .climb_tower_potential import *
-from .climb_tower_quiz import *
+from climb_tower_event import *
 from .operation import *
 from .climb_tower_potential_scan import *
 

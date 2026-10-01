@@ -55,8 +55,6 @@ class PotentialInteractor:
             list[Any]: 识别到的结果，如果为空则返回空列表
         """
         if image is None:
-            if self.image is None:
-                self.image = self.context.tasker.controller.post_screencap().wait().get()
             image = self.image
 
         params = {}

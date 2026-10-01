@@ -121,7 +121,7 @@ class PotentialLayouts:
 
 @dataclass(slots=True)
 class Data:
-    """包含所有数据的类，用于存储和更新本次潜能识别中的数据"""
+    """包含所有非跨节点储存数据的类，相当于本节点内的context，用于存储和更新本次潜能识别中的数据"""
     params: Parameters
     initial_coin: int = -1
     current_coin: int = -1
@@ -183,9 +183,9 @@ class Data:
 @dataclass(slots=True)
 class Trekker:
     index: int
+    image: np.ndarray
     name: str = ""
     main: bool = False
-    image: np.ndarray | None = None
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Trekker):
@@ -208,7 +208,7 @@ class Potential:
     new_level: int = -1
     recommended: bool = False
     recommended_level: int = -1
-    trekker: Trekker = field(default_factory=lambda: Trekker(index=-1))
+    trekker: Trekker = field(default_factory=lambda: Trekker(index=-1, image=np.array([])))
     selected: bool = False
     # 自定义参数
     rank: int = -1

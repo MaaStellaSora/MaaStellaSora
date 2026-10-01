@@ -1,7 +1,7 @@
 import re
-from typing import Any, Self
+from typing import Any
 
-from .state import State, OwnedPotentials
+from .state import State, OwnedPotentials, OwnedPotential
 from .data import MAX_POTENTIAL_LEVEL, Data, Potential
 from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
@@ -11,23 +11,19 @@ logger = logger_module.get_logger("climb_tower_potential_json")
 
 
 class AssistantPriorityHandler(ChoosePotentialHandler):
-    HANDLER_TYPE = "json"
 
     def __init__(self, screen: PotentialInteractor, data: Data):
         super().__init__(screen, data)
 
-    def read_potentials_info(self) -> Self:
+    def read_potentials_info(self):
         self.data.parsed_priority_list = self._parse_priority_raw_list(
             self.data.params.priority_list, State.owned_potentials
         )
-        self.data.potentials = self.initialize_potentials()
 
         self._update_names()
         self._update_levels()
 
-        return self
-
-    def choose(self):
+    def choose_potential(self):
         # 获得所有潜能的排名
         self._update_priority()
 
@@ -47,6 +43,11 @@ class AssistantPriorityHandler(ChoosePotentialHandler):
             logger.info(f"[潜能选择] {best_potential.name}")
 
         return best_potential
+
+    def _find_owned_potential(self, owned_potentials: OwnedPotentials, potential: Potential) -> OwnedPotential | None:
+        """cache_potential_data用的hook方法：查找已缓存的潜能，若不存在则返回None"""
+        p = potential
+        return owned_potentials.find(p.name, mode="CONTAINS", trekker_name=p.trekker.name, core=p.core)
 
     def _update_priority(self):
         for potential in self.data.potentials:

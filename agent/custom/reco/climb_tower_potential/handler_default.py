@@ -1,10 +1,9 @@
 import time
-from typing import Self
 from dataclasses import replace
 
 from .data import Data, Potential
 from .interactor import PotentialInteractor
-from .state import State, Trekker
+from .state import State, Trekker, OwnedPotentials, OwnedPotential
 
 from utils import logger as logger_module
 from utils.dev_config import DEV_IMAGES_SAVE_ENABLED
@@ -12,13 +11,16 @@ logger = logger_module.get_logger("climb_tower_potential_default")
 
 
 class ChoosePotentialHandler:
-    HANDLER_TYPE = "default"
 
     def __init__(self, screen: PotentialInteractor, data: Data):
         self.screen = screen
         self.data = data
 
     def wait_for_item_list_gone(self):
+        """
+        等待左方获得道具列表消失（仅初次进入时可能存在，刷新后不会重复出现）
+        确保后续读取左侧潜能的潜能名称、推荐图标时不会被遮挡；若发生等待会自动更新最新截图
+        """
         for _ in range(10):
             if self.screen.check_item_list_visibility():
                 logger.info("识别到干扰文字，等待1秒")
@@ -28,6 +30,7 @@ class ChoosePotentialHandler:
             break
 
     def initialize_potentials(self):
+        """根据预识别的数据初始化潜能对象"""
         # 初始化Potential对象，并保存到list中
         potential_layouts = self.data.params.potential_layouts[self.data.potential_count]
         potentials = [Potential(potential_layouts[i]) for i in range(self.data.potential_count)]
@@ -43,27 +46,42 @@ class ChoosePotentialHandler:
                 p.old_level = 0
                 p.new_level = 1
 
-        return potentials
+        self.data.potentials = potentials
 
-    def read_potentials_info(self) -> Self:
+    def read_potentials_info(self):
         """最原始的潜能信息识别器，仅识别推荐图标"""
-        self.data.potentials = self.initialize_potentials()
         self._update_recommended_potentials()
 
-        return self
-
-    def choose(self) -> Potential | None:
+    def choose_potential(self) -> Potential | None:
         """最原始的潜能选择，仅靠推荐图标选择潜能"""
         potential = next((p for p in self.data.potentials if p.recommended), None)
         if potential:
             logger.info(f"[潜能选择] 推荐潜能")
         return potential
 
+    def handle_draw_data(self, potential: Potential | None):
+        """处理潜能抽取数据的方法，供钩子使用"""
+        pass
+
     def pick(self, potential: Potential) -> bool:
         """点击潜能卡片"""
         if potential.selected:
             return True
         return self.screen.click_potential(potential.box)
+
+    def cache_potential_data(self, potential: Potential):
+        """将选择的潜能数据缓存到State类中，以供策略使用。默认模式不需要缓存，主要是给preset/json模式用"""
+        if not potential.name:
+            return
+        existed = self._find_owned_potential(State.owned_potentials, potential)
+        if existed:
+            existed.update(potential)
+        else:
+            State.owned_potentials.add(potential)
+
+    def _find_owned_potential(self, owned_potentials: OwnedPotentials, potential: Potential) -> OwnedPotential | None:
+        """cache_potential_data用的hook方法：默认模式不需要缓存，返回None"""
+        return None
 
     def dummy_potential(self, **kwargs) -> Potential:
         """返回一个虚拟的潜能对象"""
@@ -231,6 +249,7 @@ class ChoosePotentialHandler:
         return False
 
     @property
-    def _default_potential(self):
+    def _default_potential(self) -> Potential:
+        """返回默认潜能，由于本节点基于识别到选择按钮才运行，所以理论上不会返回空潜能，所以这里可以不检查None放心交给主函数作兜底使用。"""
         potential = next(p for p in self.data.potentials if p.selected)
         return potential

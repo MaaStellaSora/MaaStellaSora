@@ -1,18 +1,20 @@
 from itertools import combinations, permutations, product
 from math import exp, prod
-from typing import Self, Any
+from typing import Any
 
-from .state import State, OwnedPotential, Trekker
+import numpy as np
+
+from .state import State, OwnedPotentials, OwnedPotential, Trekker
 from .data import Data, Potential
 from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
+from utils.dev_config import DRAW_DATA_SAVE_ENABLED
 
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_potential_preset")
 
 
 class RecommendationHandler(ChoosePotentialHandler):
-    HANDLER_TYPE = "preset"
     P_NEW_MAP = (1.0, 2 / 3, 1 / 3, 0.0) # 到达软上限时的新潜能概率映射表，索引为未满级潜能数量，值为新潜能概率
 
     def __init__(self, screen: PotentialInteractor, data: Data):
@@ -45,9 +47,7 @@ class RecommendationHandler(ChoosePotentialHandler):
             else:
                 self.data.potentials[index].recommended_level = self.screen.get_recommend_level(box)
 
-    def read_potentials_info(self) -> Self:
-        self.data.potentials = self.initialize_potentials()
-
+    def read_potentials_info(self):
         self._update_recommended_potentials()
         self._update_names()
         self._update_levels()
@@ -65,21 +65,35 @@ class RecommendationHandler(ChoosePotentialHandler):
                 new = potential.new_level
                 logger.info(f"[潜能识别] {potential.name} | 等级 {old}→{new} | {recommended_output}")
 
-        return self
+    def handle_draw_data(self, potential: Potential | None):
+        """（开发者使用）选项打开时，保存潜能抽取数据"""
+        if DRAW_DATA_SAVE_ENABLED and not self.data.core_potential:
+            State.potential_draw_info.add(self.data)
 
-    def choose(self) -> Potential | None:
+    def choose_potential(self) -> Potential | None:
         # 根据参数选择潜能选择器
         if self.data.params.environment.startswith("tower_8"):
-            best_potential = self.tower_8_chooser()
+            best_potential = self._tower_8_chooser()
         else:
-            best_potential = self.default_chooser() if self.data.refreshable else self.choose_fallback_potential()
+            best_potential = self._default_chooser() if self.data.refreshable else self.choose_fallback_potential()
 
         if best_potential:
             logger.info(f"[潜能选择] {best_potential.name}")
 
         return best_potential
 
-    def default_chooser(self):
+    def _find_owned_potential(self, owned_potentials: OwnedPotentials, potential: Potential) -> OwnedPotential | None:
+        """cache_potential_data用的hook方法：查找已缓存的潜能，若不存在则返回None"""
+        p = potential
+
+        if p.old_level >= 1:
+            return owned_potentials.find(p.name, mode="FUZZY", trekker=p.trekker, core=p.core, threshold=0.75)
+        elif p.old_level == -1:  # 识别出问题时的兜底策略
+            return owned_potentials.find(p.name, mode="CONTAINS", trekker=p.trekker, core=p.core)
+        else:
+            return None
+
+    def _default_chooser(self):
         """
         默认策略，根据等级跨度、推荐等级、当前等级排序来选择推荐潜能，如没有推荐潜能则返回 None
         """
@@ -89,7 +103,7 @@ class RecommendationHandler(ChoosePotentialHandler):
             return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)
         return None
 
-    def tower_8_chooser(self) -> Potential | None:
+    def _tower_8_chooser(self) -> Potential | None:
         """
         塔8专用策略，采用打分制
         根据用户设置的最大刷新次数以及刷新分数阈值，判断是否需要刷新
@@ -100,8 +114,9 @@ class RecommendationHandler(ChoosePotentialHandler):
 
         # 核心潜能选择，直接选择推荐潜能，如没有则选择默认潜能
         if self.data.core_potential:
+            recommended_potentials = [p for p in self.data.potentials if p.recommended]
             best_potential = max(
-                (p for p in self.data.potentials if p.recommended),
+                recommended_potentials,
                 key=lambda p: p.recommended_level,
                 default=self._default_potential,
             )
@@ -223,7 +238,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         # 补充到3个旅人，在游戏初期卡包可能不满3个旅人
         missing_count = 3 - len(owned_potential_count_by_trekkers)
         if missing_count > 0:
-            placeholders = {Trekker(index=-(i + 1)): 0 for i in range(missing_count)}
+            placeholders = {Trekker(index=-(i + 1), image=np.array([])): 0 for i in range(missing_count)}
             owned_potential_count_by_trekkers = owned_potential_count_by_trekkers.copy() | placeholders
 
         scores = []
@@ -297,7 +312,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         # 0. 补充到3个旅人，在游戏初期潜能列表可能不满3个旅人
         trekkers = list(State.trekkers)
         for i in range(len(trekkers), 3):
-            trekkers.append(Trekker(index=i))
+            trekkers.append(Trekker(index=i, image=np.array([])))
 
         # 1. 统计各旅人的新旧潜能的种类数
         owned_stats = {

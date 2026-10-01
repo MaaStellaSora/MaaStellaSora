@@ -21,6 +21,18 @@ class OwnedPotential:
     trekker: Trekker
     type: str = ""
 
+    def update(self, potential: Potential):
+        """通过提供选择后的潜能数据，更新当前OwnedPotential的潜能等级"""
+        self.level = min(self.max_level, max(self.level, potential.new_level))
+        self.recommended_level = max(self.recommended_level, potential.recommended_level)
+        # 使用更长的名字，因为更长的名字更接近原名
+        self.name = self._longer_name(self.name, potential.name)
+
+    @staticmethod
+    def _longer_name(old: str, new: str) -> str:
+        """一般来讲，更长的名称更接近原名"""
+        return new if len(new) > len(old) else old
+
     @property
     def core(self) -> bool:
         """是否为核心潜能"""
@@ -41,6 +53,7 @@ class OwnedPotential:
         """是否为推荐潜能"""
         return self.recommended_level > 0
 
+
 @dataclass(slots=True)
 class OwnedPotentials:
     potentials: list[OwnedPotential] = field(default_factory=list)
@@ -51,39 +64,13 @@ class OwnedPotentials:
     def __len__(self):
         return len(self.potentials)
 
-    def save(self, potential: Potential, *, handler: str) -> None:
-        """将选中的潜能保存到OwnedPotentials中，如果已存在则更新等级和名字"""
-        if not potential.name:
-            return
-
-        trekker = potential.trekker
-        level = max(potential.new_level, 1)
-        core = potential.core
-
-        # 先查找潜能是否已存在
-        if handler == "json":
-            existed = self.find(potential.name, mode="EXACT", trekker_name=trekker.name, core=core)
-        else:
-            if potential.old_level >= 1:
-                existed = self.find(potential.name, mode="FUZZY", trekker=trekker, core=core, threshold=0.75)
-            elif potential.old_level == -1:
-                existed = self.find(potential.name, mode="CONTAINS", trekker=trekker, core=core)
-            else:
-                existed = None
-        # 如果存在则更新等级和名字
-        if existed:
-            existed.level = min(existed.max_level, max(existed.level, level))
-            existed.recommended_level = max(existed.recommended_level, potential.recommended_level)
-            # 使用更长的名字，因为更长的名字更接近原名
-            existed.name = self._longer_name(existed.name, potential.name)
-            return
-
-        # 不存在，就添加到list中
+    def add(self, potential: Potential) -> None:
+        """将选中的潜能添加到OwnedPotentials中"""
         self.potentials.append(OwnedPotential(
             name=potential.name,
-            level=level,
+            level=max(potential.new_level, 1),
             recommended_level=potential.recommended_level,
-            trekker=trekker,
+            trekker=potential.trekker,
             type=potential.type,
         ))
 
@@ -259,10 +246,6 @@ class OwnedPotentials:
         b = re.sub(r"\W", "", b)
         return SequenceMatcher(None, a, b).ratio()
 
-    @staticmethod
-    def _longer_name(old: str, new: str) -> str:
-        """一般来讲，更长的名称更接近原名"""
-        return new if len(new) > len(old) else old
 
 @dataclass
 class PotentialDrawInfo:
@@ -323,6 +306,7 @@ class PotentialDrawInfo:
         return len(self.potential_draws) > 0
 
 class State:
+    """保存需要跨节点储存的的潜能抽取相关信息，因为潜能选择节点调用链复杂，无法使用MaaFramework的特性进行跨节点储存"""
     high_level_span_count: int = 0
     enhance_high_level_span_count: int = 0
     potentials_level_count: int = 0

@@ -3,14 +3,12 @@ from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
 from .data import Data, Parameters
-from .state import State
 from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
 from .handler_preset import RecommendationHandler
 from .handler_json import AssistantPriorityHandler
 
 from utils import logger as logger_module
-from utils.dev_config import DRAW_DATA_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential")
 
 
@@ -36,71 +34,48 @@ class ChoosePotentialRecognition(CustomRecognition):
         Returns:
             CustomRecognition.AnalyzeResult: 返回 AnalyzeResult
         """
-        node_name = argv.node_name
-        params = self._get_params(context, node_name)
+        # 1. 预加载与初始化数据
+        params = self._get_params(context, argv.node_name)
         data = Data(params=params)
-        screen = PotentialInteractor(context)
+        interactor = PotentialInteractor(context)
 
-        # 1. 提前获取不受左侧道具列表遮挡、且后续选择潜能流程中不需要再次获取的数据
-        # （金币、刷新花费、核心潜能、潜能数量与类型等均位于界面上方/右侧，提前识别可充分利用等待时间）
-        data.initial_coin = screen.get_current_coin()
-        data.current_coin = data.initial_coin
-        data.refresh_cost = screen.get_refresh_cost()
-        data.core_potential = screen.check_core_potential()
-        data.potential_types = screen.get_potential_types(data.core_potential)
-        if DRAW_DATA_SAVE_ENABLED and data.params.potential_source != "enhance":
-            data.level_upped = screen.check_level_upped()
+        self._preload_data(interactor, data)
+        handler = self._load_handler(interactor, data)
 
-        # 2. 加载相应的潜能处理类
-        if data.params.handler == "json":
-            handler = AssistantPriorityHandler(screen, data)
-        elif data.params.handler == "preset":
-            handler = RecommendationHandler(screen, data)
-        # elif data.params.handler == "preset+bag":
-        #     handler = RecommendationPlusBagScanHandler(screen, data)
-        else: # default
-            handler = ChoosePotentialHandler(screen, data)
-
-        # 3. 等待左方获得道具列表消失（仅初次进入时可能存在，刷新后不会重复出现）
-        # 确保后续读取左侧潜能的潜能名称、推荐图标时不会被遮挡；若发生等待会自动更新最新截图
+        # 2. 界面就绪等待
         handler.wait_for_item_list_gone()
 
-        # 4. 进入潜能选择与刷新循环
+        # 3. 进入潜能选择与刷新循环
         while True:
             # 获取潜能数据，并选择潜能
-            potential = handler.read_potentials_info().choose()
+            handler.initialize_potentials()
+            handler.read_potentials_info()
+            potential = handler.choose_potential()
 
-            # 如果已启用潜能抽取数据保存功能，且当前潜能不是核心潜能，保存当前潜能抽取数据
-            if DRAW_DATA_SAVE_ENABLED and "preset" in data.params.handler and not data.core_potential:
-                State.potential_draw_info.add(data)
+            # 这里放置一个对当前抽取潜能的数据处理流程，比如开发者需要保存当前抽取潜能的详细信息
+            handler.handle_draw_data(potential)
 
+            # 判断是否找到符合条件的潜能，并做出相应处理
             if potential:
                 break
-            elif data.refreshable:
-                logger.info("没有找到符合条件的潜能，尝试刷新")
-                refresh_result = handler.refresh()
-                if not refresh_result:
-                    logger.error(f"刷新潜能失败。本错误为罕见错误，为保证爬塔质量，将结束任务")
-                    context.tasker.post_stop()
-                    return CustomRecognition.AnalyzeResult(box=None, detail={})
-            else:
-                logger.info("[潜能选择] 没有找到符合条件的潜能，将按照保底顺序选择")
+            if not handler.data.refreshable: # 兜底选择
+                logger.info("[潜能选择] 没有找到符合条件的潜能，按照保底顺序选择")
                 potential = handler.choose_fallback_potential()
                 break
+            logger.info("没有找到符合条件的潜能，尝试刷新")
+            if not handler.refresh(): # 刷新潜能
+                return self._handle_fatal_error(context, "刷新潜能失败，为保证爬塔质量，将中止任务")
 
-        # 点击潜能
-        click_result = handler.pick(potential)
-        if not click_result:
-            logger.error(f"点击潜能失败。本错误为罕见错误，为保证爬塔质量，将结束任务")
-            context.tasker.post_stop()
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
+        # 防御性检查
+        if not potential:
+            return self._handle_fatal_error(context, "潜能选择出现问题，为保证爬塔质量，将中止任务")
 
-        # 保存已选潜能数据到状态类中
-        if isinstance(handler, (AssistantPriorityHandler, RecommendationHandler)):
-            State.owned_potentials.save(
-                potential,
-                handler=handler.HANDLER_TYPE,
-            )
+        # 4. 点击潜能
+        if not handler.pick(potential):
+            return self._handle_fatal_error(context, "点击潜能失败，为保证爬塔质量，将中止任务")
+
+        # 5. 保存已选潜能数据到状态类中
+        handler.cache_potential_data(potential)
 
         return CustomRecognition.AnalyzeResult(box=potential.box, detail={})
 
@@ -124,7 +99,40 @@ class ChoosePotentialRecognition(CustomRecognition):
                 - threshold_coef_str (str): 刷新阈值系数字符串配置。
                 - threshold_decay_str (str): 刷新阈值衰减系数字符串配置。
         """
-        node_data = context.get_node_data(node_name)
+        node_data = context.get_node_data(node_name) or {}
         attach = node_data.get("attach", {})
         params = Parameters(**attach)
         return params
+
+    @staticmethod
+    def _preload_data(interactor: PotentialInteractor, data: Data):
+        """预加载不受左侧道具列表遮挡、且后续选择潜能流程中不需要再次获取的数据
+        包括金币、刷新花费、核心潜能、潜能数量与类型等
+        """
+        # 读取不需要刷新且没有遮挡的公用数据
+        data.initial_coin = interactor.get_current_coin()
+        data.current_coin = data.initial_coin
+        data.refresh_cost = interactor.get_refresh_cost()
+        data.core_potential = interactor.check_core_potential()
+        data.potential_types = interactor.get_potential_types(data.core_potential)
+        if data.params.potential_source != "enhance":
+            data.level_upped = interactor.check_level_upped()
+
+    @staticmethod
+    def _load_handler(interactor: PotentialInteractor, data: Data):
+        """加载相应的潜能处理类"""
+        if data.params.handler == "json":
+            handler = AssistantPriorityHandler(interactor, data)
+        elif data.params.handler == "preset":
+            handler = RecommendationHandler(interactor, data)
+        # elif data.params.handler == "preset+bag":
+        #     handler = RecommendationPlusBagScanHandler(interactor, data)
+        else:
+            handler = ChoosePotentialHandler(interactor, data)
+        return handler
+
+    @staticmethod
+    def _handle_fatal_error(context: Context, message: str):
+        logger.error(message)
+        context.tasker.post_stop()
+        return CustomRecognition.AnalyzeResult(box=None, detail={})

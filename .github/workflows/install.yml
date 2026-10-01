@@ -232,10 +232,22 @@ jobs:
           test -s install/agent/main.py
           test -s "install/runtimes/win-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/MaaFramework.dll"
 
+      - name: Verify Python dependencies on Windows
+        shell: bash
+        run: |
+          ./install/python/python.exe -c "import numpy; import maa; print('Windows Python dependencies verified successfully')"
+
+      - name: Package Windows archive
+        shell: bash
+        run: |
+          ARCHIVE_NAME="MaaStellaSora-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.zip"
+          (cd install && 7z a -tzip "../$ARCHIVE_NAME" .)
+          test -s "$ARCHIVE_NAME"
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
-          path: "install"
+          path: "MaaStellaSora-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.zip"
           if-no-files-found: error
 
   linux:
@@ -316,10 +328,23 @@ jobs:
           test -s install/agent/main.py
           test -s "install/runtimes/linux-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.so"
 
+      - name: Package Linux archive
+        shell: bash
+        run: |
+          if [[ -f "install/MaaPiCli" ]]; then
+            chmod +x "install/MaaPiCli"
+          fi
+          find install -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
+          find install -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
+
+          ARCHIVE_NAME="MaaStellaSora-linux-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.tar.gz"
+          tar -cpzf "$ARCHIVE_NAME" -C install .
+          test -s "$ARCHIVE_NAME"
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-linux-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
-          path: "install"
+          path: "MaaStellaSora-linux-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.tar.gz"
           if-no-files-found: error
 
   macos:
@@ -415,10 +440,39 @@ jobs:
           test -s install/agent/main.py
           test -s "install/runtimes/osx-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.dylib"
 
+      - name: Verify Python dependencies on macOS
+        shell: bash
+        run: |
+          ./install/python/bin/python3 -c "import numpy; import maa; print('macOS Python dependencies verified successfully')"
+
+      - name: Package macOS archive
+        shell: bash
+        run: |
+          if [[ -f "install/MaaPiCli" ]]; then
+            chmod +x "install/MaaPiCli"
+          fi
+          find install -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
+          find install -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
+          PYTHON_PATHS=(
+            "install/python/bin/python3"
+            "install/python/python"
+            "install/python/bin/python"
+            "install/python/python.exe"
+          )
+          for PYTHON_PATH in "${PYTHON_PATHS[@]}"; do
+            if [[ -f "$PYTHON_PATH" ]]; then
+              chmod +x "$PYTHON_PATH"
+            fi
+          done
+
+          ARCHIVE_NAME="MaaStellaSora-macos-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.tar.gz"
+          tar -cpzf "$ARCHIVE_NAME" -C install .
+          test -s "$ARCHIVE_NAME"
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: MaaStellaSora-macos-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}
-          path: "install"
+          path: "MaaStellaSora-macos-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.tar.gz"
           if-no-files-found: error
 
   changelog:
@@ -462,48 +516,23 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: assets
+          merge-multiple: true
 
-      - name: Process and package artifacts
+      - name: Validate release archives
         run: |
-          cd assets
-          for f in *; do
-            if [[ $f == *"win"* ]]; then
-              (cd "$f" && zip -r "../$f.zip" .)
-            else
-              echo "Processing Unix artifact: $f"
-
-              if [[ -f "$f/MaaPiCli" ]]; then
-                chmod +x "$f/MaaPiCli"
-                echo "Set execute permission for $f/MaaPiCli"
-              fi
-
-              find "$f" -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
-              echo "Set execute permission for all MFAAvalonia files"
-
-              find "$f" -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
-              echo "Set execute permission for all MFAUpdater files"
-
-              PYTHON_PATHS=(
-                "$f/python/bin/python3"
-                "$f/python/python"
-                "$f/python/bin/python"
-                "$f/python/python.exe"
-              )
-              for PYTHON_PATH in "${PYTHON_PATHS[@]}"; do
-                if [[ -f "$PYTHON_PATH" ]]; then
-                  chmod +x "$PYTHON_PATH"
-                  echo "Set execute permission for $PYTHON_PATH"
-                fi
-              done
-
-              tar -cpzf "$f.tar.gz" -C "$f" .
-              echo "Created archive with preserved permissions: $f.tar.gz"
-            fi
+          ls -lh assets/
+          for arch in x86_64 aarch64; do
+            test -s "assets/MaaStellaSora-win-${arch}-${{ needs.meta.outputs.tag }}.zip"
+            test -s "assets/MaaStellaSora-linux-${arch}-${{ needs.meta.outputs.tag }}.tar.gz"
+            test -s "assets/MaaStellaSora-macos-${arch}-${{ needs.meta.outputs.tag }}.tar.gz"
           done
+          echo "All expected release archives are present and non-empty."
 
       - uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         with:
-          files: assets/*
+          files: |
+            assets/*.zip
+            assets/*.tar.gz
           tag_name: ${{ needs.meta.outputs.tag }}
           body: ${{ needs.changelog.outputs.release_body }}
           draft: false

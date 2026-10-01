@@ -6,10 +6,12 @@ from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 from maa.define import OCRResult, BoxAndScoreResult
 
+from .models import EventInfo, Choice
+from .custom_rules import CUSTOM_RULE_REGISTRY
 from utils import logger as logger_module
 from utils.dev_config import DEV_IMAGES_SAVE_ENABLED
 
-logger = logger_module.get_logger("climb_tower_quiz")
+logger = logger_module.get_logger("climb_tower_event")
 
 
 def _match_regex(actual: str, pattern: str | list | tuple | None) -> bool:
@@ -43,12 +45,13 @@ class EventRecognition(CustomRecognition):
         rules = node_data.get("attach", {}).get("rules", [])
         lang_type = node_data.get("attach", {}).get("lang_type", "cn")
 
-        # 识别画面中的问题及选项
+        # 识别画面中的问题及选项，组合成EventInfo对象
         question_text = self._get_question_text(context, argv.image, lang_type)
         logger.info(f"[对话选择] 问题：{question_text}")
-        choices, consequences, choice_boxes = self._get_choice_texts(context, argv.image, lang_type)
-        if not choice_boxes:
+        choices = self._get_choice_texts(context, argv.image, lang_type)
+        if not choices:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
+        event_info = EventInfo(question=question_text, choices=choices)
 
         # 根据规则遍历选项列表，找到匹配的选项，匹配方法只使用正则表达式
         # 每一条规则包含 "question"、"choices"、"consequences"、"custom" 四个字段，分别对应问题、选项、选项后果、自定义规则
@@ -56,9 +59,7 @@ class EventRecognition(CustomRecognition):
         # 这些字段均为列表，每个元素为一个字符串
         # 如字段不为空，则必须匹配到列表中的任意一个元素才算成功（为空时直接算作匹配成功）
         # 如四个字段都不为空，则必须三个字段都匹配到元素且自定义规则返回True才能算成功
-        result_box = None
-        result_choice = ""
-        result_consequence = ""
+        result_choice = None
         def _match_field(text: str, patterns: list[str] | str | None) -> bool:
             """字段为空或未配置时不作限制（视为匹配成功）；非空时需命中列表中任意一项。"""
             return not patterns or _match_regex(text, patterns)
@@ -67,40 +68,57 @@ class EventRecognition(CustomRecognition):
             rule_q = rule.get("question")
             rule_c = rule.get("choices")
             rule_cq = rule.get("consequences")
+            rule_custom = rule.get("custom")
             rule_d = rule.get("description", "")
+            matched_choices = []
 
             # 1. 匹配问题：配置了问题则必须匹配通过
             if not _match_field(question_text, rule_q):
                 continue
 
             # 避免空规则导致的无差别命中（不允许选项或者后果均未配置的空规则，特别是仅配置了问题的规则）
-            if not rule_c and not rule_cq:
+            if not rule_c and not rule_cq and not rule_custom:
                 continue
 
             # 2. 匹配选项与后果：非空字段必须全部满足（AND 关系）
-            for choice_text, consequence_text, box in zip(choices, consequences, choice_boxes):
-                if _match_field(choice_text, rule_c) and _match_field(consequence_text, rule_cq):
-                    logger.info(f"[对话选择] 命中规则：{rule_d}")
-                    logger.info(f"[对话选择] 选择选项：{choice_text}")
-                    logger.info(f"[对话选择] 后果: {consequence_text}")
-                    logger.debug(f"规则内容: {rule}")
-                    result_choice = choice_text
-                    result_consequence = consequence_text
-                    result_box = box
-                    break
+            for choice in event_info.choices:
+                if _match_field(choice.text, rule_c) and _match_field(choice.consequence, rule_cq):
+                    matched_choices.append(choice)
+            if not matched_choices:
+                continue
 
-            # 3. 匹配成功后，退出循环
-            if result_box:
-                break
+            # 3. 匹配成功时，进行自定义规则判断，自定义规则拥有最高选择权
+            if rule_custom:
+                custom_function = CUSTOM_RULE_REGISTRY.get(rule_custom)
+                if not custom_function:
+                    logger.warning(f"未找到自定义规则函数：{rule_custom}")
+                    continue
+                try:
+                    matched_choice = custom_function(context, rule, event_info, matched_choices)
+                except Exception as e:
+                    logger.error(f"自定义规则函数执行异常：{e}", exc_info=True)
+                    continue
+            else:
+                matched_choice = matched_choices[0]
+
+           # 4. 无法匹配到选项，跳过当前规则
+            if not matched_choice:
+                continue
+
+            # 5. 所有匹配成功，选择当前选项
+            result_choice = matched_choice
+            logger.info(f"[对话选择] 命中规则：{rule_d}")
+            logger.info(f"[对话选择] 选择选项：{result_choice.text}")
+            logger.info(f"[对话选择] 后果: {result_choice.consequence}")
+            logger.debug(f"规则内容: {rule}")
+            break
 
         # 兜底：未命中任何规则时选择第一个选项
-        if not result_box:
-            result_box = choice_boxes[0]
-            result_choice = choices[0]
-            result_consequence = consequences[0]
+        if not result_choice:
+            result_choice = event_info.choices[0]
             logger.info(f"[对话选择] 未命中任何规则，保底选择第一个选项")
-            logger.info(f"[对话选择] 选择选项：{result_choice}")
-            logger.debug(f"[对话选择] 后果: {result_consequence}")
+            logger.info(f"[对话选择] 选择选项：{result_choice.text}")
+            logger.debug(f"[对话选择] 后果: {result_choice.consequence}")
             if DEV_IMAGES_SAVE_ENABLED:
                 from utils.image_handler import save_image
                 save_image(argv.image, f"未知选项")
@@ -110,15 +128,15 @@ class EventRecognition(CustomRecognition):
             argv.node_name: {
                 "attach":{
                     "last_question": question_text,
-                    "last_choice": result_choice,
-                    "last_consequence": result_consequence,
+                    "last_choice": result_choice.text,
+                    "last_consequence": result_choice.consequence,
                 }
             }
         }
         context.override_pipeline(pipeline_override)
 
         # 输出识别结果
-        return CustomRecognition.AnalyzeResult(box=result_box, detail={})
+        return CustomRecognition.AnalyzeResult(box=result_choice.box, detail={})
 
     @staticmethod
     def _get_question_text(context: Context, image: np.ndarray, lang_type: str) -> str:
@@ -134,10 +152,10 @@ class EventRecognition(CustomRecognition):
         return split_text.join([r.text for r in reco_result.filtered_results if isinstance(r, OCRResult)])
 
     @staticmethod
-    def _get_choice_texts(context: Context, image: np.ndarray, lang_type: str) -> tuple[list, list, list]:
+    def _get_choice_texts(context: Context, image: np.ndarray, lang_type: str) -> list[Choice]:
         reco_result = context.run_recognition("星塔_节点_对话选择_定位选项位置_agent", image)
         if not reco_result or not reco_result.hit:
-            return [], [], []
+            return []
 
         choices = []
         consequences = []
@@ -169,4 +187,7 @@ class EventRecognition(CustomRecognition):
             else:
                 consequences.append("")
 
-        return choices, consequences, choice_boxes
+        return [
+            Choice(text=text, consequence=consequence, box=box)
+            for text, consequence, box in zip(choices, consequences, choice_boxes)
+        ]

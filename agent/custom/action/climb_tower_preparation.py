@@ -9,7 +9,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
-from custom.reco import climb_tower_potential
+from custom.reco.climb_tower_potential.state import State
 
 from utils import logger as logger_module
 
@@ -33,11 +33,12 @@ class AscensionPreparation(CustomAction):
             bool: 成功时返回 True，失败时返回 False。
         """
         # 获取当前节点的attach数据
-        preparation_node_data = context.get_node_data(argv.node_name)
+        preparation_node_data = context.get_node_data(argv.node_name) or {}
         attachments = preparation_node_data.get("attach", {})
 
         # 获得潜能选择节点的attach数据，以获取潜能模式
-        potential_attachments = context.get_node_data("星塔_节点_选择潜能_agent").get("attach", {})
+        potential_node_data = context.get_node_data("星塔_节点_选择潜能_agent") or {}
+        potential_attachments = potential_node_data.get("attach", {})
         handler = potential_attachments.get("handler", "")
 
         # 如果潜能模式为json时，导入json作业参数
@@ -72,7 +73,7 @@ class AscensionPreparation(CustomAction):
         # 清除潜能状态
         reset_state = attachments.get("reset_state", False)
         if reset_state:
-            climb_tower_potential.State.reset()
+            State.reset()
 
         return True
 
@@ -231,7 +232,7 @@ class AscensionPreparation(CustomAction):
 
         if preset_melodies:
             logger.info(f"从作业中检测到预设音符：{preset_melodies}，爬塔时会买入以上音符")
-            node_data = context.get_node_data("星塔_节点_商店_购物_agent")
+            node_data = context.get_node_data("星塔_节点_商店_购物_agent") or {}
             shop_attachments = node_data.get("attach", {})
             for melody in preset_melodies:
                 melody = melody.lower()

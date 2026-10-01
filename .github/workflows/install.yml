@@ -235,7 +235,7 @@ jobs:
       - name: Verify Python dependencies on Windows
         shell: bash
         run: |
-          ./install/python/python.exe -c "import numpy; import maafw; print('Windows Python dependencies verified successfully')"
+          ./install/python/python.exe -c "import numpy; import maa; print('Windows Python dependencies verified successfully')"
 
       - name: Package Windows archive
         shell: bash
@@ -443,7 +443,7 @@ jobs:
       - name: Verify Python dependencies on macOS
         shell: bash
         run: |
-          ./install/python/bin/python3 -c "import numpy; import maafw; print('macOS Python dependencies verified successfully')"
+          ./install/python/bin/python3 -c "import numpy; import maa; print('macOS Python dependencies verified successfully')"
 
       - name: Package macOS archive
         shell: bash

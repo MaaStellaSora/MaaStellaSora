@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 
 from .state import State, OwnedPotentials, OwnedPotential, Trekker
-from .data import Data, Potential
+from .context import PotentialContext, Potential
 from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
 from utils.dev_config import DRAW_DATA_SAVE_ENABLED
@@ -17,7 +17,7 @@ logger = logger_module.get_logger("climb_tower_potential_preset")
 class RecommendationHandler(ChoosePotentialHandler):
     P_NEW_MAP = (1.0, 2 / 3, 1 / 3, 0.0) # 到达软上限时的新潜能概率映射表，索引为未满级潜能数量，值为新潜能概率
 
-    def __init__(self, screen: PotentialInteractor, data: Data):
+    def __init__(self, screen: PotentialInteractor, data: PotentialContext):
         super().__init__(screen, data)
 
     def _update_recommended_potentials(self):
@@ -28,7 +28,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         # 识别出哪些潜能是推荐潜能
         boxes = self.screen.get_recommended_potential()
-        potential_indices = self._get_recommended_potential_indices(boxes, self.data.x_borders)
+        potential_indices = self._get_recommended_potential_indices(boxes, self.data.x_bounds)
 
         # 判断是否设置了预设推荐潜能
         if boxes and boxes[0][1] < 300:
@@ -128,7 +128,7 @@ class RecommendationHandler(ChoosePotentialHandler):
             owned_potential_count_by_trekker = State.owned_potentials.count_by_trekkers()
             for trekker, count in owned_potential_count_by_trekker.items():
                 if count >= 6:
-                    trekker.main = True
+                    trekker.is_main = True
                     logger.debug("已通过触发潜能种类上限识别到主旅人")
                     break
 
@@ -151,7 +151,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         )
 
         # 不能刷：强化潜能、金币不足、刷新次数用尽等，直接选当前最优。
-        if not self.data.refresh_botton or not self.data.refreshable:
+        if not self.data.refresh_button or not self.data.refreshable:
             self._tower_8_record(best_potential)
             return best_potential
 
@@ -233,7 +233,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         # 主旅人饮料
         if self.data.params.potential_source == "specified_drink":
-            return 1.0 if target_trekker.main else 0.0
+            return 1.0 if target_trekker.is_main else 0.0
 
         # 补充到3个旅人，在游戏初期卡包可能不满3个旅人
         missing_count = 3 - len(owned_potential_count_by_trekkers)
@@ -245,7 +245,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         # 若匹配不到任何旅人，视为初始未获取状态 (c=0, is_main=0, is_capped=0)，score 为 0
         target_score = 0.0
         for trekker, potential_count in owned_potential_count_by_trekkers.items():
-            is_main = 1 if trekker.main else 0
+            is_main = 1 if trekker.is_main else 0
             cap = 6 if is_main else 5
             is_capped = int(potential_count >= cap)
             score = 0.056 * potential_count - 0.092 * potential_count ** 2 + 0.80 * is_main - 2.18 * is_capped
@@ -271,7 +271,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         # 防止极端情况
         remaining = 12 - owned_potential_count
-        cap = 6 if target_trekker.main else 5
+        cap = 6 if target_trekker.is_main else 5
 
         # 1. 新/旧潜能类别概率
         if remaining <= 0:
@@ -324,8 +324,8 @@ class RecommendationHandler(ChoosePotentialHandler):
         }
         new_potential_counts = {
             trekker:
-                0 if stats["total"] >= 5 and stats["leveling"] >= 3 and not trekker.main
-                    or stats["total"] >= 6 and stats["leveling"] >= 3 and trekker.main
+                0 if stats["total"] >= 5 and stats["leveling"] >= 3 and not trekker.is_main
+                    or stats["total"] >= 6 and stats["leveling"] >= 3 and trekker.is_main
                 else max(0, 12 - stats["total"])
             for trekker, stats in owned_stats.items()
         }

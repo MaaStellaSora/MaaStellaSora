@@ -40,7 +40,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [530, 425, 220, 40],
             "potential_roi": [470, 0, 343, 720],
             "trekker_roi": [500, 185, 40, 40],
-            "x_border": [470, 813]
+            "x_bound": [470, 813]
         }
     ],
     2: [
@@ -50,7 +50,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [358, 425, 220, 40],
             "potential_roi": [0, 0, 639, 720],
             "trekker_roi": [329, 185, 40, 40],
-            "x_border": [0, 639]
+            "x_bound": [0, 639]
         },
         {
             "core_potential_roi": [703, 405, 220, 60],
@@ -58,7 +58,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [703, 425, 220, 40],
             "potential_roi": [640, 0, 640, 720],
             "trekker_roi": [673, 185, 40, 40],
-            "x_border": [640, 1280]
+            "x_bound": [640, 1280]
         }
     ],
     3: [
@@ -68,7 +68,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [187, 425, 220, 40],
             "potential_roi": [0, 0, 469, 720],
             "trekker_roi": [156, 185, 40, 40],
-            "x_border": [0, 469]
+            "x_bound": [0, 469]
         },
         {
             "core_potential_roi": [530, 405, 220, 60],
@@ -76,7 +76,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [530, 425, 220, 40],
             "potential_roi": [470, 0, 343, 720],
             "trekker_roi": [500, 185, 40, 40],
-            "x_border": [470, 813]
+            "x_bound": [470, 813]
         },
         {
             "core_potential_roi": [875, 405, 220, 60],
@@ -84,7 +84,7 @@ DEFAULT_POTENTIAL_LAYOUTS = {
             "general_potential_level_roi": [875, 425, 220, 40],
             "potential_roi": [814, 0, 466, 720],
             "trekker_roi": [844, 185, 40, 40],
-            "x_border": [814, 1280]
+            "x_bound": [814, 1280]
         }
     ]
 }
@@ -96,7 +96,7 @@ class PotentialLayout:
     general_potential_level_roi: list[int]
     potential_roi: list[int]
     trekker_roi: list[int]
-    x_border: list[int]
+    x_bound: list[int]
 
 @dataclass(slots=True)
 class PotentialLayouts:
@@ -120,13 +120,13 @@ class PotentialLayouts:
 
 
 @dataclass(slots=True)
-class Data:
+class PotentialContext:
     """包含所有非跨节点储存数据的类，相当于本节点内的context，用于存储和更新本次潜能识别中的数据"""
     params: Parameters
     initial_coin: int = -1
     current_coin: int = -1
     refresh_cost: int = -1
-    potential_types: list[str] = field(default_factory=lambda: []) # 潜能类型，有"normal"、"rare"、"core"三种
+    potential_rarities: list[str] = field(default_factory=lambda: []) # 潜能类型，有"common"、"rare"、"core"三种
     core_potential: bool = False
     # 不需要根据刷新更新的数据
     threshold: float = -1.0 # 刷新阈值储存变量
@@ -139,7 +139,7 @@ class Data:
     parsed_priority_list: list[dict] = field(default_factory=lambda: []) # json匹配用数据
 
     @property
-    def refresh_botton(self) -> bool:
+    def refresh_button(self) -> bool:
         return self.refresh_cost >= 0
 
     @property
@@ -149,20 +149,20 @@ class Data:
     @property
     def refresh_limit(self) -> int:
         usable_coin = max(0, self.initial_coin - self.params.reserved_coin)
-        affordable = usable_coin // self.refresh_cost if self.refresh_botton else 0
+        affordable = usable_coin // self.refresh_cost if self.refresh_button else 0
         return min(self.params.max_refresh_count, affordable)
 
     @property
     def potential_count(self) -> int:
-        return len(self.potential_types)
+        return len(self.potential_rarities)
 
     @property
     def potential_rois(self) -> list[list[int]]:
         return [l.potential_roi for l in self.params.potential_layouts[self.potential_count]]
 
     @property
-    def x_borders(self) -> list[list[int]]:
-        return [l.x_border for l in self.params.potential_layouts[self.potential_count]]
+    def x_bounds(self) -> list[list[int]]:
+        return [l.x_bound for l in self.params.potential_layouts[self.potential_count]]
 
     @property
     def core_potential_name_rois(self) -> list[list[int]]:
@@ -185,7 +185,7 @@ class Trekker:
     index: int
     image: np.ndarray
     name: str = ""
-    main: bool = False
+    is_main: bool = False
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Trekker):
@@ -202,7 +202,7 @@ class Trekker:
 class Potential:
     layout: PotentialLayout
     index: int = -1
-    type: str = "" # 潜能类型，有"common"、"rare"、"core"三种
+    rarity: str = "" # 潜能类型，有"common"、"rare"、"core"三种
     name: str = ""
     old_level: int = -1
     new_level: int = -1
@@ -220,11 +220,11 @@ class Potential:
 
     @property
     def core(self) -> bool:
-        return self.type == "core"
+        return self.rarity == "core"
 
     @property
     def rare(self) -> bool:
-        return self.type == "rare"
+        return self.rarity == "rare"
 
     @property
     def level_span(self) -> int:
@@ -239,8 +239,8 @@ class Potential:
         return self.layout.potential_roi
 
     @property
-    def x_border(self) -> list[int]:
-        return self.layout.x_border
+    def x_bound(self) -> list[int]:
+        return self.layout.x_bound
 
     @property
     def core_potential_name_roi(self) -> list[int]:
@@ -254,22 +254,22 @@ class Potential:
     def general_potential_level_roi(self) -> list[int]:
         return self.layout.general_potential_level_roi
 
-    def update(self, screen: PotentialInteractor, data: Data):
+    def update(self, screen: PotentialInteractor, data: PotentialContext):
         # 更新核心潜能
         if data.core_potential:
-            self.type = "core"
+            self.rarity = "core"
 
         # 更新潜能数据
         self.name = self._get_name(screen, data)
         self.old_level, self.new_level = self._get_level(screen, data)
         self.recommended, self.recommended_level = self._get_recommended_data(screen, data)
 
-    def _get_name(self, screen: PotentialInteractor, data: Data) -> str:
+    def _get_name(self, screen: PotentialInteractor, data: PotentialContext) -> str:
         roi = self.core_potential_name_roi if self.core else self.general_potential_name_roi
         adjusted_roi = self._get_adjusted_roi(roi, data.params.selected_potential_offset)
         return screen.get_potential_name(adjusted_roi)
 
-    def _get_level(self, screen: PotentialInteractor, data: Data) -> tuple[int, int]:
+    def _get_level(self, screen: PotentialInteractor, data: PotentialContext) -> tuple[int, int]:
         if self.core:
             return 0, 1
         adjusted_roi = self._get_adjusted_roi(self.general_potential_level_roi, data.params.selected_potential_offset)
@@ -279,7 +279,7 @@ class Potential:
     def _get_recommended_roi(self, screen: PotentialInteractor) -> list[int]:
         return self.potential_roi if screen.get_recommended_potential(self.potential_roi) else []
 
-    def _get_recommended_data(self, screen: PotentialInteractor, data: Data) -> tuple[bool, int]:
+    def _get_recommended_data(self, screen: PotentialInteractor, data: PotentialContext) -> tuple[bool, int]:
         box = self._get_recommended_roi(screen)
         recommended = bool(box)
         if not recommended:
@@ -292,4 +292,4 @@ class Potential:
         return recommended, level
 
     def _get_adjusted_roi(self, roi, offset) -> list[int]:
-            return [roi[0], max(0, roi[1] - offset) if self.selected else roi[1], roi[2], roi[3]]
+        return [roi[0], max(0, roi[1] - offset) if self.selected else roi[1], roi[2], roi[3]]

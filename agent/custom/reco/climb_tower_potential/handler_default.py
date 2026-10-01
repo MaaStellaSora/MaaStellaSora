@@ -1,7 +1,7 @@
 import time
 from dataclasses import replace
 
-from .data import Data, Potential
+from .context import PotentialContext, Potential
 from .interactor import PotentialInteractor
 from .state import State, Trekker, OwnedPotentials, OwnedPotential
 
@@ -12,7 +12,7 @@ logger = logger_module.get_logger("climb_tower_potential_default")
 
 class ChoosePotentialHandler:
 
-    def __init__(self, screen: PotentialInteractor, data: Data):
+    def __init__(self, screen: PotentialInteractor, data: PotentialContext):
         self.screen = screen
         self.data = data
 
@@ -36,10 +36,10 @@ class ChoosePotentialHandler:
         potentials = [Potential(potential_layouts[i]) for i in range(self.data.potential_count)]
 
         # 给潜能的selected、type字段赋值
-        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_borders)
+        self.data.selected_potential_index = self.screen.get_selected_potential_index(self.data.x_bounds)
         for i, p in enumerate(potentials):
             p.index = i
-            p.type = self.data.potential_types[i]
+            p.rarity = self.data.potential_rarities[i]
             if i == self.data.selected_potential_index:
                 p.selected = True
             if p.core:
@@ -114,7 +114,7 @@ class ChoosePotentialHandler:
         """更新推荐潜能信息"""
         # 识别出哪些潜能是推荐潜能
         boxes = self.screen.get_recommended_potential()
-        potential_indices = self._get_recommended_potential_indices(boxes, self.data.x_borders)
+        potential_indices = self._get_recommended_potential_indices(boxes, self.data.x_bounds)
 
         # 开始遍历推荐潜能索引
         for index in potential_indices:
@@ -166,7 +166,7 @@ class ChoosePotentialHandler:
             # 给主控旅人做标记
             if not State.get_main_trekker() and self.data.params.potential_source == "specified_drink":
                 matched_trekker = self.data.potentials[potential_i].trekker
-                matched_trekker.main = True
+                matched_trekker.is_main = True
                 logger.debug("已通过特殊潜能特饮识别到主旅人")
 
             # 如果trekker超过3个，输出错误日志

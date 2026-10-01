@@ -1,9 +1,9 @@
-from .data import Data, Potential
+from .context import PotentialContext, Potential
 from .interactor import PotentialInteractor
 from .handler_preset import RecommendationHandler
 
 class RecommendationPlusBagScanHandler(RecommendationHandler):
-    def __init__(self, screen: PotentialInteractor, data: Data):
+    def __init__(self, screen: PotentialInteractor, data: PotentialContext):
         super().__init__(screen, data)
 
     # TODO：背包扫描+推荐潜能选择

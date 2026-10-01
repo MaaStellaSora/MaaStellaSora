@@ -2,7 +2,7 @@ import re
 from typing import Any
 
 from .state import State, OwnedPotentials, OwnedPotential
-from .data import MAX_POTENTIAL_LEVEL, Data, Potential
+from .context import MAX_POTENTIAL_LEVEL, PotentialContext, Potential
 from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
 
@@ -12,7 +12,7 @@ logger = logger_module.get_logger("climb_tower_potential_json")
 
 class AssistantPriorityHandler(ChoosePotentialHandler):
 
-    def __init__(self, screen: PotentialInteractor, data: Data):
+    def __init__(self, screen: PotentialInteractor, data: PotentialContext):
         super().__init__(screen, data)
 
     def read_potentials_info(self):

@@ -178,8 +178,7 @@ class PotentialInteractor:
         normal_potentials = [r.box for r in self._recognize(normal_node_name)]
         rare_potentials = [r.box for r in self._recognize(rare_node_name)]
         # 打标签，按照x坐标排序
-        # TODO: 正式名字是common不是normal，后续需要修改
-        potentials = [["normal", box] for box in normal_potentials] + [["rare", box] for box in rare_potentials]
+        potentials = [["common", box] for box in normal_potentials] + [["rare", box] for box in rare_potentials]
         potentials.sort(key=lambda x: x[1][0])
         # 去掉坐标，只保留类型标签
         potential_types = [p[0] for p in potentials]
@@ -187,10 +186,10 @@ class PotentialInteractor:
 
         if potential_count == 0:
             logger.error("潜能数量识别失败（没有潜能），将默认为3个普通潜能")
-            return ["normal", "normal", "normal"]
+            return ["common", "common", "common"]
         elif potential_count > 3:
             logger.error(f"潜能数量识别失败（识别到{potential_count}个潜能，不符合预期），将默认为3个普通潜能")
-            return ["normal", "normal", "normal"]
+            return ["common", "common", "common"]
 
         return potential_types
 
@@ -203,15 +202,15 @@ class PotentialInteractor:
         """识别拿到按钮，返回识别到的拿到按钮的坐标列表"""
         return [r.box for r in self._recognize("星塔_节点_选择潜能_识别预选潜能位置_agent")]
 
-    def get_selected_potential_index(self, borders: list[list[int]]) -> int:
+    def get_selected_potential_index(self, bounds: list[list[int]]) -> int:
         """识别拿到按钮，返回对应卡片的索引。
 
         拿到按钮位于卡片 box 范围内，通过判断图标命中 x 坐标是否落入各卡片
-        x_border 区间（左闭右闭）来确定归属卡片。
+        x_bound 区间（左闭右闭）来确定归属卡片。
         识别失败时返回第一张卡片的索引 作为兜底。
 
         Args:
-            borders(list): 可选潜能卡片的边界框，每个元素为一个列表，包含2个元素，分别是左闭右闭的x轴边界
+            bounds(list): 可选潜能卡片的边界框，每个元素为一个列表，包含2个元素，分别是左闭右闭的x轴边界
 
         Returns:
             int: 目标卡片索引，识别失败时返回0。这里的索引是0-based的，适合给list使用。
@@ -219,7 +218,7 @@ class PotentialInteractor:
         result_boxes = self.get_select_button()
 
         hit_x = result_boxes[0][0] if result_boxes else -1
-        matched = next((i for i, (low, high) in enumerate(borders) if low <= hit_x <= high), None)
+        matched = next((i for i, (low, high) in enumerate(bounds) if low <= hit_x <= high), None)
 
         if matched is None:
             logger.error("拿到按钮识别失败，潜能选择可能会出现问题")

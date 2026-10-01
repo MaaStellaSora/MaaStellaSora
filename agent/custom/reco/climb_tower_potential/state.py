@@ -6,7 +6,7 @@ from difflib import SequenceMatcher
 from typing import Literal, Iterable
 from dataclasses import dataclass, field
 
-from .data import MAX_POTENTIAL_LEVEL, Data, Potential, Trekker
+from .context import MAX_POTENTIAL_LEVEL, PotentialContext, Potential, Trekker
 
 from utils import logger as logger_module
 from utils.dev_config import DRAW_DATA_SAVE_ENABLED
@@ -71,7 +71,7 @@ class OwnedPotentials:
             level=max(potential.new_level, 1),
             recommended_level=potential.recommended_level,
             trekker=potential.trekker,
-            type=potential.type,
+            type=potential.rarity,
         ))
 
     def find(
@@ -252,7 +252,7 @@ class PotentialDrawInfo:
     """储存潜能抽取数据的类，仅preset模式下使用才能获得正确的数据"""
     potential_draws: list[dict] = field(default_factory=list)
 
-    def add(self, data: Data) -> None:
+    def add(self, data: PotentialContext) -> None:
         # 处理潜能来源
         default_source = "level_up" if data.level_upped else "quiz"
         potential_source = default_source if data.params.potential_source == "default" else data.params.potential_source
@@ -262,7 +262,7 @@ class PotentialDrawInfo:
             {
                 "name": p.name,
                 "trekker": p.trekker.index,
-                "type": p.type,
+                "type": p.rarity,
                 "old_level": p.old_level,
                 "new_level": p.new_level,
                 "recommended_level": p.recommended_level,
@@ -277,7 +277,7 @@ class PotentialDrawInfo:
                 "recommended_level": p.recommended_level,
                 "type": p.type,
             }
-            for p in State.owned_potentials.potentials
+            for p in State.owned_potentials
         ]
         self.potential_draws.append({
             "draws": draws,
@@ -328,7 +328,7 @@ class State:
     @classmethod
     def get_main_trekker(cls) -> Trekker | None:
         """获取主旅人对象"""
-        return next((t for t in cls.trekkers if t.main), None)
+        return next((t for t in cls.trekkers if t.is_main), None)
 
     @classmethod
     def get_main_trekker_index(cls) -> int:

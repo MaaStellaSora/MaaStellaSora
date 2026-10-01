@@ -2,7 +2,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from .data import Data, Parameters
+from .context import PotentialContext, Parameters
 from .interactor import PotentialInteractor
 from .handler_default import ChoosePotentialHandler
 from .handler_preset import RecommendationHandler
@@ -36,7 +36,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         """
         # 1. 预加载与初始化数据
         params = self._get_params(context, argv.node_name)
-        data = Data(params=params)
+        data = PotentialContext(params=params)
         interactor = PotentialInteractor(context)
 
         self._preload_data(interactor, data)
@@ -105,7 +105,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         return params
 
     @staticmethod
-    def _preload_data(interactor: PotentialInteractor, data: Data):
+    def _preload_data(interactor: PotentialInteractor, data: PotentialContext):
         """预加载不受左侧道具列表遮挡、且后续选择潜能流程中不需要再次获取的数据
         包括金币、刷新花费、核心潜能、潜能数量与类型等
         """
@@ -114,12 +114,12 @@ class ChoosePotentialRecognition(CustomRecognition):
         data.current_coin = data.initial_coin
         data.refresh_cost = interactor.get_refresh_cost()
         data.core_potential = interactor.check_core_potential()
-        data.potential_types = interactor.get_potential_types(data.core_potential)
+        data.potential_rarities = interactor.get_potential_types(data.core_potential)
         if data.params.potential_source != "enhance":
             data.level_upped = interactor.check_level_upped()
 
     @staticmethod
-    def _load_handler(interactor: PotentialInteractor, data: Data):
+    def _load_handler(interactor: PotentialInteractor, data: PotentialContext):
         """加载相应的潜能处理类"""
         if data.params.handler == "json":
             handler = AssistantPriorityHandler(interactor, data)

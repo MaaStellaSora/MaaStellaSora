@@ -186,7 +186,7 @@ class RecommendationHandler(ChoosePotentialHandler):
                 level_span = 1
             p = self.dummy_potential(
                 name=p.name, trekker=p.trekker, old_level=p.level, new_level=min(6, p.level + level_span),
-                recommended=p.recommended, recommended_level=p.recommended_level, type=p.type
+                recommended=p.recommended, recommended_level=p.recommended_level, rarity=p.rarity
             )
 
         # 取得有效升级量，只有在升级到推荐等级上面才是有效升级。

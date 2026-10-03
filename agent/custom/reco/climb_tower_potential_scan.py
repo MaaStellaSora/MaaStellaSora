@@ -228,7 +228,7 @@ class PotentialReader:
             if not potential.name:
                 continue
             # 读取核心潜能标记
-            potential.type = "core" if self.screen.check_potential_recommended_from_bag(core_potential_rois[i]) else ""
+            potential.rarity = "core" if self.screen.check_potential_recommended_from_bag(core_potential_rois[i]) else ""
             if not potential.core:
                 # 读取潜能等级
                 potential.level = self.screen.get_potential_level_from_bag(level_rois[i])

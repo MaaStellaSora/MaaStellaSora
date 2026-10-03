@@ -19,7 +19,7 @@ class OwnedPotential:
     level: int
     recommended_level: int
     trekker: Trekker
-    type: str = ""
+    rarity: str = ""
 
     def update(self, potential: Potential):
         """通过提供选择后的潜能数据，更新当前OwnedPotential的潜能等级"""
@@ -36,7 +36,7 @@ class OwnedPotential:
     @property
     def core(self) -> bool:
         """是否为核心潜能"""
-        return self.type == "core"
+        return self.rarity == "core"
 
     @property
     def max_level(self) -> int:
@@ -71,7 +71,7 @@ class OwnedPotentials:
             level=max(potential.new_level, 1),
             recommended_level=potential.recommended_level,
             trekker=potential.trekker,
-            type=potential.rarity,
+            rarity=potential.rarity,
         ))
 
     def find(
@@ -262,7 +262,7 @@ class PotentialDrawInfo:
             {
                 "name": p.name,
                 "trekker": p.trekker.index,
-                "type": p.rarity,
+                "rarity": p.rarity,
                 "old_level": p.old_level,
                 "new_level": p.new_level,
                 "recommended_level": p.recommended_level,
@@ -275,7 +275,7 @@ class PotentialDrawInfo:
                 "trekker": p.trekker.index,
                 "level": p.level,
                 "recommended_level": p.recommended_level,
-                "type": p.type,
+                "rarity": p.rarity,
             }
             for p in State.owned_potentials
         ]

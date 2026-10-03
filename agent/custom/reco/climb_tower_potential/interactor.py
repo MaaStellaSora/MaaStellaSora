@@ -98,15 +98,15 @@ class PotentialInteractor(Interactor):
             return False
         return self._valid_ocr(node, ocr_results)
 
-    def get_potential_types(self, core_potential: bool = False) -> list[str]:
+    def get_potentials_rarity(self, core_potential: bool = False) -> list[str]:
         """
-            检查可选潜能卡片类型
+            检查可选潜能卡片稀有度
 
             Args:
                 core_potential(bool): 是否为核心潜能，默认为False
 
             Returns:
-                list: 可选潜能卡片类型列表，识别失败时返回3个普通潜能
+                list: 可选潜能卡片稀有度列表，识别失败时返回3个普通潜能
         """
         if core_potential:
             return ["core", "core", "core"]
@@ -120,8 +120,8 @@ class PotentialInteractor(Interactor):
         potentials = [["common", box] for box in normal_potentials] + [["rare", box] for box in rare_potentials]
         potentials.sort(key=lambda x: x[1][0])
         # 去掉坐标，只保留类型标签
-        potential_types = [p[0] for p in potentials]
-        potential_count = len(potential_types)
+        potentials_rarity = [p[0] for p in potentials]
+        potential_count = len(potentials_rarity)
 
         if potential_count == 0:
             logger.error("潜能数量识别失败（没有潜能），将默认为3个普通潜能")
@@ -130,7 +130,7 @@ class PotentialInteractor(Interactor):
             logger.error(f"潜能数量识别失败（识别到{potential_count}个潜能，不符合预期），将默认为3个普通潜能")
             return ["common", "common", "common"]
 
-        return potential_types
+        return potentials_rarity
 
     def get_recommended_potential(self, roi: list[int] | None = None) -> list:
         """识别系统推荐图标，返回识别到的推荐潜能图标的坐标列表"""

@@ -114,7 +114,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         data.current_coin = data.initial_coin
         data.refresh_cost = interactor.get_refresh_cost()
         data.core_potential = interactor.check_core_potential()
-        data.potential_rarities = interactor.get_potential_types(data.core_potential)
+        data.potential_rarities = interactor.get_potentials_rarity(data.core_potential)
         if data.params.potential_source != "enhance":
             data.level_upped = interactor.check_level_upped()
 

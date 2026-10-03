@@ -232,13 +232,13 @@ class AscensionPreparation(CustomAction):
 
         if preset_melodies:
             logger.info(f"从作业中检测到预设音符：{preset_melodies}，爬塔时会买入以上音符")
-            node_data = context.get_node_data("星塔_节点_商店_购物_agent") or {}
+            node_data = context.get_node_data("星塔_节点_商店_商店主流程_agent") or {}
             shop_attachments = node_data.get("attach", {})
             for melody in preset_melodies:
                 melody = melody.lower()
                 if melody in shop_attachments:
                     context.override_pipeline({
-                        "星塔_节点_商店_购物_agent": {
+                        "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
                                 melody: True
                             }

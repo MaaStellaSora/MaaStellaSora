@@ -38,7 +38,7 @@ class PotentialInteractor(Interactor):
         try:
             return int(ocr_results[0].text)
         except (ValueError, TypeError, IndexError):
-            logger.error("未识别到刷新花费，将默认为-1")
+            logger.debug("未识别到刷新花费，将默认为-1")
             return -1
 
     def check_core_potential(self) -> bool:

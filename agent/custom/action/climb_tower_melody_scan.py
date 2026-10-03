@@ -6,6 +6,7 @@
 import numpy as np
 from maa.context import Context
 
+from custom.action.climb_tower_shop.context import Melody
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_melody_scan")
 
@@ -27,11 +28,8 @@ MELODY_NODE = "星塔_背包_识别音符_agent"
 COUNT_NODE = "星塔_背包_识别音符数量_agent"
 
 
-def scan_melody_counts(context: Context, data) -> dict[str, int]:
-    """读取背包中各音符的持有数量。
-
-    仅当配置里存在任一 melody_of_xxx > 0 时才读取；否则直接返回空字典，
-    不做任何多余操作（不打开背包、不截图）。
+def auto_scan_melody_counts(context: Context, data) -> dict[str, int]:
+    """自动打开背包并读取背包中各音符的持有数量，完成后关闭背包。
 
     Args:
         context: 任务上下文。
@@ -40,21 +38,52 @@ def scan_melody_counts(context: Context, data) -> dict[str, int]:
     Returns:
         dict[str, int]: {melody_of_xxx: 持有数量}；未设目标或读取失败时为空字典。
     """
-    # 获取属性音符，整合成正确的音符列表
-    active_element_melodies = _get_element_melodies(context, ELEMENT_NODE)
-    melodies = [*MAIN_MELODIES, *active_element_melodies]
-
-    targets = [m for m in melodies if data.get_melody_target(m) > 0]
+    targets = _get_active_melodies(context, data)
     if not targets:
         logger.debug("未设置音符数量目标，跳过音符读取")
         return {}
 
+    if not _open_melody_detail(context):
+        return {}
+    counts = scan_melody_counts(context, targets)
+    _close_bag(context)
+
+    return counts
+
+
+def direct_scan_melody_counts(context: Context, data) -> dict[str, int]:
+    """直接读取背包中各音符的持有数量。
+
+    Args:
+        context: 任务上下文。
+        data: 商店配置数据，用于判断是否设置了音符目标。
+
+    Returns:
+        dict[str, int]: {melody_of_xxx: 持有数量}；未设目标或读取失败时为空字典。
+    """
+    targets = _get_active_melodies(context, data)
+    if not targets:
+        logger.debug("未设置音符数量目标，跳过音符读取")
+        return {}
+
+    return scan_melody_counts(context, targets)
+
+
+def scan_melody_counts(context: Context, target_melodies: list[str]) -> dict[str, int]:
+    """读取背包中各音符的持有数量。该函数默认当前界面为背包的秘纹技能界面。
+    仅读取有设置音符策略的音符，如果没有设置音符策略，直接返回空字典。
+
+    Args:
+        context: 任务上下文。
+        target_melodies: 设置了音符策略的音符列表。
+
+    Returns:
+        dict[str, int]: {melody_of_xxx: 持有数量}；未设目标或读取失败时为空字典。
+    """
     counts: dict[str, int] = {}
     try:
-        if not _open_melody_detail(context):
-            return {}
         image = context.tasker.controller.post_screencap().wait().get()
-        for melody in targets:
+        for melody in target_melodies:
             counts[melody] = _read_melody_count(context, image, melody)
             if counts[melody] == -1:
                 logger.error(f"读取音符{melody}的数量时出现问题，为保证爬塔质量，将结束任务")
@@ -63,14 +92,21 @@ def scan_melody_counts(context: Context, data) -> dict[str, int]:
     except Exception as exc:
         logger.error(f"读取音符数量时出现程序异常：{exc}，为保证爬塔质量，将结束任务")
         context.tasker.post_stop()
-    finally:
-        _run(context, CLOSE_BAG_NODE)
 
     if counts:
         logger.debug(f"读取到音符数量：{counts}")
     else:
         logger.warning("未能读取到任何音符数量")
     return counts
+
+
+def _get_active_melodies(context: Context, data) -> list[str]:
+    """获取设置了音符策略的音符列表"""
+    # 获取属性音符，整合成正确的音符列表
+    active_element_melodies = _get_element_melodies(context, ELEMENT_NODE)
+    melodies = [*MAIN_MELODIES, *active_element_melodies]
+
+    return [m for m in melodies if getattr(data.params, m, -1) > 0]
 
 
 def _get_element_melodies(context: Context, node: str) -> list[str]:
@@ -87,6 +123,14 @@ def _open_melody_detail(context: Context) -> bool:
     """依次打开 背包 -> 秘纹技能，任一步失败即放弃。"""
     if not _run(context, OPEN_BAG_NODE):
         logger.error("打开音符说明界面失败")
+        return False
+    return True
+
+
+def _close_bag(context: Context) -> bool:
+    """关闭背包，任一步失败即放弃。"""
+    if not _run(context, CLOSE_BAG_NODE):
+        logger.error("关闭背包界面失败")
         return False
     return True
 

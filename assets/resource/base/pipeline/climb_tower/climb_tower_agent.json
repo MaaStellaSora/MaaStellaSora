@@ -259,10 +259,10 @@
             }
         },
         "next": [
-            "星塔_节点_商店_购物_agent"
+            "星塔_节点_商店_商店主流程_agent"
         ]
     },
-    "星塔_节点_商店_购物_agent": {
+    "星塔_节点_商店_商店主流程_agent": {
         "action": {
             "type": "Custom",
             "param": {
@@ -270,20 +270,19 @@
             }
         },
         "next": [
-            "星塔_节点_回到商店层_agent",
-            "[JumpBack]星塔_节点_商店_购物_返回商店层_agent"
+            "星塔_节点_商店_离开商店_agent",
+            "星塔_节点_商店_离开星塔_agent"
         ],
         "attach": {
-            "lang_type": "cn",
-            "priority": [
-                "drink",
-                "melody"
-            ],
+            "lang": "cn",
+            "handler": "shop_handler",
             "drink_discount_threshold": 0.8,
             "melody_5_discount_threshold": 1.0,
             "melody_15_discount_threshold": 0.5,
             "regular_shop_refresh_threshold": 1500,
             "full_price_buy_reserve_base": 500,
+            "max_enhancement_cost": 180,
+            "initial_enhancement_cost": 60,
             "buy_assist_melody": true,
             "buy_assist_before_unlock": true,
             "buy_melody_at_final_only": false,
@@ -300,62 +299,6 @@
             "melody_of_luck": 0,
             "melody_of_burst": 0,
             "melody_of_stamina": 0
-        }
-    },
-    "星塔_节点_商店_购物_返回商店层_agent": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": [
-                    "ClimbTower_agent/星塔_商店_返回__50_17_37_38__0_0_137_105.png",
-                    "ClimbTower_agent/爬塔_背包返回__34_16_54_49__0_0_138_115.png"
-                ],
-                "roi": [
-                    13,
-                    7,
-                    201,
-                    89
-                ]
-            }
-        },
-        "action": {
-            "type": "Click"
-        },
-        "post_wait_freezes": 100
-    },
-    "星塔_节点_回到商店层_agent": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": [
-                    "商店购物"
-                ],
-                "roi": [
-                    350,
-                    250,
-                    580,
-                    330
-                ]
-            }
-        },
-        "next": [
-            "星塔_节点_商店_强化_agent"
-        ]
-    },
-    "星塔_节点_商店_强化_agent": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "enhance_action"
-            }
-        },
-        "next": [
-            "星塔_节点_商店_离开商店_agent",
-            "星塔_节点_商店_离开星塔_agent"
-        ],
-        "attach": {
-            "max_cost": 180,
-            "initial_cost": 60
         }
     },
     "星塔_节点_商店_离开商店_agent": {

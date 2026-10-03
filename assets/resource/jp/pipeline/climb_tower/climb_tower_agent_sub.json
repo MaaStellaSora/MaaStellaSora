@@ -30,7 +30,7 @@
             }
         }
     },
-    "星塔_节点_商店_强化_回到商店层_agent": {
+    "星塔_节点_商店_回到商店层_agent": {
         "recognition": {
             "type": "OCR",
             "param": {

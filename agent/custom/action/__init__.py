@@ -8,7 +8,6 @@ from .activity import *
 
 __all__ = [
     "ShopAction",
-    "EnhanceAction",
     "InviteAuto",
     "InviteMemory",
     "UToolCalcRepeat",

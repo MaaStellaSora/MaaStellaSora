@@ -44,19 +44,9 @@
             }
         }
     },
-    "星塔_节点_商店_购物_agent": {
+    "星塔_节点_商店_商店主流程_agent": {
         "attach": {
-            "lang_type": "tw"
-        }
-    },
-    "星塔_节点_回到商店层_agent": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": [
-                    "商店購物"
-                ]
-            }
+            "lang": "tw"
         }
     },
     "星塔_节点_商店_离开商店_agent": {

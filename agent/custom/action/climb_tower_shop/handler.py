@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import time
+from typing import Any, Generator
 
 from . import pipeline
 from .context import ShopContext, Item
@@ -11,29 +12,27 @@ from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_shop_handler")
 
 class ShopHandler:
+    strategies = [
+        pipeline.DRINK_BUY_STRATEGY,
+        pipeline.ASSIST_MELODY_STRATEGY,
+        pipeline.MELODY_BUY_STRATEGY,
+        pipeline.HIGH_PRICE_DRINKS_STRATEGY,
+        # 仅在最终商店的最后关头执行的策略
+        pipeline.REMAINING_DRINKS_STRATEGY,
+        pipeline.FINAL_REMAINDER_STRATEGY,
+    ]
 
     def __init__(self, interactor: ShopInteractor, data: ShopContext):
         self.interactor = interactor
         self.data = data
 
-    def execute_buy_plan(self):
-        """执行购买计划"""
-        self._execute(pipeline.DRINK_BUY_STRATEGY)
-        self._execute(pipeline.ASSIST_MELODY_STRATEGY)
-        self._execute(pipeline.MELODY_BUY_STRATEGY)
-        self._execute(pipeline.HIGH_PRICE_DRINKS_STRATEGY)
-        # 仅在最终商店的最后关头执行的策略
-        self._execute(pipeline.REMAINING_DRINKS_STRATEGY)
-        self._execute(pipeline.FINAL_REMAINDER_STRATEGY)
-
     def read_shop_page_info(self) -> None:
         """
         在商店层主界面读取商店层信息，更新商店层的上下文对象。
-        当前信息包括商店类型、当前强化费用、当前金币数量。
+        当前信息包括商店类型、当前强化费用。
         如果设置了音符策略，还会读取当前音符持有数量。
         """
         # 这里就先不确保处于商店层主界面了，因为在函数起点已经确保了且基本逻辑不会改变，直接识别就行
-        self.update_coin()
         self._update_enhancement_cost()
         self._update_shop_type()
         logger.debug(f"商店类型: {self.data.shop_type}")
@@ -56,11 +55,57 @@ class ShopHandler:
         # 读取刷新相关信息
         self._update_refresh_info()
 
-        # 读取商品信息
+        # 读取金币及商品信息
+        self.update_coin()
         self._update_goods_info()
+
+    def execute_buy_plan(self):
+        """执行购买计划"""
+        buy_plan = self._buy_plan_generator()
+        max_retry = 10
+        current_action = ""
+        repeat_count = 0
+
+        def is_over_limit(action_key: str) -> bool:
+            nonlocal current_action, repeat_count
+            if current_action == action_key:
+                repeat_count += 1
+            else:
+                current_action = action_key
+                repeat_count = 1
+            return repeat_count > max_retry
+
+        while not self.interactor.context.tasker.stopping:
+            # 优先判断强化行为
+            if self._should_enhance_first():
+                if is_over_limit("ENHANCE"):
+                    break
+                logger.info("优先执行强化操作")
+                self._enhance()
+                continue
+
+            # 判断商店物品购买行为
+            plan = next(buy_plan, None)
+            if plan and plan.target_item:
+                if is_over_limit(f"BUY_{plan.name}"):
+                    break
+                plan.buy(self)
+                continue
+
+            # 没有获得任何计划时，退出循环
+            return
+
+        # 循环被打断时判断是否人工打断，否则判断为超出预期次数
+        if not self.interactor.context.tasker.stopping:
+            logger.error("执行强化或购买计划超出预期次数，为保证爬塔质量，将中止任务")
+            self.interactor.context.tasker.post_stop()
 
     def refresh(self):
         """刷新当前商店"""
+        # 确保处于商店购物界面
+        self.interactor.enter_shopping()
+
+        # 开始刷新
         current_refresh_remaining = self.data.refresh_remaining
         self.interactor.context.run_task("星塔_节点_商店_点击刷新_agent")
         for _ in range(20):
@@ -75,11 +120,8 @@ class ShopHandler:
         logger.error("等待刷新超时，为保证爬塔质量，将中止任务")
         self.interactor.context.tasker.post_stop()
 
-    def enhance(self):
-        """进行强化"""
-        # 确保在商店层购物界面
-        self.interactor.context.run_task("星塔_节点_商店_万能返回商店层_agent")
-
+    def enhance_all(self):
+        """强化所有次数"""
         # 计算可强化次数
         count = self.data.total_enhancement_count
         if self.data.shop_type == "final":
@@ -91,20 +133,45 @@ class ShopHandler:
 
         # 开始强化
         for _ in range(count):
-            if not self.interactor.enhance():
+            if not self._enhance():
                 logger.error(f"强化出现问题，终止强化")
                 return
 
-    def _execute(self, buy_plan: pipeline.BuyPipeline):
-        """执行单个购买计划"""
-        for _ in range(20):
-            if self.interactor.context.tasker.stopping:
-                return
-            target = buy_plan.step(self)
-            if not target:
-                return
-        logger.error(f"购买计划 {buy_plan.name} 已执行20次且没有完成，为保证爬塔质量，将中止任务")
-        self.interactor.context.tasker.post_stop()
+    def _enhance(self) -> bool:
+        """进行一次强化"""
+        # 确保在商店层主界面
+        self.interactor.back_to_main_page()
+
+        # 开始强化
+        if not self.interactor.enhance():
+            self.data.enhance_error += 1
+            return False
+
+        # 更新强化费用与辉光币数量
+        self.interactor.update_image()
+        self._update_enhancement_cost()
+        self.update_coin()
+        return True
+
+    def _should_enhance_first(self) -> bool:
+        """是否优先执行强化操作"""
+        if self.data.total_enhancement_count <= 0 or self.data.enhance_error > 0:
+            return False
+        # TODO: 根据当前潜能内容判断是否优先强化，在还没完成之前直接返回False
+        return False
+
+    def _buy_plan_generator(self) -> Generator[pipeline.BuyPipeline, Any, None]:
+        """获取购买计划的下一个目标"""
+        for buy_plan in self.strategies:
+            while True:
+                if self.interactor.context.tasker.stopping:
+                    return
+
+                plan = buy_plan.get_plan(self)
+                if not plan.target_item:
+                    break
+
+                yield plan
 
     def _update_goods_info(self):
         """识别购物界面 8 个格子的道具信息。
@@ -217,7 +284,7 @@ class ShopHandler:
         self.data.refresh_cost = self.interactor.get_refresh_cost()
 
     def update_coin(self):
-        """更新当前辉光币数量"""
+        """更新当前辉光币数量（辉光币是游戏中唯一金币）"""
         self.data.current_coin = self.interactor.get_current_coin()
 
     def _update_enhancement_cost(self):

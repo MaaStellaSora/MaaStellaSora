@@ -49,9 +49,10 @@ class ShopAction(CustomAction):
             handler.refresh()
 
         # 购买完成，返回商店层进行强化
-        handler.enhance()
+        handler.enhance_all()
 
-        # 结束商店层任务
+        # 确保返回商店层主界面，结束商店层流程
+        interactor.back_to_main_page()
         return True
 
     @staticmethod

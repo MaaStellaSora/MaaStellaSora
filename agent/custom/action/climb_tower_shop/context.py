@@ -371,6 +371,7 @@ class ShopContext:
     current_enhancement_cost: int = -1 # 当前强化消耗的辉光币数量
     melodies: Melodies = field(init=False) # 音符数量，如无设置音符策略则不会更新
     items: list[Item] = field(default_factory=list) # 当前商品格子信息
+    enhance_error: int = 0 # 强化错误次数
     # 内部工具
     _item_reverse_maps: dict[str, dict[str, str]] = field(init=False, repr=False)
     _enhancement_calculator: EnhancementCalculator = EnhancementCalculator()

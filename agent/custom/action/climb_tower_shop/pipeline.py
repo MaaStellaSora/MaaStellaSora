@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Self
 
 if TYPE_CHECKING:
     from .handler import ShopHandler
@@ -24,28 +24,33 @@ class BuyPipeline:
         self.sorter = sorter
         self.filterer = filterer
         self.buyer = buyer
+        self.target_item = None
 
-    def step(self, handler: ShopHandler) -> bool:
+    def get_plan(self, handler: ShopHandler) -> Self:
         """
-        执行单次评估与买入。
-        返回 True 表示成功进行了一次买入（状态已更新，需要重新循环评估）；
-        返回 False 表示当前策略已无可执行目标。
+        评估目标购买商品，并返回对象自身。
         """
         if handler.interactor.context.tasker.stopping:
-            return False
+            self.target_item = None
+            return self
 
         # 1. 实时排序
         sorted_items = self.sorter(handler.data.items)
 
         # 2. 实时 Filter：根据最新的 ShopContext 判断出当前【唯一】可买目标
-        target_item = self.filterer(sorted_items, handler.data)
-        if target_item is None:
-            return False
+        self.target_item = self.filterer(sorted_items, handler.data)
+        if self.target_item:
+            text = f"策略 [{self.name}] 选中目标: {self.target_item.internal_name} (格子 {self.target_item.grid_num})"
+            logger.debug(text)
+        return self
 
-        # 3. 执行 Buy：由 BuyFunc 全权负责 UI 买入 + 后置状态修改（扣金币、减库存、记已买等）
-        logger.debug(f"策略 [{self.name}] 选中目标: {target_item.internal_name} (格子 {target_item.grid_num})")
-        self.buyer(target_item, handler)
-        return True
+    def buy(self, handler: ShopHandler):
+        """买入当前目标商品"""
+        # 执行 Buy：由 BuyFunc 全权负责 UI 买入 + 后置状态修改（扣金币、减库存、记已买等）
+        if not self.target_item:
+            logger.warning(f"策略 [{self.name}] 当前无购买目标")
+            return False
+        return self.buyer(self.target_item, handler)
 
 
 # ----------------- Sorter -----------------

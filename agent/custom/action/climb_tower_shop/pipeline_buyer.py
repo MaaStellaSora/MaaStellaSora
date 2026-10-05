@@ -23,6 +23,10 @@ def buy_general(item: Item, handler: ShopHandler) -> bool:
     Returns:
         bool: 购买任务成功返回 True。
     """
+    # 确保处于购物界面
+    handler.interactor.enter_shopping()
+
+    # 购买环节
     data = handler.data
     context = handler.interactor.context
 
@@ -66,6 +70,10 @@ def buy_assist_melody(item: Item, handler: ShopHandler) -> bool:
     Returns:
         bool: 购买任务成功返回 True。
     """
+    # 确保处于购物界面
+    handler.interactor.enter_shopping()
+
+    # 开始尝试购买协奏音符
     override: dict[str, Any] = {
         "星塔_节点_商店_购买协奏音符_agent": {
             "action": {"param": {"target": item.price_roi}}

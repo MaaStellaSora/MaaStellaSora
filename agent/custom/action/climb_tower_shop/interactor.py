@@ -18,6 +18,15 @@ class ShopInteractor(Interactor):
         logger.debug("进入购物界面成功")
         return True
 
+    def back_to_main_page(self):
+        """返回商店层主界面。"""
+        run_result = self.context.run_task("星塔_节点_商店_万能返回商店层_agent")
+        if not (run_result and run_result.status.succeeded):
+            logger.warning("返回商店层主界面失败")
+            return False
+        logger.debug("返回商店层主界面成功")
+        return True
+
     def enhance(self) -> bool:
         """强化"""
         pipeline_override = {

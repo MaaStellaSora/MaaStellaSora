@@ -408,26 +408,25 @@
             "Node.Action.Succeeded": "点击邀约确认按钮"
         }
     },
-    "邀约_点击空白": {
+    "邀约_送礼后快进": {
         "recognition": {
             "type": "OCR",
             "param": {
                 "expected": [
-                    "点击空白",
-                    "处继续"
+                    "默契"
                 ],
                 "roi": [
-                    471,
-                    486,
-                    335,
-                    216
+                    30,
+                    600,
+                    180,
+                    60
                 ]
             }
         },
         "action": {
             "type": "Click"
         },
-        "post_wait_freezes": 1000
+        "post_wait_freezes": 100
     },
     "邀约_跳过": {
         "recognition": {
@@ -473,10 +472,9 @@
         "action": {
             "type": "Click"
         },
-        "post_wait_freezes": 1000,
+        "timeout": 30000,
         "next": [
-            "邀约_已回到邀约界面",
-            "[JumpBack]邀约_默契提升"
+            "邀约_默契提升"
         ],
         "focus": {
             "Node.Recognition.Succeeded": "还是算了"
@@ -502,9 +500,9 @@
         },
         "timeout": 30000,
         "next": [
-            "邀约_已回到邀约界面",
-            "[JumpBack]邀约_点击空白",
-            "[JumpBack]邀约_默契提升"
+            "邀约_默契提升",
+            "[JumpBack]通用_点击空白处继续",
+            "[JumpBack]邀约_送礼后快进"
         ],
         "focus": {
             "Node.Recognition.Succeeded": "邀约_送出礼物"
@@ -620,16 +618,21 @@
                     "提升"
                 ],
                 "roi": [
-                    789,
-                    200,
-                    268,
-                    81
+                    680,
+                    170,
+                    490,
+                    120
                 ]
             }
         },
         "action": {
             "type": "Click"
-        }
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "邀约_默契提升",
+            "邀约_已回到邀约界面"
+        ]
     },
     "邀约_达上限": {
         "recognition": {

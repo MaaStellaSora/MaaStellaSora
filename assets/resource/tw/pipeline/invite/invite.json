@@ -71,16 +71,6 @@
             }
         }
     },
-    "邀约_点击空白": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "點選空白",
-                    "處繼續"
-                ]
-            }
-        }
-    },
     "邀约_送出礼物": {
         "recognition": {
             "param": {

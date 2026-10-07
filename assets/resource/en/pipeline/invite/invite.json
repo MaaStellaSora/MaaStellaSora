@@ -62,12 +62,11 @@
             }
         }
     },
-    "邀约_点击空白": {
+    "邀约_送礼后快进": {
         "recognition": {
             "param": {
                 "expected": [
-                    "Select anywhere",
-                    "Continue"
+                    "Affinity"
                 ]
             }
         }
@@ -103,13 +102,7 @@
         "recognition": {
             "param": {
                 "expected": [
-                    "Level Up"
-                ],
-                "roi": [
-                    0,
-                    0,
-                    1280,
-                    720
+                    "Affinity Level Up"
                 ]
             }
         }

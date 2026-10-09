@@ -108,8 +108,7 @@
         "recognition": {
             "param": {
                 "expected": [
-                    "信頼度",
-                    "アップ"
+                    "信頼度アップ"
                 ]
             }
         }

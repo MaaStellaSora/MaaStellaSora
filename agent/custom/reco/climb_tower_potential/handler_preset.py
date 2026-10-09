@@ -393,7 +393,8 @@ class RecommendationHandler(ChoosePotentialHandler):
                 格式为{旅人对象: [{"score": 期望分数, "weight": 权重}]}
         """
         # 新潜能等级概率权重: Lv1(30%), Lv2(20%), Lv3(50%)
-        level_weights = [(1, 0.3), (2, 0.2), (3, 0.5)] if State.high_level_span_count < 10 else [(1, 0.3), (2, 0.7)]
+        high_level_span_flag = State.high_level_span_count is None or State.high_level_span_count < 10
+        level_weights = [(1, 0.3), (2, 0.2), (3, 0.5)] if high_level_span_flag else [(1, 0.3), (2, 0.7)]
 
         # 计算还可以获得的新推荐潜能的数量
         # 由于6/5的硬上限限制，且无法预知还有多少有效新潜能需要获取，所以如果不小心拿到了垃圾潜能，也只能当作拿到推荐潜能算
@@ -518,6 +519,14 @@ class RecommendationHandler(ChoosePotentialHandler):
 
     @staticmethod
     def _tower_8_record(p: Potential) -> None:
+        # 初始化状态变量
+        if State.potentials_level_count is None:
+            State.potentials_level_count = 0
+        if State.high_level_span_count is None:
+            State.high_level_span_count = 0
+        if State.enhance_high_level_span_count is None:
+            State.enhance_high_level_span_count = 0
+
         State.potentials_level_count += p.level_span
         logger.info(f"潜能计数 {State.potentials_level_count}")
         if not p.core:

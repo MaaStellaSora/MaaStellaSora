@@ -8,6 +8,7 @@ from . import pipeline
 from .context import ShopContext, Item
 from .interactor import ShopInteractor
 from custom.action.climb_tower_melody_scan import auto_scan_melody_counts
+from custom.reco.climb_tower_potential.state import State
 from utils import logger as logger_module
 logger = logger_module.get_logger("climb_tower_shop_handler")
 
@@ -154,11 +155,17 @@ class ShopHandler:
         return True
 
     def _should_enhance_first(self) -> bool:
-        """是否优先执行强化操作"""
-        if self.data.total_enhancement_count <= 0 or self.data.enhance_error > 0:
+        """是否优先执行强化操作（暂时用简单的方法判断）"""
+        if not State.owned_potentials or self.data.total_enhancement_count <= 0 or self.data.enhance_error > 0:
             return False
-        # TODO: 根据当前潜能内容判断是否优先强化，在还没完成之前直接返回False
-        return False
+        percentage = 0.33
+        level_span = 1
+        if State.enhance_high_level_span_count and State.enhance_high_level_span_count < 5:
+            level_span = 2
+        # 取离推荐等级还有level_span距离的潜能的数量，跟所有未满级潜能的数量，然后做对比
+        incomplete_count = State.owned_potentials.count(incomplete_level=level_span)
+        total_count = State.owned_potentials.count(leveling_only=True)
+        return total_count > 0 and incomplete_count / total_count >= percentage
 
     def _buy_plan_generator(self) -> Generator[pipeline.BuyPipeline, Any, None]:
         """获取购买计划的下一个目标"""

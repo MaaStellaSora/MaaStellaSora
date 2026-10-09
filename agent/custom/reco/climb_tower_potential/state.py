@@ -64,6 +64,9 @@ class OwnedPotentials:
     def __len__(self):
         return len(self.potentials)
 
+    def __bool__(self):
+        return bool(self.potentials)
+
     def add(self, potential: Potential) -> None:
         """将选中的潜能添加到OwnedPotentials中"""
         self.potentials.append(OwnedPotential(
@@ -170,6 +173,7 @@ class OwnedPotentials:
         recommended_level_at_most: int | None = None,
         include_core: bool = False,
         incomplete_only: bool = False,
+        incomplete_level: int | None = None,
         leveling_only: bool = False
     ) -> int:
         """统计符合条件的潜能的数量"""
@@ -193,6 +197,7 @@ class OwnedPotentials:
             and (recommended_level_at_most is None or potential.recommended_level <= recommended_level_at_most)
             and (include_core or not potential.core)
             and (not incomplete_only or potential.level < potential.recommended_level)
+            and (incomplete_level is None or potential.recommended_level - potential.level >= incomplete_level)
             and (not leveling_only or potential.level < potential.max_level)
         )
 
@@ -307,18 +312,18 @@ class PotentialDrawInfo:
 
 class State:
     """保存需要跨节点储存的的潜能抽取相关信息，因为潜能选择节点调用链复杂，无法使用MaaFramework的特性进行跨节点储存"""
-    high_level_span_count: int = 0
-    enhance_high_level_span_count: int = 0
-    potentials_level_count: int = 0
-    trekkers: list[Trekker] = []
-    owned_potentials: OwnedPotentials = OwnedPotentials()
-    potential_draw_info: PotentialDrawInfo = PotentialDrawInfo()
+    high_level_span_count: int | None = None  # preset模式种类策略使用
+    enhance_high_level_span_count: int | None = None  # preset模式种类策略使用
+    potentials_level_count: int | None = None  # preset模式种类策略使用
+    trekkers: list[Trekker] = []  # preset模式使用
+    owned_potentials: OwnedPotentials = OwnedPotentials()  # preset、json模式使用
+    potential_draw_info: PotentialDrawInfo = PotentialDrawInfo()  # preset模式开启开发者选项时使用
 
     @classmethod
     def reset(cls):
-        cls.high_level_span_count = 0
-        cls.enhance_high_level_span_count = 0
-        cls.potentials_level_count = 0
+        cls.high_level_span_count = None
+        cls.enhance_high_level_span_count = None
+        cls.potentials_level_count = None
         cls.trekkers.clear()
         cls.owned_potentials = OwnedPotentials()
         if cls.potential_draw_info.available and DRAW_DATA_SAVE_ENABLED:

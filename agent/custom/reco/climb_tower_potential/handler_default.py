@@ -6,7 +6,6 @@ from .interactor import PotentialInteractor
 from .state import State, Trekker, OwnedPotentials, OwnedPotential
 
 from utils import logger as logger_module
-from utils.dev_config import DEV_IMAGES_SAVE_ENABLED
 logger = logger_module.get_logger("climb_tower_potential_default")
 
 
@@ -105,10 +104,6 @@ class ChoosePotentialHandler:
         for i, roi in enumerate(adjusted_rois):
             old, new = self.screen.get_potential_level(roi)
             self.data.potentials[i].old_level, self.data.potentials[i].new_level = old, new
-
-            if DEV_IMAGES_SAVE_ENABLED and old == -1 and new == -1:
-                from utils.image_handler import save_image
-                save_image(self.screen.image, f"第{i}个潜能等级识别失败_{roi}")
 
     def _update_recommended_potentials(self):
         """更新推荐潜能信息"""

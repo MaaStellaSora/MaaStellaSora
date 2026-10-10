@@ -1,33 +1,125 @@
 [
   {
+    "description": "【问答题】后果含“选择正确回答”时，选后台数据里的正确答案",
     "choices": [
-      "Just a try",
-      "Twelve o'clock",
-      "follow it through",
-      "aims high",
-      "always three options",
-      "6?",
-      "more veg things",
-      "sit too long",
-      "12?",
+      "Twelve o.clock",
+      "Balanced Diet",
       "Carpe diem",
+      "follow it through",
+      "always three options",
+      "veg things",
       "governed by desire",
-      "1024",
-      "light it up",
-      "I'll listen to anything",
-      "I'm willing to pay for this",
-      "Victory beckons",
-      "Get stronger",
-      "Can I play it",
-      "Anywhere my heart leads",
-      "We are Kindred spirits"
+      "aims high",
+      "^1024",
+      "sit too long",
+      "^12[?？]",
+      "^6[?？]"
     ],
-    "description": "问答选项"
+    "consequences": [
+      "Choose the correct answer"
+    ]
   },
   {
+    "description": "【1 免费拿潜能】无任何消耗直接获得潜能",
     "consequences": [
-      "650"
-    ],
-    "description": "650金币的选项"
+      "^Obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【2 音符换潜能】消耗音符获得潜能",
+    "consequences": [
+      "^Spend random Musical Note\\s*[×xX]\\s*\\d+ to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【3a 生命换潜能-优先档】消耗50%生命换潜能",
+    "consequences": [
+      "^Spend 50% (Max )?HP to obtain random Rare Potential"
+    ]
+  },
+  {
+    "description": "【3b 生命换潜能】消耗生命获得确定的潜能",
+    "consequences": [
+      "^Spend \\d+% (Max )?HP to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【4a 免费赌潜能-优先档】无损失风险的三选一赌局",
+    "consequences": [
+      "^33% chance to obtain Rare Potential"
+    ]
+  },
+  {
+    "description": "【4b 免费赌潜能】无损失风险的赌局：三选一（潜能/回血/掉血），或二选一（50%潜能 / 50%回血或币）",
+    "consequences": [
+      "^33% chance to obtain .*Potential",
+      "^50% chance to [^,]*,\\s*50% chance to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【4c 免费赌随机变化】币±100/生命随机变化/潜能只涨不掉，没有真实损失风险",
+    "consequences": [
+      "randomly changes"
+    ]
+  },
+  {
+    "description": "【5a 花币买潜能-100币档】",
+    "consequences": [
+      "^Spend\\s*[×xX]\\s*100\\s+to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【5b 花币买潜能-120币档】",
+    "consequences": [
+      "^Spend\\s*[×xX]\\s*120\\s+to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【5c 花币买潜能-160币档】",
+    "consequences": [
+      "^Spend\\s*[×xX]\\s*160\\s+to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【5d 花币买潜能-180币档】",
+    "consequences": [
+      "^Spend\\s*[×xX]\\s*180\\s+to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【5e 花币买潜能-200币档】",
+    "consequences": [
+      "^Spend\\s*[×xX]\\s*200\\s+to obtain random .*Potential"
+    ]
+  },
+  {
+    "description": "【6 音符换币】消耗音符获得辉光币",
+    "consequences": [
+      "^Spend random Musical Note\\s*[×xX]\\s*\\d+ to obtain\\s*[×xX]\\s*\\d+"
+    ]
+  },
+  {
+    "description": "【7 币赌局】赌最大盈利的那个：30%赢650 / 70%输200",
+    "consequences": [
+      "^30% chance to obtain\\s*[×xX]\\s*650"
+    ]
+  },
+  {
+    "description": "【8 免费拿音符】只选“随机音符”，不选指定之音；注意不匹配带消耗的",
+    "consequences": [
+      "^Obtain random Musical Note"
+    ]
+  },
+  {
+    "description": "【9 免费赌音符】50%回血 / 50%随机音符，不花币",
+    "consequences": [
+      "^50% chance to recover \\d+% HP, 50% chance to obtain random Musical Note"
+    ]
+  },
+  {
+    "description": "【10 保底】以上都没有时选“获得30币”",
+    "consequences": [
+      "^Obtain\\s*[×xX]\\s*30\\b"
+    ]
   }
 ]

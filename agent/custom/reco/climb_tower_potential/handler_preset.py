@@ -97,7 +97,7 @@ class RecommendationHandler(ChoosePotentialHandler):
         """
         默认策略，根据等级跨度、推荐等级、当前等级排序来选择推荐潜能，如没有推荐潜能则返回 None
         """
-        candidates = [p for p in self.data.potentials if p.recommended]
+        candidates = [p for p in self.data.potentials if p.old_level < p.recommended_level]
         if candidates:
             # 按照等级跨度降序、推荐等级降序、旧等级降序来排序，选择最优的潜能
             return max(candidates, key=lambda p: (p.level_span, p.recommended_level, p.old_level), default=None)

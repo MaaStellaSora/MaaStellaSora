@@ -91,9 +91,9 @@ class AscensionPreparation(CustomAction):
             with open(event_rules_path, "r", encoding="utf-8") as f:
                 content = f.read()
                 # 因为规则可能作为正则使用，若预案中包含未转义的加号(+)会影响匹配，先做文本层面检查并给出提示
-                if "+" in content:
-                    logger.warning(
-                        f"对话选项规则'{event_rules_path}'中包含加号(+)\n作为正则元字符，可能需要转义以避免解析或匹配异常")
+                # if "+" in content:
+                #     logger.warning(
+                #         f"对话选项规则'{event_rules_path}'中包含加号(+)作为正则元字符，可能需要转义以避免解析或匹配异常")
                 event_rules = json.loads(content)
                 if not isinstance(event_rules, list):
                     logger.error(f"对话选项规则文件'{event_rules_path}'解析后不是列表类型，无法使用")

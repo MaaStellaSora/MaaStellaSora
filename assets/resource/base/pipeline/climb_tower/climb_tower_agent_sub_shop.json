@@ -1,5 +1,7 @@
 {
     "星塔_节点_商店_商店层_进入购物界面_agent": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "next": [
             "星塔_节点_商店_确认处于购物界面_agent",
             "[JumpBack]星塔_节点_商店_点击商店购物_agent"
@@ -299,6 +301,8 @@
         ]
     },
     "星塔_节点_商店_万能返回商店层_agent": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "next": [
             "星塔_节点_商店_回到商店层_agent",
             "[JumpBack]星塔_节点_商店_购买协奏音符_退出购买_agent",

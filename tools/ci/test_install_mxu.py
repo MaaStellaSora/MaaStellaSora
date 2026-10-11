@@ -42,17 +42,17 @@ class InstallMxuTests(unittest.TestCase):
                     "name": "桌面端",
                     "type": "Win32",
                     "win32": {},
-                    "attach_resource_path": ["{PROJECT_DIR}/resource/windows"],
+                    "attach_resource_path": ["resource/windows"],
                 },
                 {"name": "安卓端", "type": "Adb"},
             ],
             "resource": [
-                {"name": "官服", "path": ["{PROJECT_DIR}/resource/base"]},
+                {"name": "官服", "path": ["resource/base"]},
                 {
                     "name": "国际服",
                     "path": [
-                        "{PROJECT_DIR}/resource/base",
-                        "{PROJECT_DIR}/resource/en",
+                        "resource/base",
+                        "resource/en",
                     ],
                 },
             ],
@@ -180,14 +180,22 @@ class InstallMxuTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "resource.path"):
             install_mxu.transform_interface(interface, "v1.2.3")
 
-    def test_real_interface_uses_mxu_paths_without_changing_source(self) -> None:
+    def test_real_interface_uses_relative_paths_without_changing_source(self) -> None:
         source_path = install_mxu.WORKING_DIR / "assets" / "interface.json"
         source_text = source_path.read_text(encoding="utf-8")
         transformed = install_mxu.transform_interface(
             json.loads(source_text), "v1.2.3"
         )
 
-        self.assertNotIn(install_mxu.PROJECT_DIR_PREFIX, json.dumps(transformed))
+        self.assertEqual(
+            [resource["path"] for resource in transformed["resource"]],
+            [
+                ["resource/base"],
+                ["resource/base", "resource/tw"],
+                ["resource/base", "resource/en"],
+                ["resource/base", "resource/jp"],
+            ],
+        )
         self.assertEqual(
             transformed["controller"][0]["attach_resource_path"],
             ["resource/windows"],

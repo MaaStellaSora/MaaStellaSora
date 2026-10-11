@@ -44,11 +44,6 @@ REQUIRED_MAAFW_FILES = (
     "MaaAgentServer.dll",
 )
 REQUIRED_AGENT_BINARY_DIRS = ("maatouch", "minitouch")
-PROJECT_DIR_PREFIX = "{PROJECT_DIR}/"
-
-
-def _strip_project_dir(path: str) -> str:
-    return path.removeprefix(PROJECT_DIR_PREFIX)
 
 
 def transform_interface(interface: dict[str, Any], version: str) -> dict[str, Any]:
@@ -81,7 +76,6 @@ def transform_interface(interface: dict[str, Any], version: str) -> dict[str, An
             isinstance(path, str) for path in paths
         ):
             raise ValueError("each resource.path must be an array of strings")
-        resource["path"] = [_strip_project_dir(path) for path in paths]
 
     controllers = transformed.get("controller")
     if not isinstance(controllers, list):
@@ -98,9 +92,6 @@ def transform_interface(interface: dict[str, Any], version: str) -> dict[str, An
             raise ValueError(
                 "each controller.attach_resource_path must be an array of strings"
             )
-        controller["attach_resource_path"] = [
-            _strip_project_dir(path) for path in paths
-        ]
 
     return transformed
 
@@ -244,9 +235,6 @@ def validate_package(install_dir: Path) -> dict[str, Any]:
     if not isinstance(interface.get("version"), str) or not interface["version"]:
         raise ValueError("interface.version must be a non-empty string")
 
-    serialized = json.dumps(interface, ensure_ascii=False)
-    if PROJECT_DIR_PREFIX in serialized:
-        raise ValueError(f"interface.json still contains {PROJECT_DIR_PREFIX}")
     for forbidden_key in (
         "custom_title",
         "mirrorchyan_rid",

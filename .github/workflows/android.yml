@@ -1,0 +1,372 @@
+name: Android Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Optional project version; blank follows install.yml CI versioning"
+        type: string
+        required: false
+  workflow_call:
+    inputs:
+      version_name:
+        description: "Resolved version from install.yml; the APK is returned as MaaStellaSora-android-arm64-v8a-<version>.apk"
+        type: string
+        required: true
+      release:
+        description: "Build and sign a release APK; leave false for a debug-signed APK"
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      ANDROID_SIGNING_KEYSTORE_BASE64:
+        required: false
+      ANDROID_SIGNING_KEYSTORE_PASSWORD:
+        required: false
+      ANDROID_SIGNING_KEY_ALIAS:
+        required: false
+      ANDROID_SIGNING_KEY_PASSWORD:
+        required: false
+  pull_request:
+    paths:
+      - ".github/workflows/android.yml"
+      - "assets/logo.png"
+      - "assets/welcome_android.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout MaaFwApp
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Aliothmoon/MaaFwApp
+          path: Android/MaaFwApp
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Build Python agent bundle
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 "$PROJECT_ROOT/Android/MaaFwApp/scripts/build_agent_bundle.py" \
+            --out "$PROJECT_ROOT/agent-dist" \
+            --abi arm64-v8a \
+            --requirements "$PROJECT_ROOT/agent/requirements.txt" \
+            --extra-index-url https://chaquo.com/pypi-13.1/
+
+      - name: Resolve Android project version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_VERSION: ${{ inputs.version_name }}
+        run: |
+          if [[ -n "$REQUESTED_VERSION" ]]; then
+            version="$REQUESTED_VERSION"
+          elif [[ "$GITHUB_REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*)?$ ]]; then
+            version="$GITHUB_REF_NAME"
+          else
+            release_tag=$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq .tag_name 2>/dev/null || true)
+            if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?$ ]]; then
+              echo "No valid latest release tag found; using v0.0.0"
+              release_tag="v0.0.0"
+            fi
+            version="${release_tag}-ci.$(date -u +%y%m%d)-$(git rev-parse --short HEAD)"
+          fi
+
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*)?$ ]]; then
+            echo "Invalid project version: $version"
+            exit 1
+          fi
+
+          echo "Android project version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Stage Android project resources
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          ANDROID_PI_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PI_ROOT="$PROJECT_ROOT/android-build/pi"
+          mkdir -p "$PI_ROOT"
+          cp -a "$PROJECT_ROOT/assets/." "$PI_ROOT/"
+          cp -a "$PROJECT_ROOT/agent" "$PI_ROOT/agent"
+          cp -a "$PROJECT_ROOT/LICENSE" "$PI_ROOT/LICENSE"
+          test -s "$PI_ROOT/agent/main.py"
+          python3 - "$PI_ROOT" "$ANDROID_PI_VERSION" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          pi_root = Path(sys.argv[1])
+          interface_path = pi_root / "interface.json"
+          interface = json.loads(interface_path.read_text(encoding="utf-8"))
+          version = sys.argv[2]
+
+          interface["version"] = version
+          interface["welcome"] = "welcome_android.md"
+
+          for imported in interface.get("import", []):
+              if not (pi_root / imported).is_file():
+                  raise FileNotFoundError(f"interface import does not exist: {imported}")
+          for resource in interface.get("resource", []):
+              for relative_path in resource.get("path", []):
+                  if not (pi_root / relative_path).is_dir():
+                      raise FileNotFoundError(
+                          f"resource path does not exist: {relative_path}"
+                      )
+          for controller in interface.get("controller", []):
+              for relative_path in controller.get("attach_resource_path", []):
+                  if not (pi_root / relative_path).is_dir():
+                      raise FileNotFoundError(
+                          f"controller resource path does not exist: {relative_path}"
+                      )
+
+          interface_path.write_text(
+              json.dumps(interface, ensure_ascii=False, indent=4) + "\n",
+              encoding="utf-8",
+          )
+          print(f"Prepared Android PI version {version}")
+          PY
+
+      - name: Generate MaaFwApp profile
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          BUILD_RELEASE: ${{ github.event_name == 'workflow_call' && inputs.release }}
+        run: |
+          APP_ID=maastellasora
+          APP_LABEL=MaaStellaSora
+          if [[ "$BUILD_RELEASE" != "true" ]]; then
+            APP_ID="${APP_ID}.debug"
+            APP_LABEL="${APP_LABEL} Debug"
+          fi
+
+          cat > "$PROJECT_ROOT/profile.yaml" <<EOF
+          assets: ${PROJECT_ROOT}/android-build/pi
+          include:
+            - interface.json
+            - interface/**
+            - resource/**
+            - agent/**
+            - welcome_android.md
+            - CONTACT
+            - LICENSE
+          app:
+            id: ${APP_ID}
+            label: ${APP_LABEL}
+            icon: ${PROJECT_ROOT}/assets/logo.png
+          agent:
+            sourceDir: ${PROJECT_ROOT}/agent-dist
+            abi: [arm64-v8a]
+            runtimes:
+              - location: bundle
+                executable: bin/python3
+                name: py-agent
+                args: [-u, agent/main.py]
+                env:
+                  PYTHONHOME: "{bundle}/prefix"
+                  PYTHONPATH: "{bundle}/site-packages/pure.zip:{bundle}/site-packages"
+                  LD_LIBRARY_PATH: "{bundle}/prefix/lib:{nativeLibs}"
+                  MAAFW_BINARY_PATH: "{nativeLibs}"
+          EOF
+
+          echo "Generated profile:"
+          cat "$PROJECT_ROOT/profile.yaml"
+
+      - name: Setup Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+
+      - name: Deploy MaaFramework runtime
+        working-directory: Android/MaaFwApp
+        run: |
+          python3 scripts/setup_maa_framework.py --abi arm64-v8a
+
+      - name: Write local.properties
+        working-directory: Android/MaaFwApp
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          ANDROID_APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "sdk.dir=${ANDROID_HOME}"
+            echo "pi.profile=${PROJECT_ROOT}/profile.yaml"
+            echo "build.versionName=${ANDROID_APP_VERSION}"
+            echo "build.debugAbi=arm64-v8a"
+            echo "build.releaseAbi=arm64-v8a"
+          } > local.properties
+          cat local.properties
+
+      - name: Prepare release signing
+        if: ${{ github.event_name == 'workflow_call' && inputs.release }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$KEYSTORE_BASE64" || -z "$KEYSTORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
+            echo "Release signing secrets are required when release=true"
+            exit 1
+          fi
+
+          KEYSTORE_PATH="$RUNNER_TEMP/maastellasora-release.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          chmod 600 "$KEYSTORE_PATH"
+          keytool -list -keystore "$KEYSTORE_PATH" \
+            -storepass:env KEYSTORE_PASSWORD \
+            -alias "$KEY_ALIAS" > /dev/null
+          echo "KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+
+      - name: Build APK
+        working-directory: Android/MaaFwApp
+        env:
+          BUILD_RELEASE: ${{ github.event_name == 'workflow_call' && inputs.release }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: |
+          chmod +x ./gradlew
+          if [[ "$BUILD_RELEASE" == "true" ]]; then
+            ./gradlew --no-daemon :app:assembleRelease --stacktrace
+          else
+            ./gradlew --no-daemon :app:assembleDebug --stacktrace
+          fi
+
+      - name: Verify and name APK
+        shell: bash
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          ANDROID_APP_VERSION: ${{ steps.version.outputs.version }}
+          BUILD_RELEASE: ${{ github.event_name == 'workflow_call' && inputs.release }}
+        run: |
+          BUILD_TYPE=debug
+          if [[ "$BUILD_RELEASE" == "true" ]]; then
+            BUILD_TYPE=release
+          fi
+
+          APK_DIR="$PROJECT_ROOT/Android/MaaFwApp/app/build/outputs/apk/$BUILD_TYPE"
+          mapfile -t APKS < <(find "$APK_DIR" -maxdepth 1 -type f -name '*.apk' | sort)
+          if [[ "${#APKS[@]}" -ne 1 ]]; then
+            echo "Expected exactly one APK in $APK_DIR, found ${#APKS[@]}"
+            exit 1
+          fi
+          APK_PATH="${APKS[0]}"
+          EXPECTED_PACKAGE_ID=com.aliothmoon.maafw.maastellasora
+          if [[ "$BUILD_RELEASE" != "true" ]]; then
+            EXPECTED_PACKAGE_ID="${EXPECTED_PACKAGE_ID}.debug"
+          fi
+          AAPT=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -type f -name aapt | sort -V | tail -n 1)
+          if [[ -z "$AAPT" ]]; then
+            echo "Android build tools aapt was not found"
+            exit 1
+          fi
+          "$AAPT" dump badging "$APK_PATH" > "$RUNNER_TEMP/apk-badging.txt"
+          "$(dirname "$AAPT")/apksigner" verify "$APK_PATH"
+
+          python3 - "$APK_PATH" "$RUNNER_TEMP/apk-badging.txt" "$ANDROID_APP_VERSION" "$EXPECTED_PACKAGE_ID" <<'PY'
+          import io
+          import json
+          import re
+          import sys
+          import zipfile
+
+          apk_path, badging_path, expected_version, expected_package_id = sys.argv[1:]
+          with open(badging_path, encoding="utf-8") as file:
+              badging = file.read()
+          package = re.search(
+              r"^package: name='([^']+)' versionCode='([^']+)' versionName='([^']*)'",
+              badging,
+              re.MULTILINE,
+          )
+          if package is None:
+              raise SystemExit("Could not read APK package/version from aapt output")
+          if package.group(1) != expected_package_id:
+              raise SystemExit(
+                  f"APK package id {package.group(1)!r} != expected {expected_package_id!r}"
+              )
+          if package.group(3) != expected_version:
+              raise SystemExit(
+                  f"APK versionName {package.group(3)!r} != expected {expected_version!r}"
+              )
+
+          with zipfile.ZipFile(apk_path) as apk:
+              apk_names = set(apk.namelist())
+              required_libraries = {
+                  "lib/arm64-v8a/libMaaFramework.so",
+                  "lib/arm64-v8a/libMaaUtils.so",
+                  "lib/arm64-v8a/libMaaAndroidNativeControlUnit.so",
+              }
+              missing_libraries = required_libraries - apk_names
+              if missing_libraries:
+                  raise SystemExit(f"APK is missing native libraries: {sorted(missing_libraries)}")
+              try:
+                  pi_archive = apk.read("assets/pi.zip")
+              except KeyError as error:
+                  raise SystemExit("APK is missing assets/pi.zip") from error
+
+          with zipfile.ZipFile(io.BytesIO(pi_archive)) as pi:
+              pi_names = set(pi.namelist())
+              if "interface.json" not in pi_names:
+                  raise SystemExit("PI archive is missing root interface.json")
+              if "LICENSE" not in pi_names:
+                  raise SystemExit("PI archive is missing LICENSE")
+              interface = json.loads(pi.read("interface.json"))
+              if interface.get("version") != expected_version:
+                  raise SystemExit(
+                      f"PI version {interface.get('version')!r} != expected {expected_version!r}"
+                  )
+              welcome = interface.get("welcome")
+              if welcome != "welcome_android.md" or welcome not in pi_names:
+                  raise SystemExit("PI archive is missing the configured Android welcome file")
+              for path in interface.get("import", []):
+                  if path not in pi_names:
+                      raise SystemExit(f"PI archive is missing imported file: {path}")
+              for resource in interface.get("resource", []):
+                  for path in resource.get("path", []):
+                      if not any(name.startswith(path.rstrip("/") + "/") for name in pi_names):
+                          raise SystemExit(f"PI archive has no files under resource path: {path}")
+              if "agent/main.py" not in pi_names:
+                  raise SystemExit("PI archive is missing agent/main.py")
+
+          print(
+              f"Verified APK {package.group(1)} {package.group(3)} "
+              f"with PI version {expected_version}"
+          )
+          PY
+
+          APK_NAME="MaaStellaSora-android-arm64-v8a-${ANDROID_APP_VERSION}.apk"
+          mv "$APK_PATH" "$APK_DIR/$APK_NAME"
+          echo "APK_PATH=$APK_DIR/$APK_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: MaaStellaSora-android-arm64-v8a-${{ steps.version.outputs.version }}
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error

@@ -504,9 +504,22 @@ jobs:
           OUTPUT: CHANGES.md
           GITHUB_REPO: ${{ github.repository }}
 
+  android:
+    name: Build Android APK
+    needs: meta
+    uses: ./.github/workflows/android.yml
+    with:
+      version_name: ${{ needs.meta.outputs.tag }}
+      release: ${{ needs.meta.outputs.is_release == 'true' }}
+    secrets:
+      ANDROID_SIGNING_KEYSTORE_BASE64: ${{ needs.meta.outputs.is_release == 'true' && secrets.ANDROID_SIGNING_KEYSTORE_BASE64 || '' }}
+      ANDROID_SIGNING_KEYSTORE_PASSWORD: ${{ needs.meta.outputs.is_release == 'true' && secrets.ANDROID_SIGNING_KEYSTORE_PASSWORD || '' }}
+      ANDROID_SIGNING_KEY_ALIAS: ${{ needs.meta.outputs.is_release == 'true' && secrets.ANDROID_SIGNING_KEY_ALIAS || '' }}
+      ANDROID_SIGNING_KEY_PASSWORD: ${{ needs.meta.outputs.is_release == 'true' && secrets.ANDROID_SIGNING_KEY_PASSWORD || '' }}
+
   release:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
-    needs: [meta, windows, linux, macos, changelog]
+    needs: [meta, windows, linux, macos, android, changelog]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -526,6 +539,7 @@ jobs:
             test -s "assets/MaaStellaSora-linux-${arch}-${{ needs.meta.outputs.tag }}.tar.gz"
             test -s "assets/MaaStellaSora-macos-${arch}-${{ needs.meta.outputs.tag }}.tar.gz"
           done
+          test -s "assets/MaaStellaSora-android-arm64-v8a-${{ needs.meta.outputs.tag }}.apk"
           echo "All expected release archives are present and non-empty."
 
       - uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
@@ -533,6 +547,7 @@ jobs:
           files: |
             assets/*.zip
             assets/*.tar.gz
+            assets/*.apk
           tag_name: ${{ needs.meta.outputs.tag }}
           body: ${{ needs.changelog.outputs.release_body }}
           draft: false

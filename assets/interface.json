@@ -31,7 +31,7 @@
             },
             "permission_required": true,
             "attach_resource_path": [
-                "{PROJECT_DIR}/resource/windows"
+                "resource/windows"
             ]
         },
         {
@@ -47,28 +47,28 @@
         {
             "name": "官服",
             "path": [
-                "{PROJECT_DIR}/resource/base"
+                "resource/base"
             ]
         },
         {
             "name": "台服",
             "path": [
-                "{PROJECT_DIR}/resource/base",
-                "{PROJECT_DIR}/resource/tw"
+                "resource/base",
+                "resource/tw"
             ]
         },
         {
             "name": "国际服",
             "path": [
-                "{PROJECT_DIR}/resource/base",
-                "{PROJECT_DIR}/resource/en"
+                "resource/base",
+                "resource/en"
             ]
         },
         {
             "name": "日服",
             "path": [
-                "{PROJECT_DIR}/resource/base",
-                "{PROJECT_DIR}/resource/jp"
+                "resource/base",
+                "resource/jp"
             ]
         }
     ],

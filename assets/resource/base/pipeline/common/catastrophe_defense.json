@@ -1,0 +1,470 @@
+{
+	"灾变防线_入口": {
+		"action": {
+			"type": "Custom",
+			"param": {
+				"custom_action": "catastrophe_defense_reset"
+			}
+		},
+		"next": [
+			"灾变防线_出发",
+			"灾变防线_入口文字",
+			"灾变防线_主界面",
+			"灾变防线_记录选择",
+			"[JumpBack]通用_返回主页"
+		]
+	},
+	"灾变防线_出发": {
+		"recognition": {
+			"type": "And",
+			"param": {
+				"all_of": [
+					"通用_主页_出发"
+				]
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target_offset": [
+					0,
+					-20,
+					0,
+					0
+				]
+			}
+		},
+		"next": [
+			"灾变防线_入口文字"
+		]
+	},
+	"灾变防线_入口文字": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"灾变防线"
+				],
+				"roi": [
+					860,
+					470,
+					320,
+					190
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_主界面",
+			"灾变防线_记录选择"
+		]
+	},
+	"灾变防线_主界面": {
+		"max_hit": 3,
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"困难"
+				],
+				"roi": [
+					350,
+					80,
+					700,
+					210
+				]
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target": [
+					1050,
+					160
+				]
+			}
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_选择关卡"
+		],
+		"focus": {
+			"Node.Recognition.Succeeded": "灾变防线：选择灾变难度"
+		}
+	},
+	"灾变防线_选择关卡": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"灾变"
+				],
+				"roi": [
+					970,
+					120,
+					180,
+					100
+				]
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target": [
+					640,
+					350
+				]
+			}
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_记录选择"
+		]
+	},
+	"灾变防线_记录选择": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"区域一"
+				],
+				"roi": [
+					100,
+					90,
+					420,
+					160
+				]
+			}
+		},
+		"next": [
+			"灾变防线_区域一选择纪录",
+			"灾变防线_区域二选择纪录",
+			"灾变防线_前往挑战"
+		]
+	},
+	"灾变防线_区域一选择纪录": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"选择纪录"
+				],
+				"roi": [
+					150,
+					280,
+					420,
+					280
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_纪录管理"
+		]
+	},
+	"灾变防线_区域二选择纪录": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"选择纪录"
+				],
+				"roi": [
+					780,
+					280,
+					420,
+					280
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_纪录管理"
+		]
+	},
+	"灾变防线_纪录管理": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"纪录管理"
+				],
+				"roi": [
+					100,
+					15,
+					250,
+					60
+				]
+			}
+		},
+		"next": [
+			"灾变防线_选择首个纪录"
+		]
+	},
+	"灾变防线_选择首个纪录": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"choose_record/record_position.png"
+				]
+			}
+		},
+		"action": {
+			"type": "Custom",
+			"param": {
+				"custom_action": "catastrophe_defense_pick_record"
+			}
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_记录选择"
+		]
+	},
+	"灾变防线_前往挑战": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"前往挑战"
+				],
+				"roi": [
+					1030,
+					570,
+					250,
+					130
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_战斗循环"
+		]
+	},
+	"灾变防线_战斗循环": {
+		"next": [
+			"灾变防线_命运卡片_拿走",
+			"灾变防线_命运卡片_选卡",
+			"[JumpBack]通用_点击空白处继续",
+			"灾变防线_挑战成功",
+			"灾变防线_走位"
+		]
+	},
+	"灾变防线_命运卡片_拿走": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"拿走"
+				],
+				"roi": [
+					180,
+					500,
+					300,
+					140
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"[JumpBack]通用_点击空白处继续",
+			"灾变防线_战斗循环"
+		]
+	},
+	"灾变防线_命运卡片_选卡": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"选择一张命运卡片"
+				],
+				"roi": [
+					430,
+					15,
+					460,
+					80
+				]
+			}
+		},
+		"action": {
+			"type": "Click",
+			"param": {
+				"target": [
+					300,
+					360
+				]
+			}
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_命运卡片_拿走"
+		]
+	},
+	"灾变防线_走位": {
+		"recognition": {
+			"type": "DirectHit"
+		},
+		"action": {
+			"type": "Custom",
+			"param": {
+				"custom_action": "catastrophe_defense_move"
+			}
+		},
+		"next": [
+			"灾变防线_战斗循环"
+		],
+		"attach": {
+			"min_wait": 120,
+			"still_seconds": 8,
+			"still_ratio": 0.05,
+			"pixel_diff": 16,
+			"max_wait": 330,
+			"left_seconds": 12,
+			"portal_seconds": 5,
+			"attempts": 8
+		}
+	},
+	"灾变防线_挑战成功": {
+		"max_hit": 8,
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"挑战成功"
+				],
+				"roi": [
+					430,
+					210,
+					420,
+					100
+				]
+			}
+		},
+		"pre_delay": 1500,
+		"action": {
+			"type": "Click",
+			"param": {
+				"target_offset": [
+					0,
+					380,
+					0,
+					0
+				]
+			}
+		},
+		"post_delay": 2000,
+		"timeout": 40000,
+		"next": [
+			"灾变防线_挑战成功",
+			"灾变防线_首通奖励",
+			"灾变防线_作战奖励"
+		]
+	},
+	"灾变防线_首通奖励": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"首通奖励",
+					"普通奖励"
+				],
+				"roi": [
+					20,
+					440,
+					150,
+					100
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"灾变防线_作战奖励"
+		]
+	},
+	"灾变防线_作战奖励": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"作战奖励"
+				],
+				"roi": [
+					230,
+					80,
+					220,
+					50
+				]
+			}
+		},
+		"next": [
+			"灾变防线_一键领取"
+		]
+	},
+	"灾变防线_一键领取": {
+		"recognition": {
+			"type": "OCR",
+			"param": {
+				"expected": [
+					"一键领取",
+					"键领取"
+				],
+				"roi": [
+					480,
+					520,
+					320,
+					110
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"[JumpBack]通用_点击空白处继续",
+			"灾变防线_关闭作战奖励",
+			"通用_返回主页"
+		]
+	},
+	"灾变防线_关闭作战奖励": {
+		"recognition": {
+			"type": "TemplateMatch",
+			"param": {
+				"template": [
+					"catastrophe_defense/灾变防线_关闭奖励按钮.png"
+				],
+				"roi": [
+					980,
+					50,
+					160,
+					110
+				]
+			}
+		},
+		"action": {
+			"type": "Click"
+		},
+		"post_delay": 1500,
+		"next": [
+			"通用_返回主页"
+		]
+	}
+}

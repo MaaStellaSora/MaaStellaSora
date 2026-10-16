@@ -1,0 +1,101 @@
+"""灾变防线：从当前屏幕的纪录卡中选择亮度与饱和度得分最高的一张。
+
+复用 record_position.png 查找徽标，再按相对偏移采样整张卡。不可选的灰卡也有
+相同徽标，因此不能直接点击模板匹配排序的第一张。历史样本中，可选卡得分约
+215，灰卡最高约 153；保留该评分启发式，不负责下滑搜索或判定全屏均不可选。
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from maa.agent.agent_server import AgentServer
+from maa.context import Context
+from maa.custom_action import CustomAction
+
+from utils import logger as logger_module
+
+logger = logger_module.get_logger("catastrophe_defense")
+
+## 记录卡区域相对「◈ 旅人」徽标的偏移（x, y, w, h）
+CARD_OFFSET = (-20, -71, 230, 250)
+
+## 点击位置相对徽标的偏移（取卡片中心）
+CLICK_OFFSET = (95, 55)
+
+
+def _grab(context: Context):
+    """截一帧；失败返回 None。"""
+
+    try:
+        return context.tasker.controller.post_screencap().wait().get()
+    except Exception:  # noqa: BLE001 - 任务停止时框架会拒绝截图
+        return None
+
+
+def _card_score(arr, icon_x: int, icon_y: int) -> float:
+    """量一张记录卡「有多亮多彩」；灰卡被蒙灰，分数明显低。"""
+
+    dx, dy, w, h = CARD_OFFSET
+    x0 = max(0, icon_x + dx)
+    y0 = max(0, icon_y + dy)
+    patch = arr[y0:y0 + h, x0:x0 + w]
+    if patch.size == 0:
+        return -1.0
+    p = patch.astype(np.float32)
+    mx = p.max(axis=2)
+    mn = p.min(axis=2)
+    sat = float(((mx - mn) / np.maximum(mx, 1.0)).mean())
+    return float(p.mean()) + 100.0 * sat
+
+
+@AgentServer.custom_action("catastrophe_defense_pick_record")
+class CatastropheDefensePickRecord(CustomAction):
+    """在「纪录管理」页挑出可选（高亮）的那张记录卡并点击。"""
+
+    def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
+        if context.tasker.stopping:
+            return False
+
+        image = _grab(context)
+        if image is None:
+            logger.error("灾变防线：纪录管理页截图失败")
+            return False
+
+        ## 复用当前节点的模板识别，拿到页面上所有记录卡（每张卡一个小徽标）
+        detail = context.run_recognition(argv.node_name, image)
+        if detail is None or not detail.hit:
+            logger.error("灾变防线：纪录管理页没有识别到任何记录卡")
+            return False
+
+        candidates = list(detail.filtered_results or detail.all_results or [])
+        if not candidates:
+            logger.error("灾变防线：记录卡候选为空")
+            return False
+
+        arr = np.asarray(image)
+        scored = []
+        for r in candidates:
+            x, y, _w, _h = r.box
+            scored.append((_card_score(arr, x, y), x, y, r.score))
+        scored.sort(key=lambda t: -t[0])
+
+        best_score, best_x, best_y, match_score = scored[0]
+        logger.info(
+            "灾变防线：纪录管理页 %d 张记录卡，选中分数最高的一张（%.1f，模板分 %.3f，位置 %d,%d）",
+            len(scored), best_score, match_score, best_x, best_y,
+        )
+        logger.debug("灾变防线：各卡分数 %s", [round(s[0], 1) for s in scored])
+
+        if best_score < 0:
+            logger.error("灾变防线：记录卡采样失败")
+            return False
+
+        click_x = best_x + CLICK_OFFSET[0]
+        click_y = best_y + CLICK_OFFSET[1]
+        if context.tasker.stopping:
+            return False
+        if not context.tasker.controller.post_click(click_x, click_y).wait().succeeded:
+            logger.error("灾变防线：点击记录卡失败")
+            return False
+        logger.info("灾变防线：已选择记录卡（点击 %d,%d）", click_x, click_y)
+        return True

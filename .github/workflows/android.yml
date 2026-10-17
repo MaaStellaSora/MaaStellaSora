@@ -161,6 +161,7 @@ jobs:
           include:
             - interface.json
             - interface/**
+            - i18n/**
             - resource/**
             - agent/**
             - welcome_android.md
@@ -343,6 +344,9 @@ jobs:
               for path in interface.get("import", []):
                   if path not in pi_names:
                       raise SystemExit(f"PI archive is missing imported file: {path}")
+              for path in interface.get("languages", {}).values():
+                  if path not in pi_names:
+                      raise SystemExit(f"PI archive is missing translation file: {path}")
               for resource in interface.get("resource", []):
                   for path in resource.get("path", []):
                       if not any(name.startswith(path.rstrip("/") + "/") for name in pi_names):

@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "领取任务奖励",
+            "label": "$interface.task.领取任务奖励.label",
             "entry": "任务_入口",
-            "description": "自动前往任务页面，并且领取任务奖励"
+            "description": "$interface.task.领取任务奖励.description"
         }
     ]
 }

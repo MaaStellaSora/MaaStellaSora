@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "领取并重新派遣委托",
+            "label": "$interface.task.领取并重新派遣委托.label",
             "entry": "委托_入口",
-            "description": "自动领取并重新派遣委托"
+            "description": "$interface.task.领取并重新派遣委托.description"
         }
     ]
 }

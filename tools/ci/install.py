@@ -58,6 +58,10 @@ def install_resource(working_dir: Path, install_path: Path) -> None:
         working_dir / "assets" / "interface",
         install_path / "interface",
     )
+    copy_tree(
+        working_dir / "assets" / "i18n",
+        install_path / "i18n",
+    )
     assets_dir = install_path / "Assets"
     assets_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(working_dir / "assets" / "logo.ico", assets_dir)

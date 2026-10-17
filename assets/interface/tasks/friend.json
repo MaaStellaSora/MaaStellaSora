@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "领取与赠送干劲",
+            "label": "$interface.task.领取与赠送干劲.label",
             "entry": "好友_入口",
-            "description": "自动前往好友页面，并且领取与赠送好友干劲"
+            "description": "$interface.task.领取与赠送干劲.description"
         }
     ]
 }

@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "登录游戏",
+            "label": "$interface.task.登录游戏.label",
             "entry": "登录_登录",
-            "description": "自动登录游戏，并且关闭活动弹窗以及签到弹窗"
+            "description": "$interface.task.登录游戏.description"
         }
     ]
 }

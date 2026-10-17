@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "领取基金奖励",
+            "label": "$interface.task.领取基金奖励.label",
             "entry": "基金_入口",
-            "description": "自动打开基金页面，并且领取基金奖励"
+            "description": "$interface.task.领取基金奖励.description"
         }
     ]
 }

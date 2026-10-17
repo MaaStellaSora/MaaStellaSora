@@ -1,16 +1,18 @@
 {
     "option": {
         "新版爬塔_商店_强化_自定义选项开关": {
-            "label": "商店强化自定义选项",
-            "description": "关闭时，星塔助手默认只使用初始费用60辉光币、最高费用180辉光币的强化（包括免费强化）",
+            "label": "$interface.task.option.新版爬塔_商店_强化_自定义选项开关.label",
+            "description": "$interface.task.option.新版爬塔_商店_强化_自定义选项开关.description",
             "type": "switch",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
+                    "label": "No",
                 },
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "option": [
                         "新版爬塔_商店_最大强化金额",
                         "新版爬塔_商店_初始强化金额"
@@ -23,10 +25,11 @@
             "inputs": [
                 {
                     "name": "最大强化金额",
+                    "label": "$interface.task.option.新版爬塔_商店_最大强化金额.inputs.最大强化金额.label",
                     "default": "180",
                     "pipeline_type": "int",
                     "verify": "^\\d+$",
-                    "description": "单次强化消耗金币没超过该金额时，才会进行强化"
+                    "description": "$interface.task.option.新版爬塔_商店_最大强化金额.inputs.最大强化金额.description"
                 }
             ],
             "pipeline_override": {
@@ -42,10 +45,11 @@
             "inputs": [
                 {
                     "name": "初始强化金额",
+                    "label": "$interface.task.option.新版爬塔_商店_初始强化金额.inputs.初始强化金额.label",
                     "default": "60",
                     "pipeline_type": "int",
                     "verify": "^[1-9]\\d*$",
-                    "description": "初始强化消耗金币（不包含免费强化）<br>默认为60，研究点满时不需要自行调整"
+                    "description": "$interface.task.option.新版爬塔_商店_初始强化金额.inputs.初始强化金额.description"
                 }
             ],
             "pipeline_override": {

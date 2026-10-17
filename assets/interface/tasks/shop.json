@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "领取每日奖励",
+            "label": "$interface.task.领取每日奖励.label",
             "entry": "采购_入口",
-            "description": "自动领取采购中的每日奖励"
+            "description": "$interface.task.领取每日奖励.description"
         }
     ]
 }

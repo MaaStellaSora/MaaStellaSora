@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "活动快速战斗",
+            "label": "$interface.task.活动快速战斗.label",
             "entry": "活动快速战斗_入口",
-            "description": "自动打开活动页面，并且对活动指定关卡进行快速战斗",
+            "description": "$interface.task.活动快速战斗.description",
             "option": [
                 "作战关卡",
                 "活动战斗消耗所有干劲"
@@ -16,8 +17,8 @@
             "inputs": [
                 {
                     "name": "活动关卡名称",
-                    "label": "关卡名称",
-                    "description": "点击关卡出现问题时可以修改该选项，支持正则表达式。默认为「1-\\d+」（即1-数字）<br>罗马数字（如Ⅵ等）请用半角英文字母I、V、X代替",
+                    "label": "$interface.task.option.作战关卡.inputs.活动关卡名称.label",
+                    "description": "$interface.task.option.作战关卡.inputs.活动关卡名称.description",
                     "default": "1-\\d+",
                     "pipeline_type": "string"
                 }
@@ -37,18 +38,20 @@
         },
         "活动战斗消耗所有干劲": {
             "type": "switch",
-            "label": "消耗所有干劲",
-            "description": "开启此项后，将无视输入的次数，将直接消耗所有干劲",
+            "label": "$interface.task.option.活动战斗消耗所有干劲.label",
+            "description": "$interface.task.option.活动战斗消耗所有干劲.description",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
+                    "label": "No",
                     "option": [
                         "自定义快速作战次数"
                     ]
                 },
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "pipeline_override": {
                         "活动快速战斗_开启快速战斗": {
                             "next": [

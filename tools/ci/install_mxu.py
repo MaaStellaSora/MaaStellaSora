@@ -126,6 +126,7 @@ def _copy_project_payload(working_dir: Path, install_dir: Path, version: str) ->
         assets_dir, install_dir / "resource" / "base" / "model" / "ocr"
     )
     _copy_tree(assets_dir / "interface", install_dir / "interface")
+    _copy_tree(assets_dir / "i18n", install_dir / "i18n")
     _copy_tree(working_dir / "agent", install_dir / "agent")
 
     logo = assets_dir / "logo.ico"

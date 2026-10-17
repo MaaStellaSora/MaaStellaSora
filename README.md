@@ -31,18 +31,18 @@ QQ交流群：**1063132902**  密码：**星塔旅人**
 
 ## 安装与使用
 
-### 桌面端
+### 桌面端 / 安卓模拟器
 
-> 星塔助手目前只对比例为16:9的游戏客户端提供支持，如果你的游戏客户端比例不为16:9请自行寻找改分辨率方法或是使用模拟器或安卓版
+> 星塔助手目前只对比例为16:9的游戏客户端提供支持，如果你的游戏客户端比例不为16:9请自行寻找改分辨率方法或是使用模拟器
 
 1. 前往 [GitHub Releases](https://github.com/MaaStellaSora/MaaStellaSora/releases) 下载对应系统的压缩包。
 2. 当前构建与发行使用 **MFAAvalonia**：下载 `MaaStellaSora-{系统}-{架构}-vX.Y.Z.zip`（Windows）或对应的 `.tar.gz`（Linux/macOS），支持现有全部发布平台及自动更新。MXU 构建暂时停用，历史版本的可用包以对应 Release 为准。
 3. 将压缩包完整解压到独立目录，运行包内的 MFAAvalonia 主程序。
-4. 如果需要操控 Windows 版《星塔旅人》，请使用管理员权限运行 GUI；使用 ADB 操控模拟器时可直接启动。
+4. 使用 ADB 操控模拟器时可直接启动 MFAAvalonia；如果需要操控 Windows 版《星塔旅人》，请使用管理员权限运行 MFAAvalonia。
 
 ### 安卓端
 
-> 安卓端目前只构建手机与平板用户使用的arm64-v8a架构版本，如果你的设备不是arm64-v8a架构，请使用桌面端或者自行构建
+> 安卓端目前只构建手机与平板用户使用的arm64-v8a架构版本，如果你的设备不是arm64-v8a架构但仍想使用，请提出issue或尝试自行构建
 
 1. 前往 [GitHub Releases](https://github.com/MaaStellaSora/MaaStellaSora/releases) 下载 `MaaStellaSora-android-arm64-v8a-vX.Y.Z.apk`。
 2. 安卓端构建与发行使用 **MaaFwApp**，暂时只支持通过GitHub更新。

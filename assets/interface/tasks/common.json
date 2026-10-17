@@ -1,0 +1,29 @@
+{
+    "option": {
+        "自定义快速作战次数": {
+            "type": "input",
+            "label": "$interface.task.option.自定义快速作战次数.label",
+            "inputs": [
+                {
+                    "name": "次数",
+                    "label": "$interface.task.option.自定义快速作战次数.inputs.次数.label",
+                    "description": "$interface.task.option.自定义快速作战次数.inputs.次数.description",
+                    "default": "1",
+                    "pipeline_type": "int",
+                    "verify": "^[1-9]\\d*$"
+                }
+            ],
+            "pipeline_override": {
+                "通用_换算快速作战次数": {
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "utool_calc_repeat",
+                            "custom_action_param": "{次数}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

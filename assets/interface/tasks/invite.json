@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "邀约",
+            "label": "$interface.task.邀约.label",
             "entry": "邀约_入口",
-            "description": "自动完成5次邀约<br>输入框中需要填入的名字是游戏中实际显示的名字<br>由于选项过多，可能需要下拉菜单才能看到其他选项",
+            "description": "$interface.task.邀约.description",
             "option": [
                 "邀约_回忆收集模式",
                 "邀约旅人",
@@ -31,33 +32,38 @@
             "inputs": [
                 {
                     "name": "1号",
+                    "label": "$interface.task.option.邀约旅人.inputs.1号.label",
                     "pipeline_type": "string",
                     "default": "希娅",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+                    "description": "$interface.task.option.邀约旅人.inputs.1号.description"
                 },
                 {
                     "name": "2号",
+                    "label": "$interface.task.option.邀约旅人.inputs.2号.label",
                     "pipeline_type": "string",
                     "default": "雾语",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+                    "description": "$interface.task.option.邀约旅人.inputs.2号.description"
                 },
                 {
                     "name": "3号",
+                    "label": "$interface.task.option.邀约旅人.inputs.3号.label",
                     "pipeline_type": "string",
                     "default": "苍兰",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+                    "description": "$interface.task.option.邀约旅人.inputs.3号.description"
                 },
                 {
                     "name": "4号",
+                    "label": "$interface.task.option.邀约旅人.inputs.4号.label",
                     "pipeline_type": "string",
                     "default": "冬香",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+                    "description": "$interface.task.option.邀约旅人.inputs.4号.description"
                 },
                 {
                     "name": "5号",
+                    "label": "$interface.task.option.邀约旅人.inputs.5号.label",
                     "pipeline_type": "string",
                     "default": "夏花",
-                    "description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。"
+                    "description": "$interface.task.option.邀约旅人.inputs.5号.description"
                 }
             ],
             "pipeline_override": {
@@ -125,12 +131,13 @@
         },
         "邀约旅人_1号_送礼": {
             "type": "select",
-            "label": "1号送礼类型",
-            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "label": "$interface.task.option.邀约旅人_1号_送礼.label",
+            "description": "$interface.task.option.邀约旅人_1号_送礼.description",
             "default_case": "所有",
             "cases": [
                 {
                     "name": "所有",
+                    "label": "$interface.task.option.邀约旅人_1号_送礼.cases.所有.label",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -141,6 +148,7 @@
                 },
                 {
                     "name": "最爱",
+                    "label": "$interface.task.option.邀约旅人_1号_送礼.cases.最爱.label",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -151,6 +159,7 @@
                 },
                 {
                     "name": "不送",
+                    "label": "$interface.task.option.邀约旅人_1号_送礼.cases.不送.label",
                     "pipeline_override": {
                         "邀约_1号": {
                             "attach": {
@@ -163,12 +172,13 @@
         },
         "邀约旅人_2号_送礼": {
             "type": "select",
-            "label": "2号送礼类型",
-            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "label": "$interface.task.option.邀约旅人_2号_送礼.label",
+            "description": "$interface.task.option.邀约旅人_2号_送礼.description",
             "default_case": "所有",
             "cases": [
                 {
                     "name": "所有",
+                    "label": "$interface.task.option.邀约旅人_2号_送礼.cases.所有.label",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -179,6 +189,7 @@
                 },
                 {
                     "name": "最爱",
+                    "label": "$interface.task.option.邀约旅人_2号_送礼.cases.最爱.label",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -189,6 +200,7 @@
                 },
                 {
                     "name": "不送",
+                    "label": "$interface.task.option.邀约旅人_2号_送礼.cases.不送.label",
                     "pipeline_override": {
                         "邀约_2号": {
                             "attach": {
@@ -201,12 +213,13 @@
         },
         "邀约旅人_3号_送礼": {
             "type": "select",
-            "label": "3号送礼类型",
-            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "label": "$interface.task.option.邀约旅人_3号_送礼.label",
+            "description": "$interface.task.option.邀约旅人_3号_送礼.description",
             "default_case": "所有",
             "cases": [
                 {
                     "name": "所有",
+                    "label": "$interface.task.option.邀约旅人_3号_送礼.cases.所有.label",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -217,6 +230,7 @@
                 },
                 {
                     "name": "最爱",
+                    "label": "$interface.task.option.邀约旅人_3号_送礼.cases.最爱.label",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -227,6 +241,7 @@
                 },
                 {
                     "name": "不送",
+                    "label": "$interface.task.option.邀约旅人_3号_送礼.cases.不送.label",
                     "pipeline_override": {
                         "邀约_3号": {
                             "attach": {
@@ -239,12 +254,13 @@
         },
         "邀约旅人_4号_送礼": {
             "type": "select",
-            "label": "4号送礼类型",
-            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "label": "$interface.task.option.邀约旅人_4号_送礼.label",
+            "description": "$interface.task.option.邀约旅人_4号_送礼.description",
             "default_case": "所有",
             "cases": [
                 {
                     "name": "所有",
+                    "label": "$interface.task.option.邀约旅人_4号_送礼.cases.所有.label",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -255,6 +271,7 @@
                 },
                 {
                     "name": "最爱",
+                    "label": "$interface.task.option.邀约旅人_4号_送礼.cases.最爱.label",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -265,6 +282,7 @@
                 },
                 {
                     "name": "不送",
+                    "label": "$interface.task.option.邀约旅人_4号_送礼.cases.不送.label",
                     "pipeline_override": {
                         "邀约_4号": {
                             "attach": {
@@ -277,12 +295,13 @@
         },
         "邀约旅人_5号_送礼": {
             "type": "select",
-            "label": "5号送礼类型",
-            "description": "如选择所有，只要有礼物就送。如选择最爱，则只送黄色笑脸。",
+            "label": "$interface.task.option.邀约旅人_5号_送礼.label",
+            "description": "$interface.task.option.邀约旅人_5号_送礼.description",
             "default_case": "所有",
             "cases": [
                 {
                     "name": "所有",
+                    "label": "$interface.task.option.邀约旅人_5号_送礼.cases.所有.label",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {
@@ -293,6 +312,7 @@
                 },
                 {
                     "name": "最爱",
+                    "label": "$interface.task.option.邀约旅人_5号_送礼.cases.最爱.label",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {
@@ -303,6 +323,7 @@
                 },
                 {
                     "name": "不送",
+                    "label": "$interface.task.option.邀约旅人_5号_送礼.cases.不送.label",
                     "pipeline_override": {
                         "邀约_5号": {
                             "attach": {
@@ -315,13 +336,14 @@
         },
         "邀约_回忆收集模式": {
             "type": "switch",
-            "label": "回忆收集模式",
+            "label": "$interface.task.option.邀约_回忆收集模式.label",
             "resource": ["官服"],
-            "description": "开启后不再快进对话，改为逐句推进并选择特殊选项以收集角色特殊回忆。",
+            "description": "$interface.task.option.邀约_回忆收集模式.description",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
+                    "label": "No",
                     "pipeline_override": {
                         "邀约_总循环": {
                             "attach": {
@@ -332,6 +354,7 @@
                 },
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "pipeline_override": {
                         "邀约_总循环": {
                             "attach": {
@@ -357,12 +380,13 @@
         },
         "邀约_自动查找未收集": {
             "type": "switch",
-            "label": "自动查找未收集回忆",
-            "description": "开启后自动遍历左侧角色列表，找出有未收集回忆的角色并优先邀约。",
+            "label": "$interface.task.option.邀约_自动查找未收集.label",
+            "description": "$interface.task.option.邀约_自动查找未收集.description",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
+                    "label": "No",
                     "pipeline_override": {
                         "邀约_总循环": {
                             "attach": {
@@ -373,6 +397,7 @@
                 },
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "pipeline_override": {
                         "邀约_总循环": {
                             "attach": {
@@ -392,7 +417,7 @@
             "inputs": [
                 {
                     "name": "人数",
-                    "label": "最多查找人数",
+                    "label": "$interface.task.option.邀约_自动查找_最多查找人数.inputs.人数.label",
                     "pipeline_type": "int",
                     "verify": "^[1-9]\\d*$",
                     "default": "5"
@@ -408,12 +433,13 @@
         },
         "邀约_自动收集_送礼类型": {
             "type": "select",
-            "label": "自动收集送礼类型",
-            "description": "自动找到的角色统一使用该送礼类型。",
+            "label": "$interface.task.option.邀约_自动收集_送礼类型.label",
+            "description": "$interface.task.option.邀约_自动收集_送礼类型.description",
             "default_case": "所有",
             "cases": [
                 {
                     "name": "所有",
+                    "label": "$interface.task.option.邀约_自动收集_送礼类型.cases.所有.label",
                     "pipeline_override": {
                         "邀约_总循环": {
                             "attach": {
@@ -424,6 +450,7 @@
                 },
                 {
                     "name": "最爱",
+                    "label": "$interface.task.option.邀约_自动收集_送礼类型.cases.最爱.label",
                     "pipeline_override": {
                         "邀约_总循环": {
                             "attach": {
@@ -434,6 +461,7 @@
                 },
                 {
                     "name": "不送",
+                    "label": "$interface.task.option.邀约_自动收集_送礼类型.cases.不送.label",
                     "pipeline_override": {
                         "邀约_总循环": {
                             "attach": {

@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "活动挑战关卡自动战斗",
+            "label": "$interface.task.活动挑战关卡自动战斗.label",
             "entry": "活动挑战_入口",
-            "description": "通过刷活动挑战关卡完成关卡次数任务，仅支持半周年左右改版的横板形式界面\n\n进入活动战斗关卡后选择“挑战”，随机选择一个可识别的 2-x 关卡，并依次点击“出发”和“出战”；战斗结束后重复指定次数",
+            "description": "$interface.task.活动挑战关卡自动战斗.description",
             "option": [
                 "活动挑战重复次数"
             ]
@@ -12,12 +13,12 @@
     "option": {
         "活动挑战重复次数": {
             "type": "input",
-            "label": "活动挑战重复次数",
+            "label": "$interface.task.option.活动挑战重复次数.label",
             "inputs": [
                 {
                     "name": "挑战次数",
-                    "label": "次数",
-                    "description": "完整挑战关卡战斗流程要重复的次数",
+                    "label": "$interface.task.option.活动挑战重复次数.inputs.挑战次数.label",
+                    "description": "$interface.task.option.活动挑战重复次数.inputs.挑战次数.description",
                     "default": "1",
                     "pipeline_type": "int",
                     "verify": "^[1-9]\\d*$"

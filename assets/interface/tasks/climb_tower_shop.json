@@ -1,16 +1,18 @@
 {
     "option": {
         "新版爬塔_商店_自定义选项开关": {
-            "label": "商店购买自定义选项",
-            "description": "关闭时，星塔助手默认以不超过8折潜能特饮、5折15个音符、全价5个音符的价格购买商品，并自动购买协奏音符到15个",
+            "label": "$interface.task.option.新版爬塔_商店_自定义选项开关.label",
+            "description": "$interface.task.option.新版爬塔_商店_自定义选项开关.description",
             "type": "switch",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
+                    "label": "No",
                 },
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "option": [
                         "新版爬塔_商店_潜能特饮折扣",
                         "新版爬塔_商店_5个音符折扣",
@@ -25,12 +27,13 @@
         },
         "新版爬塔_商店_潜能特饮折扣": {
             "type": "select",
-            "label": "潜能特饮折扣",
-            "description": "买入不高于该折扣的潜能特饮，除非符合动态溢购情况或离开最终商店前",
+            "label": "$interface.task.option.新版爬塔_商店_潜能特饮折扣.label",
+            "description": "$interface.task.option.新版爬塔_商店_潜能特饮折扣.description",
             "default_case": "8折",
             "cases": [
                 {
                     "name": "全价",
+                    "label": "$interface.task.option.新版爬塔_商店_潜能特饮折扣.cases.全价.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -42,6 +45,7 @@
                 },
                 {
                     "name": "8折",
+                    "label": "$interface.task.option.新版爬塔_商店_潜能特饮折扣.cases.8折.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -55,6 +59,7 @@
                 },
                 {
                     "name": "5折",
+                    "label": "$interface.task.option.新版爬塔_商店_潜能特饮折扣.cases.5折.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -73,7 +78,8 @@
             "inputs": [
                 {
                     "name": "动态溢购",
-                    "description": "基于可刷新次数动态预留金币，并自动用溢出部分购买高价潜能特饮<br>如设置400，那么在可刷新次数为1时，会预留800金币<br>在最终商店时，仍会用光预留金币",
+                    "label": "$interface.task.option.新版爬塔_商店_动态溢购.inputs.动态溢购.label",
+                    "description": "$interface.task.option.新版爬塔_商店_动态溢购.inputs.动态溢购.description",
                     "pipeline_type": "int",
                     "verify": "^\\d+$",
                     "default": "500"
@@ -89,12 +95,13 @@
         },
         "新版爬塔_商店_5个音符折扣": {
             "type": "select",
-            "label": "5个音符折扣",
-            "description": "买入不高于该折扣的音符",
+            "label": "$interface.task.option.新版爬塔_商店_5个音符折扣.label",
+            "description": "$interface.task.option.新版爬塔_商店_5个音符折扣.description",
             "default_case": "全价",
             "cases": [
                 {
                     "name": "全价",
+                    "label": "$interface.task.option.新版爬塔_商店_5个音符折扣.cases.全价.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -105,6 +112,7 @@
                 },
                 {
                     "name": "8折",
+                    "label": "$interface.task.option.新版爬塔_商店_5个音符折扣.cases.8折.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -115,6 +123,7 @@
                 },
                 {
                     "name": "5折",
+                    "label": "$interface.task.option.新版爬塔_商店_5个音符折扣.cases.5折.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -127,12 +136,13 @@
         },
         "新版爬塔_商店_15个音符折扣": {
             "type": "select",
-            "label": "15个音符折扣",
-            "description": "买入不高于该折扣的音符",
+            "label": "$interface.task.option.新版爬塔_商店_15个音符折扣.label",
+            "description": "$interface.task.option.新版爬塔_商店_15个音符折扣.description",
             "default_case": "5折",
             "cases": [
                 {
                     "name": "全价",
+                    "label": "$interface.task.option.新版爬塔_商店_15个音符折扣.cases.全价.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -143,6 +153,7 @@
                 },
                 {
                     "name": "8折",
+                    "label": "$interface.task.option.新版爬塔_商店_15个音符折扣.cases.8折.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -153,6 +164,7 @@
                 },
                 {
                     "name": "5折",
+                    "label": "$interface.task.option.新版爬塔_商店_15个音符折扣.cases.5折.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -165,12 +177,13 @@
         },
         "新版爬塔_商店_购买音符时机": {
             "type": "select",
-            "label": "购买音符时机",
-            "description": "选择在哪里购买音符<br>当前只支持选择是否只在最终商店购买",
+            "label": "$interface.task.option.新版爬塔_商店_购买音符时机.label",
+            "description": "$interface.task.option.新版爬塔_商店_购买音符时机.description",
             "default_case": "不限",
             "cases": [
                 {
                     "name": "不限",
+                    "label": "$interface.task.option.新版爬塔_商店_购买音符时机.cases.不限.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -181,6 +194,7 @@
                 },
                 {
                     "name": "只在最终商店购买",
+                    "label": "$interface.task.option.新版爬塔_商店_购买音符时机.cases.只在最终商店购买.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -193,12 +207,13 @@
         },
         "新版爬塔_商店_自动购买协奏音符": {
             "type": "select",
-            "label": "自动购买协奏音符",
-            "description": "该功能与音符策略功能同时生效，请注意不要出现冲突",
+            "label": "$interface.task.option.新版爬塔_商店_自动购买协奏音符.label",
+            "description": "$interface.task.option.新版爬塔_商店_自动购买协奏音符.description",
             "default_case": "激活1级协奏",
             "cases": [
                 {
                     "name": "不自动购买",
+                    "label": "$interface.task.option.新版爬塔_商店_自动购买协奏音符.cases.不自动购买.label",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -210,7 +225,8 @@
                 },
                 {
                     "name": "激活1级协奏",
-                    "description": "检测到为协奏音符后，会自动购买直到音符数量达到15个",
+                    "label": "$interface.task.option.新版爬塔_商店_自动购买协奏音符.cases.激活1级协奏.label",
+                    "description": "$interface.task.option.新版爬塔_商店_自动购买协奏音符.cases.激活1级协奏.description",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -222,7 +238,8 @@
                 },
                 {
                     "name": "不限量购买",
-                    "description": "检测到为协奏音符后，会自动购买",
+                    "label": "$interface.task.option.新版爬塔_商店_自动购买协奏音符.cases.不限量购买.label",
+                    "description": "$interface.task.option.新版爬塔_商店_自动购买协奏音符.cases.不限量购买.description",
                     "pipeline_override": {
                         "星塔_节点_商店_商店主流程_agent": {
                             "attach": {
@@ -236,22 +253,22 @@
         },
         "新版爬塔_商店_音符策略": {
             "type": "input",
-            "label": "音符策略",
-            "description": "每种音符期望购买到的目标数量：填 0 = 不购买该音符；填 N = 买到持有数量达到 N 为止（仍需符合折扣及时机要求）",
+            "label": "$interface.task.option.新版爬塔_商店_音符策略.label",
+            "description": "$interface.task.option.新版爬塔_商店_音符策略.description",
             "inputs": [
-                {"name": "强攻之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "幸运之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "暴发之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "体力之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "专注之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "技巧之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "绝招之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "水之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "火之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "地之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "风之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "光之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"},
-                {"name": "暗之音", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "请输入"}
+                {"name": "强攻之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.强攻之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.强攻之音.pattern_msg"},
+                {"name": "幸运之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.幸运之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.幸运之音.pattern_msg"},
+                {"name": "暴发之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.暴发之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.暴发之音.pattern_msg"},
+                {"name": "体力之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.体力之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.体力之音.pattern_msg"},
+                {"name": "专注之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.专注之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.专注之音.pattern_msg"},
+                {"name": "技巧之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.技巧之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.技巧之音.pattern_msg"},
+                {"name": "绝招之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.绝招之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.绝招之音.pattern_msg"},
+                {"name": "水之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.水之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.水之音.pattern_msg"},
+                {"name": "火之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.火之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.火之音.pattern_msg"},
+                {"name": "地之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.地之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.地之音.pattern_msg"},
+                {"name": "风之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.风之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.风之音.pattern_msg"},
+                {"name": "光之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.光之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.光之音.pattern_msg"},
+                {"name": "暗之音", "label": "$interface.task.option.新版爬塔_商店_音符策略.inputs.暗之音.label", "pipeline_type": "int", "default": "0", "verify": "^\\d+$", "pattern_msg": "$interface.task.option.新版爬塔_商店_音符策略.inputs.暗之音.pattern_msg"}
             ],
             "pipeline_override": {
                 "星塔_节点_商店_商店主流程_agent": {
@@ -278,11 +295,12 @@
             "inputs": [
                 {
                     "name": "中途商店刷新最小金额",
-                    "description": "只在中途商店生效，为保证刷新是有意义的，建议至少设置在300辉光币以上<br>在最终商店会固定为300，尽可能刷新",
+                    "label": "$interface.task.option.新版爬塔_商店_中途商店刷新最小金额.inputs.中途商店刷新最小金额.label",
+                    "description": "$interface.task.option.新版爬塔_商店_中途商店刷新最小金额.inputs.中途商店刷新最小金额.description",
                     "pipeline_type": "int",
                     "default": "1500",
                     "verify": "^\\d+$",
-                    "pattern_msg": "请输入中途商店刷新最小金额"
+                    "pattern_msg": "$interface.task.option.新版爬塔_商店_中途商店刷新最小金额.inputs.中途商店刷新最小金额.pattern_msg"
                 }
             ],
             "pipeline_override": {

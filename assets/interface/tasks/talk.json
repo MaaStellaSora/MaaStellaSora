@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "心链送礼",
+            "label": "$interface.task.心链送礼.label",
             "entry": "心链_入口",
-            "description": "自动打开心链页面，并且为心链顶置旅人赠送礼物"
+            "description": "$interface.task.心链送礼.description"
         }
     ]
 }

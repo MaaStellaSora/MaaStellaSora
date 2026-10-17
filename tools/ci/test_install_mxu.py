@@ -25,6 +25,7 @@ class InstallMxuTests(unittest.TestCase):
     def _create_fixture(self) -> None:
         interface = {
             "interface_version": 2,
+            "languages": {"zh_cn": "i18n/zh_cn.json"},
             "name": "MaaStellaSora",
             "license": "MIT",
             "github": "https://github.com/MaaStellaSora/MaaStellaSora",
@@ -63,6 +64,10 @@ class InstallMxuTests(unittest.TestCase):
             json.dumps(interface, ensure_ascii=False),
         )
         self._write(self.root / "assets" / "logo.ico")
+        self._write(
+            self.root / "assets" / "i18n" / "zh_cn.json",
+            '{"interface.label":"测试"}',
+        )
         self._write(self.root / "assets" / "interface" / "tasks" / "login.json")
         self._write(self.root / "assets" / "resource" / "windows" / "base.json")
         self._write(self.root / "assets" / "resource" / "en" / "base.json")
@@ -145,6 +150,10 @@ class InstallMxuTests(unittest.TestCase):
         self.assertEqual(
             (output / "README.md").read_text(encoding="utf-8"),
             "project README.md",
+        )
+        self.assertEqual(
+            (output / "i18n" / "zh_cn.json").read_text(encoding="utf-8"),
+            '{"interface.label":"测试"}',
         )
         self.assertEqual(
             (self.root / "assets" / "interface.json").read_text(encoding="utf-8"),

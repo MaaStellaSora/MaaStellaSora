@@ -1,13 +1,19 @@
 {
 	"interface_version": 2,
+	"languages": {
+		"zh_cn": "i18n/zh_cn.json",
+		"zh_tw": "i18n/zh_cn.json",
+		"zh_hk": "i18n/zh_cn.json"
+	},
 	"name": "MaaStellaSora",
-	"description": "星塔助手（MaaStellaSora）提供对于游戏《星塔旅人》的自动签到、清理日常等功能，由 MaaFramework 强力驱动",
-	"contact": "QQ交流群：1063132902  密码：星塔旅人",
+	"label": "MaaStellaSora",
+	"description": "$interface.description",
+	"contact": "$interface.contact",
 	"license": "MIT",
 	"welcome": "首次使用！欢迎使用 MaaStellaSora",
 	"github": "https://github.com/MaaStellaSora/MaaStellaSora",
 	"version": "0.9.5",
-	"custom_title": "星塔助手",
+	"custom_title": "MaaStellaSora",
 	"mirrorchyan_rid": "SSAH",
 	"mirrorchyan_multiplatform": true,
 	"agent": {
@@ -21,6 +27,7 @@
 	"controller": [
 		{
 			"name": "桌面端",
+			"label": "$interface.controller.桌面端.label",
 			"type": "Win32",
 			"win32": {
 				"class_regex": "UnityWndClass",
@@ -36,10 +43,12 @@
 		},
 		{
 			"name": "安卓端",
+			"label": "$interface.controller.安卓端.label",
 			"type": "Adb"
 		},
 		{
 			"name": "PlayCover",
+			"label": "PlayCover",
 			"type": "PlayCover"
 		},
 		{
@@ -56,18 +65,21 @@
 			"attach_resource_path": [
 				"resource/windows"
 			],
-			"description": "灾变防线专用前台控制器。运行时请保持游戏窗口在前台，真实键盘输入会占用操作；仅支持 1280×720。"
+			"description": "$interface.controller.桌面端（前台）.description",
+			"label": "$interface.controller.桌面端（前台）.label"
 		}
 	],
 	"resource": [
 		{
 			"name": "官服",
+			"label": "$interface.resource.官服.label",
 			"path": [
 				"resource/base"
 			]
 		},
 		{
 			"name": "台服",
+			"label": "$interface.resource.台服.label",
 			"path": [
 				"resource/base",
 				"resource/tw"
@@ -75,6 +87,7 @@
 		},
 		{
 			"name": "国际服",
+			"label": "$interface.resource.国际服.label",
 			"path": [
 				"resource/base",
 				"resource/en"
@@ -82,6 +95,7 @@
 		},
 		{
 			"name": "日服",
+			"label": "$interface.resource.日服.label",
 			"path": [
 				"resource/base",
 				"resource/jp"
@@ -89,6 +103,7 @@
 		}
 	],
 	"import": [
+		"interface/tasks/common.json",
 		"interface/tasks/login.json",
 		"interface/tasks/shop.json",
 		"interface/tasks/talk.json",
@@ -109,32 +124,5 @@
 		"interface/tasks/climb_tower_shop_enhance.json",
 		"interface/tasks/climb_tower_target.json",
 		"interface/tasks/catastrophe_defense.json"
-	],
-	"option": {
-		"自定义快速作战次数": {
-			"type": "input",
-			"label": "自定义快速作战次数",
-			"inputs": [
-				{
-					"name": "次数",
-					"label": "次数",
-					"description": "打几次就填几",
-					"default": "1",
-					"pipeline_type": "int",
-					"verify": "^[1-9]\\d*$"
-				}
-			],
-			"pipeline_override": {
-				"通用_换算快速作战次数": {
-					"action": {
-						"type": "Custom",
-						"param": {
-							"custom_action": "utool_calc_repeat",
-							"custom_action_param": "{次数}"
-						}
-					}
-				}
-			}
-		}
-	}
+	]
 }

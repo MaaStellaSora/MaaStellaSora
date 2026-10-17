@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "猎影合围",
+            "label": "$interface.task.猎影合围.label",
             "entry": "猎影合围_入口",
-            "description": "1. 会按照协助讨伐->追踪目标的顺序消耗资源，直到到达保留数量\n2. 追踪目标时不会使用围猎许可证，如果选择等待到讨伐完成但没有人协助围猎，会一直等待直到目标逃跑\n3. 战斗时，如无选择纪录会默认选择第一个纪录，如要自定义纪录请先自己选择纪录手动打一把\n4. 战斗使用自动战斗，请确保拥有足够的实力。如果结果不足1星，任务将会陷入无限循环",
+            "description": "$interface.task.猎影合围.description",
             "option": [
                 "猎影合围_开启协助讨伐",
                 "猎影合围_开启追踪目标"
@@ -13,11 +14,12 @@
     "option": {
         "猎影合围_开启协助讨伐": {
             "type": "switch",
-            "label": "协助讨伐",
+            "label": "$interface.task.option.猎影合围_开启协助讨伐.label",
             "default_case": "Yes",
             "cases": [
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "pipeline_override": {
                         "猎影合围_协助讨伐": {
                             "enabled": true
@@ -29,6 +31,7 @@
                 },
                 {
                     "name": "No",
+                    "label": "No",
                     "pipeline_override": {
                         "猎影合围_协助讨伐": {
                             "enabled": false
@@ -42,7 +45,7 @@
             "inputs": [
                 {
                     "name": "猎影合围_协助讨伐_保留围猎许可证数量",
-                    "label": "保留围猎许可证数量",
+                    "label": "$interface.task.option.猎影合围_协助讨伐_保留数量.inputs.猎影合围_协助讨伐_保留围猎许可证数量.label",
                     "verify": "\\d+",
                     "default": "0",
                     "pipeline_type": "int"
@@ -58,12 +61,13 @@
         },
         "猎影合围_协助讨伐_开启无偿协助": {
             "type": "switch",
-            "label": "开启无偿协助",
-            "description": "达到一定等级后可以无偿协助他人。若还有围猎许可证会先消耗完，之后在许可证为0的状态下进行指定次数的无偿协助",
+            "label": "$interface.task.option.猎影合围_协助讨伐_开启无偿协助.label",
+            "description": "$interface.task.option.猎影合围_协助讨伐_开启无偿协助.description",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
+                    "label": "No",
                     "pipeline_override": {
                         "猎影合围_协助_点击无偿协助": {
                             "enabled": false
@@ -75,6 +79,7 @@
                 },
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "pipeline_override": {
                         "猎影合围_协助_点击无偿协助": {
                             "enabled": true
@@ -91,8 +96,8 @@
             "inputs": [
                 {
                     "name": "无偿协助次数",
-                    "label": "无偿协助次数",
-                    "description": "如果连续战斗过久，可能会被官方盯上，请谨慎设置次数",
+                    "label": "$interface.task.option.猎影合围_协助讨伐_无偿协助次数.inputs.无偿协助次数.label",
+                    "description": "$interface.task.option.猎影合围_协助讨伐_无偿协助次数.inputs.无偿协助次数.description",
                     "verify": "^[1-9]\\d*$",
                     "default": "5",
                     "pipeline_type": "int"
@@ -106,11 +111,12 @@
         },
         "猎影合围_开启追踪目标": {
             "type": "switch",
-            "label": "追踪目标",
+            "label": "$interface.task.option.猎影合围_开启追踪目标.label",
             "default_case": "Yes",
             "cases": [
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "pipeline_override": {
                         "猎影合围_追踪目标": {
                             "enabled": true
@@ -123,6 +129,7 @@
                 },
                 {
                     "name": "No",
+                    "label": "No",
                     "pipeline_override": {
                         "猎影合围_追踪目标": {
                             "enabled": false
@@ -136,7 +143,7 @@
             "inputs": [
                 {
                     "name": "猎影合围_追踪目标_保留追踪委托书数量",
-                    "label": "保留追踪委托书数量",
+                    "label": "$interface.task.option.猎影合围_追踪目标_保留数量.inputs.猎影合围_追踪目标_保留追踪委托书数量.label",
                     "verify": "\\d+",
                     "default": "0",
                     "pipeline_type": "int"
@@ -152,12 +159,13 @@
         },
         "猎影合围_追踪目标_是否等待讨伐完成": {
             "type": "switch",
-            "label": "是否等待讨伐完成",
-            "description": "如开启该选项，出击完成后会一直等待直到讨伐完成，任务只会在追踪委托书数量到达保留数量时结束\n\n如关闭该选项，出击完成后会直接结束追踪目标任务",
+            "label": "$interface.task.option.猎影合围_追踪目标_是否等待讨伐完成.label",
+            "description": "$interface.task.option.猎影合围_追踪目标_是否等待讨伐完成.description",
             "default_case": "No",
             "cases": [
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "pipeline_override": {
                         "猎影合围_追踪目标_等待讨伐完成": {
                             "enabled": true
@@ -169,6 +177,7 @@
                 },
                 {
                     "name": "No",
+                    "label": "No",
                     "pipeline_override": {
                         "猎影合围_追踪目标_等待讨伐完成": {
                             "enabled": false

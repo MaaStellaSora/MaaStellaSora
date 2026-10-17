@@ -2,8 +2,9 @@
     "task": [
         {
             "name": "真格挑战",
+            "label": "$interface.task.真格挑战.label",
             "entry": "真格挑战_入口",
-            "description": "自动完成真格挑战\n\n注意：\n\n1. 为保证任务顺利进行，只会在该首领已有默认纪录的情况下进入战斗，否则会在选择纪录界面结束任务\n\n2. 挑战最多循环10次，如果失败次数过多可能会不能把挑战次数用光，请具备一定实力再使用",
+            "description": "$interface.task.真格挑战.description",
             "option": [
                 "真格挑战_选择首领"
             ]
@@ -12,12 +13,12 @@
     "option": {
         "真格挑战_选择首领": {
             "type": "select",
-            "label": "选择首领",
+            "label": "$interface.task.option.真格挑战_选择首领.label",
             "default_case": "真格挑战_选择首领_首领1",
             "cases": [
                 {
                     "name": "真格挑战_选择首领_首领1",
-                    "label": "寄生之庭(暗)",
+                    "label": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领1.label",
                     "pipeline_override": {
                         "__真格挑战_选择首领": {
                             "recognition": {
@@ -38,7 +39,7 @@
                 },
                 {
                     "name": "真格挑战_选择首领_首领2",
-                    "label": "猛进之灵(地)",
+                    "label": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领2.label",
                     "pipeline_override": {
                         "__真格挑战_选择首领": {
                             "recognition": {
@@ -59,7 +60,7 @@
                 },
                 {
                     "name": "真格挑战_选择首领_首领3",
-                    "label": "魔侍巨像(火)",
+                    "label": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领3.label",
                     "pipeline_override": {
                         "__真格挑战_选择首领": {
                             "recognition": {
@@ -80,7 +81,7 @@
                 },
                 {
                     "name": "真格挑战_选择首领_首领4",
-                    "label": "流风美人(风)",
+                    "label": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领4.label",
                     "pipeline_override": {
                         "__真格挑战_选择首领": {
                             "recognition": {
@@ -101,7 +102,7 @@
                 },
                 {
                     "name": "真格挑战_选择首领_首领5",
-                    "label": "翠煌之刃(光)",
+                    "label": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领5.label",
                     "pipeline_override": {
                         "__真格挑战_选择首领": {
                             "recognition": {
@@ -122,7 +123,7 @@
                 },
                 {
                     "name": "真格挑战_选择首领_首领6",
-                    "label": "咕噜六角鲸(水)",
+                    "label": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领6.label",
                     "pipeline_override": {
                         "__真格挑战_选择首领": {
                             "recognition": {

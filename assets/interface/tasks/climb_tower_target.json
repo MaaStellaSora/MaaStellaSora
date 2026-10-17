@@ -1,16 +1,18 @@
 {
     "option": {
         "新版爬塔_设置爬塔目标": {
-            "label": "设置爬塔目标",
-            "description": "开启后，在设置的爬塔次数内完成目标时，会直接结束爬塔<br>如果没达到目标，在爬塔次数内会继续爬塔",
+            "label": "$interface.task.option.新版爬塔_设置爬塔目标.label",
+            "description": "$interface.task.option.新版爬塔_设置爬塔目标.description",
             "type": "switch",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
+                    "label": "No",
                 },
                 {
                     "name": "Yes",
+                    "label": "Yes",
                     "option": [
                         "新版爬塔_爬塔目标"
                     ]
@@ -18,24 +20,26 @@
             ]
         },
         "新版爬塔_爬塔目标": {
-            "label": "爬塔目标",
+            "label": "$interface.task.option.新版爬塔_爬塔目标.label",
             "type": "input",
             "inputs": [
                 {
                     "name": "潜能数目标",
-                    "description": "在爬塔次数内所有旅人的潜能总数>=设置值(>0)时，会直接结束爬塔。0为不生效。",
+                    "label": "$interface.task.option.新版爬塔_爬塔目标.inputs.潜能数目标.label",
+                    "description": "$interface.task.option.新版爬塔_爬塔目标.inputs.潜能数目标.description",
                     "pipeline_type": "int",
                     "default": "0",
                     "verify": "^\\d+$",
-                    "pattern_msg": "请输入潜能数目标(≥0)"
+                    "pattern_msg": "$interface.task.option.新版爬塔_爬塔目标.inputs.潜能数目标.pattern_msg"
                 },
                 {
                     "name": "记录等级目标",
-                    "description": "在爬塔次数内纪录等级>=设置值(>0)时，会直接结束爬塔。0为不生效。",
+                    "label": "$interface.task.option.新版爬塔_爬塔目标.inputs.记录等级目标.label",
+                    "description": "$interface.task.option.新版爬塔_爬塔目标.inputs.记录等级目标.description",
                     "pipeline_type": "int",
                     "default": "0",
                     "verify": "^\\d+$",
-                    "pattern_msg": "请输入记录等级目标(≥0)"
+                    "pattern_msg": "$interface.task.option.新版爬塔_爬塔目标.inputs.记录等级目标.pattern_msg"
                 }
             ],
             "pipeline_override": {

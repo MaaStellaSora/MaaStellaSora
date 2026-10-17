@@ -3,7 +3,8 @@
     "languages": {
         "zh_cn": "i18n/zh_cn.json",
         "zh_tw": "i18n/zh_cn.json",
-        "zh_hk": "i18n/zh_cn.json"
+        "zh_hk": "i18n/zh_cn.json",
+        "ko_kr": "i18n/ko_kr.json"
     },
     "name": "MaaStellaSora",
     "label": "MaaStellaSora",

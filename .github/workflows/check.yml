@@ -7,6 +7,8 @@ on:
     paths:
       - ".github/workflows/check.yml"
       - "tools/checks/check_resource.py"
+      - "tools/checks/tests/**"
+      - "agent/custom/action/catastrophe_defense_*.py"
       - "tools/checks/requirements.txt"
       - "tools/ci/resolve_releases.py"
       - "tools/ci/prepare_maafw.py"
@@ -17,6 +19,8 @@ on:
     paths:
       - ".github/workflows/check.yml"
       - "tools/checks/check_resource.py"
+      - "tools/checks/tests/**"
+      - "agent/custom/action/catastrophe_defense_*.py"
       - "tools/checks/requirements.txt"
       - "tools/ci/resolve_releases.py"
       - "tools/ci/prepare_maafw.py"
@@ -65,6 +69,9 @@ jobs:
         run: |
           python tools/ci/prepare_maafw.py --maafw-tag "${{ steps.upstream.outputs.maafw_tag }}" --platform-tag macosx_13_0_arm64
           python -m pip install --disable-pip-version-check --find-links install/deps --requirement tools/checks/requirements.txt "maafw==${{ steps.upstream.outputs.maafw_python_version }}"
+
+      - name: Check catastrophe defense stop and key release behavior
+        run: python -m unittest discover -s tools/checks/tests -v
 
       - name: Check Resource (BASE)
         run: |

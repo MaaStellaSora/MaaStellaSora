@@ -13,6 +13,7 @@ from maa.context import Context
 from maa.custom_action import CustomAction
 
 from utils import logger as logger_module
+from utils.catastrophe_defense import grab as _grab, wait_job
 
 logger = logger_module.get_logger("catastrophe_defense")
 
@@ -21,15 +22,6 @@ CARD_OFFSET = (-20, -71, 230, 250)
 
 ## 点击位置相对徽标的偏移（取卡片中心）
 CLICK_OFFSET = (95, 55)
-
-
-def _grab(context: Context):
-    """截一帧；失败返回 None。"""
-
-    try:
-        return context.tasker.controller.post_screencap().wait().get()
-    except Exception:  # noqa: BLE001 - 任务停止时框架会拒绝截图
-        return None
 
 
 def _card_score(arr, icon_x: int, icon_y: int) -> float:
@@ -94,7 +86,7 @@ class CatastropheDefensePickRecord(CustomAction):
         click_y = best_y + CLICK_OFFSET[1]
         if context.tasker.stopping:
             return False
-        if not context.tasker.controller.post_click(click_x, click_y).wait().succeeded:
+        if not wait_job(context, context.tasker.controller.post_click(click_x, click_y)):
             logger.error("灾变防线：点击记录卡失败")
             return False
         logger.info("灾变防线：已选择记录卡（点击 %d,%d）", click_x, click_y)

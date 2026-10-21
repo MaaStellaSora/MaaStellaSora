@@ -1,476 +1,478 @@
 {
-    "task": [
-        {
-            "name": "邀约",
-            "label": "$interface.task.邀约.label",
-            "entry": "邀约_入口",
-            "description": "$interface.task.邀约.description",
-            "option": [
-                "邀约_回忆收集模式",
-                "邀约旅人",
-                "邀约旅人_下拉_1号",
-                "邀约旅人_下拉_2号",
-                "邀约旅人_下拉_3号",
-                "邀约旅人_下拉_4号",
-                "邀约旅人_下拉_5号",
-                "邀约旅人_1号_送礼",
-                "邀约旅人_2号_送礼",
-                "邀约旅人_3号_送礼",
-                "邀约旅人_4号_送礼",
-                "邀约旅人_5号_送礼"
-            ]
-        }
-    ],
-    "option": {
-        "邀约旅人": {
-            "type": "input",
-            "resource": [
-                "台服",
-                "日服",
-                "国际服"
-            ],
-            "inputs": [
-                {
-                    "name": "1号",
-                    "label": "$interface.task.option.邀约旅人.inputs.1号.label",
-                    "pipeline_type": "string",
-                    "default": "希娅",
-                    "description": "$interface.task.option.邀约旅人.inputs.1号.description"
-                },
-                {
-                    "name": "2号",
-                    "label": "$interface.task.option.邀约旅人.inputs.2号.label",
-                    "pipeline_type": "string",
-                    "default": "雾语",
-                    "description": "$interface.task.option.邀约旅人.inputs.2号.description"
-                },
-                {
-                    "name": "3号",
-                    "label": "$interface.task.option.邀约旅人.inputs.3号.label",
-                    "pipeline_type": "string",
-                    "default": "苍兰",
-                    "description": "$interface.task.option.邀约旅人.inputs.3号.description"
-                },
-                {
-                    "name": "4号",
-                    "label": "$interface.task.option.邀约旅人.inputs.4号.label",
-                    "pipeline_type": "string",
-                    "default": "冬香",
-                    "description": "$interface.task.option.邀约旅人.inputs.4号.description"
-                },
-                {
-                    "name": "5号",
-                    "label": "$interface.task.option.邀约旅人.inputs.5号.label",
-                    "pipeline_type": "string",
-                    "default": "夏花",
-                    "description": "$interface.task.option.邀约旅人.inputs.5号.description"
-                }
-            ],
-            "pipeline_override": {
-                "邀约_1号": {
-                    "recognition": {
-                        "param": {
-                            "expected": [
-                                "{1号}"
-                            ]
-                        }
-                    },
-                    "focus": {
-                        "Node.Recognition.Succeeded": "尝试邀约_{1号}"
-                    }
-                },
-                "邀约_2号": {
-                    "recognition": {
-                        "param": {
-                            "expected": [
-                                "{2号}"
-                            ]
-                        }
-                    },
-                    "focus": {
-                        "Node.Recognition.Succeeded": "尝试邀约_{2号}"
-                    }
-                },
-                "邀约_3号": {
-                    "recognition": {
-                        "param": {
-                            "expected": [
-                                "{3号}"
-                            ]
-                        }
-                    },
-                    "focus": {
-                        "Node.Recognition.Succeeded": "尝试邀约_{3号}"
-                    }
-                },
-                "邀约_4号": {
-                    "recognition": {
-                        "param": {
-                            "expected": [
-                                "{4号}"
-                            ]
-                        }
-                    },
-                    "focus": {
-                        "Node.Recognition.Succeeded": "尝试邀约_{4号}"
-                    }
-                },
-                "邀约_5号": {
-                    "recognition": {
-                        "param": {
-                            "expected": [
-                                "{5号}"
-                            ]
-                        }
-                    },
-                    "focus": {
-                        "Node.Recognition.Succeeded": "尝试邀约_{5号}"
-                    }
-                }
-            }
-        },
-        "邀约旅人_1号_送礼": {
-            "type": "select",
-            "label": "$interface.task.option.邀约旅人_1号_送礼.label",
-            "description": "$interface.task.option.邀约旅人_1号_送礼.description",
-            "default_case": "所有",
-            "cases": [
-                {
-                    "name": "所有",
-                    "label": "$interface.task.option.邀约旅人_1号_送礼.cases.所有.label",
-                    "pipeline_override": {
-                        "邀约_1号": {
-                            "attach": {
-                                "gift": "all"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "最爱",
-                    "label": "$interface.task.option.邀约旅人_1号_送礼.cases.最爱.label",
-                    "pipeline_override": {
-                        "邀约_1号": {
-                            "attach": {
-                                "gift": "favorite"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "不送",
-                    "label": "$interface.task.option.邀约旅人_1号_送礼.cases.不送.label",
-                    "pipeline_override": {
-                        "邀约_1号": {
-                            "attach": {
-                                "gift": "no"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "邀约旅人_2号_送礼": {
-            "type": "select",
-            "label": "$interface.task.option.邀约旅人_2号_送礼.label",
-            "description": "$interface.task.option.邀约旅人_2号_送礼.description",
-            "default_case": "所有",
-            "cases": [
-                {
-                    "name": "所有",
-                    "label": "$interface.task.option.邀约旅人_2号_送礼.cases.所有.label",
-                    "pipeline_override": {
-                        "邀约_2号": {
-                            "attach": {
-                                "gift": "all"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "最爱",
-                    "label": "$interface.task.option.邀约旅人_2号_送礼.cases.最爱.label",
-                    "pipeline_override": {
-                        "邀约_2号": {
-                            "attach": {
-                                "gift": "favorite"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "不送",
-                    "label": "$interface.task.option.邀约旅人_2号_送礼.cases.不送.label",
-                    "pipeline_override": {
-                        "邀约_2号": {
-                            "attach": {
-                                "gift": "no"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "邀约旅人_3号_送礼": {
-            "type": "select",
-            "label": "$interface.task.option.邀约旅人_3号_送礼.label",
-            "description": "$interface.task.option.邀约旅人_3号_送礼.description",
-            "default_case": "所有",
-            "cases": [
-                {
-                    "name": "所有",
-                    "label": "$interface.task.option.邀约旅人_3号_送礼.cases.所有.label",
-                    "pipeline_override": {
-                        "邀约_3号": {
-                            "attach": {
-                                "gift": "all"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "最爱",
-                    "label": "$interface.task.option.邀约旅人_3号_送礼.cases.最爱.label",
-                    "pipeline_override": {
-                        "邀约_3号": {
-                            "attach": {
-                                "gift": "favorite"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "不送",
-                    "label": "$interface.task.option.邀约旅人_3号_送礼.cases.不送.label",
-                    "pipeline_override": {
-                        "邀约_3号": {
-                            "attach": {
-                                "gift": "no"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "邀约旅人_4号_送礼": {
-            "type": "select",
-            "label": "$interface.task.option.邀约旅人_4号_送礼.label",
-            "description": "$interface.task.option.邀约旅人_4号_送礼.description",
-            "default_case": "所有",
-            "cases": [
-                {
-                    "name": "所有",
-                    "label": "$interface.task.option.邀约旅人_4号_送礼.cases.所有.label",
-                    "pipeline_override": {
-                        "邀约_4号": {
-                            "attach": {
-                                "gift": "all"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "最爱",
-                    "label": "$interface.task.option.邀约旅人_4号_送礼.cases.最爱.label",
-                    "pipeline_override": {
-                        "邀约_4号": {
-                            "attach": {
-                                "gift": "favorite"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "不送",
-                    "label": "$interface.task.option.邀约旅人_4号_送礼.cases.不送.label",
-                    "pipeline_override": {
-                        "邀约_4号": {
-                            "attach": {
-                                "gift": "no"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "邀约旅人_5号_送礼": {
-            "type": "select",
-            "label": "$interface.task.option.邀约旅人_5号_送礼.label",
-            "description": "$interface.task.option.邀约旅人_5号_送礼.description",
-            "default_case": "所有",
-            "cases": [
-                {
-                    "name": "所有",
-                    "label": "$interface.task.option.邀约旅人_5号_送礼.cases.所有.label",
-                    "pipeline_override": {
-                        "邀约_5号": {
-                            "attach": {
-                                "gift": "all"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "最爱",
-                    "label": "$interface.task.option.邀约旅人_5号_送礼.cases.最爱.label",
-                    "pipeline_override": {
-                        "邀约_5号": {
-                            "attach": {
-                                "gift": "favorite"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "不送",
-                    "label": "$interface.task.option.邀约旅人_5号_送礼.cases.不送.label",
-                    "pipeline_override": {
-                        "邀约_5号": {
-                            "attach": {
-                                "gift": "no"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "邀约_回忆收集模式": {
-            "type": "switch",
-            "label": "$interface.task.option.邀约_回忆收集模式.label",
-            "resource": ["官服"],
-            "description": "$interface.task.option.邀约_回忆收集模式.description",
-            "default_case": "No",
-            "cases": [
-                {
-                    "name": "No",
-                    "label": "No",
-                    "pipeline_override": {
-                        "邀约_总循环": {
-                            "attach": {
-                                "memory_mode": false
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "Yes",
-                    "label": "Yes",
-                    "pipeline_override": {
-                        "邀约_总循环": {
-                            "attach": {
-                                "memory_mode": true
-                            }
-                        },
-                        "邀约_选择默认地点": {
-                            "next": [
-                                "邀约_回忆收集_循环"
-                            ]
-                        },
-                        "邀约_选择回忆地点": {
-                            "next": [
-                                "邀约_回忆收集_循环"
-                            ]
-                        }
-                    },
-                    "option": [
-                        "邀约_自动查找未收集"
-                    ]
-                }
-            ]
-        },
-        "邀约_自动查找未收集": {
-            "type": "switch",
-            "label": "$interface.task.option.邀约_自动查找未收集.label",
-            "description": "$interface.task.option.邀约_自动查找未收集.description",
-            "default_case": "No",
-            "cases": [
-                {
-                    "name": "No",
-                    "label": "No",
-                    "pipeline_override": {
-                        "邀约_总循环": {
-                            "attach": {
-                                "auto_find": false
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "Yes",
-                    "label": "Yes",
-                    "pipeline_override": {
-                        "邀约_总循环": {
-                            "attach": {
-                                "auto_find": true
-                            }
-                        }
-                    },
-                    "option": [
-                        "邀约_自动查找_最多查找人数",
-                        "邀约_自动收集_送礼类型"
-                    ]
-                }
-            ]
-        },
-        "邀约_自动查找_最多查找人数": {
-            "type": "input",
-            "inputs": [
-                {
-                    "name": "人数",
-                    "label": "$interface.task.option.邀约_自动查找_最多查找人数.inputs.人数.label",
-                    "pipeline_type": "int",
-                    "verify": "^[1-9]\\d*$",
-                    "default": "5"
-                }
-            ],
-            "pipeline_override": {
-                "邀约_总循环": {
-                    "attach": {
-                        "max_find_count": "{人数}"
-                    }
-                }
-            }
-        },
-        "邀约_自动收集_送礼类型": {
-            "type": "select",
-            "label": "$interface.task.option.邀约_自动收集_送礼类型.label",
-            "description": "$interface.task.option.邀约_自动收集_送礼类型.description",
-            "default_case": "所有",
-            "cases": [
-                {
-                    "name": "所有",
-                    "label": "$interface.task.option.邀约_自动收集_送礼类型.cases.所有.label",
-                    "pipeline_override": {
-                        "邀约_总循环": {
-                            "attach": {
-                                "auto_gift": "all"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "最爱",
-                    "label": "$interface.task.option.邀约_自动收集_送礼类型.cases.最爱.label",
-                    "pipeline_override": {
-                        "邀约_总循环": {
-                            "attach": {
-                                "auto_gift": "favorite"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "不送",
-                    "label": "$interface.task.option.邀约_自动收集_送礼类型.cases.不送.label",
-                    "pipeline_override": {
-                        "邀约_总循环": {
-                            "attach": {
-                                "auto_gift": "no"
-                            }
-                        }
-                    }
-                }
-            ]
-        }
-    }
+	"task": [
+		{
+			"name": "邀约",
+			"label": "$interface.task.邀约.label",
+			"entry": "邀约_入口",
+			"description": "$interface.task.邀约.description",
+			"option": [
+				"邀约_回忆收集模式",
+				"邀约旅人",
+				"邀约旅人_下拉_1号",
+				"邀约旅人_下拉_2号",
+				"邀约旅人_下拉_3号",
+				"邀约旅人_下拉_4号",
+				"邀约旅人_下拉_5号",
+				"邀约旅人_1号_送礼",
+				"邀约旅人_2号_送礼",
+				"邀约旅人_3号_送礼",
+				"邀约旅人_4号_送礼",
+				"邀约旅人_5号_送礼"
+			]
+		}
+	],
+	"option": {
+		"邀约旅人": {
+			"type": "input",
+			"resource": [
+				"台服",
+				"日服",
+				"国际服"
+			],
+			"inputs": [
+				{
+					"name": "1号",
+					"label": "$interface.task.option.邀约旅人.inputs.1号.label",
+					"pipeline_type": "string",
+					"default": "希娅",
+					"description": "$interface.task.option.邀约旅人.inputs.1号.description"
+				},
+				{
+					"name": "2号",
+					"label": "$interface.task.option.邀约旅人.inputs.2号.label",
+					"pipeline_type": "string",
+					"default": "雾语",
+					"description": "$interface.task.option.邀约旅人.inputs.2号.description"
+				},
+				{
+					"name": "3号",
+					"label": "$interface.task.option.邀约旅人.inputs.3号.label",
+					"pipeline_type": "string",
+					"default": "苍兰",
+					"description": "$interface.task.option.邀约旅人.inputs.3号.description"
+				},
+				{
+					"name": "4号",
+					"label": "$interface.task.option.邀约旅人.inputs.4号.label",
+					"pipeline_type": "string",
+					"default": "冬香",
+					"description": "$interface.task.option.邀约旅人.inputs.4号.description"
+				},
+				{
+					"name": "5号",
+					"label": "$interface.task.option.邀约旅人.inputs.5号.label",
+					"pipeline_type": "string",
+					"default": "夏花",
+					"description": "$interface.task.option.邀约旅人.inputs.5号.description"
+				}
+			],
+			"pipeline_override": {
+				"邀约_1号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{1号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{1号}"
+					}
+				},
+				"邀约_2号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{2号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{2号}"
+					}
+				},
+				"邀约_3号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{3号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{3号}"
+					}
+				},
+				"邀约_4号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{4号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{4号}"
+					}
+				},
+				"邀约_5号": {
+					"recognition": {
+						"param": {
+							"expected": [
+								"{5号}"
+							]
+						}
+					},
+					"focus": {
+						"Node.Recognition.Succeeded": "尝试邀约_{5号}"
+					}
+				}
+			}
+		},
+		"邀约旅人_1号_送礼": {
+			"type": "select",
+			"label": "$interface.task.option.邀约旅人_1号_送礼.label",
+			"description": "$interface.task.option.邀约旅人_1号_送礼.description",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"label": "$interface.task.option.邀约旅人_1号_送礼.cases.所有.label",
+					"pipeline_override": {
+						"邀约_1号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"label": "$interface.task.option.邀约旅人_1号_送礼.cases.最爱.label",
+					"pipeline_override": {
+						"邀约_1号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"label": "$interface.task.option.邀约旅人_1号_送礼.cases.不送.label",
+					"pipeline_override": {
+						"邀约_1号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_2号_送礼": {
+			"type": "select",
+			"label": "$interface.task.option.邀约旅人_2号_送礼.label",
+			"description": "$interface.task.option.邀约旅人_2号_送礼.description",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"label": "$interface.task.option.邀约旅人_2号_送礼.cases.所有.label",
+					"pipeline_override": {
+						"邀约_2号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"label": "$interface.task.option.邀约旅人_2号_送礼.cases.最爱.label",
+					"pipeline_override": {
+						"邀约_2号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"label": "$interface.task.option.邀约旅人_2号_送礼.cases.不送.label",
+					"pipeline_override": {
+						"邀约_2号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_3号_送礼": {
+			"type": "select",
+			"label": "$interface.task.option.邀约旅人_3号_送礼.label",
+			"description": "$interface.task.option.邀约旅人_3号_送礼.description",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"label": "$interface.task.option.邀约旅人_3号_送礼.cases.所有.label",
+					"pipeline_override": {
+						"邀约_3号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"label": "$interface.task.option.邀约旅人_3号_送礼.cases.最爱.label",
+					"pipeline_override": {
+						"邀约_3号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"label": "$interface.task.option.邀约旅人_3号_送礼.cases.不送.label",
+					"pipeline_override": {
+						"邀约_3号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_4号_送礼": {
+			"type": "select",
+			"label": "$interface.task.option.邀约旅人_4号_送礼.label",
+			"description": "$interface.task.option.邀约旅人_4号_送礼.description",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"label": "$interface.task.option.邀约旅人_4号_送礼.cases.所有.label",
+					"pipeline_override": {
+						"邀约_4号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"label": "$interface.task.option.邀约旅人_4号_送礼.cases.最爱.label",
+					"pipeline_override": {
+						"邀约_4号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"label": "$interface.task.option.邀约旅人_4号_送礼.cases.不送.label",
+					"pipeline_override": {
+						"邀约_4号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约旅人_5号_送礼": {
+			"type": "select",
+			"label": "$interface.task.option.邀约旅人_5号_送礼.label",
+			"description": "$interface.task.option.邀约旅人_5号_送礼.description",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"label": "$interface.task.option.邀约旅人_5号_送礼.cases.所有.label",
+					"pipeline_override": {
+						"邀约_5号": {
+							"attach": {
+								"gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"label": "$interface.task.option.邀约旅人_5号_送礼.cases.最爱.label",
+					"pipeline_override": {
+						"邀约_5号": {
+							"attach": {
+								"gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"label": "$interface.task.option.邀约旅人_5号_送礼.cases.不送.label",
+					"pipeline_override": {
+						"邀约_5号": {
+							"attach": {
+								"gift": "no"
+							}
+						}
+					}
+				}
+			]
+		},
+		"邀约_回忆收集模式": {
+			"type": "switch",
+			"label": "$interface.task.option.邀约_回忆收集模式.label",
+			"resource": ["官服"],
+			"description": "$interface.task.option.邀约_回忆收集模式.description",
+			"default_case": "No",
+			"cases": [
+				{
+					"name": "No",
+					"label": "No",
+					"pipeline_override": {
+						"邀约_选择默认地点": {
+							"next": [
+								"邀约_跳过",
+								"邀约_选择默认地点"
+							]
+						},
+						"邀约_选择回忆地点": {
+							"next": [
+								"邀约_跳过",
+								"邀约_选择回忆地点"
+							]
+						}
+					}
+				},
+				{
+					"name": "Yes",
+					"label": "Yes",
+					"pipeline_override": {
+						"邀约_选择默认地点": {
+							"next": [
+								"邀约_回忆收集_循环"
+							]
+						},
+						"邀约_选择回忆地点": {
+							"next": [
+								"邀约_回忆收集_循环"
+							]
+						}
+					},
+					"option": [
+						"邀约_自动查找未收集"
+					]
+				}
+			]
+		},
+		"邀约_自动查找未收集": {
+			"type": "switch",
+			"label": "$interface.task.option.邀约_自动查找未收集.label",
+			"description": "$interface.task.option.邀约_自动查找未收集.description",
+			"default_case": "No",
+			"cases": [
+				{
+					"name": "No",
+					"label": "No",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_find": false
+							}
+						}
+					}
+				},
+				{
+					"name": "Yes",
+					"label": "Yes",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_find": true
+							}
+						}
+					},
+					"option": [
+						"邀约_自动查找_最多查找人数",
+						"邀约_自动收集_送礼类型"
+					]
+				}
+			]
+		},
+		"邀约_自动查找_最多查找人数": {
+			"type": "input",
+			"inputs": [
+				{
+					"name": "人数",
+					"label": "$interface.task.option.邀约_自动查找_最多查找人数.inputs.人数.label",
+					"pipeline_type": "int",
+					"verify": "^[1-9]\\d*$",
+					"default": "5"
+				}
+			],
+			"pipeline_override": {
+				"邀约_总循环": {
+					"attach": {
+						"max_find_count": "{人数}"
+					}
+				}
+			}
+		},
+		"邀约_自动收集_送礼类型": {
+			"type": "select",
+			"label": "$interface.task.option.邀约_自动收集_送礼类型.label",
+			"description": "$interface.task.option.邀约_自动收集_送礼类型.description",
+			"default_case": "所有",
+			"cases": [
+				{
+					"name": "所有",
+					"label": "$interface.task.option.邀约_自动收集_送礼类型.cases.所有.label",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_gift": "all"
+							}
+						}
+					}
+				},
+				{
+					"name": "最爱",
+					"label": "$interface.task.option.邀约_自动收集_送礼类型.cases.最爱.label",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_gift": "favorite"
+							}
+						}
+					}
+				},
+				{
+					"name": "不送",
+					"label": "$interface.task.option.邀约_自动收集_送礼类型.cases.不送.label",
+					"pipeline_override": {
+						"邀约_总循环": {
+							"attach": {
+								"auto_gift": "no"
+							}
+						}
+					}
+				}
+			]
+		}
+	}
 }

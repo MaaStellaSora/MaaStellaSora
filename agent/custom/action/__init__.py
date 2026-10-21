@@ -9,7 +9,6 @@ from .activity import *
 __all__ = [
     "ShopAction",
     "InviteAuto",
-    "InviteMemory",
     "UToolCalcRepeat",
     "AscensionPreparation",
     "AscensionLoop",

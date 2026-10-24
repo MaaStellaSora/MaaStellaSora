@@ -55,19 +55,19 @@
         },
         {
             "name": "桌面端（前台）",
-			"type": "Win32",
-			"win32": {
-				"class_regex": "UnityWndClass",
-				"window_regex": "xtlr|星塔旅人|ステラソラ|StellaSora",
-				"screencap": "FramePool",
-				"mouse": "SendMessageWithCursorPos",
-				"keyboard": "Seize"
-			},
-			"permission_required": true,
-			"attach_resource_path": [
-				"resource/windows"
-			],
-			"description": "灾变防线专用前台控制器。运行时请保持游戏窗口在前台，真实键盘输入会占用操作；仅支持 1280×720。"
+            "type": "Win32",
+            "win32": {
+                "class_regex": "UnityWndClass",
+                "window_regex": "xtlr|星塔旅人|ステラソラ|StellaSora",
+                "screencap": "FramePool",
+                "mouse": "SendMessageWithCursorPos",
+                "keyboard": "Seize"
+            },
+            "permission_required": true,
+            "attach_resource_path": [
+                "resource/windows"
+            ],
+            "description": "灾变防线专用前台控制器。运行时请保持游戏窗口在前台，真实键盘输入会占用操作；仅支持 1280×720。"
         }
     ],
     "resource": [

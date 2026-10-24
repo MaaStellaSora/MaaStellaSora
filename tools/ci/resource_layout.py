@@ -19,6 +19,7 @@ PIPELINE_PATHS = {
     "combat/fight.json": "fight.json",
     "combat/operation.json": "operation.json",
     "combat/proving_grounds.json": "proving_grounds.json",
+    "combat/cataclysm_survivor.json": "cataclysm_survivor.json",
     "activity/activity.json": "activity.json",
     "activity/activity_challenge.json": "activity_challenge.json",
     "invite/invite.json": "invite.json",

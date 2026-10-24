@@ -55,6 +55,7 @@
         },
         {
             "name": "桌面端（前台）",
+            "label": "$interface.controller.桌面端（前台）.label",
             "type": "Win32",
             "win32": {
                 "class_regex": "UnityWndClass",
@@ -67,7 +68,7 @@
             "attach_resource_path": [
                 "resource/windows"
             ],
-            "description": "灾变防线专用前台控制器。运行时请保持游戏窗口在前台，真实键盘输入会占用操作；仅支持 1280×720。"
+            "description": "$interface.controller.桌面端（前台）.description"
         }
     ],
     "resource": [

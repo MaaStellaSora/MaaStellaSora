@@ -13,8 +13,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
 spec = importlib.util.spec_from_file_location(
-    "catastrophe_defense_move",
-    ROOT / "agent/custom/action/catastrophe_defense_move.py",
+    "cataclysm_survivor_move",
+    ROOT / "agent/custom/action/cataclysm_survivor_move.py",
 )
 move = importlib.util.module_from_spec(spec)
 # 单测不启动原生 AgentServer 的消息线程；动作逻辑仍使用真实 Python 绑定类型。
@@ -22,7 +22,7 @@ with patch("maa.agent.agent_server.AgentServer.custom_action", side_effect=lambd
     spec.loader.exec_module(move)
 
 
-class CatastropheDefenseMovementTests(unittest.TestCase):
+class CataclysmSurvivorMovementTests(unittest.TestCase):
     def setUp(self):
         self.controller = Mock()
         for post in (self.controller.post_key_down, self.controller.post_key_up):
@@ -122,14 +122,14 @@ class CatastropheDefenseMovementTests(unittest.TestCase):
     def test_failed_hold_fails_action_without_marking_portal_entered(self):
         move._state.update(started_at=1, phase=move.PHASE_LEFT)
         with patch.object(move, "_grab", return_value=None), patch.object(move, "_hold", return_value="failed"):
-            self.assertFalse(move.CatastropheDefenseMove().run(self.context, self.argv))
+            self.assertFalse(move.CataclysmSurvivorMove().run(self.context, self.argv))
         self.assertFalse(move._state["entered"])
 
     def test_reset_allows_second_run_in_same_context(self):
-        action = move.CatastropheDefenseMove()
+        action = move.CataclysmSurvivorMove()
         self.assertTrue(action.run(self.context, self.argv))
         move._state.update(entered=True, phase=move.PHASE_DONE, attempt=8, last_gray=np.zeros((2, 2)))
-        self.assertTrue(move.CatastropheDefenseReset().run(self.context, self.argv))
+        self.assertTrue(move.CataclysmSurvivorReset().run(self.context, self.argv))
         self.assertFalse(move._state["entered"])
         self.assertEqual(move._state["attempt"], 0)
         self.assertIsNone(move._state["last_gray"])
@@ -183,7 +183,7 @@ class CatastropheDefenseMovementTests(unittest.TestCase):
                     ), patch.object(move, "_settle", return_value=(False, ratio)), self.assertLogs(
                         move.logger, level="ERROR",
                     ):
-                        self.assertFalse(move.CatastropheDefenseMove().run(self.context, self.argv))
+                        self.assertFalse(move.CataclysmSurvivorMove().run(self.context, self.argv))
                     self.assertEqual(move._state["phase"], phase)
                     self.assertFalse(move._state["entered"])
 
@@ -206,7 +206,7 @@ class CatastropheDefenseMovementTests(unittest.TestCase):
     def test_other_active_run_cannot_reset_or_move_owned_state(self):
         move._state.update(phase=move.PHASE_PORTAL, attempt=3)
         other = SimpleNamespace(**{**vars(self.context), "get_task_job": lambda: SimpleNamespace(job_id=2)})
-        for action in (move.CatastropheDefenseReset(), move.CatastropheDefenseMove()):
+        for action in (move.CataclysmSurvivorReset(), move.CataclysmSurvivorMove()):
             with self.assertLogs(move.logger, level="ERROR"):
                 self.assertFalse(action.run(other, self.argv))
         self.assertEqual(move._state["phase"], move.PHASE_PORTAL)
@@ -218,13 +218,13 @@ class CatastropheDefenseMovementTests(unittest.TestCase):
         next_job = SimpleNamespace(job_id=2, done=False)
         self.context.get_task_job = lambda: next_job
         move._state.update(phase=move.PHASE_DONE, entered=True)
-        self.assertTrue(move.CatastropheDefenseReset().run(self.context, self.argv))
+        self.assertTrue(move.CataclysmSurvivorReset().run(self.context, self.argv))
         self.assertEqual(move._owner_job.job_id, 2)
         self.assertFalse(move._state["entered"])
 
     def test_reentrant_callbacks_fail_without_deadlocking_or_releasing_keys(self):
         with move._action_lock:
-            for action in (move.CatastropheDefenseReset(), move.CatastropheDefenseMove()):
+            for action in (move.CataclysmSurvivorReset(), move.CataclysmSurvivorMove()):
                 with self.assertLogs(move.logger, level="ERROR"):
                     self.assertFalse(action.run(self.context, self.argv))
         self.controller.post_key_up.assert_not_called()

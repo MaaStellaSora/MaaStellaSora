@@ -13,9 +13,9 @@ from maa.context import Context
 from maa.custom_action import CustomAction
 
 from utils import logger as logger_module
-from utils.catastrophe_defense import grab as _grab, wait_job
+from utils.cataclysm_survivor import grab as _grab, wait_job
 
-logger = logger_module.get_logger("catastrophe_defense")
+logger = logger_module.get_logger("cataclysm_survivor")
 
 ## 记录卡区域相对「◈ 旅人」徽标的偏移（x, y, w, h）
 CARD_OFFSET = (-20, -71, 230, 250)
@@ -40,8 +40,8 @@ def _card_score(arr, icon_x: int, icon_y: int) -> float:
     return float(p.mean()) + 100.0 * sat
 
 
-@AgentServer.custom_action("catastrophe_defense_pick_record")
-class CatastropheDefensePickRecord(CustomAction):
+@AgentServer.custom_action("cataclysm_survivor_pick_record")
+class CataclysmSurvivorPickRecord(CustomAction):
     """在「纪录管理」页挑出可选（高亮）的那张记录卡并点击。"""
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> bool:

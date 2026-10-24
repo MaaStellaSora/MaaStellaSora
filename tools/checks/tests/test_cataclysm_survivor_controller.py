@@ -10,7 +10,7 @@ import numpy as np
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "agent"))
-from utils import catastrophe_defense as io  # noqa: E402
+from utils import cataclysm_survivor as io  # noqa: E402
 
 
 class ControllerWaitTests(unittest.TestCase):

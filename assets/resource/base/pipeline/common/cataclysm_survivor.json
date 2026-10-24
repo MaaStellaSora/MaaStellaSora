@@ -3,7 +3,7 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "catastrophe_defense_reset"
+                "custom_action": "cataclysm_survivor_reset"
             }
         },
         "next": [
@@ -220,7 +220,7 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "catastrophe_defense_pick_record"
+                "custom_action": "cataclysm_survivor_pick_record"
             }
         },
         "post_delay": 1500,
@@ -320,7 +320,7 @@
         "action": {
             "type": "Custom",
             "param": {
-                "custom_action": "catastrophe_defense_move"
+                "custom_action": "cataclysm_survivor_move"
             }
         },
         "next": [
@@ -447,7 +447,7 @@
             "type": "TemplateMatch",
             "param": {
                 "template": [
-                    "catastrophe_defense/灾变防线_关闭奖励按钮.png"
+                    "cataclysm_survivor/灾变防线_关闭奖励按钮.png"
                 ],
                 "roi": [
                     980,

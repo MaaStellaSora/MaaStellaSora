@@ -13,7 +13,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
 spec = importlib.util.spec_from_file_location(
-    "catastrophe_defense_record", ROOT / "agent/custom/action/catastrophe_defense_record.py",
+    "cataclysm_survivor_record", ROOT / "agent/custom/action/cataclysm_survivor_record.py",
 )
 record = importlib.util.module_from_spec(spec)
 with patch("maa.agent.agent_server.AgentServer.custom_action", side_effect=lambda _name: lambda cls: cls):
@@ -37,7 +37,7 @@ class RecordCandidateTests(unittest.TestCase):
             run_recognition=Mock(return_value=detail),
         )
         with patch.object(record, "_grab", return_value=image):
-            self.assertTrue(record.CatastropheDefensePickRecord().run(context, SimpleNamespace(node_name="record")))
+            self.assertTrue(record.CataclysmSurvivorPickRecord().run(context, SimpleNamespace(node_name="record")))
         controller.post_click.assert_called_once_with(445, 155)
 
 

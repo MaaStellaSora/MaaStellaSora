@@ -125,6 +125,6 @@
         "interface/tasks/climb_tower_shop.json",
         "interface/tasks/climb_tower_shop_enhance.json",
         "interface/tasks/climb_tower_target.json",
-		"interface/tasks/catastrophe_defense.json"
+		"interface/tasks/cataclysm_survivor.json"
     ]
 }

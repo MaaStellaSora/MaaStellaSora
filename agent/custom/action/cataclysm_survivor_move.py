@@ -18,9 +18,9 @@ from maa.context import Context
 from maa.custom_action import CustomAction
 
 from utils import logger as logger_module
-from utils.catastrophe_defense import IO_TIMEOUT, grab as _grab, wait_job
+from utils.cataclysm_survivor import IO_TIMEOUT, grab as _grab, wait_job
 
-logger = logger_module.get_logger("catastrophe_defense")
+logger = logger_module.get_logger("cataclysm_survivor")
 
 ## Win32 虚拟键码
 KEY_W = 0x57
@@ -277,8 +277,8 @@ def _hold(context: Context, keys: tuple[int, ...], seconds: float) -> str:
     return outcome
 
 
-@AgentServer.custom_action("catastrophe_defense_reset")
-class CatastropheDefenseReset(CustomAction):
+@AgentServer.custom_action("cataclysm_survivor_reset")
+class CataclysmSurvivorReset(CustomAction):
     """任务开始时清掉上一次运行留下的走位状态和按键。"""
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> bool:
@@ -295,8 +295,8 @@ class CatastropheDefenseReset(CustomAction):
             _action_lock.release()
 
 
-@AgentServer.custom_action("catastrophe_defense_move")
-class CatastropheDefenseMove(CustomAction):
+@AgentServer.custom_action("cataclysm_survivor_move")
+class CataclysmSurvivorMove(CustomAction):
     """尝试进入传送门：等画面静止再走，等待阶段秒回。"""
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> bool:

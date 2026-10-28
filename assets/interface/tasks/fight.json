@@ -341,7 +341,7 @@
                     "recognition": {
                         "param": {
                             "expected": [
-                                "(难度|難度|難易度|Difficulty){难度}(?!\\d)"
+                                "(难度|難度|難易度|Difficulty|난이도)\\s*{难度}(?!\\d)"
                             ]
                         }
                     },

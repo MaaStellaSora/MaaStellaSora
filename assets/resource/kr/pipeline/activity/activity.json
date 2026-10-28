@@ -1,0 +1,38 @@
+{
+    "活动快速战斗_开启快速战斗": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "빠른 ?전투"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_开始战斗": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "전투 ?시작"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_选择活动难度": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "보통"
+                ]
+            }
+        }
+    },
+    "活动快速战斗_确认": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "확 ?인"
+                ]
+            }
+        }
+    }
+}

@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "领取并重新派遣委托",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.领取并重新派遣委托.label",
             "entry": "委托_入口",
             "description": "$interface.task.领取并重新派遣委托.description"

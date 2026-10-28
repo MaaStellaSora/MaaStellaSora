@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "新版爬塔",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.新版爬塔.label",
             "entry": "星塔_入口_agent",
             "description": "$interface.task.新版爬塔.description",

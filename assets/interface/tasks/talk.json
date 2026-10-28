@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "心链送礼",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.心链送礼.label",
             "entry": "心链_入口",
             "description": "$interface.task.心链送礼.description"

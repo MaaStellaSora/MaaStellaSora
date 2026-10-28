@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "活动挑战关卡自动战斗",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.活动挑战关卡自动战斗.label",
             "entry": "活动挑战_入口",
             "description": "$interface.task.活动挑战关卡自动战斗.description",

@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "猎影合围",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.猎影合围.label",
             "entry": "猎影合围_入口",
             "description": "$interface.task.猎影合围.description",

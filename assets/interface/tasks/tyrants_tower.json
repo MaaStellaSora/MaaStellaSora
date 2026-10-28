@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "魔王之塔",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.魔王之塔.label",
             "entry": "魔王之塔_入口",
             "description": "$interface.task.魔王之塔.description"

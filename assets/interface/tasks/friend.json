@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "领取与赠送干劲",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.领取与赠送干劲.label",
             "entry": "好友_入口",
             "description": "$interface.task.领取与赠送干劲.description"

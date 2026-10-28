@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "登录游戏",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.登录游戏.label",
             "entry": "登录_登录",
             "description": "$interface.task.登录游戏.description"

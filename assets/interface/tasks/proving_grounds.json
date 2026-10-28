@@ -2,6 +2,12 @@
     "task": [
         {
             "name": "真格挑战",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
             "label": "$interface.task.真格挑战.label",
             "entry": "真格挑战_入口",
             "description": "$interface.task.真格挑战.description",

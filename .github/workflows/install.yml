@@ -234,6 +234,12 @@ jobs:
           test -s install/agent/main.py
           test -s "install/runtimes/win-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/MaaFramework.dll"
 
+      - name: Apply app branding
+        shell: bash
+        run: |
+          ./install/python/python.exe tools/ci/app_branding.py install
+          test -s "install/MaaStellaSora.exe"
+
       - name: Verify Python dependencies on Windows
         shell: bash
         run: |
@@ -329,6 +335,12 @@ jobs:
           test -s install/interface.json
           test -s install/agent/main.py
           test -s "install/runtimes/linux-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.so"
+
+      - name: Apply app branding
+        shell: bash
+        run: |
+          python tools/ci/app_branding.py install
+          test -s "install/MaaStellaSora"
 
       - name: Package Linux archive
         shell: bash
@@ -441,6 +453,12 @@ jobs:
           test -s install/interface.json
           test -s install/agent/main.py
           test -s "install/runtimes/osx-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.dylib"
+
+      - name: Apply app branding
+        shell: bash
+        run: |
+          ./install/python/bin/python3 tools/ci/app_branding.py install
+          test -s "install/MaaStellaSora"
 
       - name: Verify Python dependencies on macOS
         shell: bash

@@ -348,7 +348,7 @@ jobs:
           if [[ -f "install/MaaPiCli" ]]; then
             chmod +x "install/MaaPiCli"
           fi
-          find install -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
+          find install -type f \( -name "MFAAvalonia*" -o -name "MaaStellaSora*" \) -exec chmod +x {} \; 2>/dev/null || true
           find install -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
 
           ARCHIVE_NAME="MaaStellaSora-linux-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.tar.gz"
@@ -471,7 +471,7 @@ jobs:
           if [[ -f "install/MaaPiCli" ]]; then
             chmod +x "install/MaaPiCli"
           fi
-          find install -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
+          find install -type f \( -name "MFAAvalonia*" -o -name "MaaStellaSora*" \) -exec chmod +x {} \; 2>/dev/null || true
           find install -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
           PYTHON_PATHS=(
             "install/python/bin/python3"

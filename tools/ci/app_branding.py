@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import ctypes
 import json
+import re
 import struct
 import sys
 from ctypes import wintypes
@@ -27,6 +28,10 @@ OLD_APP_NAME = "MFAAvalonia"
 RT_ICON = 3
 RT_GROUP_ICON = 14
 LANG_NEUTRAL = 0
+
+## 项目代号会被当作文件名用，先按各平台都安全的白名单校验一次。
+## interface.json 的 name 只要求非空字符串，理论上可以带路径分隔符或平台非法字符。
+SAFE_APP_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._-]*$")
 
 
 def read_app_name(install_dir: Path) -> str:
@@ -53,8 +58,18 @@ def rename_executable(install_dir: Path, app_name: str) -> Path | None:
         if target.exists():
             target.unlink()
         source.rename(target)
+        ## rename 保留源文件模式，但打包步骤里 find -name "MFAAvalonia*" 的兜底 chmod
+        ## 改名后匹配不到新名字，这里显式补上执行位（Windows 上是空操作）。
+        if suffix == "":
+            target.chmod(0o755)
         print(f"[branding] rename {source.name} -> {target.name}")
         return target
+    ## 幂等：重跑时旧名字已经不在、新名字在，仍要把图标应用上去
+    for suffix in (".exe", ""):
+        existing = install_dir / f"{app_name}{suffix}"
+        if existing.is_file():
+            print(f"[branding] {existing.name} already renamed, apply icon only")
+            return existing
     print("[branding] warn: MFAAvalonia executable not found, skip rename")
     return None
 
@@ -210,6 +225,10 @@ def main(argv: list[str]) -> None:
     app_name = read_app_name(install_dir)
     if not app_name:
         raise SystemExit("interface.json has no name, cannot rename executable")
+    if not SAFE_APP_NAME.match(app_name):
+        raise SystemExit(
+            f"interface.json name {app_name!r} is not usable as a file name"
+        )
 
     executable = rename_executable(install_dir, app_name)
     if executable is not None:

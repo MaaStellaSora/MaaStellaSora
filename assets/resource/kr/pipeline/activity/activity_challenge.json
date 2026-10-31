@@ -1,0 +1,27 @@
+{
+    "活动挑战_选择挑战难度": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "도전"
+                ]
+            }
+        }
+    },
+    "活动挑战_出发": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "출 ?발"
+                ],
+                "roi": [
+                    980,
+                    600,
+                    140,
+                    50
+                ],
+                "only_rec": true
+            }
+        }
+    }
+}

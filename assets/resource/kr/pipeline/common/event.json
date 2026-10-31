@@ -1,0 +1,33 @@
+{
+    "活动_打开活动": {
+        "recognition": {
+            "param": {
+                "roi": [
+                    0,
+                    160,
+                    300,
+                    160
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "活动_战斗关卡界面": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "전투 ?스테이지"
+                ]
+            }
+        }
+    },
+    "__活动_战斗关卡按钮": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "전투 ?스테이지"
+                ]
+            }
+        }
+    }
+}

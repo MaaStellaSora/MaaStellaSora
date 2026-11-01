@@ -681,24 +681,6 @@
         },
         "post_wait_freezes": 500
     },
-    "邀约_已滑动到底部": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "invite_scroll_down_template",
-                "threshold": 0.99
-            }
-        }
-    },
-    "邀约_已滑动到顶部": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "invite_scroll_up_template",
-                "threshold": 0.99
-            }
-        }
-    },
     "邀约_回忆收集_循环": {
         "description": "在回忆收集循环选项打开时，打开该节点，否则关闭该节点",
         "enabled": false,

@@ -24,14 +24,6 @@
         },
         "action": {
             "type": "Click",
-            "param": {
-                "target_offset": [
-                    0,
-                    -20,
-                    0,
-                    0
-                ]
-            }
         },
         "next": [
             "灾变防线_入口文字"

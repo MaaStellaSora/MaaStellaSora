@@ -1,13 +1,4 @@
 {
-    "战斗_出发": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "出發"
-                ]
-            }
-        }
-    },
     "战斗_快速战斗": {
         "recognition": {
             "param": {

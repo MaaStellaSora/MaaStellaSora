@@ -4,15 +4,6 @@
             "event_rules": "ascension_event_tw.json"
         }
     },
-    "星塔_出发_agent": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "出發"
-                ]
-            }
-        }
-    },
     "星塔_星塔探索按钮_agent": {
         "recognition": {
             "param": {

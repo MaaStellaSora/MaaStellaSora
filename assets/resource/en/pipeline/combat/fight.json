@@ -1,19 +1,4 @@
 {
-    "战斗_出发": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Go"
-                ],
-                "roi": [
-                    1022,
-                    551,
-                    259,
-                    169
-                ]
-            }
-        }
-    },
     "战斗_快速战斗": {
         "recognition": {
             "param": {

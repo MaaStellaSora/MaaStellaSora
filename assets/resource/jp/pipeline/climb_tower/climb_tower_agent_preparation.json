@@ -4,22 +4,6 @@
             "event_rules": "ascension_event_jp.json"
         }
     },
-    "星塔_出发_agent": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": [
-                    "出発"
-                ],
-                "roi": [
-                    1022,
-                    551,
-                    259,
-                    169
-                ]
-            }
-        }
-    },
     "星塔_星塔探索按钮_agent": {
         "recognition": {
             "type": "OCR",

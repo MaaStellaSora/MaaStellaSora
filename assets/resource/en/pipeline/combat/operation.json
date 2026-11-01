@@ -1,13 +1,4 @@
 {
-    "猎影合围_出发": {
-        "recognition": {
-            "param": {
-                "expected": [
-                    "Go"
-                ]
-            }
-        }
-    },
     "猎影合围_围猎等级提升": {
         "recognition": {
             "param": {

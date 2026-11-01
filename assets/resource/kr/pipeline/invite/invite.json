@@ -1,0 +1,110 @@
+{
+    "邀约_主界面": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "신청"
+                ]
+            }
+        }
+    },
+    "邀约_前往邀约": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "신청"
+                ]
+            }
+        }
+    },
+    "邀约_地点": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "선 ?택"
+                ]
+            }
+        }
+    },
+    "邀约_特殊回忆": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "특별한 ?추억"
+                ]
+            }
+        }
+    },
+    "邀约_选择默认地点": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "선 ?택"
+                ]
+            }
+        }
+    },
+    "邀约_选择回忆地点": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "선 ?택"
+                ]
+            }
+        }
+    },
+    "邀约_已回到邀约界面": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "신청"
+                ]
+            }
+        }
+    },
+    "邀约_送礼后快进": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "호감도"
+                ]
+            }
+        }
+    },
+    "邀约_还是算了": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "그만두기"
+                ]
+            }
+        }
+    },
+    "邀约_送出礼物": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "선물 ?보내기"
+                ]
+            }
+        }
+    },
+    "邀约_送礼": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "선물 ?보내기"
+                ]
+            }
+        }
+    },
+    "邀约_默契提升": {
+        "recognition": {
+            "param": {
+                "expected": [
+                    "^호감도 ?\\S{1,2}$"
+                ]
+            }
+        }
+    }
+}

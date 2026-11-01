@@ -2,12 +2,6 @@
     "task": [
         {
             "name": "邀约",
-            "resource": [
-                "官服",
-                "台服",
-                "国际服",
-                "日服"
-            ],
             "label": "$interface.task.邀约.label",
             "entry": "邀约_入口",
             "description": "$interface.task.邀约.description",
@@ -33,7 +27,8 @@
             "resource": [
                 "台服",
                 "日服",
-                "国际服"
+                "国际服",
+                "韩服"
             ],
             "inputs": [
                 {

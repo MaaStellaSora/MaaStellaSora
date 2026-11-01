@@ -11,8 +11,11 @@
             "param": {
                 "expected": [
                     "Select anywhere to continue",
-                    "Select anywhere",
-                    "continue"
+                    "Select anywhere to claim",
+                    "Select to close",
+                    "Tap anywhere to refresh",
+                    "(Select|Tap) anywhere",
+                    "to (continue|refresh)"
                 ]
             }
         }

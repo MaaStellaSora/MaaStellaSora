@@ -86,6 +86,12 @@ class InviteMatchingTests(unittest.TestCase):
         ])
         self.assertEqual([m["text"] for m in merged], ["월로(여름)", "치시아"])
 
+    def test_decoration_icon_is_dropped_from_korean_list(self):
+        merged = InviteAuto._get_refined_merge([
+            ocr("세이나(기원)", 370, 262), ocr("A", 228, 346, h=8), ocr("+", 103, 333, h=10), ocr("틸리아", 245, 424),
+        ])
+        self.assertEqual([m["text"] for m in merged], ["세이나(기원)", "틸리아"])
+
     def test_non_korean_name_merge_is_unchanged(self):
         merged = InviteAuto._get_refined_merge([ocr("Flora", 120, 570), ocr("Summer", 116, 597)])
         self.assertEqual([m["text"] for m in merged], ["FloraSummer"])

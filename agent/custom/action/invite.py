@@ -300,6 +300,10 @@ class InviteAuto(CustomAction):
                     'y_end': y + h  # 辅助字段：记录当前底部Y
                 })
 
+        # 韩服卡片左上角的装饰图标会单独识别成 '+'、'A' 等，列表中有韩文名字时只保留含韩文的结果
+        if any(HANGUL.search(m['text']) for m in merged_list):
+            merged_list = [m for m in merged_list if HANGUL.search(m['text'])]
+
         # 返回前可以清理掉辅助字段，只保留要的三个键
         return [{'text': i['text'], 'x': i['x'], 'y': i['y']} for i in merged_list]
 

@@ -136,7 +136,7 @@
     "agent.custom.reco.climb_tower_potential.interactor.get_recommend_level.recommended_level_not_found": "未识别到推荐等级，将默认为-1",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.recognition_failed": "潜能数量识别失败（没有潜能），将默认为3个普通潜能",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.potential_count_recognition_failed": "潜能数量识别失败（识别到{potential_count}个潜能，不符合预期），将默认为3个普通潜能",
-    "agent.custom.reco.climb_tower_potential.interactor.get_selected_potential_index.recognition_failed": "拿到按钮识别失败，潜能选择可能会出现问题",
+    "agent.custom.reco.climb_tower_potential.interactor.get_selected_potential_index.recognition_failed": "拿走按钮识别失败，潜能选择可能会出现问题",
     "agent.custom.reco.climb_tower_potential.main.analyze.no_matching_potential": "[潜能选择] 没有找到符合条件的潜能，按照保底顺序选择",
     "agent.custom.reco.climb_tower_potential.main.analyze.potential_no_matching_potential": "没有找到符合条件的潜能，尝试刷新",
     "agent.custom.reco.climb_tower_potential.state.export.exported": "已导出潜能抽取数据到 {file_path}",

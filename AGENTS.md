@@ -4,12 +4,13 @@ MaaStellaSora 使用 MaaFramework Pipeline 描述游戏流程，通过 Python Ag
 
 ## 按任务阅读
 
-按当前任务阅读下列文档，并沿源码引用定位具体实现。
+仅按当前任务选择并阅读对应文档，不要默认通读表中所有文档；遇到具体实现问题时，再按需沿文档引用和源码定位深入查阅。
 
 | 任务 | 主要参考 |
 | --- | --- |
 | 了解目录、资源叠加和发行路径 | [项目结构](docs/zh_cn/项目结构.md) |
 | 修改 Pipeline 或界面节点覆盖 | [Pipeline 编写规范](docs/zh_cn/Pipeline编写规范.md) |
+| 新增或修改 Python Custom 函数 | [Custom 函数编写规范](docs/zh_cn/custom函数编写规范.md) |
 | 配置编辑器和格式化工具 | [个性化配置](docs/zh_cn/个性化配置.md) |
 | 选择贡献方式、收集调试信息、准备 PR | [贡献指南](docs/CONTRIBUTING.md) |
 

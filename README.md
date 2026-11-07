@@ -51,7 +51,7 @@ QQ交流群：**1063132902**  密码：**星塔旅人**
 
 请查阅 [参与贡献指南](docs/CONTRIBUTING.md)：反馈问题请参考 [调试截图与日志提取](docs/CONTRIBUTING.md#调试截图与日志提取)，提交修改请参考 [提交 Pull Request (PR)](docs/CONTRIBUTING.md#提交-pull-request-pr) 了解审查标准与提交说明。
 
-参考文档：[项目结构](docs/zh_cn/项目结构.md) · [Pipeline 编写规范](docs/zh_cn/Pipeline编写规范.md) · [AI 工具入口](AGENTS.md)
+参考文档：[项目结构](docs/zh_cn/项目结构.md) · [Pipeline 编写规范](docs/zh_cn/Pipeline编写规范.md) · [Custom 函数编写规范](docs/zh_cn/custom函数编写规范.md) · [AI 工具入口](AGENTS.md)
 
 ## 鸣谢
 

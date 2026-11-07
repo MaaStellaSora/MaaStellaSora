@@ -49,7 +49,7 @@ QQ交流群：**1063132902**  密码：**星塔旅人**
 
 ## 参与开发或贡献
 
-选择[贡献方式](docs/CONTRIBUTING.md#贡献方式)，反馈问题时参考[调试截图与日志](docs/CONTRIBUTING.md#调试截图与日志)，完成修改后按[提交 PR](docs/CONTRIBUTING.md#提交-pr)准备说明与验证结果。
+请查阅 [参与贡献指南](docs/CONTRIBUTING.md)：反馈问题请参考 [调试截图与日志提取](docs/CONTRIBUTING.md#调试截图与日志提取)，提交修改请参考 [提交 Pull Request (PR)](docs/CONTRIBUTING.md#提交-pull-request-pr) 了解审查标准与提交说明。
 
 参考文档：[项目结构](docs/zh_cn/项目结构.md) · [Pipeline 编写规范](docs/zh_cn/Pipeline编写规范.md) · [AI 工具入口](AGENTS.md)
 
@@ -70,3 +70,10 @@ QQ交流群：**1063132902**  密码：**星塔旅人**
 - **[MXU](https://github.com/MistEO/MXU)** 基于 Web 技术的 MaaFramework 通用 GUI
 - **[MaaFwApp](https://github.com/Aliothmoon/MaaFwApp)** 基于 Android 的 MaaFramework 通用 GUI
 - **[MaaPipelineEditor](https://github.com/kqcoxn/MaaPipelineEditor)** 可视化阅读与构建 Pipeline，功能完备，极致轻量跨平台，提供渐进式本地功能扩展，无缝兼容新旧项目
+
+## 免责声明
+
+1. **用途声明**：本项目（MaaStellaSora）仅用于个人学习交流图像识别与自动化测试技术，属于非营利性的开源学习工具，请勿将本项目用于商业盈利或任何非法用途。
+2. **版权归属**：本项目所涉及的游戏画面、文本、图标及相关素材的著作权均归游戏开发商与运营商所有。本项目为第三方开源项目，与《星塔旅人》官方运营团队没有任何关联。
+3. **风险自担**：请合理使用辅助工具，并遵守游戏《用户服务协议》与相关法律法规。由于使用本项目所可能导致的任何风险（包括但不限于账号异常、游戏封禁、数据异常或设备问题等），均需由使用者自行评估并承担，本项目开发者及贡献者不承担任何形式的法律责任。
+4. **完全免费**：本项目在 GitHub 完全免费开源。若您在任何渠道付费获取了本项目或其衍生修改版本，请立即申请退款并向我们反馈。

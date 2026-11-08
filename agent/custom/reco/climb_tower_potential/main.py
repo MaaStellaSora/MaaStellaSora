@@ -102,10 +102,20 @@ class ChoosePotentialRecognition(CustomRecognition):
                 - environment (str): 塔难度环境。
                 - threshold_coef_str (str): 刷新阈值系数字符串配置。
                 - threshold_decay_str (str): 刷新阈值衰减系数字符串配置。
+                - last_question (str): 上一次对话问题。
+                - last_choice (str): 上一次对话选择。
+                - last_consequence (str): 上一次对话后果。
+                - lang (str): 对话节点的区服标识，用于选择后果文本关键词。
         """
         node_data = context.get_node_data(node_name) or {}
         attach = node_data.get("attach", {})
-        params = Parameters(**attach)
+        event_node = context.get_node_data("星塔_节点_进行对话选择_agent") or {}
+        event_attach = event_node.get("attach", {})
+        last_event_data = {
+            "last_consequence": event_attach.get("last_consequence", ""),
+            "lang": event_attach.get("lang_type", "cn"),
+        }
+        params = Parameters(**attach, **last_event_data)
         return params
 
     @staticmethod
@@ -120,7 +130,7 @@ class ChoosePotentialRecognition(CustomRecognition):
         data.core_potential = interactor.check_core_potential()
         data.potential_rarities = interactor.get_potentials_rarity(data.core_potential)
         if data.params.potential_source != "enhance":
-            data.level_upped = interactor.check_level_upped()
+            data.team_level = interactor.get_team_level()
 
     @staticmethod
     def _load_handler(interactor: PotentialInteractor, data: PotentialContext):

@@ -9,6 +9,14 @@ from .interactor import PotentialInteractor
 
 MAX_POTENTIAL_LEVEL: int = 6  # 潜能等级上限，condition max_level 字段的默认值
 
+POTENTIAL_SCOPE_KEYWORDS = {
+    "cn": {"potential": "潜能", "main": "主控", "support": "援护", "common": "普通", "rare": "稀有"},
+    "tw": {"potential": "潛能", "main": "主控", "support": "援護", "common": "普通", "rare": "稀有"},
+    "jp": {"potential": "素質", "main": "主力", "support": "支援", "common": "金", "rare": "虹"},
+    "en": {"potential": "potential", "main": "Main", "support": "support", "common": "Common", "rare": "Rare"},
+    "kr": {"potential": "잠재력", "main": "메인", "support": "지원", "common": "일반", "rare": "희귀"},
+}
+
 @dataclass(slots=True, frozen=True)
 class Parameters:
     """不会改变的参数，只在初始化时设置一次。通常包含从attach传入的参数，以及一些公用常量"""
@@ -20,6 +28,8 @@ class Parameters:
     environment: str
     threshold_coef_str: str
     threshold_decay_str: str
+    last_consequence: str
+    lang: str
     # 自带默认值的参数
     potential_layouts: PotentialLayouts = field(default_factory=lambda: PotentialLayouts())
     selected_potential_offset: int = 35
@@ -130,13 +140,37 @@ class PotentialContext:
     core_potential: bool = False
     # 不需要根据刷新更新的数据
     threshold: float = -1.0 # 刷新阈值储存变量
-    level_upped: bool = False # 是否通过旅人升级获得潜能
+    team_level: int = -1 # 队伍等级
     preset_available: bool | None = None # 是否在游戏中设置了预设推荐潜能
     # 需要根据刷新更新的数据
     selected_potential_index: int = 1
     potentials: list[Potential] = field(default_factory=lambda: [])
     refresh_count: int = 0 # 刷新次数
     parsed_priority_list: list[dict] = field(default_factory=lambda: []) # json匹配用数据
+
+    @property
+    def level_upped(self) -> bool:
+        """是否通过旅人升级获得潜能"""
+        return self.team_level > 0
+
+    @property
+    def potential_scopes(self) -> list[str]:
+        """根据各种信息判断抽取潜能的范围"""
+        if self.params.potential_source in ["enhance", "drink"] or self.level_upped:
+            return []
+        if self.params.potential_source == "specified_drink":
+            return ["main"]
+
+        # 排除掉特饮、强化、升级后，这里只会是事件选项了，根据事件选项判断潜能范围
+        keywords = POTENTIAL_SCOPE_KEYWORDS[self.params.lang]
+        consequence = self.params.last_consequence.casefold()
+        if keywords["potential"].casefold() not in consequence:
+            return []
+
+        return [
+            scope for scope in ("main", "support", "common", "rare")
+            if keywords[scope].casefold() in consequence
+        ]
 
     @property
     def refresh_button(self) -> bool:

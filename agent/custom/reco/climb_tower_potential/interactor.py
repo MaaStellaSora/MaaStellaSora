@@ -49,6 +49,19 @@ class PotentialInteractor(Interactor):
     def check_level_upped(self) -> bool:
         return bool(self._recognize("星塔_节点_选择潜能_检测是否升级_agent"))
 
+    def get_team_level(self) -> int:
+        node_name = "星塔_节点_选择潜能_检测是否升级_agent"
+        ocr_results = self._recognize(node_name)
+
+        if self._valid_ocr(node_name, ocr_results):
+            try:
+                return int(ocr_results[0].text)
+            except (ValueError, TypeError, IndexError):
+                pass
+
+        logger.debug("Failed to recognize team level, defaulting to -1")
+        return -1
+
     def get_potential_name(self, roi: list[int]) -> str:
         ocr_results = self._recognize("星塔_节点_选择潜能_识别潜能名称_agent", roi=roi)
         return " ".join([t.text for t in ocr_results])

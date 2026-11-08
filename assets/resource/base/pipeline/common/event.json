@@ -9,16 +9,16 @@
         ]
     },
     "活动_打开活动": {
-        "recognition": {
-            "type": "TemplateMatch",
+        "action": {
+            "type": "Click",
             "param": {
-                "template": [
-                    "activity/banner.png"
+                "target": [
+                    54,
+                    221,
+                    126,
+                    42
                 ]
             }
-        },
-        "action": {
-            "type": "Click"
         },
         "next": [
             "活动_活动界面"
@@ -42,7 +42,7 @@
         ]
     },
     "活动_点击活动战斗关卡": {
-        "max_hit": 10,
+        "max_hit": 5,
         "recognition": {
             "type": "And",
             "param": {

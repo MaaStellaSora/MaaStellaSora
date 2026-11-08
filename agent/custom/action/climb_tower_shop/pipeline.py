@@ -185,12 +185,24 @@ def _melody(items: list[Item], data: ShopContext, condition: Callable[[Item], bo
     3. 够钱买的
     4. 其他条件
     """
+    if data.shop_type == "regular":
+        thresholds = {
+            5: data.params.melody_5_discount_threshold,
+            15: data.params.melody_15_discount_threshold,
+        }
+    elif data.shop_type == "final":
+        thresholds = {
+            5: data.params.melody_5_discount_threshold_final,
+            15: data.params.melody_15_discount_threshold_final,
+        }
+    else:
+        return None
+
     reserved_coin = data.total_enhancement_cost
-    thresholds = {5: data.params.melody_5_discount_threshold, 15: data.params.melody_15_discount_threshold}
     items = (
         item for item in items
         if "melody" in item.internal_name and not item.bought
-           and item.discount <= thresholds.get(item.quantity, 1)
+           and item.discount <= thresholds.get(item.quantity, 0.0)
            and (condition is None or condition(item) is True)
            and (data.current_coin - reserved_coin) >= item.price
     )

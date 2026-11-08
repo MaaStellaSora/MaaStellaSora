@@ -331,6 +331,8 @@ class ShopParams:
     drink_discount_threshold: float
     melody_5_discount_threshold: float
     melody_15_discount_threshold: float
+    melody_5_discount_threshold_final: float
+    melody_15_discount_threshold_final: float
     buy_assist_melody: bool
     buy_assist_before_unlock: bool
     buy_melody_at_final_only: bool

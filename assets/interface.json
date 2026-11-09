@@ -3,7 +3,7 @@
     "languages": {
         "zh_cn": "i18n/zh_cn.json",
         "zh_hant": "i18n/zh_cn.json",
-        "en_us": "i18n/zh_cn.json",
+        "en_us": "i18n/en_us.json",
         "ja_jp": "i18n/zh_cn.json",
         "ko_kr": "i18n/ko_kr.json"
     },

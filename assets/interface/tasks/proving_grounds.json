@@ -7,7 +7,12 @@
             "description": "$interface.task.真格挑战.description",
             "option": [
                 "真格挑战_选择首领"
-            ]
+            ],
+            "pipeline_override": {
+                "选择纪录_点击筛选图标": {
+                    "enabled": true
+                }
+            }
         }
     ],
     "option": {
@@ -34,6 +39,15 @@
                             "focus": {
                                 "Node.Action.Succeeded": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领1.pipeline_override.真格挑战_有挑战次数时选择首领.focus.Node.Action.Succeeded"
                             }
+                        },
+                        "选择纪录_筛选窗口_选择属性": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "common/elements/lux.png"
+                                    ],
+                                }
+                            },
                         }
                     }
                 },
@@ -55,6 +69,18 @@
                             "focus": {
                                 "Node.Action.Succeeded": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领2.pipeline_override.真格挑战_有挑战次数时选择首领.focus.Node.Action.Succeeded"
                             }
+                        },
+                        "选择纪录_点击筛选图标": {
+                            "enabled": true
+                        },
+                        "选择纪录_筛选窗口_选择属性": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "common/elements/ventus.png"
+                                    ],
+                                }
+                            },
                         }
                     }
                 },
@@ -76,6 +102,15 @@
                             "focus": {
                                 "Node.Action.Succeeded": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领3.pipeline_override.真格挑战_有挑战次数时选择首领.focus.Node.Action.Succeeded"
                             }
+                        },
+                        "选择纪录_筛选窗口_选择属性": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "common/elements/aqua.png"
+                                    ],
+                                }
+                            },
                         }
                     }
                 },
@@ -97,6 +132,15 @@
                             "focus": {
                                 "Node.Action.Succeeded": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领4.pipeline_override.真格挑战_有挑战次数时选择首领.focus.Node.Action.Succeeded"
                             }
+                        },
+                        "选择纪录_筛选窗口_选择属性": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "common/elements/ignis.png"
+                                    ],
+                                }
+                            },
                         }
                     }
                 },
@@ -118,6 +162,15 @@
                             "focus": {
                                 "Node.Action.Succeeded": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领5.pipeline_override.真格挑战_有挑战次数时选择首领.focus.Node.Action.Succeeded"
                             }
+                        },
+                        "选择纪录_筛选窗口_选择属性": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "common/elements/umbra.png"
+                                    ],
+                                }
+                            },
                         }
                     }
                 },
@@ -139,6 +192,15 @@
                             "focus": {
                                 "Node.Action.Succeeded": "$interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领6.pipeline_override.真格挑战_有挑战次数时选择首领.focus.Node.Action.Succeeded"
                             }
+                        },
+                        "选择纪录_筛选窗口_选择属性": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "common/elements/terra.png"
+                                    ],
+                                }
+                            },
                         }
                     }
                 }

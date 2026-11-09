@@ -83,22 +83,152 @@
         },
         "post_wait_freezes": 100,
         "next": [
+            "[JumpBack]选择纪录_点击筛选图标",
             "选择纪录_选择首个纪录"
         ]
     },
-    "选择纪录_选择首个纪录": {
+    "__选择纪录_识别纪录": {
         "recognition": {
             "type": "TemplateMatch",
             "param": {
                 "template": [
                     "choose_record/record_position.png"
                 ],
+                "roi": [
+                    60,
+                    100,
+                    1170,
+                    520
+                ],
                 "order_by": "Vertical"
+            }
+        }
+    },
+    "__选择纪录_识别纪录有效性": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "lower": [
+                    230,
+                    230,
+                    230
+                ],
+                "upper": [
+                    255,
+                    255,
+                    255
+                ],
+                "count": 100,
+                "roi": "__选择纪录_识别纪录",
+                "roi_offset": [
+                    100,
+                    -10,
+                    40,
+                    10
+                ]
+            }
+        }
+    },
+    "选择纪录_选择首个纪录": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "__选择纪录_识别纪录",
+                    "__选择纪录_识别纪录有效性"
+                ]
             }
         },
         "action": {
             "type": "Click"
         }
+    },
+    "选择纪录_点击筛选图标": {
+        "enabled": false,
+        "max_hit": 1,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "choose_record/filter.png"
+                ],
+                "roi": [
+                    800,
+                    600,
+                    480,
+                    120
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "选择纪录_筛选窗口"
+        ]
+    },
+    "选择纪录_筛选窗口": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "close.png"
+                ],
+                "roi": [
+                    1000,
+                    70,
+                    140,
+                    110
+                ]
+            }
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "选择纪录_筛选窗口_选择属性"
+        ]
+    },
+    "选择纪录_筛选窗口_选择属性": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "common/elements/aqua.png"
+                ],
+                "roi": [
+                    185,
+                    90,
+                    910,
+                    535
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "选择纪录_筛选窗口_确认"
+        ]
+    },
+    "选择纪录_筛选窗口_确认": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ok.png"
+                ],
+                "roi": [
+                    185,
+                    90,
+                    910,
+                    535
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": 100
     },
     "选择纪录_猎影合围_目标已被讨伐": {
         "recognition": {

@@ -181,8 +181,7 @@
         },
         "post_wait_freezes": 100,
         "next": [
-            "真格挑战_没有默认纪录",
-            "[JumpBack]选择纪录_进入主界面(不选择纪录版)",
+            "[JumpBack]选择纪录_进入主界面",
             "真格挑战_挑战完成"
         ]
     },
@@ -209,21 +208,5 @@
             "真格挑战_主界面",
             "真格挑战_挑战完成"
         ]
-    },
-    "真格挑战_没有默认纪录": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "选择纪录_点击选择纪录"
-                ]
-            }
-        },
-        "focus": {
-            "Node.Action.Succeeded": {
-                "content": "$pipeline.真格挑战_没有默认纪录.focus.Node.Action.Succeeded",
-                "display": ["log", "notification"]
-            }
-        }
     }
 }

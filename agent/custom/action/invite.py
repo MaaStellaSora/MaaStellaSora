@@ -16,6 +16,7 @@ class InviteAuto(CustomAction):
         # 导入logger
         super().__init__()
         self.logger = logger.get_logger(__name__)
+        self.lang = "cn"
 
     def run(
             self,
@@ -34,6 +35,7 @@ class InviteAuto(CustomAction):
         # 自动查找配置（由设置界面的 switch 通过 attach 注入）
         inviter_node_data = context.get_node_data(argv.node_name) or {}
         attach = inviter_node_data.get("attach", {})
+        self.lang = attach.get("lang", "cn")
         auto_find = bool(attach.get("auto_find"))
 
         # 组装待邀约名单：元素 (名字, 送礼类型)
@@ -169,7 +171,7 @@ class InviteAuto(CustomAction):
     def _click_trekker(
             self,
             context: Context,
-            trekker_name: str
+            trekker_name: str,
     ) -> bool:
         """
             识别并点击邀约对象
@@ -184,7 +186,7 @@ class InviteAuto(CustomAction):
         # 处理旅人名字的文本问题，把全角括号都换成半角括号，把空格都取消
         formatted_name = self._normalize_name(trekker_name)
         # 文本相似度阈值；韩文按字母比较后相似度偏高，用 0.8 区分 '레이스' 与 '레이센'
-        similarity_limit = 0.8 if HANGUL.search(formatted_name) else 0.75
+        similarity_limit = 0.8 if self.lang == "kr" else 0.75
         # 文本长度差阈值
         max_allowed_diff = 1 if len(formatted_name) <= 7 else 2
 
@@ -214,19 +216,19 @@ class InviteAuto(CustomAction):
                               f" 相似度: {similarity:.2f}")
         return False
 
-    @staticmethod
-    def _similarity(result: str, name: str) -> float:
+    def _similarity(self, result: str, name: str) -> float:
         """
-            计算识别结果与旅人名字的相似度，不含韩文时与直接比较字符串相同
+            计算识别结果与旅人名字的相似度；韩服额外按韩文字母比较
 
             韩文名字一个字识别错就会差一整个字（'시먀오' 识别成 '시야오'），所以再按字母（자모）比较一次。
             一方的韩文完整包含另一方时（'시아' 与 '치시아'）是另一个旅人，直接判为不相似。
         """
         similarity = difflib.SequenceMatcher(None, result, name).ratio()
+        if self.lang != "kr":
+            return similarity
+
         hangul_result = "".join(HANGUL.findall(result))
         hangul_name = "".join(HANGUL.findall(name))
-        if not hangul_result or not hangul_name:
-            return similarity
         if hangul_result != hangul_name and (hangul_result in hangul_name or hangul_name in hangul_result):
             return 0.0
 
@@ -244,8 +246,7 @@ class InviteAuto(CustomAction):
 
         return max(similarity, difflib.SequenceMatcher(None, jamo(result), jamo(name)).ratio())
 
-    @staticmethod
-    def _get_refined_merge(results, threshold = 0.7, y_tolerance = 30, x_tolerance = 50):
+    def _get_refined_merge(self, results, threshold = 0.7, y_tolerance = 30, x_tolerance = 50):
         """
             处理OCR识别结果，将符合条件的文本块进行合并，并计算最终的点击位置。
 
@@ -263,9 +264,15 @@ class InviteAuto(CustomAction):
         if not results:
             return []
 
-        # 过滤掉低于识别阈值的结果，或以P开头的乱码结果
+        # 过滤低分结果、通用乱码、单字符噪声，以及区服特有的 OCR 噪声
         results = [r for r in results if r.score >= threshold
-                   and not (r.text.startswith('P') and (not r.text.isascii() or r.text.isupper()))]
+                   and len(r.text) > 1
+                   and not (r.text.startswith('P') and not r.text.istitle())]
+        if self.lang != "en":
+            results = [r for r in results if not r.text.isascii()]
+        if self.lang == "kr":
+            results = [r for r in results if HANGUL.search(r.text)]
+
         # 按 Y 坐标排序，确保从上往下处理
         results.sort(key=lambda r: r.box[1])
 
@@ -278,10 +285,6 @@ class InviteAuto(CustomAction):
             for m in merged_list:
                 # 逻辑：X轴距离在格子范围内，且当前块顶部靠近上一个块的底部
                 if abs(m['x_ref'] - x) <= x_tolerance and abs(y - m['y_end']) <= y_tolerance:
-                    # 韩服名字下方的装饰文字会识别成 'PIbPD' 等英文乱码，不并入韩文名字
-                    if HANGUL.search(m['text']) and item.text.isascii():
-                        found = True
-                        break
                     m['text'] += item.text
                     # 简单合并坐标并取整
                     m['x'] = (m['x'] + cx) // 2
@@ -299,10 +302,6 @@ class InviteAuto(CustomAction):
                     'x_ref': x,  # 辅助字段：记录起始X
                     'y_end': y + h  # 辅助字段：记录当前底部Y
                 })
-
-        # 韩服卡片左上角的装饰图标会单独识别成 '+'、'A' 等，列表中有韩文名字时只保留含韩文的结果
-        if any(HANGUL.search(m['text']) for m in merged_list):
-            merged_list = [m for m in merged_list if HANGUL.search(m['text'])]
 
         # 返回前可以清理掉辅助字段，只保留要的三个键
         return [{'text': i['text'], 'x': i['x'], 'y': i['y']} for i in merged_list]

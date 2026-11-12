@@ -33,9 +33,10 @@ def ocr(text, x, y, h=24, score=0.99):
 
 
 class InviteMatchingTests(unittest.TestCase):
-    def click_trekker(self, target, ocr_results):
+    def click_trekker(self, target, ocr_results, lang="cn"):
         action = InviteAuto.__new__(InviteAuto)
         action.logger = Mock()
+        action.lang = lang
         controller = Mock()
         context = SimpleNamespace(
             tasker=SimpleNamespace(stopping=False, controller=controller),
@@ -48,19 +49,29 @@ class InviteMatchingTests(unittest.TestCase):
         """按游戏列表三列排列，每格之间留足间距，避免名字互相合并。"""
         return [ocr(name, 120 + 125 * (i % 3), 265 + 157 * (i // 3)) for i, name in enumerate(names)]
 
+    def merge(self, results, lang="cn"):
+        action = InviteAuto.__new__(InviteAuto)
+        action.lang = lang
+        return action._get_refined_merge(results)
+
+    def similarity(self, result, name, lang="cn"):
+        action = InviteAuto.__new__(InviteAuto)
+        action.lang = lang
+        return action._similarity(result, name)
+
     def test_korean_name_does_not_match_name_it_is_contained_in(self):
         # 2026-11-01 实机：目标 '치시아' 时第一页的 '시아' 被点击
-        found, click = self.click_trekker("치시아", self.grid(["세이나(기원)", "토나", "시아"]))
+        found, click = self.click_trekker("치시아", self.grid(["세이나(기원)", "토나", "시아"]), "kr")
         self.assertFalse(found)
         click.assert_not_called()
-        found, _ = self.click_trekker("시아", self.grid(["치시아"]))
+        found, _ = self.click_trekker("시아", self.grid(["치시아"]), "kr")
         self.assertFalse(found)
 
     def test_korean_single_letter_misread_still_matches(self):
         # 实机识别结果：'시먀오' 被识别成 '시야오'/'시마오'，'윌로(여름)' 被识别成 '월로(여름)'
         for target, text in [("시먀오", "시야오"), ("시먀오", "시마오"), ("윌로(여름)", "월로(여름)")]:
             with self.subTest(text=text):
-                found, click = self.click_trekker(target, self.grid(["플로라", "라루", text]))
+                found, click = self.click_trekker(target, self.grid(["플로라", "라루", text]), "kr")
                 self.assertTrue(found)
                 click.assert_called_once_with(370 + 30, 265 + 12)
 
@@ -68,33 +79,62 @@ class InviteMatchingTests(unittest.TestCase):
         for target in KOREAN_NAMES:
             for other in KOREAN_NAMES:
                 with self.subTest(target=target, other=other):
-                    found, _ = self.click_trekker(target, self.grid([other]))
+                    found, _ = self.click_trekker(target, self.grid([other]), "kr")
                     self.assertEqual(found, target == other)
 
     def test_non_korean_similarity_is_unchanged(self):
         for result, name in [("Geraxiux", "Geranium"), ("Chitose", "Chitose"), ("希娅", "缇莉雅"), ("拉露", "拉露(圣夜)")]:
             with self.subTest(result=result):
                 self.assertEqual(
-                    InviteAuto._similarity(result, name),
+                    self.similarity(result, name),
                     difflib.SequenceMatcher(None, result, name).ratio(),
                 )
 
+    def test_korean_similarity_rules_are_selected_by_server(self):
+        korean = self.similarity("시아", "치시아", "kr")
+        chinese = self.similarity("시아", "치시아", "cn")
+        self.assertEqual(korean, 0)
+        self.assertEqual(chinese, difflib.SequenceMatcher(None, "시아", "치시아").ratio())
+
     def test_decoration_text_is_not_merged_into_korean_name(self):
-        merged = InviteAuto._get_refined_merge([
+        merged = self.merge([
             ocr("치시아", 120, 570), ocr("PIbPD", 116, 597, h=17, score=0.8),
             ocr("월로", 380, 420), ocr("(여름)", 372, 446, h=16),
-        ])
+        ], "kr")
         self.assertEqual([m["text"] for m in merged], ["월로(여름)", "치시아"])
 
     def test_decoration_icon_is_dropped_from_korean_list(self):
-        merged = InviteAuto._get_refined_merge([
+        merged = self.merge([
             ocr("세이나(기원)", 370, 262), ocr("A", 228, 346, h=8), ocr("+", 103, 333, h=10), ocr("틸리아", 245, 424),
-        ])
+        ], "kr")
         self.assertEqual([m["text"] for m in merged], ["세이나(기원)", "틸리아"])
 
     def test_non_korean_name_merge_is_unchanged(self):
-        merged = InviteAuto._get_refined_merge([ocr("Flora", 120, 570), ocr("Summer", 116, 597)])
+        merged = self.merge([ocr("Flora", 120, 570), ocr("Summer", 116, 597)], "en")
         self.assertEqual([m["text"] for m in merged], ["FloraSummer"])
+
+    def test_common_garbage_is_filtered_for_all_languages(self):
+        results = [ocr("PIbPD", 120, 570), ocr("Pioneer", 120, 620), ocr("+", 120, 670)]
+        for lang in ("cn", "tw", "en", "jp", "kr"):
+            with self.subTest(lang=lang):
+                merged = self.merge(results.copy(), lang)
+                expected = ["Pioneer"] if lang == "en" else []
+                self.assertEqual([m["text"] for m in merged], expected)
+
+    def test_ascii_fragments_are_filtered_only_outside_global_server(self):
+        results = [ocr("希娅", 120, 570), ocr("Flora", 116, 597)]
+        merged = self.merge(results.copy(), "cn")
+        self.assertEqual([m["text"] for m in merged], ["希娅"])
+
+        merged = self.merge([ocr("Flora", 120, 570)], "en")
+        self.assertEqual([m["text"] for m in merged], ["Flora"])
+
+    def test_hangul_only_filter_is_limited_to_korean_server(self):
+        results = [ocr("치시아", 120, 570), ocr("希娅", 380, 570)]
+        korean = self.merge(results.copy(), "kr")
+        chinese = self.merge(results.copy(), "cn")
+        self.assertEqual([m["text"] for m in korean], ["치시아"])
+        self.assertEqual([m["text"] for m in chinese], ["치시아", "希娅"])
 
 
 if __name__ == "__main__":

@@ -338,6 +338,9 @@
                 "custom_action": "InviteAuto"
             }
         },
+        "attach": {
+            "lang": "cn"
+        },
         "next": [
             "通用_返回主页"
         ]

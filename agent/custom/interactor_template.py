@@ -75,6 +75,11 @@ class Interactor:
         # 输出结果
         return reco_detail.filtered_results if reco_detail else []
 
+    def run(self, node_name:str, pipeline_override: dict[str, Any]) -> bool:
+        """运行指定节点，返回运行结果，True表示运行成功，False表示运行失败"""
+        run_result = self.context.run_task(node_name, pipeline_override)
+        return run_result is not None and run_result.status.succeeded
+
     def click(self, box: list[int]) -> bool:
         """点击指定box，返回点击结果，True表示点击成功，False表示点击失败"""
         click_x = random.randint(box[0], box[0] + box[2])

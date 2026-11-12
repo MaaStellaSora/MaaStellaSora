@@ -1,5 +1,8 @@
 {
     "agent.utils.image_handler.save_image.warning": "이미지 {filename} 저장 실패: {exc}",
+    "agent.custom.choose_record.run.invalid_elements": "잘못된 원소입니다: {value_1}. 사용 가능한 원소: {value_2}",
+    "agent.custom.choose_record.run.invalid_convert": "잘못된 convert 매개변수입니다: {value_1}",
+    "agent.custom.choose_record.run.element_selection_failed": "원소 선택에 실패했습니다: {value_1}",
     "agent.custom.action.activity.run.screenshot_failed": "이벤트 도전 스크린샷을 찍지 못했습니다",
     "agent.custom.action.activity.run.selectable_stage_not_found": "선택할 수 있는 2-x 이벤트 도전 스테이지를 인식하지 못했습니다",
     "agent.custom.action.activity.run.recognition_result_empty": "2-x 이벤트 도전 스테이지 인식 결과가 비어 있습니다",

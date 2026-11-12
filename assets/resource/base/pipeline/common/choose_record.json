@@ -187,12 +187,12 @@
             "选择纪录_筛选窗口_选择属性"
         ]
     },
-    "选择纪录_筛选窗口_选择属性": {
+    "__选择纪录_筛选窗口_选择单个属性": {
         "recognition": {
             "type": "TemplateMatch",
             "param": {
                 "template": [
-                    "common/elements/aqua.png"
+                    "common/elements/terra.png"
                 ],
                 "roi": [
                     185,
@@ -200,15 +200,28 @@
                     910,
                     535
                 ],
+                "order_by": "Score",
                 "green_mask": true
             }
         },
         "action": {
             "type": "Click"
+        }
+    },
+    "选择纪录_筛选窗口_选择属性": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "element_filter"
+            }
         },
         "next": [
             "选择纪录_筛选窗口_确认"
-        ]
+        ],
+        "attach": {
+            "elements": [],
+            "convert": ""
+        }
     },
     "选择纪录_筛选窗口_确认": {
         "recognition": {

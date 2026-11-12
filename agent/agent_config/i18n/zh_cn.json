@@ -1,5 +1,8 @@
 {
     "agent.utils.image_handler.save_image.warning": "保存图片 {filename} 失败: {exc}",
+    "agent.custom.choose_record.run.invalid_elements": "无效的元素：{value_1}。可用元素：{value_2}",
+    "agent.custom.choose_record.run.invalid_convert": "无效的 convert 参数：{value_1}",
+    "agent.custom.choose_record.run.element_selection_failed": "选择属性失败：{value_1}",
     "agent.custom.action.activity.run.screenshot_failed": "活动挑战截图失败",
     "agent.custom.action.activity.run.selectable_stage_not_found": "没有识别到可选择的 2-x 活动挑战关卡",
     "agent.custom.action.activity.run.recognition_result_empty": "2-x 活动挑战关卡识别结果为空",

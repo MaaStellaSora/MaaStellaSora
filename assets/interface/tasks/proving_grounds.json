@@ -6,7 +6,8 @@
             "entry": "真格挑战_入口",
             "description": "$interface.task.真格挑战.description",
             "option": [
-                "真格挑战_选择首领"
+                "真格挑战_选择首领",
+                "真格挑战_选择队伍方式"
             ],
             "pipeline_override": {
                 "选择纪录_点击筛选图标": {
@@ -41,13 +42,11 @@
                             }
                         },
                         "选择纪录_筛选窗口_选择属性": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "common/elements/lux.png"
-                                    ],
-                                }
-                            },
+                            "attach": {
+                                "elements": [
+                                    "umbra"
+                                ]
+                            }
                         }
                     }
                 },
@@ -74,13 +73,11 @@
                             "enabled": true
                         },
                         "选择纪录_筛选窗口_选择属性": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "common/elements/ventus.png"
-                                    ],
-                                }
-                            },
+                            "attach": {
+                                "elements": [
+                                    "terra"
+                                ]
+                            }
                         }
                     }
                 },
@@ -104,13 +101,11 @@
                             }
                         },
                         "选择纪录_筛选窗口_选择属性": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "common/elements/aqua.png"
-                                    ],
-                                }
-                            },
+                            "attach": {
+                                "elements": [
+                                    "ignis"
+                                ]
+                            }
                         }
                     }
                 },
@@ -134,13 +129,11 @@
                             }
                         },
                         "选择纪录_筛选窗口_选择属性": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "common/elements/ignis.png"
-                                    ],
-                                }
-                            },
+                            "attach": {
+                                "elements": [
+                                    "ventus"
+                                ]
+                            }
                         }
                     }
                 },
@@ -164,13 +157,11 @@
                             }
                         },
                         "选择纪录_筛选窗口_选择属性": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "common/elements/umbra.png"
-                                    ],
-                                }
-                            },
+                            "attach": {
+                                "elements": [
+                                    "lux"
+                                ]
+                            }
                         }
                     }
                 },
@@ -194,13 +185,42 @@
                             }
                         },
                         "选择纪录_筛选窗口_选择属性": {
-                            "recognition": {
-                                "param": {
-                                    "template": [
-                                        "common/elements/terra.png"
-                                    ],
-                                }
-                            },
+                            "attach": {
+                                "elements": [
+                                    "aqua"
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "真格挑战_选择队伍方式": {
+            "type": "select",
+            "label": "$interface.task.option.真格挑战_选择队伍方式.label",
+            "default_case": "真格挑战_选择队伍方式_选择弱点属性",
+            "cases": [
+                {
+                    "name": "真格挑战_选择队伍方式_选择弱点属性",
+                    "label": "$interface.task.option.真格挑战_选择队伍方式.cases.真格挑战_选择队伍方式_选择弱点属性.label",
+                    "description": "$interface.task.option.真格挑战_选择队伍方式.cases.真格挑战_选择队伍方式_选择弱点属性.description",
+                    "pipeline_override": {
+                        "选择纪录_筛选窗口_选择属性": {
+                            "attach": {
+                                "convert": "vulnerability"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "真格挑战_选择队伍方式_选择抵抗以外属性",
+                    "label": "$interface.task.option.真格挑战_选择队伍方式.cases.真格挑战_选择队伍方式_选择抵抗以外属性.label",
+                    "description": "$interface.task.option.真格挑战_选择队伍方式.cases.真格挑战_选择队伍方式_选择抵抗以外属性.description",
+                    "pipeline_override": {
+                        "选择纪录_筛选窗口_选择属性": {
+                            "attach": {
+                                "convert": "non_resistant"
+                            }
                         }
                     }
                 }

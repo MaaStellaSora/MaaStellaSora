@@ -17,6 +17,12 @@
 
 阅读流程时，从界面任务的 `entry` 进入节点图，再检查选项的 `pipeline_override`；遇到 Custom 节点，按 `custom_action` 或 `custom_recognition` 注册名定位 Python 模块。
 
+## 节点用途说明
+
+纯 Pipeline 流程通过有意义的节点名表达步骤；当节点的用途、条件或特殊约束不能从节点名和流程关系中清楚看出时，使用本项目的节点级 `description` 字段补充说明。`description` 在本项目中作为节点注释维护，不替代实际流程配置，也不需要为纯 Pipeline 任务另建任务说明文档。修改流程时同步维护受影响节点的说明，避免描述与实际行为不一致。
+
+此处的节点 `description` 是本项目约定的私有注释字段，不是 MaaFramework 上游 Pipeline 协议所定义的节点行为字段；不要将业务流程或条件只写在注释里，实际行为仍须由 Pipeline 字段表达。
+
 ## v2 节点写法
 
 识别与动作使用对象形式：`type` 在前，`param` 在后。识别参数放在 `recognition.param`，动作参数放在 `action.param`；等待、重复、后继等控制字段放在节点层。

@@ -10,7 +10,7 @@ MaaStellaSora 使用 MaaFramework Pipeline 描述游戏流程，通过 Python Ag
 | --- | --- |
 | 了解目录、资源叠加和发行路径 | [项目结构](docs/zh_cn/项目结构.md) |
 | 修改 Pipeline 或界面节点覆盖 | [Pipeline 编写规范](docs/zh_cn/Pipeline编写规范.md) |
-| 新增或修改 Python Custom 函数 | [Custom 函数编写规范](docs/zh_cn/custom函数编写规范.md) |
+| 新增或修改 Python Custom 函数 | [Custom 函数编写规范](docs/zh_cn/custom函数编写规范.md)；若属于具体游戏任务，同时查阅 `docs/zh_cn/task/` 下对应文档 |
 | 配置编辑器和格式化工具 | [个性化配置](docs/zh_cn/个性化配置.md) |
 | 选择贡献方式、收集调试信息、准备 PR | [贡献指南](docs/CONTRIBUTING.md) |
 
@@ -28,7 +28,10 @@ MaaStellaSora 使用 MaaFramework Pipeline 描述游戏流程，通过 Python Ag
 - 节点名、任务与选项标识、Custom 注册名作为引用接口维护，修改时同步核对定义、调用和覆盖。
 - 采用 Pipeline v2 参数层级与既定字段顺序；数组顺序、识别参数、时序和后继变化按功能修改验证。
 - 查阅与实际依赖版本对应的上游协议及源码。新增依赖或公共抽象应有当前需求和调用场景支撑。
-- 新增或修改 MaaFramework 资源（interface、Pipeline、Agent）以外的模块，或补充上游 MaaFramework 文档未说明的项目维护规则时，应在最贴近该模块的文档中说明模块职责、维护方式和注意事项，确保后续维护者或贡献者可据此继续维护；这类文档用于交接维护知识，不是本次改动的工作汇报。
+- 具体游戏任务包含 Python Custom 代码时，先查阅 `docs/zh_cn/task/` 下对应文档；新建或修改 Custom 模块时，在对应任务文档中记录该模块的职责、重要业务假设和维护注意事项。没有对应文档时才为该任务新建文档。
+- 纯 Pipeline/interface 任务不要求新建任务文档；使用清晰的节点名和 Pipeline `description` 字段说明节点用途及必要的业务条件。若改动同时涉及 Custom 代码，则按 Custom 模块文档规则处理。
+- 通用规范文档只记录适用于多个任务或模块的规则，不写入单一任务、模块或区服的业务逻辑。只有当任务文档中的做法可推广为跨任务规则时，才考虑同步更新通用规范，并保持通用文档不依赖某个任务的实现细节。
+- 新增或修改 MaaFramework 资源（interface、Pipeline、Agent）以外的独立模块，或补充上游 MaaFramework 文档未说明且需要长期维护的项目规则时，应在最贴近该模块的文档中说明职责、维护方式和注意事项；这类文档用于交接维护知识，不是本次改动的工作汇报。
 - 源码路径与发行路径按项目映射维护，本地环境、运行配置和验证产物放在已忽略的目录中。
 
 ## 验证与交付

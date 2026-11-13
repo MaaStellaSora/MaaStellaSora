@@ -461,6 +461,7 @@ class ObservationTracker:
             self.observe_route("DRAW", coins, observed_floor=observed_floor)
         else:
             self.state = replace(self.state, coins=coins)
+            self.coins_uncertain = False
         if source_name == "enhance":
             source = sim.Source("regular", "any", 0, "SHOP", False)
             source_observation = dict(status="confirmed", complete=True, basis="observed_shop_reward")

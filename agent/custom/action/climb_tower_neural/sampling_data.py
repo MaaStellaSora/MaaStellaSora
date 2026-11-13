@@ -1,6 +1,6 @@
 """Run/session observations with linked OCR readings and original game evidence."""
 from collections import defaultdict
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from contextvars import ContextVar
 from dataclasses import fields, is_dataclass
 from datetime import datetime
@@ -148,6 +148,7 @@ class SamplingCollector:
         self.run_confirmed = False
         self._journal_rollback = {}
         self._pending_journal_gap = None
+        self._pending_archives = set()
         self.settlement_seen = False
         self.settlement_result = None
         self.event = None
@@ -650,6 +651,9 @@ class SamplingCollector:
                     observation_not_game_truth=True)
 
     def finish_at_boundary(self, reason):
+        with self.lock:
+            for marker in tuple(self._pending_archives):
+                self._try_recover_marker(marker)
         self.finish_run("settlement_saved" if self.settlement_seen else reason,
                         completion_observed=self.settlement_seen, settlement=self.settlement_result)
 
@@ -688,6 +692,7 @@ class SamplingCollector:
                     self.research_store.checkpoint(path)
                     ready = self._release_run(path, manifest)
                 except (OSError, TypeError, ValueError, sqlite3.Error) as error:
+                    self._pending_archives.add(marker)
                     self.logger.error("$agent.custom.action.climb_tower_neural.sampling_finalize_failed", {"error": str(error)})
             self.run = None
             self.run_confirmed = False
@@ -704,7 +709,7 @@ class SamplingCollector:
     def _release_run(self, path, manifest):
         ready = self.directory / "queue" / f"{manifest['run_id']}.ready.json"
         authorized = valid_upload_consent(manifest)
-        if authorized:
+        if authorized and not ready.exists():
             # Publish once, only after the database commit. The worker may pick it up immediately.
             write_json(ready, {key: manifest[key] for key in ("run_id", "session_id", "pid",
                                                               "research_database", "research_upload")})
@@ -712,14 +717,25 @@ class SamplingCollector:
         return ready if authorized else None
 
     def recover_interrupted(self):
+        self.directory.mkdir(parents=True, exist_ok=True)
+        # A separate database serializes recovery through journal cleanup without
+        # holding the research database's writer lock. Closing releases it on exit.
+        with closing(sqlite3.connect(self.directory / ".recovery.lock", timeout=0)) as lock:
+            try:
+                lock.execute("BEGIN IMMEDIATE")
+            except sqlite3.OperationalError as error:
+                if error.sqlite_errorcode != sqlite3.SQLITE_BUSY:
+                    raise
+                return
+            with self.lock:
+                self._recover_interrupted()
+
+    def _recover_interrupted(self):
         sessions = set()
         for marker in (self.directory / "queue").glob("*.open.json"):
-            try:
-                session = self._recover_marker(marker)
-                if session:
-                    sessions.add(session)
-            except (OSError, KeyError, TypeError, ValueError, sqlite3.Error) as error:
-                self.logger.error("$agent.custom.action.climb_tower_neural.sampling_recovery_failed", {"marker": marker.name, "error": str(error)})
+            session = self._try_recover_marker(marker)
+            if session and session != self.session_id:
+                sessions.add(session)
         # A process can exit after committing its last run but before task_end.
         for folder, pattern in (("queue", "*.ready.json"), ("sent", "*.json")):
             for marker in (self.directory / folder).glob(pattern):
@@ -730,6 +746,8 @@ class SamplingCollector:
                             and (self.directory / "sessions" / f"{session}.jsonl").exists()
                             and not process_alive(manifest["pid"])):
                         sessions.add(session)
+                except FileNotFoundError:
+                    continue
                 except (OSError, KeyError, TypeError, ValueError) as error:
                     self.logger.error("$agent.custom.action.climb_tower_neural.sampling_recovery_failed", {"marker": marker.name, "error": str(error)})
         for session in sessions:
@@ -738,15 +756,36 @@ class SamplingCollector:
             except (OSError, TypeError, ValueError) as error:
                 self.logger.error("$agent.custom.action.climb_tower_neural.sampling_journal_cleanup_failed", {"error": str(error)})
 
+    def _try_recover_marker(self, marker):
+        try:
+            session = self._recover_marker(marker)
+        except (OSError, KeyError, TypeError, ValueError, sqlite3.Error) as error:
+            self.logger.error("$agent.custom.action.climb_tower_neural.sampling_recovery_failed", {"marker": marker.name, "error": str(error)})
+        else:
+            self._pending_archives.discard(marker)
+            return session
+
     def _recover_marker(self, marker):
-        manifest = json.loads(marker.read_text(encoding="utf-8"))
+        try:
+            manifest = json.loads(marker.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return
         run_id = manifest["run_id"]
         if uuid.UUID(run_id).hex != run_id or marker.name != f"{run_id}.open.json":
             raise ValueError("Invalid sampling run ID")
-        if process_alive(manifest["pid"]):
+        # Only this collector can retry its own closed runs while its PID is alive.
+        if marker not in self._pending_archives and process_alive(manifest["pid"]):
             return
         path = self.directory / "runs" / f"{manifest['run_id']}.jsonl"
+        status = self.research_store.run_status(run_id)
+        if status and status != "open":
+            # A previous recovery may have committed before cleanup was interrupted.
+            manifest["research_database"] = DATABASE_FILE
+            self._release_run(path, manifest)
+            return manifest["session_id"]
         if not path.exists():
+            if status:
+                raise ValueError("Missing journal for a checkpointed sampling run")
             # The open marker is written before the first observation.
             path.parent.mkdir(parents=True, exist_ok=True)
             path.touch(exist_ok=True)

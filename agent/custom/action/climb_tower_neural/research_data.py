@@ -195,14 +195,32 @@ def _normalize_floor(value):
     return value
 
 
-def _session_rows(run_path, run, session_path):
+def _session_rows(run_path, run, session_path, tail_damage):
+    """Read the shared session without changing an unfinished final record."""
     first = run[0]
     if session_path is None:
         session_path = Path(run_path).parent.parent / "sessions" / f"{first.get('session_id')}.jsonl"
     if not Path(session_path).exists():
         return []
     task = first.get("task_id")
-    return [row for row in _rows(session_path) if row.get("task_id") == task]
+    data = Path(session_path).read_bytes()
+    lines = data.splitlines(keepends=True)
+    rows = []
+    for index, line in enumerate(lines):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line.decode("utf-8-sig" if index == 0 else "utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            if index != len(lines) - 1 or line.endswith((b"\n", b"\r")):
+                raise
+            tail_damage.update(scope="session", session_id=first.get("session_id"),
+                byte_offset=len(data) - len(line), byte_count=len(line),
+                sha256=hashlib.sha256(line).hexdigest())
+        else:
+            if row.get("task_id") == task:
+                rows.append(row)
+    return rows
 
 
 def _session_record_ids(value, mapping):
@@ -435,7 +453,8 @@ def build_payload(run_path, session_path=None):
     journal_damage = json.loads(damage_path.read_text(encoding="utf-8")) if damage_path.exists() else None
     run_id = next((row.get("run_id") for row in run if row.get("run_id")), run_path.stem)
     builder = _Builder(run_id)
-    session = _session_rows(run_path, run, session_path)
+    session_tail = {}
+    session = _session_rows(run_path, run, session_path, session_tail)
     session_ids = {row["record_id"]: f"session:{run_id}:{row['record_id']}" for row in session}
     for row in session:
         row["_original_record_id"] = row["record_id"]
@@ -708,6 +727,9 @@ def build_payload(run_path, session_path=None):
             dict(journal_damage,
                  affected_from_sequence=min(part["affected_from_sequence"] for part in journal_damage["fragments"]),
                  affected_through_sequence=run[-1].get("sequence")))
+    if session_tail:
+        builder.issue(None, "session.journal", "truncated_session_tail", "partial",
+            "共享会话末条记录未写完；已保留可读记录，未推断缺失内容或所属任务。", session_tail)
     interrupted_tail = run_path.with_suffix(".interrupted-tail")
     if interrupted_tail.exists():
         builder.issue(end["record_id"] if end else None, "records.tail", "truncated_record_tail", "partial",

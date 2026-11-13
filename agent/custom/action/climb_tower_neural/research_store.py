@@ -1,6 +1,8 @@
 """Live normalized storage; JSONL exists only as the active task/run journal."""
 import ctypes
+from contextlib import closing
 from pathlib import Path
+import sqlite3
 import time
 
 from .research_data import build_payload, import_payload
@@ -48,6 +50,16 @@ class ResearchStore:
         self.database_path = self.directory / DATABASE_FILE
         self._checkpoints = {}
 
+    def run_status(self, run_id):
+        """Distinguish a committed final archive from an active checkpoint."""
+        if not self.database_path.exists():
+            return None
+        with closing(sqlite3.connect(self.database_path)) as connection:
+            if not connection.execute("SELECT 1 FROM sqlite_master WHERE name='runs' AND type='table'").fetchone():
+                return None
+            row = connection.execute("SELECT lifecycle_status FROM runs WHERE run_id=?", (run_id,)).fetchone()
+            return row[0] if row else None
+
     def observe(self, run_path, event_type):
         """Checkpoint batches, while the append-only journal persists every row."""
         path = Path(run_path)
@@ -68,18 +80,21 @@ class ResearchStore:
     def release_run(self, run_path):
         """Recycle an open marker and its journal once the run is committed."""
         path = Path(run_path)
-        recycle_file(self.directory / "queue" / f"{path.stem}.open.json")
         recycle_file(path)
         recycle_file(path.with_suffix(".interrupted-tail"))
         recycle_file(path.with_suffix(BAD_BYTES_SUFFIX))
         recycle_file(path.with_suffix(DAMAGE_SUFFIX))
+        recycle_file(self.directory / "queue" / f"{path.stem}.open.json")
         self._checkpoints.pop(path.stem, None)
 
     def release_session(self, session_id):
         """Keep one task's preset evidence available to all its consecutive runs."""
         import json
         for marker in (self.directory / "queue").glob("*.open.json"):
-            manifest = json.loads(marker.read_text(encoding="utf-8"))
+            try:
+                manifest = json.loads(marker.read_text(encoding="utf-8"))
+            except FileNotFoundError:
+                continue  # Another instance finished this run during the scan.
             if manifest.get("session_id") == session_id:
                 return
         recycle_file(self.directory / "sessions" / f"{session_id}.jsonl")

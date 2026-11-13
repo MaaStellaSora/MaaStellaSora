@@ -56,7 +56,7 @@ def prepare_actions(state, candidates, decision_context):
                 available[action] = candidate
                 slots[sim.action_key(action)] = row["slot"]
         cost = decision_context["enhancement_cost"]
-        state = replace(state, stock=tuple(map(tuple, stock)),
+        state = replace(state, phase="SHOP", stock=tuple(map(tuple, stock)), firstInitial=False,
                         paidIndex=sim.PRICES.index(cost) if cost else state.paidIndex)
         decision_context["model_state"] = state
         decision_context["action_slots"] = slots

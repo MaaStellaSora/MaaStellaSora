@@ -124,7 +124,6 @@ def run_model_shop(action_handler, context, argv, runtime):
         tracker.observe_route("SHOP_UNSEEN", data.current_coin)
     except ValueError as error:
         return stop_for_missing(["route"], reason="shop_route_unresolved", observed_error=str(error))
-    tracker.state = replace(tracker.state, phase="SHOP")
     while not context.tasker.stopping:
         if not runtime.model_ready(context):
             return stop_for_missing(["model_state"])
@@ -150,7 +149,7 @@ def run_model_shop(action_handler, context, argv, runtime):
             candidates.append(Action("RESTOCK", price=data.refresh_cost))
         candidates.append(Action("LEAVE"))
         restocks = data.refresh_remaining
-        tracker.state = replace(state, phase="SHOP", coins=data.current_coin,
+        tracker.state = replace(state, coins=data.current_coin,
                                 freeEnhance=cost == 0, restocks=restocks,
                                 source=None, offer=())
         decision_context = runtime.decision_context("shop", {
@@ -172,7 +171,9 @@ def run_model_shop(action_handler, context, argv, runtime):
         if action.kind == "LEAVE":
             if shopping_page:
                 interactor.back_to_main_page()
-            tracker.state = replace(tracker.state, phase=tracker.state.shopReturnPhase,
+            # The simulator advances directly to END when no route nodes remain.
+            next_phase = "END" if tracker.state.node > len(sim.ROUTE) else tracker.state.shopReturnPhase
+            tracker.state = replace(tracker.state, phase=next_phase,
                                     source=None, stock=sim.EMPTY_STOCK,
                                     paidIndex=0, firstInitial=False)
             return True

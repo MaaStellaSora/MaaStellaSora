@@ -313,8 +313,7 @@ class ObservationTracker:
                   npc3EventReward=current.npc3EventReward and node <= 7,
                   source=sim.Source() if phase == "DRAW" else None, offer=())
         if phase == "SHOP_UNSEEN":
-            kw.update(shopOrdinal=shop, firstInitial=shop == 1, paidIndex=0,
-                      shopReturnPhase="END" if shop == 4 else "ADVANCE")
+            kw.update(shopOrdinal=shop, firstInitial=shop == 1, paidIndex=0, shopReturnPhase="ADVANCE")
         self.state = replace(current, **kw)
         self.pending_event = None
         # Reaching a new route boundary also ends the preceding event's

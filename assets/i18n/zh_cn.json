@@ -309,5 +309,9 @@
     "pipeline.邀约_还是算了.focus.Node.Recognition.Succeeded": "选择不送礼物",
     "pipeline.邀约_送出礼物.focus.Node.Recognition.Succeeded": "选择送出礼物",
     "pipeline.邀约_特殊回忆选项.focus.Node.Action.Starting": "选择带爱心卡片的特殊回忆选项",
-    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未发现爱心卡片，选择默认对话选项"
+    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未发现爱心卡片，选择默认对话选项",
+    "interface.tower_neural.task.description": "基于神经网络决策的自动化爬塔。<br>测试版目前仅支持潜能抓取，请从主页开始运行。",
+    "interface.tower_neural.task.label": "爬塔（神经网络）",
+    "interface.tower_neural.upload.description": "开启后，新产生的爬塔日志将匿名上传给模块作者，用于错误分析和后续音符-潜能联合网络开发",
+    "interface.tower_neural.upload.label": "分享数据，帮助改进模型"
 }

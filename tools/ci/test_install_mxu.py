@@ -76,11 +76,13 @@ class InstallMxuTests(unittest.TestCase):
                 self.root / "assets" / "resource" / "base" / "model" / "ocr" / name
             )
         self._write(self.root / "agent" / "main.py")
+        self._write(self.root / "agent" / "neural_main.py")
         self._write(self.root / "agent" / "custom" / "action.py")
         self._write(self.root / "agent" / "__pycache__" / "main.pyc")
 
         for name in install_mxu.PROJECT_FILES:
             self._write(self.root / name, f"project {name}")
+        self._write(self.root / "assets" / "requirements-win-x64.txt", "-r requirements.txt\n")
         self._write(
             self.root / "assets" / "MaaCommonAssets" / "LICENSE",
             "MaaCommonAssets license",

@@ -1,0 +1,160 @@
+{
+    "星塔_神经网络_识别当前金币": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^(?:[0-9]+|[1-9][0-9]{0,2}(?:,[0-9]{3})+)$"
+                ],
+                "replace": [],
+                "roi": [
+                    1180,
+                    20,
+                    65,
+                    25
+                ],
+                "only_rec": true,
+                "threshold": 0.85
+            }
+        },
+        "attach": {
+            "strict_number_reading": true,
+            "wallet_text_locator": true
+        }
+    },
+    "星塔_神经网络_定位事件钱包": {
+        "description": "事件菜单展开音符栏时钱包移到下排，按金币图标定位同排的金额。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "ClimbTower_neural/事件钱包金币.png",
+                "roi": [
+                    1144,
+                    10,
+                    43,
+                    103
+                ],
+                "threshold": 0.85
+            }
+        },
+        "attach": {
+            "amount_roi_offset": [
+                26,
+                -2,
+                65,
+                25
+            ]
+        }
+    },
+    "星塔_神经网络_定位钱包数字": {
+        "description": "深色钱包栏中未检出字框时，用白色数字的轮廓定位金额；数值由 OCR 读取。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    1180,
+                    20,
+                    65,
+                    25
+                ],
+                "method": 4,
+                "lower": [
+                    210,
+                    210,
+                    210
+                ],
+                "upper": [
+                    255,
+                    255,
+                    255
+                ],
+                "count": 1,
+                "connected": true
+            }
+        }
+    },
+    "星塔_神经网络_识别刷新花费": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^[0-9]+$"
+                ],
+                "roi": [
+                    1165,
+                    560,
+                    105,
+                    50
+                ],
+                "replace": [],
+                "threshold": 0.6
+            }
+        },
+        "attach": {
+            "strict_number_reading": true
+        }
+    },
+    "星塔_神经网络_商店_识别物品价格": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^[0-9]+$"
+                ],
+                "roi": [
+                    795,
+                    440,
+                    110,
+                    35
+                ],
+                "replace": [],
+                "threshold": 0.6
+            }
+        },
+        "attach": {
+            "strict_number_reading": true
+        }
+    },
+    "星塔_神经网络_商店_识别可刷新次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^[0-9]+$"
+                ],
+                "roi": [
+                    1170,
+                    616,
+                    22,
+                    34
+                ],
+                "only_rec": true,
+                "replace": [],
+                "threshold": 0.3
+            }
+        },
+        "attach": {
+            "strict_number_reading": true
+        }
+    },
+    "星塔_神经网络_商店_识别强化所需金币": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    ".+"
+                ],
+                "roi": [
+                    347,
+                    357,
+                    435,
+                    93
+                ],
+                "replace": []
+            }
+        },
+        "attach": {
+            "free_pattern": "免费"
+        }
+    }
+}

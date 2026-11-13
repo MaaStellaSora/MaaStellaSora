@@ -309,5 +309,9 @@
     "pipeline.邀约_还是算了.focus.Node.Recognition.Succeeded": "プレゼントを贈らない",
     "pipeline.邀约_送出礼物.focus.Node.Recognition.Succeeded": "プレゼントを贈る",
     "pipeline.邀约_特殊回忆选项.focus.Node.Action.Starting": "ハート付きカードの特別な思い出を選択",
-    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "ハート付きカードが見つかりません。通常の会話選択肢を選びます"
+    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "ハート付きカードが見つかりません。通常の会話選択肢を選びます",
+    "interface.tower_neural.task.description": "ニューラルネットワークの判断で星ノ塔を自動攻略します。<br>ベータ版は現在、素質の取得にのみ対応しています。ホーム画面から開始してください。",
+    "interface.tower_neural.task.label": "星の塔（ニューラルネットワーク）",
+    "interface.tower_neural.upload.description": "有効にすると、新たに生成される星ノ塔の攻略ログが匿名でモジュール作者に送信されます。ログは不具合の分析と、協奏音符と素質を組み合わせたニューラルネットワークの開発に使用されます。",
+    "interface.tower_neural.upload.label": "データを共有してモデル改善に協力"
 }

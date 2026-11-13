@@ -22,7 +22,7 @@
         "child_exec": "python",
         "child_args": [
             "-u",
-            "./../agent/main.py"
+            "./../agent/neural_main.py"
         ],
         "timeout": -1
     },
@@ -131,9 +131,10 @@
         "interface/tasks/operation.json",
         "interface/tasks/proving_grounds.json",
         "interface/tasks/climb_tower.json",
+        "interface/tasks/climb_tower_neural.json",
         "interface/tasks/climb_tower_shop.json",
         "interface/tasks/climb_tower_shop_enhance.json",
         "interface/tasks/climb_tower_target.json",
-		"interface/tasks/cataclysm_survivor.json"
+        "interface/tasks/cataclysm_survivor.json"
     ]
 }

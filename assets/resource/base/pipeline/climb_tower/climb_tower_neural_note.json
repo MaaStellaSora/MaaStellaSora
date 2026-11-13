@@ -1,0 +1,164 @@
+{
+    "NoteOCR_Text": {
+        "recognition": {
+            "type": "OCR"
+        }
+    },
+    "星塔_神经网络_打开音符详情": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_音符效果按钮.png"
+                ],
+                "roi": [
+                    1000,
+                    0,
+                    280,
+                    120
+                ],
+                "green_mask": true
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    12,
+                    12,
+                    -24,
+                    -24
+                ]
+            }
+        },
+        "timeout": 3000,
+        "next": [
+            "星塔_神经网络_音符详情已打开"
+        ]
+    },
+    "星塔_神经网络_音符详情已打开": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_背包_关闭音符效果窗口_agent"
+                ]
+            }
+        },
+        "post_wait_freezes": 100,
+        "timeout": 3000
+    },
+    "星塔_神经网络_音符详情置顶": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    410,
+                    220,
+                    1,
+                    1
+                ],
+                "end": [
+                    410,
+                    585,
+                    1,
+                    1
+                ],
+                "duration": 250
+            }
+        },
+        "post_wait_freezes": {
+            "time": 150,
+            "target": [
+                258,
+                206,
+                260,
+                382
+            ]
+        }
+    },
+    "星塔_神经网络_音符详情向下": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    410,
+                    540,
+                    1,
+                    1
+                ],
+                "end": [
+                    410,
+                    240,
+                    1,
+                    1
+                ],
+                "duration": 250
+            }
+        },
+        "post_wait_freezes": {
+            "time": 150,
+            "target": [
+                258,
+                206,
+                260,
+                382
+            ]
+        }
+    },
+    "星塔_音符采集_结算秘纹页": {
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "星塔_音符采集_背包数量": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "未获得",
+                    "(?:[LlI1][Vv][.:]?\\s*(\\d+)|(\\d+)\\s*个)"
+                ],
+                "threshold": 0.6
+            }
+        },
+        "attach": {
+            "text_rules": {
+                "zero": "未获得",
+                "count": "(?:[LlI1][Vv][.:]?\\s*(\\d+)|(\\d+)\\s*个)"
+            }
+        }
+    },
+    "星塔_音符采集_协奏等级": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "未激活(?:状态)?|未解锁|未发动",
+                    "(?:[Ll][Vv][.:]?|等级)\\s*(\\d+)",
+                    "(?:(?:[Ll][Vv][.:]?|等级)\\s*)?(?:MAX|最大|满级)"
+                ],
+                "threshold": 0.6
+            }
+        },
+        "attach": {
+            "text_rules": {
+                "inactive": "未激活(?:状态)?|未解锁|未发动",
+                "level": "(?:[Ll][Vv][.:]?|等级)\\s*(\\d+)",
+                "maximum": "(?:(?:[Ll][Vv][.:]?|等级)\\s*)?(?:MAX|最大|满级)"
+            }
+        }
+    },
+    "星塔_音符采集_事件文本规则": {
+        "attach": {
+            "text_rules": {
+                "note": "音符",
+                "potential": "潜能|素质",
+                "spend": "消耗[^，,。;；]*音符|音符[^，,。;；]*消耗",
+                "random": "随机",
+                "amount": "(\\d+)\\s*个[^，,、。;；\\d]{0,12}音符|音符[^，,、。;；\\d]*?(\\d+)\\s*个"
+            }
+        }
+    }
+}

@@ -309,5 +309,9 @@
     "pipeline.邀约_还是算了.focus.Node.Recognition.Succeeded": "選擇不送禮物",
     "pipeline.邀约_送出礼物.focus.Node.Recognition.Succeeded": "選擇送出禮物",
     "pipeline.邀约_特殊回忆选项.focus.Node.Action.Starting": "選擇帶愛心卡片的特殊回憶選項",
-    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未發現愛心卡片，選擇預設對話選項"
+    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未發現愛心卡片，選擇預設對話選項",
+    "interface.tower_neural.task.description": "基於神經網路決策的自動化爬塔。<br>測試版目前僅支援潛能抓取，請從主頁開始執行。",
+    "interface.tower_neural.task.label": "爬塔（神經網路）",
+    "interface.tower_neural.upload.description": "開啟後，新產生的爬塔日誌將匿名上傳給模組作者，用於錯誤分析和後續音符-潛能聯合網路開發",
+    "interface.tower_neural.upload.label": "分享資料，幫助改進模型"
 }

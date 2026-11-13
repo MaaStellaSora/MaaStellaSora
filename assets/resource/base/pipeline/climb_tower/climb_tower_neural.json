@@ -1,0 +1,337 @@
+{
+    "星塔_神经网络_入口": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "通用_主页_出发"
+                ]
+            }
+        },
+        "action": {
+            "type": "DoNothing"
+        },
+        "timeout": 3500,
+        "next": [
+            "星塔_入口_agent"
+        ]
+    },
+    "星塔_神经网络_清晰场景标记": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/melodies/melody_of_pummel.png"
+                ],
+                "roi": [
+                    0,
+                    600,
+                    160,
+                    112
+                ],
+                "threshold": 0.8,
+                "green_mask": true
+            }
+        }
+    },
+    "星塔_神经网络_场景详情入口": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_neural/场景音符背包入口.png"
+                ],
+                "roi": [
+                    540,
+                    625,
+                    100,
+                    80
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "星塔_神经网络_普通场景已出现": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_神经网络_清晰场景标记",
+                    "星塔_神经网络_场景详情入口"
+                ]
+            }
+        }
+    },
+    "星塔_神经网络_自动前进控件": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_neural/自动前进控件.png"
+                ],
+                "roi": [
+                    1130,
+                    550,
+                    150,
+                    130
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "星塔_神经网络_自动前进中": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^自动前进中$"
+                ],
+                "roi": [
+                    1120,
+                    650,
+                    160,
+                    60
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "星塔_神经网络_自动前进已关闭图标": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_neural/自动前进已关闭控件.png",
+                    "ClimbTower_neural/自动前进已关闭人物_点亮.png"
+                ],
+                "roi": [
+                    1170,
+                    588,
+                    60,
+                    44
+                ],
+                "threshold": 0.9
+            }
+        }
+    },
+    "星塔_神经网络_自动前进已关闭文字": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^自动前进$"
+                ],
+                "roi": [
+                    1120,
+                    650,
+                    160,
+                    60
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "星塔_神经网络_恢复自动前进": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_神经网络_自动前进已关闭文字",
+                    "星塔_神经网络_自动前进已关闭图标"
+                ]
+            }
+        }
+    },
+    "星塔_神经网络_暂停自动前进": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_神经网络_自动前进控件",
+                    "星塔_神经网络_自动前进中"
+                ]
+            }
+        }
+    },
+    "星塔_神经网络_结算保存图形": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_神经网络_结算保存按钮底色",
+                    "星塔_神经网络_结算角色标记"
+                ]
+            }
+        }
+    },
+    "星塔_神经网络_结算保存按钮底色": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "lower": [
+                    [
+                        0,
+                        180,
+                        180
+                    ]
+                ],
+                "upper": [
+                    [
+                        100,
+                        255,
+                        255
+                    ]
+                ],
+                "count": 8000,
+                "roi": [
+                    1025,
+                    625,
+                    225,
+                    60
+                ],
+                "connected": true
+            }
+        }
+    },
+    "星塔_神经网络_结算角色标记": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/星塔_纪录数标记.png"
+                ],
+                "roi": [
+                    67,
+                    165,
+                    310,
+                    97
+                ],
+                "threshold": 0.8,
+                "index": 2
+            }
+        }
+    },
+    "星塔_神经网络_预设OCR": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    ".+"
+                ],
+                "threshold": 0.3
+            }
+        }
+    },
+    "星塔_神经网络_预设卡片边界": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "lower": [
+                    [
+                        255,
+                        255,
+                        255
+                    ]
+                ],
+                "upper": [
+                    [
+                        255,
+                        255,
+                        255
+                    ]
+                ],
+                "roi": [
+                    350,
+                    95,
+                    593,
+                    591
+                ],
+                "connected": true,
+                "count": 100
+            }
+        }
+    },
+    "星塔_神经网络_预设点击": {
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freezes": {
+            "time": 100,
+            "timeout": 1500,
+            "target": [
+                0,
+                0,
+                1280,
+                720
+            ]
+        },
+        "timeout": 60000
+    },
+    "星塔_神经网络_背包潜能_向下": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    926,
+                    625
+                ],
+                "end": [
+                    926,
+                    385
+                ],
+                "duration": 600,
+                "end_hold": 350
+            }
+        },
+        "post_wait_freezes": {
+            "time": 300,
+            "timeout": 3000,
+            "target": [
+                358,
+                95,
+                118,
+                591
+            ],
+            "threshold": 0.98,
+            "rate_limit": 100
+        },
+        "description": "慢滑并在终点按住后松手，等待首列卡片连续稳定；末行其余列会透出场景动画。"
+    },
+    "星塔_神经网络_背包潜能_置顶": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    926,
+                    200
+                ],
+                "end": [
+                    926,
+                    625
+                ],
+                "duration": 600,
+                "end_hold": 350
+            }
+        },
+        "post_wait_freezes": {
+            "time": 300,
+            "timeout": 3000,
+            "target": [
+                358,
+                95,
+                118,
+                591
+            ],
+            "threshold": 0.98,
+            "rate_limit": 100
+        },
+        "description": "慢滑并在终点按住后松手，等待首列卡片连续稳定后再判断置顶。"
+    },
+    "星塔_神经网络_运行环境": {
+        "attach": {
+            "native_windows": false,
+            "research_recording": true,
+            "research_upload": false
+        }
+    }
+}

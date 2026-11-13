@@ -309,5 +309,9 @@
     "pipeline.邀约_还是算了.focus.Node.Recognition.Succeeded": "선물 보내지 않기 선택",
     "pipeline.邀约_送出礼物.focus.Node.Recognition.Succeeded": "선물 보내기 선택",
     "pipeline.邀约_特殊回忆选项.focus.Node.Action.Starting": "하트 카드가 있는 특별한 추억 선택지 선택",
-    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "하트 카드 없음, 기본 대화 선택지 선택"
+    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "하트 카드 없음, 기본 대화 선택지 선택",
+    "interface.tower_neural.task.description": "신경망의 판단으로 별의 탑 등반을 자동화합니다.<br>베타 버전은 현재 잠재력 획득만 지원합니다. 홈 화면에서 시작해 주세요.",
+    "interface.tower_neural.task.label": "별의 탑 등반 (신경망)",
+    "interface.tower_neural.upload.description": "이 기능을 켜면 새로 생성되는 별의 탑 등반 로그가 모듈 개발자에게 익명으로 전송됩니다. 로그는 오류 분석과 향후 음표와 잠재력을 함께 다루는 신경망 개발에 사용됩니다.",
+    "interface.tower_neural.upload.label": "데이터 공유로 모델 개선에 참여"
 }

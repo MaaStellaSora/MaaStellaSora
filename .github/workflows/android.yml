@@ -104,18 +104,24 @@ jobs:
         run: |
           PI_ROOT="$PROJECT_ROOT/android-build/pi"
           mkdir -p "$PI_ROOT"
-          cp -a "$PROJECT_ROOT/assets/." "$PI_ROOT/"
-          cp -a "$PROJECT_ROOT/agent" "$PI_ROOT/agent"
           cp -a "$PROJECT_ROOT/LICENSE" "$PI_ROOT/LICENSE"
-          test -s "$PI_ROOT/agent/main.py"
           python3 - "$PI_ROOT" "$ANDROID_PI_VERSION" <<'PY'
           import json
+          import os
           import sys
           from pathlib import Path
 
+          project_root = Path(os.environ["PROJECT_ROOT"])
+          sys.path.insert(0, str(project_root / "tools/ci"))
+          from package_common import configure_agent, copy_agent_files, copy_tree, require_file
+
           pi_root = Path(sys.argv[1])
+          copy_tree(project_root / "assets", pi_root, platform_tag="android-arm64")
+          copy_agent_files(project_root, pi_root, "android-arm64")
+          require_file(pi_root / "agent/main.py")
           interface_path = pi_root / "interface.json"
           interface = json.loads(interface_path.read_text(encoding="utf-8"))
+          configure_agent(interface, "android-arm64")
           version = sys.argv[2]
 
           interface["version"] = version

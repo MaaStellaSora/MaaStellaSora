@@ -1,0 +1,27 @@
+{
+    "endpoint": "https://35.213.73.34/v3/runs",
+    "access_token": "",
+    "policy_version": "tower-state-space-research-v2",
+    "consent_option": "research_upload",
+    "title": "分享爬塔对局数据",
+    "default_enabled": false,
+    "recipient": "dango636 的公网设备",
+    "purpose": "星塔状态空间分析和价值模型改进",
+    "data_categories": [
+        "结构化预设",
+        "潜能与音符变化",
+        "操作与结算",
+        "识别文本与质量信息"
+    ],
+    "images_included": false,
+    "retention": "状态空间与模型研究期间；可联系 dango636 申请删除",
+    "contact": "联系 dango636",
+    "transport": {
+        "method": "POST",
+        "content_type": "application/zip",
+        "authorization": "none",
+        "deduplication_header": "X-Upload-ID",
+        "sha256_header": "X-Content-SHA256",
+        "acknowledgement": "HTTP 2xx 表示接收成功"
+    }
+}

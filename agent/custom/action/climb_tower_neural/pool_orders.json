@@ -1,0 +1,151 @@
+{
+    "schema": "role_quality_pool_order_v1",
+    "orders": [
+        {
+            "character_id": 162,
+            "role_type": "master",
+            "quality": "rare",
+            "regions": [
+                "cn",
+                "jp"
+            ],
+            "ids": [
+                516205,
+                516208,
+                516212
+            ],
+            "basis": "adopted_StateSpace_1.3_configuration"
+        },
+        {
+            "character_id": 162,
+            "role_type": "master",
+            "quality": "common",
+            "regions": [
+                "cn",
+                "jp"
+            ],
+            "ids": [
+                516206,
+                516207,
+                516209,
+                516210,
+                516211,
+                516213,
+                516241,
+                516242,
+                516243
+            ],
+            "basis": "adopted_StateSpace_1.3_configuration"
+        },
+        {
+            "character_id": 115,
+            "role_type": "assist",
+            "quality": "rare",
+            "regions": [
+                "cn",
+                "jp"
+            ],
+            "ids": [
+                511525,
+                511530,
+                511533
+            ],
+            "basis": "adopted_StateSpace_1.3_configuration"
+        },
+        {
+            "character_id": 115,
+            "role_type": "assist",
+            "quality": "common",
+            "regions": [
+                "cn",
+                "jp"
+            ],
+            "ids": [
+                511526,
+                511527,
+                511528,
+                511529,
+                511531,
+                511532,
+                511541,
+                511542,
+                511543
+            ],
+            "basis": "adopted_StateSpace_1.3_configuration"
+        },
+        {
+            "character_id": 107,
+            "role_type": "assist",
+            "quality": "rare",
+            "regions": [
+                "cn",
+                "jp"
+            ],
+            "ids": [
+                510725,
+                510728,
+                510733
+            ],
+            "basis": "adopted_StateSpace_1.3_configuration"
+        },
+        {
+            "character_id": 107,
+            "role_type": "assist",
+            "quality": "common",
+            "regions": [
+                "cn",
+                "jp"
+            ],
+            "ids": [
+                510726,
+                510727,
+                510729,
+                510730,
+                510731,
+                510732,
+                510741,
+                510742,
+                510743
+            ],
+            "basis": "adopted_StateSpace_1.3_configuration"
+        },
+        {
+            "character_id": 160,
+            "role_type": "master",
+            "quality": "rare",
+            "regions": [
+                "tw"
+            ],
+            "ids": [
+                516007,
+                516013,
+                516010
+            ],
+            "basis": "first_complete_unacquired_pool_observation",
+            "dataset_id": "maa_tw",
+            "run_id": "c18095c3e2c140919bafa8ad7310773a",
+            "record_id": "5e33078eb5ea44cdbf719d2dba94847f"
+        },
+        {
+            "character_id": 144,
+            "role_type": "master",
+            "quality": "rare",
+            "regions": [
+                "cn"
+            ],
+            "ids": [
+                514407,
+                514413,
+                514410
+            ],
+            "basis": "first_complete_unacquired_pool_observation",
+            "dataset_id": "maa_cn",
+            "run_id": "aff7f0bb6ec54cecab6aeec823fa7839",
+            "record_id": "5ca6875f13a54219ac723d4e1e23f03b"
+        }
+    ],
+    "sources": {
+        "adopted_StateSpace_1.3_configuration": "https://github.com/dango636/StellaSora-Tower-Research/blob/46372929b35212875a493b3a4d7dfa19820aaeed/Background/StateSpace.md#13-足以初始化该预设的完整六池",
+        "first_complete_unacquired_pool_observation": "https://github.com/dango636/StellaSora-Tower-Research/blob/46372929b35212875a493b3a4d7dfa19820aaeed/Background/StateSpace_Observation_Targets.md"
+    }
+}

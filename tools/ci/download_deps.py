@@ -5,12 +5,12 @@
 自动检测当前平台并下载对应架构的wheel文件
 """
 
-import os
 import sys
 import subprocess
 import argparse
 import platform
 import re
+import sysconfig
 from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -32,23 +32,8 @@ def get_platform_tag():
     print(f"检测到操作系统: {os_type}, 架构: {os_arch}")
 
     if os_type == "Windows":
-        # 在Windows ARM64环境中，platform.machine()可能错误返回AMD64
-        # 我们需要检查处理器标识符来确定真实架构
-        processor_identifier = os.environ.get("PROCESSOR_IDENTIFIER", "")
-
-        # 检查是否为ARM64处理器
-        if "ARMv8" in processor_identifier or "ARM64" in processor_identifier:
-            print(f"检测到ARM64处理器: {processor_identifier}")
-            os_arch = "ARM64"
-
-        # 映射platform.machine()到pip的平台标签
-        arch_mapping = {
-            "AMD64": "win_amd64",
-            "x86_64": "win_amd64",
-            "ARM64": "win_arm64",
-            "aarch64": "win_arm64",
-        }
-        platform_tag = arch_mapping.get(os_arch, f"win_{os_arch.lower()}")
+        # Wheels must match this Python, including x64 emulation on ARM hosts.
+        platform_tag = sysconfig.get_platform().replace("-", "_")
 
     elif os_type == "Darwin":  # macOS
         # 映射platform.machine()到pip的平台标签
@@ -85,7 +70,7 @@ def build_download_command(
         "pip",
         "download",
         "-r",
-        str(REQUIREMENTS_FILE),
+        str(requirements_for_platform(platform_tag or get_platform_tag())),
         "-d",
         str(deps_path),
         "--only-binary=:all:",
@@ -99,6 +84,11 @@ def build_download_command(
             raise ValueError(f"无效的 MaaFramework Python 版本: {maafw_version}")
         cmd.extend(["--find-links", str(deps_path), f"maafw=={maafw_version}"])
     return cmd
+
+
+def requirements_for_platform(platform_tag):
+    return (REQUIREMENTS_FILE.with_name("requirements-win-x64.txt")
+            if platform_tag == "win_amd64" else REQUIREMENTS_FILE)
 
 
 def validate_maafw_wheel(deps_path, expected_version):

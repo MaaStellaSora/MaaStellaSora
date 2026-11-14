@@ -95,6 +95,11 @@ lang = os.environ.get("PI_CLIENT_LANGUAGE", "")
 _TRANSLATIONS = _load_translations()
 
 
+def translate(key: str, **variables: object) -> str:
+    """Translate an inline fragment using the same language as user logs."""
+    return _TRANSLATIONS[key.removeprefix("$")].format_map(variables)
+
+
 def get_logger(name: str = "custom") -> logging.Logger:
     """
     获取或创建一个Logger实例

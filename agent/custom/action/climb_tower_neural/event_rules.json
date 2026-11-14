@@ -1,0 +1,1299 @@
+{
+    "schema_version": 1,
+    "description": "Visible Maa Pipeline OCR consequences to frozen event semantics. Patterns describe localizations, never OCR character substitutions. Quiz answer text remains in ascension_event_<language>.json.",
+    "policy": {
+        "id": "visible_menu_afterstate_v1",
+        "value_samples": 16
+    },
+    "text": {
+        "number_pattern": "\\d+",
+        "patterns": {
+            "potential": "潜能|潛能|素質|potential",
+            "note": "音符|musical note|random note|强攻|強攻|強撃|pummel|幸运|幸運|luck|暴发|暴發|爆发|爆發|爆発|burst|体力|體力|stamina|专注|專注|集中|focus|技巧|器用|skill|绝招|絕招|必殺|ultimate",
+            "hp": "生命|hp|体力|生命値",
+            "quiz": "正确回答|正確答案|正解すると|correct answer",
+            "spend": "消耗|消費|spend",
+            "restore": "恢复|恢復|回復|restore|recover",
+            "gain": "獲得|获得|obtain|gain",
+            "change": "随机(?:发生)?变化|隨機(?:發生)?變化|ランダムで変動|randomly change",
+            "has_650": "650",
+            "has_200": "200",
+            "has_100": "100",
+            "has_120": "120",
+            "has_150": "150",
+            "gain_30": "(?:获得|獲得|obtain|gain)[^\\d]{0,12}30|(?:を|×|x)\\s*30\\s*枚?\\s*獲得"
+        },
+        "classifiers": {
+            "quality": [
+                {
+                    "pattern": "稀有|虹|rare",
+                    "value": "rare"
+                },
+                {
+                    "pattern": "普通|common|normal potential|素質[（(](?:金|青)[）)]",
+                    "value": "common"
+                }
+            ],
+            "scope": [
+                {
+                    "pattern": "援护|援護|支援|support|assist",
+                    "value": "support"
+                },
+                {
+                    "pattern": "主控|主角|主役|操作中|main|active trekker",
+                    "value": "main"
+                }
+            ],
+            "chance": [
+                {
+                    "pattern": "33%",
+                    "value": 33
+                },
+                {
+                    "pattern": "50%\\s*(?:概率|機率|几率|chance|の確率|获得|獲得|失去|恢复|回復|[)）])|概率[^,]*50%|[（(]50%",
+                    "value": 50
+                }
+            ],
+            "change_scope": [
+                {
+                    "pattern": "生命|hp|体力|生命値",
+                    "value": "hp"
+                }
+            ]
+        },
+        "classifier_defaults": {
+            "quality": "",
+            "scope": "",
+            "chance": 0,
+            "change_scope": ""
+        },
+        "captures": {
+            "coin_cost": [
+                {
+                    "pattern": "(?:を|×|x)\\s*(\\d+)\\s*枚?\\s*消費"
+                },
+                {
+                    "pattern": "(?:消耗|消費|spend)\\s*(?:辉光币|輝光幣|coins?)?\\s*[x×]?\\s*(\\d+)\\s*(?:枚|金币|金幣|coins?|to\\b|,)"
+                },
+                {
+                    "pattern": "(?:消耗|消費|spend)\\s*[^\\d]{0,8}(\\d+)(?!\\d|\\s*%)",
+                    "when": {
+                        "note": false,
+                        "hp": false
+                    }
+                }
+            ],
+            "hp_cost": [
+                {
+                    "pattern": "(?:消耗|消費|spend)\\s*(?:最大|max\\s*)?(?:hp)?\\s*(\\d+)\\s*%"
+                },
+                {
+                    "pattern": "(?:最大)?hp(?:を)?\\s*(\\d+)\\s*%\\s*(?:消費|消耗)"
+                }
+            ]
+        },
+        "note_kinds": [
+            {
+                "melody": "random",
+                "pattern": "随机音符|隨機音符|ランダム(?:な|の)?音符|音符をランダムで|random(?:ly)?\\s*(?:musical\\s*)?notes?",
+                "suffix": 8
+            },
+            {
+                "melody": "melody_of_pummel",
+                "pattern": "强攻|強攻|強撃|pummel",
+                "suffix": 1
+            },
+            {
+                "melody": "melody_of_luck",
+                "pattern": "幸运|幸運|luck",
+                "suffix": 2
+            },
+            {
+                "melody": "melody_of_burst",
+                "pattern": "暴发|暴發|爆发|爆發|爆発|burst",
+                "suffix": 3
+            },
+            {
+                "melody": "melody_of_stamina",
+                "pattern": "体力|體力|stamina",
+                "suffix": 4
+            },
+            {
+                "melody": "melody_of_focus",
+                "pattern": "专注|專注|集中|focus",
+                "suffix": 5
+            },
+            {
+                "melody": "melody_of_skill",
+                "pattern": "技巧|器用|skill",
+                "suffix": 6
+            },
+            {
+                "melody": "melody_of_ultimate",
+                "pattern": "绝招|絕招|必殺|ultimate",
+                "suffix": 7
+            }
+        ]
+    },
+    "effect_rules": [
+        {
+            "when": {
+                "change": true
+            },
+            "effect": {
+                "kind": "change",
+                "amount": {
+                    "field": "potential"
+                },
+                "scope": {
+                    "field": "change_scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "has_650": true,
+                "has_200": true
+            },
+            "effect": {
+                "kind": "coin_gamble",
+                "amount": 650
+            }
+        },
+        {
+            "when": {
+                "has_200": true,
+                "has_100": true,
+                "chance": true
+            },
+            "effect": {
+                "kind": "coin_gamble",
+                "amount": 200
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "chance": 33
+            },
+            "effect": {
+                "kind": "chance_potential",
+                "amount": 0,
+                "chance": 33,
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "hp_cost": true
+            },
+            "effect": {
+                "kind": "hp_potential",
+                "amount": {
+                    "field": "hp_cost"
+                },
+                "chance": {
+                    "field": "chance"
+                },
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "chance": 50,
+                "has_100": true,
+                "hp": false
+            },
+            "effect": {
+                "kind": "coin_or_potential",
+                "amount": 100,
+                "chance": 50,
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "chance": 50,
+                "has_120": true,
+                "hp": false
+            },
+            "effect": {
+                "kind": "coin_or_potential",
+                "amount": 120,
+                "chance": 50,
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "chance": 50
+            },
+            "effect": {
+                "kind": "hp_or_potential",
+                "amount": 0,
+                "chance": 50,
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "coin_cost": true
+            },
+            "effect": {
+                "kind": "buy_potential",
+                "amount": {
+                    "field": "coin_cost"
+                },
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "note": true,
+                "spend": true
+            },
+            "effect": {
+                "kind": "notes_potential",
+                "amount": 10,
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "potential": true,
+                "spend": false
+            },
+            "effect": {
+                "kind": "free_potential",
+                "amount": 0,
+                "quality": {
+                    "field": "quality"
+                },
+                "scope": {
+                    "field": "scope"
+                }
+            }
+        },
+        {
+            "when": {
+                "hp": true,
+                "restore": true,
+                "coin_cost": true
+            },
+            "effect": {
+                "kind": "buy_hp",
+                "amount": {
+                    "field": "coin_cost"
+                }
+            }
+        },
+        {
+            "when": {
+                "hp": true,
+                "restore": true,
+                "chance": true,
+                "note": true
+            },
+            "effect": {
+                "kind": "hp_or_notes",
+                "amount": 0,
+                "chance": 50
+            }
+        },
+        {
+            "when": {
+                "hp": true,
+                "restore": true
+            },
+            "effect": {
+                "kind": "heal",
+                "amount": 20
+            }
+        },
+        {
+            "when": {
+                "note": true,
+                "coin_cost": true
+            },
+            "effect": {
+                "kind": "buy_notes",
+                "amount": {
+                    "field": "coin_cost"
+                }
+            }
+        },
+        {
+            "when": {
+                "note": true,
+                "has_150": true,
+                "spend": true
+            },
+            "effect": {
+                "kind": "notes_coin",
+                "amount": 150
+            }
+        },
+        {
+            "when": {
+                "note": true,
+                "gain": true
+            },
+            "effect": {
+                "kind": "free_notes",
+                "amount": 5
+            }
+        },
+        {
+            "when": {
+                "gain_30": true
+            },
+            "effect": {
+                "kind": "coin",
+                "amount": 30
+            }
+        }
+    ],
+    "menus": {
+        "101": {
+            "visible_count": 3,
+            "options": {
+                "10101": {
+                    "kind": "buy_potential",
+                    "amount": 100,
+                    "quality": "common",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10102": {
+                    "kind": "buy_potential",
+                    "amount": 120,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10103": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "102": {
+            "visible_count": 4,
+            "options": {
+                "10201": {
+                    "kind": "buy_potential",
+                    "amount": 120,
+                    "quality": "regular",
+                    "scope": "support",
+                    "chance": 0
+                },
+                "10202": {
+                    "kind": "buy_potential",
+                    "amount": 160,
+                    "quality": "regular",
+                    "scope": "main",
+                    "chance": 0
+                },
+                "10203": {
+                    "kind": "buy_potential",
+                    "amount": 200,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10204": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "103": {
+            "visible_count": 2,
+            "options": {
+                "10301": {
+                    "kind": "notes_coin",
+                    "amount": 150,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10302": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "104": {
+            "visible_count": 3,
+            "options": {
+                "10401": {
+                    "kind": "notes_potential",
+                    "amount": 10,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10402": {
+                    "kind": "buy_potential",
+                    "amount": 200,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10403": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "105": {
+            "visible_count": 3,
+            "options": {
+                "10501": {
+                    "kind": "coin_gamble",
+                    "amount": 200,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10502": {
+                    "kind": "coin_gamble",
+                    "amount": 650,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10503": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "106": {
+            "visible_count": 3,
+            "options": {
+                "10601": {
+                    "kind": "hp_potential",
+                    "amount": 20,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 50
+                },
+                "10602": {
+                    "kind": "hp_potential",
+                    "amount": 40,
+                    "quality": "common",
+                    "scope": "",
+                    "chance": 0
+                },
+                "10603": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "109": {
+            "visible_count": 2,
+            "options": {
+                "10901": {
+                    "kind": "coin_or_potential",
+                    "amount": 100,
+                    "quality": "common",
+                    "scope": "",
+                    "chance": 50
+                },
+                "10902": {
+                    "kind": "buy_potential",
+                    "amount": 120,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "110": {
+            "visible_count": 2,
+            "options": {
+                "11001": {
+                    "kind": "coin_or_potential",
+                    "amount": 120,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 50
+                },
+                "11002": {
+                    "kind": "buy_potential",
+                    "amount": 160,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "111": {
+            "visible_count": 2,
+            "options": {
+                "11101": {
+                    "kind": "heal",
+                    "amount": 20,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "11102": {
+                    "kind": "hp_potential",
+                    "amount": 20,
+                    "quality": "common",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "112": {
+            "visible_count": 2,
+            "options": {
+                "11201": {
+                    "kind": "heal",
+                    "amount": 20,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "11202": {
+                    "kind": "hp_potential",
+                    "amount": 30,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "113": {
+            "visible_count": 3,
+            "options": {
+                "11301": {
+                    "kind": "heal",
+                    "amount": 20,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "11302": {
+                    "kind": "hp_potential",
+                    "amount": 30,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 0
+                },
+                "11303": {
+                    "kind": "hp_potential",
+                    "amount": 50,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "117": {
+            "visible_count": 2,
+            "options": {
+                "11701": {
+                    "kind": "change",
+                    "amount": 0,
+                    "quality": "",
+                    "scope": "hp",
+                    "chance": 0
+                },
+                "11702": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "118": {
+            "visible_count": 2,
+            "options": {
+                "11801": {
+                    "kind": "change",
+                    "amount": 1,
+                    "quality": "",
+                    "scope": "hp",
+                    "chance": 0
+                },
+                "11802": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "119": {
+            "visible_count": 2,
+            "options": {
+                "11901": {
+                    "kind": "change",
+                    "amount": 1,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "11902": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "120": {
+            "visible_count": 2,
+            "options": {
+                "12001": {
+                    "kind": "buy_notes",
+                    "amount": 50,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "12002": {
+                    "kind": "hp_or_notes",
+                    "amount": 0,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 50
+                }
+            }
+        },
+        "121": {
+            "visible_count": 2,
+            "options": {
+                "12101": {
+                    "kind": "buy_potential",
+                    "amount": 100,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 0
+                },
+                "12102": {
+                    "kind": "hp_or_potential",
+                    "amount": 0,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 50
+                }
+            }
+        },
+        "122": {
+            "visible_count": 2,
+            "options": {
+                "12201": {
+                    "kind": "buy_potential",
+                    "amount": 180,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 0
+                },
+                "12202": {
+                    "kind": "hp_or_potential",
+                    "amount": 0,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 50
+                }
+            }
+        },
+        "123": {
+            "visible_count": 2,
+            "options": {
+                "12301": {
+                    "kind": "buy_hp",
+                    "amount": 50,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                },
+                "12302": {
+                    "kind": "hp_potential",
+                    "amount": 30,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "124": {
+            "visible_count": 2,
+            "options": {
+                "12401": {
+                    "kind": "chance_potential",
+                    "amount": 0,
+                    "quality": "regular",
+                    "scope": "",
+                    "chance": 33
+                },
+                "12402": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "125": {
+            "visible_count": 3,
+            "options": {
+                "12501": {
+                    "kind": "chance_potential",
+                    "amount": 0,
+                    "quality": "common",
+                    "scope": "",
+                    "chance": 33
+                },
+                "12502": {
+                    "kind": "chance_potential",
+                    "amount": 0,
+                    "quality": "rare",
+                    "scope": "",
+                    "chance": 33
+                },
+                "12503": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "126": {
+            "visible_count": 2,
+            "options": {
+                "12601": {
+                    "kind": "free_potential",
+                    "amount": 0,
+                    "quality": "common",
+                    "scope": "support",
+                    "chance": 0
+                },
+                "12602": {
+                    "kind": "heal",
+                    "amount": 20,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "127": {
+            "visible_count": 2,
+            "options": {
+                "12701": {
+                    "kind": "free_potential",
+                    "amount": 0,
+                    "quality": "regular",
+                    "scope": "support",
+                    "chance": 0
+                },
+                "12702": {
+                    "kind": "free_notes",
+                    "amount": 5,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        },
+        "128": {
+            "visible_count": 2,
+            "options": {
+                "12801": {
+                    "kind": "free_potential",
+                    "amount": 0,
+                    "quality": "rare",
+                    "scope": "support",
+                    "chance": 0
+                },
+                "12802": {
+                    "kind": "coin",
+                    "amount": 30,
+                    "quality": "",
+                    "scope": "",
+                    "chance": 0
+                }
+            }
+        }
+    },
+    "note_menus": [
+        {
+            "event_id": 107,
+            "visible_count": 3,
+            "note_choice_count": 3,
+            "required_kinds": [
+                "random"
+            ],
+            "options": {
+                "melody_of_pummel": {
+                    "option_id": 10701,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                },
+                "melody_of_luck": {
+                    "option_id": 10702,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                },
+                "melody_of_burst": {
+                    "option_id": 10703,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                },
+                "melody_of_stamina": {
+                    "option_id": 10704,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                },
+                "melody_of_focus": {
+                    "option_id": 10705,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                },
+                "melody_of_skill": {
+                    "option_id": 10706,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                },
+                "melody_of_ultimate": {
+                    "option_id": 10707,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                },
+                "random": {
+                    "option_id": 10708,
+                    "effect": {
+                        "kind": "free_notes",
+                        "amount": 5
+                    }
+                }
+            }
+        },
+        {
+            "event_id": 108,
+            "visible_count": 4,
+            "note_choice_count": 3,
+            "required_kinds": [
+                "random"
+            ],
+            "options": {
+                "melody_of_pummel": {
+                    "option_id": 10801,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 140
+                    }
+                },
+                "melody_of_luck": {
+                    "option_id": 10802,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 140
+                    }
+                },
+                "melody_of_burst": {
+                    "option_id": 10803,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 140
+                    }
+                },
+                "melody_of_stamina": {
+                    "option_id": 10804,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 140
+                    }
+                },
+                "melody_of_focus": {
+                    "option_id": 10805,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 140
+                    }
+                },
+                "melody_of_skill": {
+                    "option_id": 10806,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 140
+                    }
+                },
+                "melody_of_ultimate": {
+                    "option_id": 10807,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 140
+                    }
+                },
+                "random": {
+                    "option_id": 10808,
+                    "effect": {
+                        "kind": "buy_notes",
+                        "amount": 90
+                    }
+                }
+            },
+            "other_options": {
+                "10809": {
+                    "kind": "coin",
+                    "amount": 30
+                }
+            }
+        }
+    ],
+    "quiz_rules": [
+        {
+            "event_id": 116,
+            "when": {
+                "quiz": true,
+                "potential": true,
+                "numbers": [
+                    "1"
+                ],
+                "quality": "rare"
+            },
+            "correct_option_id": 11603,
+            "potential_source": {
+                "rarity": "rare"
+            }
+        },
+        {
+            "event_id": 115,
+            "when": {
+                "quiz": true,
+                "potential": true,
+                "numbers": [
+                    "1"
+                ],
+                "quality": ""
+            },
+            "correct_option_id": 11503,
+            "potential_source": {
+                "rarity": "regular"
+            }
+        },
+        {
+            "event_id": 114,
+            "when": {
+                "quiz": true,
+                "potential": false,
+                "note": true,
+                "numbers": [
+                    "10"
+                ]
+            },
+            "correct_option_id": 11403,
+            "potential_source": null
+        }
+    ],
+    "note_effects": {
+        "10701": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_pummel",
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10702": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_luck",
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10703": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_burst",
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10704": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_stamina",
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10705": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_focus",
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10706": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_skill",
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10707": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_ultimate",
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10708": {
+            "operation": "gain",
+            "selection": "random",
+            "melody": null,
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10801": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_pummel",
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10802": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_luck",
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10803": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_burst",
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10804": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_stamina",
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10805": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_focus",
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10806": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_skill",
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10807": {
+            "operation": "gain",
+            "selection": "specified",
+            "melody": "melody_of_ultimate",
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10808": {
+            "operation": "gain",
+            "selection": "random",
+            "melody": null,
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10301": {
+            "operation": "spend",
+            "selection": "random",
+            "melody": null,
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "10401": {
+            "operation": "spend",
+            "selection": "random",
+            "melody": null,
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "11403": {
+            "operation": "gain",
+            "selection": "random",
+            "melody": null,
+            "count": 10,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "12001": {
+            "operation": "gain",
+            "selection": "random",
+            "melody": null,
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        },
+        "12002": {
+            "operation": "gain",
+            "selection": "random",
+            "melody": null,
+            "count": 5,
+            "probability": [
+                1,
+                2
+            ]
+        },
+        "12702": {
+            "operation": "gain",
+            "selection": "random",
+            "melody": null,
+            "count": 5,
+            "probability": [
+                1,
+                1
+            ]
+        }
+    }
+}

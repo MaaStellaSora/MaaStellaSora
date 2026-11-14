@@ -122,12 +122,17 @@ class PipelineI18nTests(unittest.TestCase):
 logger.info("$agent.example.ready")
 logger.warning("$agent.example.warning")
 self._handle_fatal_error(context, "$agent.example.failed")
+messages = {"stop": "$agent.example.stopped"}
+logger.error(messages[reason])
+label = translate("$agent.example.label")
 logger.debug("未处理的 Debug 文案")
 """,
             {
                 "agent.example.ready": "已就绪",
                 "agent.example.warning": "注意",
                 "agent.example.failed": "失败",
+                "agent.example.stopped": "已停止",
+                "agent.example.label": "选项",
             },
         )
 

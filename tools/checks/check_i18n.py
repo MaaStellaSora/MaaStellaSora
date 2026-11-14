@@ -349,15 +349,12 @@ class AgentScope:
                 continue
 
             for node in ast.walk(tree):
+                if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                    self._collect_key(node.value, location, node, result)
                 if not isinstance(node, ast.Call):
                     continue
                 if self._is_logger_call(node):
                     self._scan_log_call(node, location, result)
-                elif self._is_fatal_error_helper(node):
-                    for argument in node.args:
-                        for item in ast.walk(argument):
-                            if isinstance(item, ast.Constant) and isinstance(item.value, str):
-                                self._collect_key(item.value, location, item, result)
         return result
 
     @staticmethod
@@ -373,16 +370,12 @@ class AgentScope:
             isinstance(receiver, ast.Attribute) and receiver.attr == "logger"
         )
 
-    @staticmethod
-    def _is_fatal_error_helper(node: ast.Call) -> bool:
-        return isinstance(node.func, ast.Attribute) and node.func.attr == "_handle_fatal_error"
-
     def _scan_log_call(self, node: ast.Call, location: str, result: ScanResult) -> None:
         if not node.args:
             return
         message = node.args[0]
         if isinstance(message, ast.Constant) and isinstance(message.value, str):
-            if self._collect_key(message.value, location, message, result):
+            if message.value.startswith("$agent."):
                 return
             text = message.value
         elif isinstance(message, ast.JoinedStr):

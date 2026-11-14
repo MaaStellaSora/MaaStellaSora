@@ -90,12 +90,43 @@ class SampleUpload:
     def _retry_path(self, marker):
         return self.directory / "retries" / marker.name
 
+    def _retry_state(self, marker):
+        try:
+            state = json.loads(self._retry_path(marker).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return {}
+        except ValueError:
+            state = None
+        if (isinstance(state, dict) and isinstance(state.get("attempts"), int)
+                and isinstance(state.get("next_attempt"), (int, float))):
+            return state
+        self.logger.debug("Tower upload %s: invalid retry metadata; retrying", marker.stem)
+        return {}
+
+    @staticmethod
+    def _recycle(path):
+        try:
+            recycle_file(path)
+        except OSError:
+            if path.exists():
+                raise
+
     def _defer(self, marker, state, permanent=False):
         attempts = state.get("attempts", 0) + 1
         delay = 1800 if permanent else min(120, 3 * 2 ** min(attempts - 1, 6))
-        write_json(self._retry_path(marker), {
-            "attempts": attempts, "next_attempt": time.time() + delay + random.uniform(0, delay * 0.25)
-        })
+        next_attempt = time.time() + delay + random.uniform(0, delay * 0.25)
+        try:
+            if not marker.exists():
+                return None  # Another uploader already received the acknowledgement.
+            write_json(self._retry_path(marker), {
+                "attempts": attempts, "next_attempt": next_attempt
+            })
+            if not marker.exists():
+                self._recycle(self._retry_path(marker))
+                return None
+        except OSError as error:
+            self.logger.debug("Tower upload %s: retry metadata unavailable: %s", marker.stem, type(error).__name__)
+        return next_attempt
 
     def flush(self):
         delay = 30
@@ -103,16 +134,25 @@ class SampleUpload:
             return delay
         # Serve the just-finished run ahead of older retries. Retry metadata stays
         # outside research data and does not change the ready marker's age.
-        for marker in sorted((self.directory / "queue").glob("*.ready.json"),
-                             key=lambda path: path.stat().st_mtime_ns, reverse=True):
+        markers = []
+        for marker in (self.directory / "queue").glob("*.ready.json"):
+            try:
+                markers.append((marker.stat().st_mtime_ns, marker))
+            except FileNotFoundError:
+                continue
+        for _, marker in sorted(markers, reverse=True):
             if not self.upload_allowed():
                 return delay
-            retry = self._retry_path(marker)
-            state = json.loads(retry.read_text(encoding="utf-8")) if retry.exists() else {}
+            try:
+                state = self._retry_state(marker)
+            except OSError as error:
+                self.logger.debug("Tower upload %s: retry metadata unavailable: %s", marker.stem, type(error).__name__)
+                continue
             remaining = state.get("next_attempt", 0) - time.time()
             if remaining > 0:
                 delay = min(delay, remaining)
                 continue
+            next_attempt = None
             try:
                 manifest = json.loads(marker.read_text(encoding="utf-8"))
                 if not self.upload_allowed(manifest):
@@ -122,15 +162,14 @@ class SampleUpload:
                 code = error.code
                 error.close()
                 self.logger.debug("Tower upload %s: HTTP %s; queued for retry", marker.stem, code)
-                self._defer(marker, state, permanent=400 <= code < 500 and code not in (408, 425, 429))
+                next_attempt = self._defer(marker, state, permanent=400 <= code < 500 and code not in (408, 425, 429))
             except (OSError, ValueError, TypeError, KeyError, sqlite3.Error, http.client.HTTPException) as error:
                 self.logger.debug("Tower upload %s: %s; queued for retry", marker.stem, type(error).__name__)
-                self._defer(marker, state)
+                next_attempt = self._defer(marker, state)
             finally:
                 with self.attempt_finished:
                     self.attempt_finished.notify_all()
-            if retry.exists():
-                next_attempt = json.loads(retry.read_text(encoding="utf-8"))["next_attempt"]
+            if next_attempt is not None:
                 delay = min(delay, max(0, next_attempt - time.time()))
             if self.wake.is_set():
                 return 0  # A newly finished run preempts older retries.
@@ -165,5 +204,7 @@ class SampleUpload:
             if not 200 <= response.status < 300:
                 raise OSError(f"接收端返回 HTTP {response.status}")
             self.logger.debug("Tower upload %s: HTTP %s", run_id, response.status)
-        recycle_file(self._retry_path(marker))
-        recycle_file(marker)
+        # Remove readiness first so a concurrent failed attempt cannot leave
+        # retry metadata behind after this acknowledgement.
+        self._recycle(marker)
+        self._recycle(self._retry_path(marker))

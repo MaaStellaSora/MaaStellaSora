@@ -3,10 +3,10 @@ import json
 from pathlib import Path
 import sqlite3
 import sys
-import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
+from tower_temp_directory import TowerTempDirectory
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
@@ -17,7 +17,7 @@ from climb_tower_neural.research_data import export_payload
 
 class TowerNeuralRecoveryTests(unittest.TestCase):
     def setUp(self):
-        temporary = tempfile.TemporaryDirectory()
+        temporary = TowerTempDirectory()
         self.addCleanup(temporary.cleanup)
         self.app_dir = Path(temporary.name)
         self.first = sampling_data.SamplingCollector(self.app_dir, Mock())

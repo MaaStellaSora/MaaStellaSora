@@ -11,8 +11,9 @@ import json
 import os
 import re
 import sqlite3
-import threading
 import sysconfig
+import threading
+import time
 import uuid
 
 from .ocr_number import assess_amount, decimal_amount
@@ -75,12 +76,32 @@ def snapshot(value):
     return None
 
 
-def write_json(path, value):
+def write_json(path, value, *, overwrite=True):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if not overwrite:
+            try:
+                if os.name == "nt":
+                    temporary.rename(path)  # Windows rename atomically refuses an existing destination.
+                else:
+                    os.link(temporary, path)
+            except FileExistsError:
+                pass  # Another instance already published its complete identity.
+            return
+        for attempt in range(6):
+            try:
+                temporary.replace(path)
+                break
+            except PermissionError as error:
+                if os.name != "nt" or error.winerror not in (5, 32) or attempt == 5:
+                    raise
+                # A reader or competing replacement briefly holds the Windows file.
+                time.sleep(.01)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def process_alive(pid):
@@ -172,14 +193,10 @@ class SamplingCollector:
             self.logger.error("$agent.custom.action.climb_tower_neural.sampling_initialize_failed", {"error": str(error)})
 
     def _load_collector(self):
-        legacy_identity = self.directory / "collector_identity.json"
         identity = self.app_dir / "config/neural_network/collector_identity.json"
         if not identity.exists():
-            value = (json.loads(legacy_identity.read_text(encoding="utf-8-sig")) if legacy_identity.exists()
-                     else {"participant_id": uuid.uuid4().hex, "created_at": timestamp()})
-            write_json(identity, value)
+            write_json(identity, {"participant_id": uuid.uuid4().hex, "created_at": timestamp()}, overwrite=False)
         self.participant_id = json.loads(identity.read_text(encoding="utf-8-sig"))["participant_id"]
-        write_json(legacy_identity, json.loads(identity.read_text(encoding="utf-8-sig")))
         self.recover_interrupted()
         interface = self.app_dir / "interface.json"
         if interface.exists():

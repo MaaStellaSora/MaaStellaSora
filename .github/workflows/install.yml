@@ -239,10 +239,12 @@ jobs:
         run: |
           ./install/python/python.exe -c "import numpy; import maa; print('Windows Python dependencies verified successfully')"
 
-      - name: Verify neural strategy dependencies on Windows x64
+      - name: Verify neural strategy dependencies and shared files on Windows x64
         if: matrix.arch == 'x86_64'
         shell: bash
-        run: ./install/python/python.exe -c "import cv2; print(cv2.__version__)"
+        run: |
+          ./install/python/python.exe -c "import cv2; print(cv2.__version__)"
+          ./install/python/python.exe -m unittest discover -s tools/checks/tests -p test_tower_neural_shared_files.py
 
       - name: Package Windows archive
         shell: bash

@@ -234,6 +234,12 @@ jobs:
           test -s install/agent/main.py
           test -s "install/runtimes/win-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/MaaFramework.dll"
 
+      - name: Apply app branding
+        shell: bash
+        run: |
+          ./install/python/python.exe tools/ci/app_branding.py install
+          test -s "install/MaaStellaSora.exe"
+
       - name: Verify Python dependencies on Windows
         shell: bash
         run: |
@@ -330,13 +336,19 @@ jobs:
           test -s install/agent/main.py
           test -s "install/runtimes/linux-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.so"
 
+      - name: Apply app branding
+        shell: bash
+        run: |
+          python tools/ci/app_branding.py install
+          test -s "install/MaaStellaSora"
+
       - name: Package Linux archive
         shell: bash
         run: |
           if [[ -f "install/MaaPiCli" ]]; then
             chmod +x "install/MaaPiCli"
           fi
-          find install -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
+          find install -type f \( -name "MFAAvalonia*" -o -name "MaaStellaSora*" \) -exec chmod +x {} \; 2>/dev/null || true
           find install -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
 
           ARCHIVE_NAME="MaaStellaSora-linux-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.tar.gz"
@@ -442,6 +454,12 @@ jobs:
           test -s install/agent/main.py
           test -s "install/runtimes/osx-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}/native/libMaaFramework.dylib"
 
+      - name: Apply app branding
+        shell: bash
+        run: |
+          ./install/python/bin/python3 tools/ci/app_branding.py install
+          test -s "install/MaaStellaSora"
+
       - name: Verify Python dependencies on macOS
         shell: bash
         run: |
@@ -453,7 +471,7 @@ jobs:
           if [[ -f "install/MaaPiCli" ]]; then
             chmod +x "install/MaaPiCli"
           fi
-          find install -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
+          find install -type f \( -name "MFAAvalonia*" -o -name "MaaStellaSora*" \) -exec chmod +x {} \; 2>/dev/null || true
           find install -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
           PYTHON_PATHS=(
             "install/python/bin/python3"

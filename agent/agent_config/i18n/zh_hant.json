@@ -187,7 +187,7 @@
     "agent.custom.action.climb_tower_neural.decision_forecast": "[神經網路] 預期 {expected_total:.2f}{options}",
     "agent.custom.action.climb_tower_neural.model_observation_failed": "[神經網路] 本局狀態未確認，已停止。",
     "agent.custom.action.climb_tower_neural.model_disabled": "[神經網路] 功能未啟用，已停止。",
-    "agent.custom.action.climb_tower_neural.bag_open_failed": "[神經網路] 未能開啟背包，已停止。",
+    "agent.custom.action.climb_tower_neural.bag_open_failed": "[神經網路] 未能開啟揹包，已停止。",
     "agent.custom.action.climb_tower_neural.preset_read_failed": "[神經網路] 預設讀取失敗：預設讀取不完整或讀數衝突",
     "agent.custom.action.climb_tower_neural.potential_return_failed": "[神經網路] 未能返回潛能頁，已停止。",
     "agent.custom.action.climb_tower_neural.run_start_unconfirmed": "[神經網路] 未確認本局開始，已停止。",

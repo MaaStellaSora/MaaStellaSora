@@ -97,7 +97,8 @@ _TRANSLATIONS = _load_translations()
 
 def translate(key: str, **variables: object) -> str:
     """Translate an inline fragment using the same language as user logs."""
-    return _TRANSLATIONS[key.removeprefix("$")].format_map(variables)
+    translation = _TRANSLATIONS.get(key.removeprefix("$"))
+    return key if translation is None else translation.format_map(variables)
 
 
 def get_logger(name: str = "custom") -> logging.Logger:

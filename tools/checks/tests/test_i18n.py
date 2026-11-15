@@ -3,10 +3,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "agent"))
 from tools.checks.check_i18n import check  # noqa: E402
+from utils import logger as logger_module  # noqa: E402
 
 
 class PipelineI18nTests(unittest.TestCase):
@@ -160,6 +163,64 @@ logger.error("$agent.example.missing")
             "unused translation for locale zh_cn: agent.example.unused",
             messages,
         )
+
+    def test_debug_only_keys_are_optional_and_not_unused(self):
+        self._write_agent_fixture(
+            """
+logger.debug("$agent.example.missing")
+self.logger.debug("$agent.example.available")
+logger.debug(translate("$agent.example.debug_fragment"))
+""",
+            {"agent.example.available": "调试信息"},
+        )
+
+        self.assertEqual(check(self.root), [])
+
+    def test_debug_does_not_exempt_a_key_used_in_user_logs(self):
+        self._write_agent_fixture(
+            """
+logger.debug("$agent.example.shared")
+logger.warning("$agent.example.shared")
+""",
+            {},
+        )
+
+        self.assertIn(
+            "missing translation for locale zh_cn: agent.example.shared",
+            [item.message for item in check(self.root)],
+        )
+
+    def test_error_mapping_and_inline_translate_still_require_coverage(self):
+        self._write_agent_fixture(
+            """
+messages = {"stop": "$agent.example.stopped"}
+logger.error(messages[reason])
+label = translate("$agent.example.label")
+""",
+            {},
+        )
+
+        self.assertCountEqual(
+            [item.message for item in check(self.root)],
+            [
+                "missing translation for locale zh_cn: agent.example.stopped",
+                "missing translation for locale zh_cn: agent.example.label",
+            ],
+        )
+
+
+class InlineTranslationTests(unittest.TestCase):
+    def test_missing_key_is_returned_unchanged(self):
+        with patch.dict(logger_module._TRANSLATIONS, {}, clear=True):
+            for key in ("$agent.example.missing", "agent.example.missing"):
+                with self.subTest(key=key):
+                    self.assertEqual(logger_module.translate(key, name="测试"), key)
+
+    def test_existing_translation_interpolates_variables(self):
+        with patch.dict(
+            logger_module._TRANSLATIONS, {"agent.example.ready": "{name}已就绪"}, clear=True
+        ):
+            self.assertEqual(logger_module.translate("$agent.example.ready", name="测试"), "测试已就绪")
 
 
 if __name__ == "__main__":

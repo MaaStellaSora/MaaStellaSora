@@ -56,6 +56,24 @@ class TowerNeuralRecoveryTests(unittest.TestCase):
         self.first.logger.error.assert_not_called()
         self.second.logger.error.assert_not_called()
 
+    def test_observations_stay_in_journal_until_the_completed_run_is_archived(self):
+        inventory = self.first.emit("note_inventory_observed", counts={"alpha": 5},
+                                    complete=True, scope_melodies=["alpha"])
+        menu = self.first.emit("event_menu_observed", question=None, choices=[], ocr_missing=["question"])
+        self.assertFalse(self.database.exists())
+        self.assertIsNone(self.first.research_store.run_status(self.run_id))
+        self.assertTrue(self.run_path.exists())
+        self.first.finish_run("settlement_saved", completion_observed=True)
+        tables = export_payload(self.database, self.run_id)["tables"]
+        records = {row["record_id"]: json.loads(row["payload_json"]) for row in tables["records"]}
+        self.assertEqual(records[self.wallet_id]["coin"], 410)
+        self.assertEqual(records[inventory]["counts"], {"alpha": 5})
+        self.assertEqual(records[menu]["ocr_missing"], ["question"])
+        self.assertTrue(any(row["record_id"] == menu and row["code"] == "missing_observation"
+                            for row in tables["quality_issues"]))
+        self.assertEqual(tables["runs"][0]["lifecycle_status"], "completed")
+        self.assertFalse(self.run_path.exists())
+
     def test_two_collectors_recovering_one_run_preserve_all_evidence(self):
         expected = self.finish_without_cleanup()
         entered = False
@@ -85,13 +103,14 @@ class TowerNeuralRecoveryTests(unittest.TestCase):
     def test_next_task_retries_its_own_closed_run_while_process_is_alive(self):
         with patch.object(self.first.research_store, "checkpoint", side_effect=sqlite3.OperationalError("busy")):
             self.first.finish_run("settlement_saved", completion_observed=True)
-        self.assertEqual(self.first.research_store.run_status(self.run_id), "open")
+        self.assertIsNone(self.first.research_store.run_status(self.run_id))
         self.second.recover_interrupted()
         self.assertTrue(self.marker.exists())
         self.first.begin_task("cn", "next")
         tables = export_payload(self.database, self.run_id)["tables"]
         self.assertEqual(tables["runs"][0]["lifecycle_status"], "completed")
-        self.assertIn(self.wallet_id, {row["record_id"] for row in tables["records"]})
+        self.assertEqual([json.loads(row["payload_json"])["coin"] for row in tables["records"]
+                          if row["record_id"] == self.wallet_id], [410])
         self.assertFalse(self.marker.exists())
 
     def test_truncated_session_tail_is_flagged_without_changing_run_evidence(self):

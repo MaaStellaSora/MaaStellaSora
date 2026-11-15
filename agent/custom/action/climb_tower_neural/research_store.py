@@ -1,17 +1,14 @@
-"""Live normalized storage; JSONL exists only as the active task/run journal."""
+"""Compact game observations; JSONL exists only as the active task/run journal."""
 import ctypes
 from contextlib import closing
 from pathlib import Path
 import sqlite3
-import time
 
 from .research_data import build_payload, import_payload
 from .sampling_journal import BAD_BYTES_SUFFIX, DAMAGE_SUFFIX
 
 
 DATABASE_FILE = "research.sqlite3"
-CHECKPOINT_RECORDS = 256
-CHECKPOINT_SECONDS = 30
 CONSENT_SOURCE = "task.attach.research_upload"
 
 
@@ -48,7 +45,6 @@ class ResearchStore:
     def __init__(self, directory):
         self.directory = Path(directory)
         self.database_path = self.directory / DATABASE_FILE
-        self._checkpoints = {}
 
     def run_status(self, run_id):
         """Distinguish a committed final archive from an active checkpoint."""
@@ -60,22 +56,10 @@ class ResearchStore:
             row = connection.execute("SELECT lifecycle_status FROM runs WHERE run_id=?", (run_id,)).fetchone()
             return row[0] if row else None
 
-    def observe(self, run_path, event_type):
-        """Checkpoint batches, while the append-only journal persists every row."""
-        path = Path(run_path)
-        count, previous = self._checkpoints.get(path.stem, (0, time.monotonic()))
-        count += 1
-        now = time.monotonic()
-        self._checkpoints[path.stem] = (count, previous)
-        if event_type != "exploration_end" and (event_type in ("exploration_start", "exploration_start_confirmed")
-                or count >= CHECKPOINT_RECORDS or now - previous >= CHECKPOINT_SECONDS):
-            self.checkpoint(path)
-
     def checkpoint(self, run_path):
-        """Commit all evidence and quality together, using the shared converter."""
+        """Commit state-space observations and quality together."""
         path = Path(run_path)
         import_payload(self.database_path, build_payload(path))
-        self._checkpoints[path.stem] = (0, time.monotonic())
 
     def release_run(self, run_path):
         """Recycle an open marker and its journal once the run is committed."""
@@ -85,7 +69,6 @@ class ResearchStore:
         recycle_file(path.with_suffix(BAD_BYTES_SUFFIX))
         recycle_file(path.with_suffix(DAMAGE_SUFFIX))
         recycle_file(self.directory / "queue" / f"{path.stem}.open.json")
-        self._checkpoints.pop(path.stem, None)
 
     def release_session(self, session_id):
         """Keep one task's preset evidence available to all its consecutive runs."""

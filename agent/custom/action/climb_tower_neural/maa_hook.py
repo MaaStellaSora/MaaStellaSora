@@ -57,8 +57,7 @@ class ValueModelRuntime:
         self.ui_logs = ModelLogFilter()
         self.owned_cache = OwnedPotentials()
         self.collector = SamplingCollector(
-            self.app_dir, get_logger(f"{__package__}.sampling"), self.root,
-            owned_provider=lambda: self.owned_cache,
+            self.app_dir, get_logger(f"{__package__}.sampling"),
         )
         self.task_open = False
         self.collection_enabled = self.collector.enabled
@@ -193,7 +192,7 @@ class ValueModelRuntime:
                 return False
             if preset is None:
                 try:
-                    party = read_bag_party(context, language, self.collector.capture_preset)
+                    party = read_bag_party(context, language)
                     if context.tasker.stopping:
                         return False
                     preset = compile_bag_preset(party, language, read(self.root / "potential_name_catalog.json"))

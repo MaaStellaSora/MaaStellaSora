@@ -221,8 +221,7 @@ def run_model_shop(action_handler, context, argv, runtime):
         transaction = dict(operation_id=uuid.uuid4().hex, stock_scan_id=runtime.collector.stock_scan_id,
                            item=snapshot(item), source_type=source)
         before_coin = data.current_coin
-        runtime.collector.emit("purchase_attempt", phase="before", coins=before_coin,
-                               owned=runtime.collector.owned(), **transaction)
+        runtime.collector.emit("purchase_attempt", phase="before", coins=before_coin, **transaction)
         purchase = dict(operation_id=transaction["operation_id"], source_type=source,
                         item=item, committed=False)
         tracker.pending_shop_purchase = purchase
@@ -255,7 +254,7 @@ def run_model_shop(action_handler, context, argv, runtime):
                 wallet_evidence["wallets"], before_wallet=wallet_evidence["before_wallet"],
                 pipeline_wallet=runtime.collector.last_wallet)
             runtime.collector.emit("purchase_result", phase="after", success=succeeded,
-                pipeline_succeeded=pipeline_succeeded, owned=runtime.collector.owned(), **fields, **transaction)
+                pipeline_succeeded=pipeline_succeeded, **fields, **transaction)
             if not succeeded:
                 return stop_for_missing(["purchase_confirmation"], reason="shop_action_unconfirmed")
             if purchase.get("return_page") == BY_NAME["shop_main"].node:

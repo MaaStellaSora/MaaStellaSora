@@ -3,8 +3,6 @@ from copy import deepcopy
 import re
 import uuid
 
-import cv2
-
 from .interactor import Interactor
 
 from .note_floor import read_floor_observation
@@ -24,7 +22,6 @@ class NoteRuntime:
         self.setup = None
         self.floor = None
         self.mode = "field"
-        self.snapshot_index = 0
         self.last_floor_observation = None
         self.bag_inventory = None
         self.bag_inventory_revision = None
@@ -44,7 +41,7 @@ class NoteRuntime:
     def reset(self):
         self.finish("task_restart")
         self.ledger, self.setup, self.floor = None, None, None
-        self.mode, self.snapshot_index = "field", 0
+        self.mode = "field"
         self.last_floor_observation = None
         self.bag_inventory = None
         self.bag_inventory_revision = None
@@ -83,21 +80,6 @@ class NoteRuntime:
     def _image(self, image):
         return image if image.shape[:2] == (720, 1280) else normalize_image(image)
 
-    def _save_image(self, image, label):
-        if not self.collector.enabled or not self.collector.config.get("capture_note_screenshots", False):
-            return None
-        self.snapshot_index += 1
-        run_id = self.ledger.run_id
-        folder = self.collector.directory / "screenshots" / str(run_id)
-        try:
-            folder.mkdir(parents=True, exist_ok=True)
-            target = folder / f"{self.snapshot_index:04d}_{label}.png"
-            cv2.imencode(".png", image)[1].tofile(target)
-        except OSError as error:
-            self.collector.logger.error("$agent.custom.action.climb_tower_neural.sampling_record_failed", {"error": str(error)})
-            return None
-        return target.relative_to(self.runtime.app_dir).as_posix()
-
     def read_start_setup(self, context, image, node, box):
         """Read supply while the recognized start button still holds this page."""
         image = self._image(image)
@@ -133,7 +115,7 @@ class NoteRuntime:
         if not self.observing or setup is None:
             return None
         self.ledger = NoteLedger()
-        self.mode, self.floor, self.snapshot_index = "field", 1, 0
+        self.mode, self.floor = "field", 1
         image = self._image(image)
         self.bag_inventory = None
         self.bag_inventory_revision = None
@@ -144,7 +126,6 @@ class NoteRuntime:
             run_id=self._run_id(),
             main_discs=self.setup["main_discs"], setup_complete=self.setup["complete"]))
         self._record("note_setup_observed", **self.setup,
-                            image_path=self._save_image(image, "setup"),
                             probability_eligible=self.setup["complete"])
         self._emit(self.ledger.begin_battle("battle_1", floor=1,
             floor_complete=True, floor_source="new_run_start"))
@@ -204,8 +185,7 @@ class NoteRuntime:
                                               if key not in {"inventory", "complete"}})
         self.setup["bag_setup_complete"] = observed["complete"]
         self.setup["complete"] = observed["complete"] and self.setup.get("supply_complete", True)
-        self._record("note_bag_setup_observed", **observed,
-                     image_path=self._save_image(image, "bag_setup"))
+        self._record("note_bag_setup_observed", **observed)
         return observed
 
     def _expected_floors(self, page):
@@ -329,8 +309,7 @@ class NoteRuntime:
         restored = continue_box is None or bool(continue_box)
         if not observation.get("bar_present", False):
             self._record("note_inventory_skipped", page=layout,
-                reason=observation.get("bar_reason"), floor=None,
-                image_path=self._save_image(image, f"{layout}_skipped") if self.ledger else None)
+                reason=observation.get("bar_reason"), floor=None)
             return None, restored, False
         floor_observation = self._read_floor(context, image, layout, floor, observation=floor_observation)
         floor = floor_observation["floor"]
@@ -369,8 +348,7 @@ class NoteRuntime:
             self._battle(None, floor_observation)
         row = self.ledger.observe(observation, page=layout)
         row.update(floor=floor, floor_complete=floor_observation["complete"],
-            floor_observation=floor_observation, last_confirmed_floor=self.floor,
-            image_path=self._save_image(image, layout), derived_concertos=self.derived_concertos())
+            floor_observation=floor_observation, last_confirmed_floor=self.floor)
         self._emit(row)
         pending = self.ledger.pending
         if restored and layout == "result" and pending and pending["source_type"] in {"event", "combined_interval"}:
@@ -392,8 +370,7 @@ class NoteRuntime:
                     and not re.search(text_rules(context, "event")["potential"],
                                       last_event.get("consequence", ""), re.I)):
                 page_id = self._record("note_stable_page_observed", page="potential",
-                    source_basis="main_pipeline_confirmed_potential_page",
-                    image_path=self._save_image(self._image(image), "stable_potential"))
+                    source_basis="main_pipeline_confirmed_potential_page")
                 self._emit(self.ledger.combine_event_battle(
                     f"battle_{floor}" if floor is not None else f"battle_stable_{uuid.uuid4().hex}",
                     floor=floor, floor_complete=floor is not None, floor_observation=floor_observation,
@@ -407,8 +384,7 @@ class NoteRuntime:
                     floor is None or floor in pending["metadata"].get("event_floor_candidates", [])):
                 return True, False
             page_id = self._record("note_stable_page_observed", page="potential",
-                source_basis="main_pipeline_confirmed_potential_page",
-                image_path=self._save_image(self._image(image), "stable_potential"))
+                source_basis="main_pipeline_confirmed_potential_page")
             self._emit(self.ledger.combine_event_battle(
                 f"battle_{floor}" if floor is not None else f"battle_stable_{uuid.uuid4().hex}",
                 floor=floor, floor_complete=floor is not None, floor_observation=floor_observation,
@@ -528,8 +504,7 @@ class NoteRuntime:
         if page == "stable_battle_reward" and pending.get("required_scope"):
             # A spend result that cannot settle the scope waits for a stable offer.
             return None, True, False
-        observation, restored = read_full_inventory(context, scope,
-            capture_skill_page=lambda image: self._save_image(image, f"event_{phase}_bag"))
+        observation, restored = read_full_inventory(context, scope)
         if observation is not None:
             if phase == "after":
                 before_scope = pending["before"]["scope_melodies"]
@@ -538,9 +513,7 @@ class NoteRuntime:
                     after_scope_melodies=list(after_scope),
                     unobserved_before_melodies=[key for key in after_scope if pending["before"]["counts"][key] is None])
             row = self.ledger.observe(observation, page=self._bag_page(observation))
-            row.update(floor=None, floor_complete=False, last_confirmed_floor=self.floor,
-                       image_path=observation.get("skill_image_path"),
-                       derived_concertos=self.derived_concertos())
+            row.update(floor=None, floor_complete=False, last_confirmed_floor=self.floor)
             self._emit(row)
         self._record("note_bag_inventory_read", phase=phase, operation_id=pending["operation_id"],
             complete=bool(observation and observation["complete"]), bag_closed=restored, page=page,
@@ -643,8 +616,7 @@ class NoteRuntime:
         self.finish("settlement")
         self._record("note_settlement_observed", **actual,
             counts=inventory["counts"] if inventory else None,
-            scope_melodies=self.ledger.current_observation["scope_melodies"] if inventory else [],
-            derived_concertos=self.derived_concertos())
+            scope_melodies=self.ledger.current_observation["scope_melodies"] if inventory else [])
         return actual
 
     def derived_concertos(self):

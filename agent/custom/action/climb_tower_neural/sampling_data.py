@@ -1,4 +1,4 @@
-"""Run/session observations with linked OCR readings and original game evidence."""
+"""Run-scoped game observations and confirmed actions for state-space research."""
 from collections import defaultdict
 from contextlib import closing, contextmanager
 from contextvars import ContextVar
@@ -11,7 +11,6 @@ import json
 import os
 import re
 import sqlite3
-import sysconfig
 import threading
 import time
 import uuid
@@ -19,14 +18,15 @@ import uuid
 from .ocr_number import assess_amount, decimal_amount
 
 from .event_mapping import has_potential_reward
-from .sampling_evidence import ObservedInventory, ReadEvidence, raw_ocr, recognition_roi
+from .sampling_evidence import ObservedInventory, ReadEvidence, observation_signature, raw_ocr, recognition_roi
 from .name_matching import clean_name, identity_key, match_name
+from .research_data import compact_preset, compact_record
 from .research_store import DATABASE_FILE, ResearchStore, valid_upload_consent
 from .sampling_journal import JournalRollbackError, append_record, repair_journal, rollback
 
 
-VERSION = "maa-run-observations-20261113.1"
-SCHEMA_VERSION = 3
+VERSION = "maa-run-observations-20261115.1"
+SCHEMA_VERSION = 4
 SKIP_FIELDS = {"image", "raw_image", "draw_images", "layout", "potential_layouts"}
 LINK_FIELDS = {"operation_id", "origin_operation_id", "offer_id", "reward_chain_id",
                "stock_scan_id", "shop_visit_id", "event_id", "source_type"}
@@ -76,21 +76,12 @@ def snapshot(value):
     return None
 
 
-def write_json(path, value, *, overwrite=True):
+def write_json(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
     try:
         temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        if not overwrite:
-            try:
-                if os.name == "nt":
-                    temporary.rename(path)  # Windows rename atomically refuses an existing destination.
-                else:
-                    os.link(temporary, path)
-            except FileExistsError:
-                pass  # Another instance already published its complete identity.
-            return
         for attempt in range(6):
             try:
                 temporary.replace(path)
@@ -124,9 +115,8 @@ def process_alive(pid):
 
 
 class SamplingCollector:
-    def __init__(self, app_dir, logger, module_root=None, owned_provider=None):
+    def __init__(self, app_dir, logger):
         self.app_dir, self.logger = Path(app_dir), logger
-        self.module_root = Path(module_root) if module_root else None
         config = self.app_dir / "agent/agent_config/tower_sampling.json"
         try:
             self.config = json.loads(config.read_text(encoding="utf-8-sig")) if config.exists() else {}
@@ -142,7 +132,6 @@ class SamplingCollector:
         self.task_id = None
         self.sequence = 0
         self.lock = threading.RLock()
-        self.owned_provider = owned_provider or (lambda: ())
         self._read = ContextVar("tower_sampling_read", default=None)
         self._operations = []
         self._purchase_wallets = {}
@@ -153,7 +142,9 @@ class SamplingCollector:
         self.last_observed_floor_context = None
         self._pending_potential_floor = None
         self._potential_floor_reads = {}
-        self.last_preset_frame = None
+        self._last_pool_observation = None
+        self._initial_pool_order_evidence = []
+        self._observations = {}
         self.tracker = None
         self.preset = None
         self.preset_id = None
@@ -176,8 +167,6 @@ class SamplingCollector:
         self.event_question = ""
         self.stock_scan_id = None
         self.upload = None
-        self.runtime_versions = {}
-        self.participant_id = None
 
     def context(self, context):
         from .tower_sampling_collector import SamplingContext
@@ -193,22 +182,7 @@ class SamplingCollector:
             self.logger.error("$agent.custom.action.climb_tower_neural.sampling_initialize_failed", {"error": str(error)})
 
     def _load_collector(self):
-        identity = self.app_dir / "config/neural_network/collector_identity.json"
-        if not identity.exists():
-            write_json(identity, {"participant_id": uuid.uuid4().hex, "created_at": timestamp()}, overwrite=False)
-        self.participant_id = json.loads(identity.read_text(encoding="utf-8-sig"))["participant_id"]
         self.recover_interrupted()
-        interface = self.app_dir / "interface.json"
-        if interface.exists():
-            # Only public software versions, never the app's instance/account settings.
-            import jsonc
-            data = jsonc.loads(interface.read_text(encoding="utf-8-sig"))
-            self.runtime_versions = {key: data[key] for key in ("version", "interface_version") if key in data}
-        self.runtime_versions["python_platform"] = sysconfig.get_platform()
-        rules = (self.module_root or Path(__file__).resolve().parent) / "note_rules.json"
-        self.runtime_versions["note_rules_sha256"] = hashlib.sha256(rules.read_bytes()).hexdigest()
-        self.emit("collector_loaded", supported_languages=["cn", "jp"],
-                  capture="all visible tower OCR and actions; local UI boundaries; no images or server IDs")
         self.logger.debug("Tower game recording enabled")
 
     def _safe(self, value):
@@ -228,8 +202,8 @@ class SamplingCollector:
         try:
             with self.lock:
                 if not self.run_confirmed and event_type not in {
-                        "collector_loaded", "task_start", "task_end", "exploration_start",
-                        "exploration_start_attempt", "exploration_start_confirmed", "exploration_end"}:
+                        "task_start", "task_end", "exploration_start",
+                        "exploration_start_confirmed", "exploration_end"}:
                     return
                 # A potential-bearing event can instead roll a non-potential
                 # outcome. Once a real scene boundary is seen, its next reward
@@ -242,21 +216,33 @@ class SamplingCollector:
                             and payload.get("complete") and self.event and self.event["clicked"])
                         or (event_type == "lifecycle_observed" and payload.get("lifecycle_type") == "shop_entry")):
                     self._clear_event_reward()
+                if event_type not in {"task_start", "task_end"}:
+                    header = {key: payload[key] for key in ("original_preset", "target_vector") if key in payload}
+                    payload = compact_record(event_type, snapshot(payload))
+                    if payload is None:
+                        return
+                    payload.update(header)
+                key = event_type, payload.get("page")
+                previous = self._observations.get(key)
+                signature = (observation_signature(payload) if event_type in {
+                    "note_floor_observed", "note_inventory_observed", "note_inventory_skipped"} else None)
+                if previous and signature == previous["signature"] and not self._pending_journal_gap:
+                    if event_type == "note_floor_observed":
+                        self._remember_floor(payload, previous["record_id"], previous["timestamp"])
+                    return previous["record_id"]
                 sequence = self.sequence + 1
                 run_id = self.run["run_id"] if self.run else None
                 run_sequence = self.run["record_count"] + 1 if self.run else None
                 row = dict(schema_version=SCHEMA_VERSION, collector_version=VERSION, event_type=event_type,
                            record_type=event_type, timestamp=timestamp(), record_id=uuid.uuid4().hex,
-                           participant_id=self.participant_id, session_id=self.session_id,
+                           session_id=self.session_id,
                            task_id=self.task_id, run_id=run_id, exploration_id=run_id,
                            sequence=sequence, run_sequence=run_sequence,
                            lang_type=self.language, observer="maa_local_UI_and_cached_OCR",
-                           policy_mode=self.policy_mode,
                            server_confirmed=False, preset_id=self.preset_id,
-                           target_vector_complete=self.target_vector is not None,
-                           target_vector=self.target_vector)
+                           target_vector_complete=self.target_vector is not None)
                 row.update(payload)
-                row.update(participant_id=self.participant_id, session_id=self.session_id,
+                row.update(session_id=self.session_id,
                            task_id=self.task_id, run_id=run_id, exploration_id=run_id,
                            sequence=sequence, run_sequence=run_sequence)
                 folder = self.directory / ("runs" if run_id else "sessions")
@@ -297,27 +283,30 @@ class SamplingCollector:
                                               {"error": str(marker_error)})
                     raise
                 self._pending_journal_gap = None
+                if signature is not None:
+                    self._observations[key] = dict(signature=signature, record_id=row["record_id"], timestamp=row["timestamp"])
                 if event_type in ("note_run_started", "note_inventory_observed"):
                     self.last_note_state_record_id = row["record_id"]
                 if event_type == "note_floor_observed":
-                    floor = (dict(floor=payload["floor"], record_id=row["record_id"],
-                                  page=payload.get("page"), source="floor_hud", timestamp=row["timestamp"])
-                             if payload.get("complete") and payload.get("source") == "floor_hud"
-                             and payload.get("floor") is not None else None)
-                    if floor:
-                        self.last_observed_floor_context = floor
-                    if payload.get("page") == "potential":
-                        self._pending_potential_floor = floor
+                    self._remember_floor(payload, row["record_id"], row["timestamp"])
                 try:
-                    if self.run:
-                        self.research_store.observe(path, event_type)
-                    elif event_type == "task_end":
+                    if not self.run and event_type == "task_end":
                         self.research_store.release_session(self.session_id)
                 except (OSError, TypeError, ValueError, sqlite3.Error) as error:
                     self.logger.error("$agent.custom.action.climb_tower_neural.sampling_database_failed", {"error": str(error)})
                 return row["record_id"]
         except (OSError, TypeError, ValueError) as error:
             self.logger.error("$agent.custom.action.climb_tower_neural.sampling_record_failed", {"error": str(error)})
+
+    def _remember_floor(self, payload, record_id, observed_at):
+        floor = (dict(floor=payload["floor"], record_id=record_id, page=payload.get("page"),
+                      source="floor_hud", timestamp=observed_at)
+                 if payload.get("complete") and payload.get("source") == "floor_hud"
+                 and payload.get("floor") is not None else None)
+        if floor:
+            self.last_observed_floor_context = floor
+        if payload.get("page") == "potential":
+            self._pending_potential_floor = floor
 
     def new_read(self, kind, **links):
         parent = self._read.get()
@@ -331,32 +320,6 @@ class SamplingCollector:
             self._potential_floor_reads[read.read_id] = self._pending_potential_floor
         self._pending_potential_floor = None
         return read
-
-    def capture_preset(self, event, image, **metadata):
-        """Keep frame/crop coordinates; source pixels are an opt-in local aid."""
-        if not self.enabled or not self.run_confirmed:
-            return
-        if event == "preset_screenshot":
-            record_id = uuid.uuid4().hex
-            self.last_preset_frame = dict(source_frame_id=record_id)
-            if self.config.get("capture_preset_screenshots", False):
-                import cv2
-                folder = self.directory / "screenshots" / "presets" / self.session_id
-                try:
-                    folder.mkdir(parents=True, exist_ok=True)
-                    target = folder / f"{record_id}.png"
-                    cv2.imencode(".png", image)[1].tofile(target)
-                except OSError as error:
-                    self.logger.error("$agent.custom.action.climb_tower_neural.sampling_record_failed", {"error": str(error)})
-                else:
-                    self.last_preset_frame["source_image_path"] = target.relative_to(self.app_dir).as_posix()
-            self.emit(event, record_id=record_id,
-                      image_path=self.last_preset_frame.get("source_image_path"),
-                      coordinate_space="maa_client_1280x720",
-                      image_size=[image.shape[1], image.shape[0]], **metadata)
-        elif event == "preset_level_crop":
-            self.emit(event, **(self.last_preset_frame or {}),
-                      coordinate_space="maa_client_1280x720", **metadata)
 
     @property
     def current_read(self):
@@ -415,17 +378,9 @@ class SamplingCollector:
         locator = read.recognition_by_id(locator_id) if read else None
         if locator:
             origin["source_locator_record_id"] = locator["record_id"]
-        recognition_links = dict(links)
-        recognition_links.update({key: origin[key] for key in (
-            "coordinate_space", "source_coordinate_space", "source_node", "source_roi", "input_scale",
-            "purpose", "preprocessing", "source_locator_reco_id", "source_locator_record_id",
-            "detected_text_roi", "padding") if key in origin})
-        if native_reco_id is not None:
-            recognition_links["native_reco_id"] = native_reco_id
-        record_id = self.emit("context_run_recognition", phase="after", node_name=entry,
-                              lang_type=language, method="run_recognition", roi=roi,
-                              arguments=snapshot(args), keyword_arguments=snapshot(kwargs),
-                              raw_result=raw, **recognition_links)
+        # OCR attempts support the current read in memory. Persist its game
+        # value and quality at the business boundary, rather than every poll.
+        record_id = uuid.uuid4().hex
         if read:
             read.recognitions.append(dict(record_id=record_id, node_name=entry, roi=roi, raw_result=raw,
                 native_reco_id=native_reco_id, purpose=origin.get("purpose"), source_locator_reco_id=locator_id))
@@ -445,22 +400,27 @@ class SamplingCollector:
                 values.update(row["coin"] for row in (previous, wallet) if row.get("coin_complete"))
                 if len(values) > 1 or previous["recognition_status"] == "conflict":
                     wallet.update(coin=None, coin_complete=False, recognition_status="conflict", conflicts=sorted(values))
-            wallet_id = self.emit("wallet_observed", node_name=entry, **wallet,
-                preceding_event_id=self.event["event_id"] if self.event else None,
-                recognition_record_id=record_id, raw_result=raw,
-                source_node=origin.get("source_node", entry), source_roi=origin.get("source_roi", roi),
-                preprocessing=origin.get("preprocessing", "original"),
-                **{key: origin[key] for key in ("purpose", "source_locator_reco_id", "source_locator_record_id",
-                    "detected_text_roi", "padding") if key in origin}, **links)
+            observed = {key: wallet[key] for key in ("coin", "coin_complete", "recognition_status", "conflicts")
+                        if key in wallet}
+            if not wallet["coin_complete"]:
+                values = list(dict.fromkeys(wallet["values"] + wallet["raw_values"]))
+                if values:
+                    observed["unresolved_values"] = values
+            context = {key: links.get(key) for key in ("operation_id", "offer_id", "reward_chain_id", "shop_visit_id")}
+            context["preceding_event_id"] = self.event["event_id"] if self.event else None
+            signature = ({key: value for key, value in observed.items() if key != "unresolved_values"}, context)
+            wallet_id = (previous["record_id"] if previous and previous.get("signature") == signature else
+                self.emit("wallet_observed", **observed, **context,
+                          read_id=read.read_id if read else None))
             self.last_wallet = dict(**wallet, record_id=wallet_id, recognition_record_id=record_id,
-                **{key: origin[key] for key in ("purpose", "source_locator_reco_id", "source_locator_record_id") if key in origin}, **links)
+                                    signature=signature, **links)
             with self.lock:
                 purchase = self._purchase_wallets.get(links.get("operation_id"))
                 if purchase is not None:
                     purchase["wallets"].append(self.last_wallet)
 
     def owned_fields(self):
-        return dict(self.inventory.fields(), maa_owned_cache=self.owned(), maa_owned_complete=False)
+        return self.inventory.fields()
 
     def begin_task(self, language, strategy):
         self.finish_at_boundary("task_restarted")
@@ -481,10 +441,12 @@ class SamplingCollector:
         self.names.clear()
         self.local_names.clear()
         self.start_pending = False
-        self.last_preset_frame = None
         self.last_observed_floor_context = None
         self._pending_potential_floor = None
         self._potential_floor_reads.clear()
+        self._last_pool_observation = None
+        self._initial_pool_order_evidence = []
+        self._observations.clear()
         self.reward = self.pending_selection = self.event = None
         self.event_question = ""
         self.emit("task_start", strategy=strategy, observation_policy="stable_pages_only_v1")
@@ -494,9 +456,12 @@ class SamplingCollector:
             return
         if self.run:
             tracker.run_id = self.run["run_id"]
-        self.preset, self.tracker = snapshot(preset), tracker
+        self.preset, self.tracker = compact_preset(snapshot(preset)), tracker
         self.policy_mode = "model"
         self.target_vector = [level for pool in preset["pools"] for level in pool]
+        self._initial_pool_order_evidence = [{key: row[key] for key in (
+            "role", "character_id", "quality", "region", "status", "basis") if key in row}
+            for row in preset.get("pool_order_evidence", [])]
         identities = []
         self.names.clear()
         self.local_names.clear()
@@ -515,16 +480,17 @@ class SamplingCollector:
         key = [{"role": m["role"], "character_id": m["character_id"], "targets": m["targets"]}
                for m in preset["party"]]
         self.preset_id = hashlib.sha256(json.dumps(key, sort_keys=True, ensure_ascii=True).encode()).hexdigest()
-        self.emit("preset_observed", original_preset=self.preset,
-                  source="in_game_bag_targets_OCR" if "bag_party" in preset else "in_game_current_preset_OCR",
-                  model_versions=snapshot(tracker.model.versions))
+        self.emit("preset_observed", original_preset=self.preset, target_vector=self.target_vector,
+                  source="in_game_bag_targets_OCR" if "bag_party" in preset else "in_game_current_preset_OCR")
 
     def initialize_bag_inventory(self, preset):
         """Import the complete visible stock without requiring unnamed non-target IDs."""
         if not self.ensure_run("bag_inventory_observed"):
             return
         self.inventory.initialize_bag_inventory(preset["initial_inventory"])
-        self.emit("bag_inventory_observed", original_bag_party=preset.get("bag_party"),
+        self.emit("bag_inventory_observed", original_bag_party=[
+            {key: member[key] for key in ("role", "obtained_count") if key in member}
+            for member in preset.get("bag_party", [])],
             source="visible_bag_inventory", **self.owned_fields())
 
     def start_intent(self, node):
@@ -537,8 +503,6 @@ class SamplingCollector:
             if not self.enabled:
                 return
             self._start_run(node)
-            self.run["start_attempt_record_id"] = self.emit("exploration_start_attempt", node_name=node,
-                start_status="awaiting_entry", full_run_start_observed=False)
             return self.run["run_id"]
 
     def confirm_start(self, evidence):
@@ -571,7 +535,7 @@ class SamplingCollector:
         run_id = uuid.uuid4().hex
         if self.tracker:
             self.tracker.run_id = run_id
-        self.run = dict(run_id=run_id, session_id=self.session_id, participant_id=self.participant_id,
+        self.run = dict(run_id=run_id, session_id=self.session_id,
                         pid=os.getpid(), started_at=timestamp(), record_count=0,
                         full_run_start_observed=False, awaiting_start=self.start_pending, language=self.language,
                         unresolved_candidate_count=0)
@@ -584,6 +548,8 @@ class SamplingCollector:
         self.last_observed_floor_context = None
         self._pending_potential_floor = None
         self._potential_floor_reads.clear()
+        self._last_pool_observation = None
+        self._observations.clear()
         self.reward = self.pending_selection = self.event = None
         self.event_question = ""
         self.stock_scan_id = None
@@ -593,18 +559,15 @@ class SamplingCollector:
             write_json(self.directory / "queue" / f"{run_id}.open.json", self.run)
         except OSError as error:
             self.logger.error("$agent.custom.action.climb_tower_neural.sampling_marker_open_failed", {"error": str(error)})
-        self.emit("exploration_start", full_run_start_observed=self.run["full_run_start_observed"],
+        self.run["start_attempt_record_id"] = self.emit("exploration_start", full_run_start_observed=self.run["full_run_start_observed"],
                   observation_policy="stable_pages_only_v1",
                   resumed=False, boundary_evidence=evidence, start_status="awaiting_entry",
-                  original_preset=self.preset, runtime_versions=self.runtime_versions,
-                  model_versions=snapshot(self.tracker.model.versions) if self.tracker else None,
+                  original_preset=self.preset, target_vector=self.target_vector,
                   **self.owned_fields())
 
-    def owned(self):
-        return [self.potential(p) for p in self.owned_provider()]
-
     def potential(self, potential, *, name_readings=()):
-        row = snapshot(potential)
+        value = snapshot(potential)
+        row = {key: value[key] for key in ("index", "name", "rarity", "old_level", "new_level") if key in value}
         role = getattr(getattr(potential, "trekker", None), "index", -1) + 1
         resolution = match_name(row.get("name", ""), self.names, role=role or None,
                                 rarity=row.get("rarity"), preferred=self.local_names, party_bound=True)
@@ -684,10 +647,12 @@ class SamplingCollector:
                 return
             if self.pending_selection:
                 self.inventory.uncertain("take_not_confirmed", offer_id=self.pending_selection["offer_id"])
+            final_inventory = self.owned_fields()
+            final_inventory["final_owned"] = final_inventory.pop("owned")
             end_record = self.emit("exploration_end", completion_observed=completion_observed, reason=reason,
-                      final_owned=self.inventory.fields()["owned"], **self.owned_fields(),
-                      settlement=settlement, tracker_estimate=self.inferred_state(),
-                      last_wallet_observation=self.last_wallet,
+                      **final_inventory,
+                      settlement=settlement,
+                      last_wallet_observation_id=(self.last_wallet or {}).get("record_id"),
                       pending_selection=snapshot(self.pending_selection),
                       full_run_start_observed=self.run["full_run_start_observed"])
             manifest = dict(self.run, ended_at=timestamp(), reason=reason,
@@ -831,7 +796,7 @@ class SamplingCollector:
                 row.update(schema_version=SCHEMA_VERSION, collector_version=VERSION,
                            event_type="exploration_end", record_type="exploration_end", record_id=uuid.uuid4().hex,
                            run_id=manifest["run_id"], exploration_id=manifest["run_id"],
-                           session_id=manifest["session_id"], participant_id=manifest["participant_id"],
+                           session_id=manifest["session_id"],
                            sequence=max(last.get("sequence", 0), manifest.get("last_sequence", 0)) + 1,
                            run_sequence=max(last.get("run_sequence") or count, manifest["record_count"]) + 1,
                            timestamp=timestamp(), reason=reason, observer="local_log_recovery",
@@ -954,13 +919,11 @@ class SamplingCollector:
             if p["canonical_rarity"] is not None and p["rarity"] != p["canonical_rarity"]:
                 errors.append("rarity_catalog_conflict")
             p.update(slot=slot, initial_level=p["offered_level_after"] if p["is_new"] else None,
-                     server_raw_increment=None, raw_ocr=dict(name=raw_ocr(name), level=raw_ocr(level)),
-                     name_roi=name_roi or (name[0]["roi"] if name else None),
-                     level_roi=level_roi or (level[0]["roi"] if level else None),
-                     level_regions=[dict(node_name=r["node_name"], roi=r["roi"], recognition_record_id=r["record_id"], raw=raw_ocr([r])) for r in level],
-                     recognition_record_ids=[r["record_id"] for r in name+level],
                      recognition_status="ok" if not errors else "unresolved",
                      recognition_errors=errors)
+            if errors:
+                p["unresolved_values"] = {key: list(dict.fromkeys(row.get("text", "") for row in raw_ocr(records)))
+                    for key, records in (("name", name), ("level", level)) if records}
         unresolved = sum(p["recognition_status"] != "ok" for p in candidates)
         read_complete = bool(candidates) and unresolved == 0
         fingerprint = [(identity_key(p) or p["name"], p["role"], p["rarity"],
@@ -983,29 +946,30 @@ class SamplingCollector:
         floor_basis = ("same_potential_callback_floor_hud" if floor_observation and not page["refresh_index"]
                        else "same_reward_chain_floor_hud" if floor_observation
                        else "not_observed_on_this_reward_chain")
+        signature = (candidates, consistent, conflicts, data.current_coin, data.refresh_cost, floor_observation)
+        if repeated and page.get("observed_signature") == signature:
+            return offer_id
+        page["observed_signature"] = signature
         self.emit("offer_reobserved" if repeated else "offer_observed", offer_id=offer_id,
                   offer_index=page["offer_index"], reward_chain_id=chain["reward_chain_id"],
                   refresh_index=page["refresh_index"], refresh_parent_offer_id=page["refresh_parent_offer_id"],
                   refresh_operation_id=page["refresh_operation_id"], maa_refresh_count=data.refresh_count,
                   page_generation_basis="successful_refresh" if page["refresh_index"] else "new_reward_after_confirmed_take_or_run_start",
                   same_page_read_index=page["observation_count"], recognition_consistent=consistent,
-                  read_id=read.read_id, recognition_record_ids=read.record_ids,
+                  read_id=read.read_id,
                   origin_operation_id=chain["origin_operation_id"],
                   source_raw=source_raw, source_type=source_raw, **source_fields,
                   level_upped=data.level_upped, core_potential=data.core_potential,
                   candidates=candidates, candidate_read_complete=read_complete,
                   candidates_complete=read_complete,
                   recognition_status="ok" if read_complete and consistent else "unresolved",
-                  raw_rarity=list(data.potential_rarities),
                   level_basis="Maa_core_0_to_1_convention" if data.core_potential else "card_level_OCR",
-                  inventory_conflicts=conflicts, **self.owned_fields(),
+                  inventory_conflicts=conflicts,
                   main_trekker_index=0, trekker_index_basis="game_preset_party_roles",
                   coin=data.current_coin, refresh_price=data.refresh_cost,
                   floor=floor_observation["floor"] if floor_observation else None,
                   floor_basis=floor_basis,
                   floor_observation_id=floor_observation["record_id"] if floor_observation else None,
-                  last_observed_floor_context=self.last_observed_floor_context,
-                  state=snapshot(data), tracker_estimate=self.inferred_state(),
                   preceding_event_id=self.event["event_id"] if self.event else None,
                   preceding_event_relation=("confirmed_event_choice_reward_chain" if source_fields["source"] == "event"
                                             else "last_observed_event_not_reward_attribution"))
@@ -1031,7 +995,7 @@ class SamplingCollector:
             reward_chain_id=self.reward["reward_chain_id"], selected=selected,
             source_type=self.reward["source"], source_raw=self.reward["source"],
             **self.reward["source_fields"])
-        self.emit("selection_cache", **self.pending_selection, **self.owned_fields(),
+        self.emit("selection_cache", **self.pending_selection,
                   operation_confirmed=False, cache_timing="before_final_take_button_confirmation")
 
     @staticmethod
@@ -1048,14 +1012,12 @@ class SamplingCollector:
         if not self.pending_selection:
             return
         record_id = uuid.uuid4().hex
-        previous = self.inventory.fields()
         self.pending_selection["selection_observation_complete"] = self.inventory.confirm(
             self.pending_selection["selected"], record_id)
         self.emit("selection_ui_transition_observed", **self.pending_selection,
-                  record_id=record_id, owned_before=previous["owned"],
-                  owned_before_complete=previous["owned_complete"],
+                  record_id=record_id,
                   operation_confirmed=True, confirmation_basis=evidence,
-                  observed_state_after=self.owned(), **self.owned_fields())
+                  owned_complete=self.inventory.complete, owned_issues=list(self.inventory.issues))
         self.pending_selection = None
         if self.reward:
             self.reward["closed"] = True
@@ -1069,38 +1031,38 @@ class SamplingCollector:
             return self._new_offer_page(chain)["offer_id"]
 
     def model_decision(self, record):
-        if self.policy_mode != "model" or not self.ensure_run("model_decision"):
+        observation = record.get("pool_identity_observation")
+        if not self.ensure_run("pool_observed") or observation is None or observation == self._last_pool_observation:
             return
-        # The preset and software versions are already in this run's header.
-        reduced = {k: v for k, v in record.items()
-                   if k not in {"original_preset", "versions", "run_id"}}
+        first = self._last_pool_observation is None
+        self._last_pool_observation = snapshot(observation)
         chain = self.reward if self.reward and not self.reward["closed"] else None
-        phase = record.get("phase")
-        self.emit("model_decision", reward_chain_id=chain["reward_chain_id"] if chain else None,
+        self.emit("pool_observed", pool_identity_observation=observation,
                   offer_id=chain["page"]["offer_id"] if chain and chain["page"] else None,
-                  event_id=self.event["event_id"] if phase == "EVENT" and self.event else None,
-                  stock_scan_id=self.stock_scan_id if phase == "SHOP" else None, decision=reduced,
-                  observation_context={
-                      "basis": "latest_captured_observations_not_model_input",
-                      "note_state_record_id": self.last_note_state_record_id,
-                      "wallet_record_id": (self.last_wallet or {}).get("record_id"),
-                      "floor_record_id": (self.last_observed_floor_context or {}).get("record_id"),
-                  })
+                  event_id=self.event["event_id"] if self.event else None,
+                  stock_scan_id=self.stock_scan_id,
+                  **({"initial_order_evidence": self._initial_pool_order_evidence} if first else {}))
 
     def event_menu(self, choices):
         if not self.ensure_run("event_menu"):
             return
         menu = dict(question=self.event_question, choices=snapshot(choices))
-        signature = json.dumps(menu, sort_keys=True, ensure_ascii=False)
+        observed_choices = [dict(ui_index=index, text=choice.get("text"),
+            consequence=choice.get("consequence"), available=choice.get("available"),
+            observations={field: {key: value for key, value in reading.items() if key == "complete"}
+                          for field, reading in choice.get("observations", {}).items()})
+            for index, choice in enumerate(menu["choices"])]
+        observed = dict(question=self.event_question, choices=observed_choices)
+        signature = json.dumps(observed, sort_keys=True, ensure_ascii=False)
         repeated = (self.event and self.event["signature"] == signature
                     and not self.event["clicked"] and not self.event.get("reward_boundary_seen"))
         if not repeated:
             if self.reward:
                 self.reward["closed"] = True
             self.event = dict(event_id=uuid.uuid4().hex, signature=signature, clicked=False, **menu)
-        self.emit("event_menu_reobserved" if repeated else "event_menu_observed",
-                  event_id=self.event["event_id"], **menu, **self.owned_fields(),
-                  tracker_estimate=self.inferred_state())
+            self.emit("event_menu_observed", event_id=self.event["event_id"], **observed)
+        else:
+            self.event.update(menu)
 
     def event_choice(self, result, attach):
         if not self.run_confirmed or self.event is None or result.box is None:
@@ -1110,14 +1072,19 @@ class SamplingCollector:
         selected_box = snapshot(result.box)
         selected_ui_index = next((index for index, choice in enumerate(self.event["choices"])
                                   if choice.get("box") == selected_box), None)
-        record_id = self.emit("event_choice", event_id=self.event["event_id"],
-                  question=attach.get("last_question"), selected_text=attach.get("last_choice"),
+        choice = dict(question=attach.get("last_question"), selected_text=attach.get("last_choice"),
                   displayed_consequence=attach.get("last_consequence"),
-                  selected_box=selected_box, selected_ui_index=selected_ui_index,
-                  model_mapping=snapshot(result.detail),
+                  selected_ui_index=selected_ui_index,
+                  event_mapping={key: result.detail[key] for key in (
+                      "event", "option", "quiz_event_id", "selection_basis", "full_visible_menu", "ocr_missing")
+                                 if key in result.detail},
                   **{key: result.detail[key] for key in ("floor", "floor_confirmed", "floor_candidates")
                      if key in result.detail},
                   operation_confirmed=False)
+        if self.event.get("choice_signature") == choice:
+            return
+        self.event["choice_signature"] = choice
+        record_id = self.emit("event_choice", event_id=self.event["event_id"], **choice)
         self.event["choice_record_id"] = record_id
         matches = [choice for choice in self.event["choices"] if choice.get("box") == selected_box]
         self.event["selection"] = (dict(record_id=record_id, selected_box=selected_box,
@@ -1142,28 +1109,32 @@ class SamplingCollector:
         initial = snapshot(data)
         common = dict(operation_id=operation_id or uuid.uuid4().hex, offer_id=offer_id,
                       reward_chain_id=self.reward["reward_chain_id"] if self.reward and not self.reward["closed"] else None,
-                      stock_scan_id=self.stock_scan_id, arguments=snapshot(args),
+                      stock_scan_id=self.stock_scan_id,
                       source_type=getattr(data.params, "potential_source", None))
+        if event == "selection_result" and args:
+            common["selected_candidate_index"] = args[0].index
         if offer_id and self.reward and not self.reward["closed"]:
             common.update(self.reward["source_fields"], source_raw=data.params.potential_source)
         if before:
-            self.emit(event + "_attempt", phase="before", state=initial, **self.owned_fields(), **common)
+            self.emit(event + "_attempt", phase="before", coin_before=initial.get("current_coin"),
+                      refresh_price=initial.get("refresh_cost"), **common)
         with self.action_scope(**common), self.capture(event, **common) as read:
             result = function(*args)
         next_offer_id = (self.refresh_succeeded(offer_id, common["operation_id"])
                          if event == "refresh_result" and result else None)
-        outcome = dict(previous_state=initial, result=snapshot(result),
+        outcome = dict(result=snapshot(result),
                        Maa_reported_success=result if isinstance(result, bool) else None,
                        next_offer_id=next_offer_id, coin_before=initial.get("current_coin"),
-                       read_id=read.read_id, recognition_record_ids=read.record_ids, **common)
+                       read_id=read.read_id, **common)
         if event == "shop_refresh_result" and result is True and not handler.interactor.context.tasker.stopping:
             # The adapter publishes the final confirmed frame before completing this operation.
             outcome["refresh_remaining_after_action"] = data.refresh_remaining
+            outcome["previous_state"] = initial
             handler.pending_refresh = outcome
         else:
-            self.emit(event, phase="after", state=snapshot(data),
+            self.emit(event, phase="after",
                       coin_after=None if event == "shop_refresh_result" else getattr(data, "current_coin", None),
-                      **self.owned_fields(), **outcome)
+                      **outcome)
         return result
 
     def complete_shop_refresh(self, handler, read):
@@ -1192,7 +1163,8 @@ class SamplingCollector:
         shelf_changed = items != before.get("items")
         success = True if debit_confirmed and stock_complete and (remaining_decreased or shelf_changed) else None
         pending.update(result=success, Maa_return_value=pending["result"])
-        self.emit("shop_refresh_result", phase="after", state=snapshot(data), coin_after=coin_after,
+        pending.pop("previous_state")
+        self.emit("shop_refresh_result", phase="after", coin_after=coin_after,
                   success=success, operation_confirmed=success is True,
                   confirmation_basis="next_shelf_wallet_and_refresh_count_or_stock_change",
                   confirmation_status="confirmed" if success else "incomplete",
@@ -1200,9 +1172,8 @@ class SamplingCollector:
                   refresh_remaining_after=remaining_after, refresh_remaining_decreased=remaining_decreased,
                   stock_read_complete=stock_complete, shelf_changed=shelf_changed,
                   next_stock_scan_id=self.stock_scan_id, stock_read_id=read.read_id,
-                  stock_recognition_record_ids=read.record_ids,
                   wallet_observation_id=wallet["record_id"] if coin_after is not None else None,
-                  **self.owned_fields(), **pending)
+                  **pending)
 
     def observe_shop(self, handler, read, previous_state):
         if not self.ensure_run("shop_page"):
@@ -1238,7 +1209,9 @@ class SamplingCollector:
             price = read.matching(("星塔_神经网络_商店_识别物品价格",
                                    "星塔_节点_商店_购物_识别物品价格_agent"), rois["price_roi"])
             item = by_slot.get(slot)
-            observed_item = dict(item) if item else None
+            observed_item = {key: item[key] for key in (
+                "internal_name", "quantity", "price", "display_name", "trekker_specified", "missing")
+                if key in item} if item else None
             if observed_item:
                 missing = observed_item.get("missing", [])
                 for field, column in (("name", "internal_name"), ("quantity", "quantity"), ("price", "price")):
@@ -1247,11 +1220,19 @@ class SamplingCollector:
                 if "name" in missing:
                     observed_item["trekker_specified"] = None
             effective_price = observed_item.get("price") if observed_item else None
-            slots.append(dict(slot=slot, **snapshot(rois),
+            slots.append(dict(slot=slot,
                 item_instance_id=f"{generation}:{slot}" if generation else None, item=observed_item,
-                effective_price=effective_price if effective_price is not None and effective_price >= 0 else None,
-                raw_ocr=dict(name=raw_ocr(name), price=raw_ocr(price)),
-                recognition_record_ids=[r["record_id"] for r in name+price]))
+                effective_price=effective_price if effective_price is not None and effective_price >= 0 else None))
+            if observed_item is None or observed_item.get("missing"):
+                slots[-1]["unresolved_values"] = {key: list(dict.fromkeys(row.get("text", "") for row in raw_ocr(records)))
+                    for key, records in (("name", name), ("price", price)) if records}
+        signature = (generation, slots, data.current_coin, remaining,
+                     getattr(data, "refresh_remaining_basis", "ocr"), data.refresh_cost)
+        if repeated and getattr(handler, "observed_stock_signature", None) == signature:
+            self.stock_scan_id = handler.observed_stock_scan_id
+            return
+        handler.observed_stock_signature = signature
+        handler.observed_stock_scan_id = self.stock_scan_id
         self.emit("shop_observed", phase="after", shop_event_type="stock_snapshot",
                   stock_scan_id=self.stock_scan_id, shop_visit_id=handler.shop_visit_id,
                   shop_entry_id=handler.shop_visit_id, stock_generation_id=generation,
@@ -1267,8 +1248,6 @@ class SamplingCollector:
                   refresh_remaining_basis=getattr(data, "refresh_remaining_basis", "ocr"),
                   refresh_controls_expected_visible=(getattr(data, "refresh_remaining_basis", "ocr")
                                                      != "global_confirmed_refreshes_exhausted"),
-                  stock_snapshot=items,
-                  payload=dict(slots=slots, maa_items=items), state=snapshot(data),
-                  previous_state=previous_state, coin=data.current_coin,
+                  payload=dict(slots=slots), coin=data.current_coin,
                   refresh_price=data.refresh_cost, read_id=read.read_id,
-                  recognition_record_ids=read.record_ids, **self.owned_fields())
+                  missing=data.goods_missing)

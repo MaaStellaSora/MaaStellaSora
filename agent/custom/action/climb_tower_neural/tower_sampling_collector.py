@@ -26,18 +26,7 @@ class SamplingContext:
         return result
 
     def run_task(self, entry, *args, **kwargs):
-        observed = isinstance(entry, str) and "星塔" in entry
-        common = dict(node_name=entry, lang_type=self._language, method="run_task",
-                      arguments=snapshot(args), keyword_arguments=snapshot(kwargs))
-        read = self._collector.current_read
-        if read:
-            common.update(read_id=read.read_id, **read.links)
-        if observed:
-            self._collector.emit("context_run_task", phase="before", **common)
-        result = self._context.run_task(entry, *args, **kwargs)
-        if observed:
-            self._collector.emit("context_run_task", phase="after", raw_result=snapshot(result), **common)
-        return result
+        return self._context.run_task(entry, *args, **kwargs)
 
 
 class ObservedPotentialHandler:
@@ -82,18 +71,7 @@ class ObservedPotentialHandler:
         return result
 
     def choose_potential(self):
-        potential = self.handler.choose_potential()
-        if self.collector.enabled and self.collector.run_confirmed:
-            candidate_index = potential.index if potential is not None else None
-            self.collector.emit("policy_decision", offer_id=self.offer_id,
-                reward_chain_id=self.collector.reward["reward_chain_id"],
-                selected_candidate_index=candidate_index,
-                selected=(self.collector.observed_offer_candidate(self.offer_id, candidate_index)
-                          if potential is not None else None),
-                refresh_requested=potential is None, operation_confirmed=False,
-                decision_method=self.handler.decision_method,
-                policy_mode=self.collector.policy_mode)
-        return potential
+        return self.handler.choose_potential()
 
     def pick(self, potential):
         self.selection_id = uuid.uuid4().hex
@@ -121,6 +99,8 @@ class ObservedShopHandler(ShopHandler):
         self.shop_visit_id = uuid.uuid4().hex
         self.stock_generations = {}
         self.stock_generation_id = None
+        self.observed_stock_signature = None
+        self.observed_stock_scan_id = None
         self.pending_refresh = None
 
     def read_goods_page_info(self, *, enter_shopping=True, refresh_exhausted=False):

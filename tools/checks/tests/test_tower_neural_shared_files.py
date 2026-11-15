@@ -43,39 +43,41 @@ class TowerNeuralSharedFilesTests(unittest.TestCase):
         os.utime(marker, (age, age))
         return marker
 
-    def test_two_collectors_initializing_one_directory_keep_one_identity(self):
+    def test_two_collectors_use_temporary_sessions_without_personal_identity(self):
         collectors = [sampling_data.SamplingCollector(self.app_dir, Mock()) for _ in range(2)]
         identity = self.app_dir / "config/neural_network/collector_identity.json"
-        first_written, second_written, first_finished = (threading.Event() for _ in range(3))
-        write_text = Path.write_text
-
-        def staged_write(path, *args, **kwargs):
-            result = write_text(path, *args, **kwargs)
-            if path.parent == identity.parent and path.suffix == ".tmp":
-                if not first_written.is_set():
-                    first_written.set()
-                    self.assertTrue(second_written.wait(5))
-                else:
-                    second_written.set()
-                    self.assertTrue(first_finished.wait(5))
-            return result
-
-        # Both complete their candidate before either publishes; the first
-        # collector then finishes before the second attempts publication.
-        with patch.object(Path, "write_text", staged_write), ThreadPoolExecutor(max_workers=2) as workers:
-            first = workers.submit(collectors[0].loaded)
-            self.assertTrue(first_written.wait(5))
-            second = workers.submit(collectors[1].loaded)
-            try:
-                first.result(timeout=5)
-            finally:
-                first_finished.set()
-            second.result(timeout=5)
-        participant = json.loads(identity.read_text(encoding="utf-8"))["participant_id"]
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            list(workers.map(lambda collector: collector.loaded(), collectors))
+        self.assertFalse(identity.exists())
+        self.assertEqual(len({collector.session_id for collector in collectors}), 2)
         for collector in collectors:
             self.assertTrue(collector.enabled)
-            self.assertEqual(collector.participant_id, participant)
+            self.assertFalse(hasattr(collector, "participant_id"))
+            collector.begin_task("cn", "test")
+            session = collector.directory / "sessions" / f"{collector.session_id}.jsonl"
+            rows = [json.loads(line) for line in session.read_text(encoding="utf-8").splitlines()]
+            self.assertTrue(rows)
+            self.assertTrue(all("participant_id" not in row for row in rows))
             collector.logger.error.assert_not_called()
+
+    def test_repeated_event_menu_writes_only_changed_semantics(self):
+        collector = sampling_data.SamplingCollector(self.app_dir, Mock())
+        collector.begin_task("cn", "test")
+        collector.start_intent("start")
+        collector.confirm_start("entered")
+        choices = [dict(text="take", consequence="potential reward", box=[1, 2, 3, 4])]
+        collector.event_menu(choices)
+        first_event = collector.event["event_id"]
+        collector.event_menu(choices)
+        self.assertEqual(collector.event["event_id"], first_event)
+        collector.event_menu([dict(text="leave", consequence="no reward", box=[1, 2, 3, 4])])
+        self.assertNotEqual(collector.event["event_id"], first_event)
+        path = collector.directory / "runs" / f"{collector.run['run_id']}.jsonl"
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+        menus = [row for row in rows if row["event_type"].startswith("event_menu_")]
+        self.assertEqual([row["event_type"] for row in menus], ["event_menu_observed"] * 2)
+        self.assertEqual([row["choices"][0]["text"] for row in menus], ["take", "leave"])
+        collector.logger.error.assert_not_called()
 
     def test_two_uploaders_can_publish_retry_metadata_concurrently(self):
         first, second = self.uploaders()

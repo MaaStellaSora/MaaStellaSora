@@ -9,6 +9,16 @@ import uuid
 from .name_matching import identity_key, is_anonymous_non_target
 
 
+def observation_signature(value):
+    """Compare game readings without a fresh acquisition's bookkeeping."""
+    if isinstance(value, dict):
+        return {key: observation_signature(item) for key, item in value.items()
+                if key not in {"timestamp", "observed_at", "revision"} and not key.endswith("_revision")}
+    if isinstance(value, list):
+        return [observation_signature(item) for item in value]
+    return value
+
+
 def planned_combined_interval(value, *, started=False):
     """The explicit stable-page policy excludes inseparable source statistics."""
     sources = value.get("mixed_sources")

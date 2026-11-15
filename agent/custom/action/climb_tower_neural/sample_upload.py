@@ -13,8 +13,9 @@ import urllib.request
 import zipfile
 
 from .sampling_data import timestamp, write_json
-from .research_data import FORMAT, SCHEMA_VERSION, export_payload
+from .research_data import FORMAT, export_payload
 from .research_store import CONSENT_SOURCE, DATABASE_FILE, recycle_file, valid_upload_consent
+from .research_wire import WIRE_SCHEMA_VERSION, upload_payload
 
 
 class _RejectRedirects(urllib.request.HTTPRedirectHandler):
@@ -179,13 +180,14 @@ class SampleUpload:
         if not self.upload_allowed(manifest):
             return
         run_id = manifest["run_id"]
-        payload = export_payload(self.directory / DATABASE_FILE, run_id)
+        payload = upload_payload(export_payload(self.directory / DATABASE_FILE, run_id))
         package = io.BytesIO()
         with zipfile.ZipFile(package, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
             archive.writestr("research.json", json.dumps(payload, ensure_ascii=False,
                 separators=(",", ":"), allow_nan=False))
             archive.writestr("manifest.json", json.dumps(dict(run_id=run_id,
-                format=FORMAT, schema_version=SCHEMA_VERSION,
+                format=FORMAT, schema_version=WIRE_SCHEMA_VERSION,
+                content_schema_version=payload["content_schema_version"],
                 consent_source=CONSENT_SOURCE,
                 consent_policy=self.settings["policy_version"],
                 research_upload=manifest["research_upload"],

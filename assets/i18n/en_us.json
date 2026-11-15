@@ -286,7 +286,7 @@
     "interface.task.option.真格挑战_选择首领.cases.真格挑战_选择首领_首领6.pipeline_override.真格挑战_有挑战次数时选择首领.focus.Node.Action.Succeeded": "Select Boss: Gobble Hexhorn Whale",
     "interface.tower_neural.task.description": "Automates Ascension runs with neural network decisions.<br>The beta currently supports potential selection only. Start from the home screen.",
     "interface.tower_neural.task.label": "Ascension (Neural Network)",
-    "interface.tower_neural.upload.description": "When enabled, new Ascension run logs are sent anonymously to the module author to analyze errors and develop a joint melody and potential model.",
+    "interface.tower_neural.upload.description": "Share each run’s preset, observed game state, actions, and results with the module author to study tower mechanics. Missing or uncertain data is flagged. No personal identifiers or screenshots are included.",
     "interface.tower_neural.upload.label": "Share data to help improve the model",
     "pipeline.猎影合围_任务完成.focus.Node.Action.Succeeded": "Operation: Shadow Siege task completed",
     "pipeline.猎影合围_追踪目标.focus.Node.Action.Succeeded": "Start tracking target",

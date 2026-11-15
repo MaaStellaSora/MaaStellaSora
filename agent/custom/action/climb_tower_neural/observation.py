@@ -379,12 +379,7 @@ class ObservationTracker:
             after_wallet_observation_id=after.get("record_id"),
             event_choice_record_id=event.get("choice_record_id"),
             event_click_record_id=event.get("click_record_id"),
-            event_id=event.get("event_id"),
-            model_mapping=dict(event=self.pending_event[0], option=self.pending_event[1]),
-            component_amounts_basis="rule_constrained_inference_not_individual_UI_observations",
-            candidate_components=[dict(event_delta=delta,
-                battles=[dict(floor=floor, base_coins=amount) for floor, amount in battles],
-                battle_base=base, battle_bonus=bonus) for delta, battles, base, bonus in sorted(paths)])
+            event_id=event.get("event_id"))
 
     def open_page(self, data, *, observed_floor=None):
         source_name = data.params.potential_source

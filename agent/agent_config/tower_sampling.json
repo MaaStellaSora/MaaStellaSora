@@ -1,6 +1,3 @@
 {
-    "enabled": true,
-    "capture_screenshots": false,
-    "capture_preset_screenshots": false,
-    "capture_note_screenshots": false
+    "enabled": true
 }

@@ -192,16 +192,11 @@ class PotentialTake(RuntimeCallback, CustomAction):
             result = finish_potential_take(screen, self.runtime.pending_take, self.runtime.logger, runtime=self.runtime)
         if result:
             commit_potential_take(self.runtime)
-        elif (not context.tasker.stopping and self.runtime.collector.enabled
-              and self.runtime.collector.config.get("capture_note_screenshots", False)
-              and self.runtime.notes.ledger is not None):
-            screen.screenshot()
-            image_path = self.runtime.notes._save_image(screen.image, "potential_take_unresolved")
-            if image_path:
-                selection = self.runtime.collector.pending_selection or {}
-                self.runtime.collector.emit("potential_take_unresolved", image_path=image_path,
-                    operation_confirmed=False, offer_id=selection.get("offer_id"),
-                    operation_id=selection.get("operation_id"), reward_chain_id=selection.get("reward_chain_id"))
+        elif not context.tasker.stopping and self.runtime.collector.enabled:
+            selection = self.runtime.collector.pending_selection or {}
+            self.runtime.collector.emit("potential_take_unresolved", reason="take_transition_unconfirmed",
+                operation_confirmed=False, offer_id=selection.get("offer_id"),
+                operation_id=selection.get("operation_id"), reward_chain_id=selection.get("reward_chain_id"))
         if not result and not context.tasker.stopping:
             self.runtime.stop_model(context, "potential_take_unconfirmed", phase="potential_take",
                 missing=("confirmed_potential_take",))
@@ -224,7 +219,7 @@ class Shop(RuntimeCallback, ShopAction):
         self.runtime.collector.ensure_run("shop_page_recognized")
         self.runtime.notes.enter_shop()
         self.runtime.collector.emit("lifecycle_observed", lifecycle_type="shop_entry",
-                                   node_name=argv.node_name, owned=self.runtime.collector.owned())
+                                   node_name=argv.node_name)
         with self.runtime.ui_logs.scope():
             try:
                 if not self.runtime.ensure_tracker(context, "shop"):

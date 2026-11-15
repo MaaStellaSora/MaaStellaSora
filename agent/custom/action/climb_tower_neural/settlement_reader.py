@@ -74,8 +74,7 @@ class SettlementReader(CustomAction):
         finally:
             self._observed.reset(token)
         collector.settlement_result = observed
-        collector.emit("settlement_observed", **observed, final_owned=collector.inventory.fields()["owned"],
-                       **collector.owned_fields(), tracker_estimate=collector.inferred_state())
+        collector.emit("settlement_observed", **observed)
         self._read_note_settlement(context, image)
         return True
 

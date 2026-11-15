@@ -18,8 +18,7 @@ class TowerContextSink(ContextEventSink):
             if name == "星塔_节点_选择潜能_已确认拿走_agent":
                 # This NoOp jump target emits Action.Succeeded, not a pipeline
                 # completion. Its recognition already confirmed page transition.
-                collector.selection_confirmed(dict(node_name=name, message=msg,
-                    maa_task_id=details.get("task_id"), maa_node_id=details.get("node_id")))
+                collector.selection_confirmed("potential_page_transition")
             elif name == "星塔_节点_进行对话选择_agent":
                 collector.event_clicked(name)
             elif name == "星塔_保存记录_agent":
@@ -31,10 +30,9 @@ class TowerContextSink(ContextEventSink):
             "星塔_节点_商店_离开商店_agent": "shop_leave",
             "星塔_记录界面_读取数值_agent": "settlement_page",
             "星塔_保存记录_agent": "settlement_save",
-        }.get(name, "pipeline_node_completed")
-        collector.emit("lifecycle_observed", lifecycle_type=kind, node_name=name,
-                       maa_task_id=details.get("task_id"), maa_node_id=details.get("node_id"),
-                       tracker_estimate=collector.inferred_state())
+        }.get(name)
+        if kind:
+            collector.emit("lifecycle_observed", lifecycle_type=kind)
 
 
 class TowerTaskSink(TaskerEventSink):
@@ -63,8 +61,7 @@ class TowerTaskSink(TaskerEventSink):
             if self.notes:
                 self.notes.finish("task_end")
             self.collector.finish_at_boundary("task_ended_without_settlement")
-            self.collector.emit("task_end", maa_task_id=self.task_id,
-                                status="succeeded" if msg.endswith("Succeeded") else "failed_or_stopped")
+            self.collector.emit("task_end", status="succeeded" if msg.endswith("Succeeded") else "failed_or_stopped")
             self.collector.enabled = False
         if self.runtime:
             self.runtime.finish_task()

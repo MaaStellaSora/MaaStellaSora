@@ -1,8 +1,7 @@
 """State-space observations as database rows, shared by local import and upload.
 
-This format stores observations and their evidence, not a copy of the collector
-log.  Game readings, confirmed-history reconstruction and model inference keep
-separate provenance throughout the format.
+Game readings and confirmed actions retain their provenance. Runtime calls,
+recognition geometry, policy predictions and reconstructed caches are omitted.
 """
 from collections import defaultdict
 from contextlib import closing
@@ -14,37 +13,20 @@ from pathlib import Path
 import sqlite3
 
 from .purchase_evidence import purchase_wallet_evidence
-from .name_matching import identity_key
 from .settlement_counts import check_potential_counts
 from .sampling_evidence import planned_combined_interval, reused_interval_components, battle_floor_outside_route
 from .sampling_journal import DAMAGE_SUFFIX
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 FORMAT = "maa-state-space-database"
-TABLES = ("presets", "runs", "records", "objects", "record_objects", "readings",
-          "record_readings", "quality_issues")
+TABLES = ("presets", "runs", "records", "quality_issues")
 BASE_FIELDS = {"schema_version", "collector_version", "event_type", "record_type", "timestamp",
                "record_id", "participant_id", "session_id", "task_id", "run_id", "exploration_id",
                "sequence", "run_sequence", "lang_type", "observer", "server_confirmed",
                "preset_id", "target_vector_complete", "target_vector", "_original_record_id"}
 TRANSPORT_FIELDS = {"arguments", "keyword_arguments", "raw_detail", "reco_id", "maa_task_id",
                     "maa_node_id", "image_path", "source_image_path"}
-SNAPSHOTS = {"owned": ("owned", "confirmed_selection_history"),
-             "final_owned": ("owned", "confirmed_selection_history"),
-             "owned_before": ("owned", "confirmed_selection_history"),
-             "observed_state_after": ("maa_owned", "maa_cache_unverified"),
-             "maa_owned_cache": ("maa_owned", "maa_cache_unverified"),
-             "state": ("maa_state", "maa_cache_unverified"),
-             "previous_state": ("maa_state", "maa_cache_unverified"),
-             "tracker_estimate": ("tracker", "model_inference"),
-             "counters": ("tracker", "model_inference"),
-             "public_state": ("model_state", "model_inference"),
-             "observed_state": ("decision_observations", "game_UI_observation"),
-             "pools": ("model_remaining_targets", "model_inference"),
-             "tracker_public_observation": ("tracker", "model_inference")}
-POLICY_FIELDS = {"score", "probability", "rank", "sub_rank", "in_preset", "in_owned",
-                 "recommended", "recommended_level"}
 QUALITY_RANK = {"valid": 0, "partial": 1, "suspect": 2, "invalid": 3}
 
 
@@ -54,6 +36,322 @@ def _json(value):
 
 def _hash(value):
     return hashlib.sha256(_json(value).encode("utf-8")).hexdigest()
+
+
+_DISCARD_EVENTS = {
+    "context_run_recognition", "context_run_task", "collector_loaded", "preset_screenshot",
+    "preset_level_crop", "model_decision", "policy_decision", "fallback_policy_decision",
+    "selection_cache", "task_start", "task_end", "exploration_start_attempt",
+}
+_DISCARD_FIELDS = (BASE_FIELDS - {"record_id", "run_id", "sequence"}) | TRANSPORT_FIELDS | {
+    "legacy_identity", "metadata", "_identity", "_legacy", "pc", "policy_mode", "maa_policy",
+    "model_mapping", "model_mapping_basis", "model_decision", "model_decision_recorded",
+    "model_versions", "runtime_versions", "versions", "config", "params", "decision",
+    "tracker_estimate", "tracker_public_observation", "counters", "public_state", "pools",
+    "state", "previous_state", "observed_state_after", "maa_owned_cache", "maa_owned_complete",
+    "owned_counts", "owned_revision", "owned_independently_verified", "owned_source",
+    "raw", "raw_ocr", "raw_result", "raw_detail", "raw_values", "score_raw", "raw_rarity",
+    "raw_clear_text", "raw_difficulty_text", "source_raw", "raw_increment", "server_raw_increment",
+    "recognition_record_id", "recognition_record_ids", "native_reco_id", "source_locator_record_id",
+    "source_locator_reco_id", "source_frame_id", "source_image_path", "image_path", "source_document",
+    "operation_document", "source_sample_id", "source_preset_id", "original_preset_source",
+    "source_documents", "original_record", "payload_json", "content_json", "path", "checkpoint", "checkpoint_sha256",
+    "machine_id", "client_id", "account_id", "user_id", "username", "computer_name", "hostname", "device_id", "pid",
+    "source_database", "database", "dataset_id", "source_dataset_id", "source_session_id",
+    "source_task_id", "source_participant_id", "teacher_label_available", "training_eligible",
+    "training_exclusion_reason", "training_exclusion_reasons", "training_scope_match",
+    "training_scope_basis", "training_scope_version", "coordinate_space", "source_coordinate_space",
+    "frame", "preprocessing", "padding", "input_scale", "arguments", "keyword_arguments",
+    "node_name", "source_node", "capture_node", "verification_node", "off_verification_node",
+    "on_verification_node", "resume_action", "message", "icon_quality", "icon_score",
+    "white_level", "origin_x", "row_y", "spacing", "detail", "score", "similarity",
+    "identity_similarity", "identity_name", "ocr_text", "text_score", "name_score", "confidence",
+    "derived_concertos", "game_event_id", "game_option_id", "read_id", "stock_read_id",
+    "stock_recognition_record_ids", "pipeline_wallet_recognition_record_id",
+    "wallet_before_recognition_record_id", "wallet_recognition_record_id", "attempt_record_ids",
+    "original_target_vector", "original_target_pools", "original_preset", "original_record_id",
+    "resumed_from_decision_index", "confirmed_at", "observed_at", "before_observed_at",
+    "after_observed_at", "start_timestamp", "time", "timestamp", "reco_id", "maa_node_id", "maa_task_id",
+}
+_BOUNDARY_FIELDS = set("""full_run_start_observed completion_observed reason start_status
+    start_confirmation_record_id start_attempt_record_id resumed boundary_basis boundary_evidence
+    boundary_payload start_basis boundary_recovered entry_page continuation_basis confirmation_basis
+    history_estimated pending_operation pending_selection owned final_owned owned_complete owned_basis
+    owned_issues owned_anonymous last_wallet_observation last_coin_observation last_floor outcome
+    record_level record_level_complete potential_counts potential_counts_complete potential_counts_conflicts
+    potential_counts_order potential_count_roles potential_count observed_counts settlement end_reason
+    physical_game_id segment_index segment_count""".split())
+_OFFER_FIELDS = set("""offer_id reward_chain_id offer_index refresh_index same_page_read_index
+    source source_type source_attribution source_inferred source_basis origin_operation_id
+    refresh_operation_id refresh_parent_offer_id preceding_event_id preceding_event_relation
+    floor floor_basis floor_observation_id floor_candidates last_observed_floor_context coin
+    core_potential candidates candidates_complete candidate_read_complete recognition_status
+    recognition_consistent recognition_errors inventory_conflicts owned_complete owned_basis owned_issues
+    main_trekker_index trekker_index_basis level_basis level_upped page_generation_basis refresh_price
+    pool_identity_observation visible_shared_bonus""".split())
+_ACTION_FIELDS = set("""operation_id offer_id next_offer_id reward_chain_id stock_scan_id next_stock_scan_id
+    shop_visit_id shelf_generation_id item item_instance_id slot source source_type source_attribution
+    source_inferred source_basis phase selected selected_slot selected_ui_index planned_name
+    selection_confirmed selection_basis selection_observation_complete selected_candidate_index operation_confirmed
+    confirmation_basis confirmation_status debit_confirmed success result coin_before coin_after
+    coins coins_before coins_after observed_coins purchase_debit pipeline_coins_after
+    pipeline_wallet_observation_id wallet_before_observation_id wallet_observation_id
+    wallet_observation_complete refresh_price refresh_remaining_before refresh_remaining_after
+    refresh_remaining_decreased shelf_changed stock_read_complete owned_complete owned_basis owned_issues
+    owned_before_complete selection_status superseded_by_record_id click_record_id
+    source_record_id confirmation_record_id affected_from_sequence affected_through_sequence""".split())
+_WALLET_FIELDS = set("""coin coin_complete parsed_values values recognition_status conflicts read_kind
+    wallet_observation_id wallet_before_observation_id before_wallet_observation_id after_wallet_observation_id
+    previous_wallet_observation_id retry_of_wallet_observation_id resolved_by_wallet_record_id
+    floor floor_complete floor_observation_id preceding_battle_id preceding_event_id offer_id operation_id
+    reward_chain_id stock_scan_id shop_visit_id source_page source_type capture_timing complete probe_only
+    probe_outcome coins_before coins_after delta source_type candidate_components component_amounts_basis
+    event_choice_record_id event_click_record_id event_id interval_basis independently_observed
+    analysis_eligible probability_eligible analysis_exclusion_reason""".split())
+_SHOP_FIELDS = set("""coin wallet_complete slots refresh_price refresh_remaining phase stock_scan_id
+    shop_visit_id shop_entry_id shelf_generation_id previous_shelf_generation_id stock_generation_id
+    shelf_generation_basis shelf_generation_complete repeated_scan shop_event_type invalid_fields
+    recognition_errors owned_complete owned_basis owned_issues operation_id missing
+    refresh_remaining_observed refresh_remaining_basis""".split())
+_EVENT_FIELDS = set("""event_id event_identity_basis choices question selected_text displayed_consequence
+    selected_ui_index event_choice_record_id operation_confirmed selection_status superseded_by_record_id
+    click_record_id floor floor_complete floor_confirmed floor_candidates full_visible_menu ocr_missing evidence
+    owned_complete owned_basis owned_issues event_mapping""".split())
+_OBSERVATION_FIELDS = {"observation_alternatives", "observed_state", "physical_source",
+                       "physical_source_evidence", "source_record_id", "journal_gap", "unresolved_values",
+                       "decision_observations"}
+_OWNED_EVENTS = {"exploration_start", "exploration_start_confirmed", "exploration_end",
+                 "run_start", "run_end", "bag_inventory_observed", "settlement_observed"}
+
+
+def _reading_adds_information(reading, counts):
+    return (reading.get("conflicting_values") or reading.get("conflicts") or reading.get("complete") is False
+            or reading.get("recognition_status") not in {None, "ok", "confirmed", "complete"}
+            or reading.get("current") is None or reading.get("current") != counts.get(reading.get("melody")))
+
+
+def _compact_value(value, event_type="", *, potential=False):
+    """Keep game meaning; IDs for OCR calls, geometry and policy data have no role here."""
+    if isinstance(value, list):
+        return [_compact_value(item, event_type, potential=potential) for item in value]
+    if not isinstance(value, dict):
+        return value
+    result = {}
+    for key, item in value.items():
+        if (key in _DISCARD_FIELDS or key.endswith(("_roi", "_box", "_boxes", "_reading_id", "_reading_ids", "_object_id"))
+                or key in {"box", "roi", "regions", "level_regions", "crop", "source_box", "selected_box"}
+                or key.startswith(("model_", "evaluation_", "training_"))):
+            if key == "score" and event_type in {"settlement_observed", "note_settlement_observed"}:
+                result[key] = item
+            continue
+        result[key] = _compact_value(item, event_type,
+            potential=key in {"selected", "candidates", "owned", "owned_before", "final_owned", "targets", "recognition_catalog"})
+    if "potential_id" in value or potential:
+        for key in ("rank", "sub_rank", "probability", "recommended", "recommended_level", "in_preset",
+                    "in_owned", "target_level", "initial_level", "is_new", "selected"):
+            result.pop(key, None)
+        if "canonical_rarity" in result:
+            result["rarity"] = result.pop("canonical_rarity")
+        for canonical, aliases in (("level_before", ("old_level",)),
+                                    ("level_after", ("new_level", "offered_level_after"))):
+            for alias in aliases:
+                if canonical not in result and alias in result:
+                    result[canonical] = result[alias]
+                result.pop(alias, None)
+        if "slot" in result:
+            result.pop("index", None)
+        elif "index" in result:
+            result["slot"] = result.pop("index")
+        if value.get("potential_id") is not None and value.get("role") is not None:
+            if len(value.get("id_candidates") or []) <= 1 and not value.get("recognition_errors"):
+                result.pop("name", None)
+            result.pop("trekker", None)
+        if value.get("potential_id") is not None:
+            result.pop("name_ja_jp", None)
+            result.pop("name_zh_cn", None)
+        if result.get("rarity") == "core":
+            result.pop("core", None)
+    # The inventory map already gives all successful reads. Keep only extra
+    # quality/alternative information from the embedded acquisition object.
+    if isinstance(result.get("observation"), dict):
+        observation = result["observation"]
+        if observation.get("counts") == result.get("counts"):
+            observation.pop("counts", None)
+        if observation.get("complete") == result.get("complete"):
+            observation.pop("complete", None)
+        if isinstance(result.get("counts"), dict):
+            readings = observation.get("readings")
+            if isinstance(readings, list):
+                observation["readings"] = [reading for reading in readings
+                    if _reading_adds_information(reading, result["counts"])]
+        if not observation:
+            result.pop("observation")
+    counts = result.get("counts")
+    if not isinstance(counts, dict):
+        counts = result.get("starting_supply")
+    readings = result.get("readings")
+    if isinstance(counts, dict) and isinstance(readings, list):
+        result["readings"] = [reading for reading in readings
+            if _reading_adds_information(reading, counts)]
+        if not result["readings"]:
+            result.pop("readings")
+    if result.get("final_owned") is not None and result.get("owned") == result["final_owned"]:
+        result.pop("owned")
+    if result.get("supply_complete") and isinstance(result.get("skipped_regions"), list):
+        result["skipped_regions"] = [region for region in result["skipped_regions"]
+            if region.get("reason") != "outside_supply_column_without_number"]
+        if not result["skipped_regions"]:
+            result.pop("skipped_regions")
+    for disc in result.get("main_discs", []):
+        if disc.get("id") is not None and disc.get("status") == "confirmed":
+            for key in ("text", "name", "name_ja", "name_zh", "name_ja_jp", "name_zh_cn"):
+                disc.pop(key, None)
+    return result
+
+
+def compact_record(event_type, payload):
+    """Project one semantic observation/action; return None for collector/policy bookkeeping."""
+    if event_type in _DISCARD_EVENTS:
+        return None
+    if event_type in {"note_bag_inventory_read", "note_detail_read"} and payload.get("complete") and payload.get("bag_closed"):
+        return None
+    payload = deepcopy(payload)
+    if event_type == "lifecycle_observed":
+        if payload.get("lifecycle_type") in {"pipeline_node_completed", "task_started", "task_ended"}:
+            return None
+    if event_type in {"shop_observed", "shop_reobserved"}:
+        nested = payload.pop("payload", {})
+        if isinstance(nested, dict):
+            for key in ("slots", "coin", "refresh_price", "refresh_remaining", "invalid_fields", "recognition_errors"):
+                if key not in payload and key in nested:
+                    payload[key] = nested[key]
+        payload.pop("stock_snapshot", None)
+        fields = _SHOP_FIELDS
+    elif event_type in {"offer_observed", "offer_reobserved"}:
+        fields = _OFFER_FIELDS
+    elif event_type in {"event_menu_observed", "event_menu_reobserved", "event_choice", "event_choice_click_observed"}:
+        fields = _EVENT_FIELDS
+        mapping = payload.get("model_mapping") or {}
+        if "selected_ui_index" not in payload and mapping.get("selected_ui_index") is not None:
+            payload["selected_ui_index"] = mapping["selected_ui_index"]
+    elif event_type.startswith("wallet_") or event_type == "field_wallet_observed":
+        fields = _WALLET_FIELDS
+        if payload.get("parsed_values"):
+            payload.pop("values", None)
+    elif event_type in _OWNED_EVENTS:
+        fields = _BOUNDARY_FIELDS
+        if event_type == "bag_inventory_observed":
+            fields |= {"original_bag_party", "source", "complete"}
+    elif event_type.endswith(("_attempt", "_result")) or event_type in {"selection_ui_transition_observed", "selection_attempt"}:
+        fields = _ACTION_FIELDS
+    elif event_type == "preset_observed":
+        fields = {"preset_read_evidence", "source"}
+    else:
+        fields = None  # Notes/manual evidence carry task-specific game observations.
+    if fields is not None:
+        payload = {key: item for key, item in payload.items() if key in fields | _OBSERVATION_FIELDS}
+    if event_type not in _OWNED_EVENTS:
+        for field in ("owned", "owned_before", "final_owned", "maa_owned_cache"):
+            payload.pop(field, None)
+    result = _compact_value(payload, event_type)
+    if event_type == "preset_observed" and isinstance(result.get("preset_read_evidence"), dict):
+        evidence = result["preset_read_evidence"]
+        for key in ("name_matches", "frames_read", "displayed_role_total_sources"):
+            evidence.pop(key, None)
+        readings = evidence.pop("displayed_role_total_readings", {})
+        alternatives = {role: sorted({item.get("value") for item in values if item.get("value") is not None})
+                        for role, values in readings.items()}
+        alternatives = {role: values for role, values in alternatives.items() if len(values) > 1}
+        if alternatives:
+            evidence["role_total_alternatives"] = alternatives
+    if event_type == "note_inventory_observed":
+        result.pop("bar_evidence", None)
+    return result
+
+
+def compact_preset(original):
+    """Keep the party and each target's identity/level, without the OCR/catalog copies."""
+    content = {}
+    for key in ("party", "recognition_catalog"):
+        if key in original:
+            content[key] = _compact_value(original[key])
+    for party, original_party in zip(content.get("party", []), original.get("party", [])):
+        for key in tuple(party):
+            if key not in {"role", "character_id", "character_id_namespace", "local_character_identity",
+                           "local_potential_catalogue", "targets", "catalogue_order",
+                           "name", "name_ja_jp", "name_zh_cn"}:
+                party.pop(key)
+        for target, original_target in zip(party.get("targets", []), original_party.get("targets", [])):
+            if "target_level" in original_target:
+                target["target_level"] = original_target["target_level"]
+        if party.get("character_id") is not None:
+            for key in ("name", "name_ja_jp", "name_zh_cn", "local_character_identity"):
+                party.pop(key, None)
+    for target, original_target in zip(content.get("recognition_catalog", []), original.get("recognition_catalog", [])):
+        if "target_level" in original_target:
+            target["target_level"] = original_target["target_level"]
+    return content
+
+
+def compact_payload(payload):
+    """Project the native format or its explicitly marked v3 transport envelope."""
+    native = payload.get("schema_version") == SCHEMA_VERSION
+    envelope = payload.get("schema_version") == 1 and payload.get("content_schema_version") == SCHEMA_VERSION
+    if payload.get("format") != FORMAT or not (native or envelope):
+        raise ValueError("Unsupported state-space database payload")
+    source = payload
+    tables = {table: [] for table in TABLES}
+    preset_keys = {}
+    for row in source["tables"].get("presets", []):
+        original = json.loads(row["content_json"])
+        content = compact_preset(original)
+        vector = json.loads(row.get("target_vector_json", "null"))
+        key = _hash([content, vector])
+        preset_keys[row["preset_key"]] = key
+        candidate = dict(preset_key=key, target_vector_json=_json(vector),
+            target_vector_complete=bool(row.get("target_vector_complete")), content_json=_json(content))
+        if candidate not in tables["presets"]:
+            tables["presets"].append(candidate)
+    for row in source["tables"].get("runs", []):
+        tables["runs"].append(dict(run_id=row["run_id"],
+            physical_game_id=row.get("physical_game_id") or row["run_id"],
+            segment_index=row.get("segment_index", 1), segment_count=row.get("segment_count", 1),
+            preset_key=preset_keys.get(row.get("preset_key")), language=row.get("language"),
+            lifecycle_status=row["lifecycle_status"], termination_reason=row.get("termination_reason"),
+            termination_basis=row.get("termination_basis", "observation"),
+            full_run_start_observed=bool(row.get("full_run_start_observed")),
+            completion_observed=bool(row.get("completion_observed")), quality_status=row.get("quality_status", "partial")))
+    removed = {}
+    for row in source["tables"].get("records", []):
+        event = row["event_type"]
+        data = json.loads(row["payload_json"])
+        data = compact_record(event, data)
+        if data is None:
+            removed[row["record_id"]] = row
+            continue
+        tables["records"].append(dict(record_id=row["record_id"], run_id=row["run_id"],
+            sequence=row.get("sequence"), event_type=event,
+            basis="game_UI_observation" if event == "pool_observed" else row.get("basis", "game_UI_observation"),
+            quality_status=row.get("quality_status", "partial"), payload_json=_json(data)))
+    seen = set()
+    for row in source["tables"].get("quality_issues", []):
+        evidence = _compact_value(json.loads(row.get("evidence_json", "{}")))
+        rid = row.get("record_id")
+        if rid in removed:
+            original = removed[rid]
+            if original["event_type"] in {"model_decision", "policy_decision", "fallback_policy_decision", "context_run_task"}:
+                continue
+            evidence.setdefault("affected_from_sequence", original.get("sequence"))
+            evidence.setdefault("affected_through_sequence", original.get("sequence"))
+            rid = None
+        identity = [row["run_id"], rid, row["field_path"], row["code"], row["severity"], evidence]
+        key = _hash(identity)
+        if key in seen:
+            continue
+        seen.add(key)
+        tables["quality_issues"].append(dict(issue_id=key, run_id=row["run_id"], record_id=rid,
+            field_path=row["field_path"], code=row["code"], severity=row["severity"], evidence_json=_json(evidence)))
+    return dict(format=FORMAT, schema_version=SCHEMA_VERSION, tables=tables)
 
 
 def _rows(path):
@@ -123,27 +421,6 @@ def _normalize_wallet_attempts(rows):
                            complete=wallet["coin_complete"] and row.get("floor_complete", False))
 
 
-def _raw_result(value):
-    """Keep all OCR/template candidates once, plus their all/filtered/best roles."""
-    value = value or {}
-    result = {key: deepcopy(item) for key, item in value.items()
-              if key not in {"reco_id", "raw_detail", "all_results", "filtered_results", "best_result"}}
-    candidates, indexes = [], {}
-
-    def index(item):
-        token = _json(item)
-        if token not in indexes:
-            indexes[token] = len(candidates)
-            candidates.append(item)
-        return indexes[token]
-
-    result["all_indexes"] = [index(item) for item in value.get("all_results", [])]
-    result["filtered_indexes"] = [index(item) for item in value.get("filtered_results", [])]
-    result["best_index"] = index(value["best_result"]) if value.get("best_result") is not None else None
-    result["results"] = candidates
-    return result
-
-
 def _normalize_event_choices(rows):
     """A repeated recognition can replace a choice before the actual click."""
     choices, pending = {}, {}
@@ -164,25 +441,6 @@ def _normalize_event_choices(rows):
             if selected and selected.get("event_id") == event:
                 row["event_choice_record_id"] = selected["record_id"]
                 selected.update(selection_status="clicked", click_record_id=row["record_id"])
-
-
-def _snapshot(value):
-    """Current owned facts; the confirmation record contains change evidence."""
-    if isinstance(value, list):
-        return [_snapshot(item) for item in value]
-    if not isinstance(value, dict):
-        return value
-    result = {key: value[key] for key in ("role", "potential_id", "local_identity", "level", "confirmation_record_id",
-              "anonymous", "count", "rarity_class", "canonical_rarity", "core", "target_level",
-              "local_identity_namespace") if key in value}
-    if "level" not in result:
-        result["level"] = value.get("level_after", value.get("new_level"))
-    if identity_key(value) is None or value.get("role") is None or value.get("local_identity"):
-        identity_fields = {"name", "character_id", "trekker", "trekker_index", "rarity", "canonical_rarity",
-            "core", "identity_basis", "identity_name", "identity_similarity", "identity_inferred", "id_candidates",
-            "recognition_status", "recognition_errors", "level_basis"}
-        result.update({key: item for key, item in value.items() if key in identity_fields})
-    return result
 
 
 def _normalize_floor(value):
@@ -237,14 +495,7 @@ class _Builder:
     def __init__(self, run_id):
         self.run_id = run_id
         self.tables = {table: [] for table in TABLES}
-        self.objects = {}
-        self.readings = {}
-        self.reading_links = set()
-        self.object_links = set()
         self.issues = {}
-        self.recognitions = {}
-        self.evidence_index = defaultdict(set)
-        self.read_groups = defaultdict(set)
         self.record_quality = defaultdict(lambda: "valid")
 
     def issue(self, record_id, path, code, severity, message, evidence=None):
@@ -256,96 +507,6 @@ class _Builder:
         current = self.record_quality[record_id]
         if QUALITY_RANK[severity] > QUALITY_RANK[current]:
             self.record_quality[record_id] = severity
-
-    def link_reading(self, record_id, reading_id, path):
-        self.reading_links.add((record_id, reading_id, path))
-
-    def add_recognition(self, row, input_crop=None):
-        rid = row["record_id"]
-        raw = row.get("raw_result", {}) or {}
-        content = _raw_result(raw)
-        content.update({key: row[key] for key in ("purpose", "native_reco_id", "source_node", "source_roi",
-            "preprocessing", "source_locator_reco_id", "source_locator_record_id", "detected_text_roi", "padding") if key in row})
-        coordinate_space = row.get("coordinate_space", "maa_client_1280x720")
-        if input_crop is not None:
-            coordinate_space = "preset_level_input_3x"
-            content.update(source_coordinate_space="maa_client_1280x720",
-                           source_box=input_crop["source_box"], input_scale=3,
-                           source_frame_id=input_crop.get("source_frame_id"))
-        elif coordinate_space != "maa_client_1280x720":
-            content.update(source_coordinate_space=row.get("source_coordinate_space", "maa_client_1280x720"),
-                           source_box=row.get("source_roi"), input_scale=row.get("input_scale"))
-        self.readings[rid] = dict(reading_id=rid, run_id=self.run_id,
-            original_record_id=row.get("_original_record_id", rid),
-            timestamp=row.get("timestamp"), sequence=row.get("sequence"), node_name=row.get("node_name"),
-            method=raw.get("algorithm", row.get("method")), read_id=row.get("read_id"),
-            coordinate_space=coordinate_space, roi_json=_json(row.get("roi")),
-            status="hit" if raw.get("hit") else "missing", content_json=_json(content))
-        self.recognitions[rid] = row
-        self.evidence_index[_json(_raw_result(raw))].add(rid)
-        for key in ("read_id", "offer_id", "operation_id", "stock_scan_id", "event_id"):
-            if row.get(key):
-                self.read_groups[(key, row[key])].add(rid)
-
-    def inline_reading(self, value, record, path):
-        matching = self.evidence_index.get(_json(value), set())
-        primary = record.get("recognition_record_id")
-        own_readings = matching & _references(record)
-        if record.get("read_id"):
-            own_readings.update(matching & self.read_groups[("read_id", record["read_id"])])
-        existing = (primary if primary in matching else
-                    next(iter(own_readings)) if len(own_readings) == 1 else None)
-        if existing is not None:
-            self.link_reading(record["record_id"], existing, path)
-            return existing
-        rid = "inline:" + _hash([self.run_id, value])
-        self.readings.setdefault(rid, dict(reading_id=rid, run_id=self.run_id, original_record_id=None,
-            timestamp=None, sequence=None, node_name=None, method="embedded_UI_evidence", read_id=None,
-            coordinate_space="maa_client_1280x720", roi_json="null", status="captured",
-            content_json=_json(value)))
-        self.link_reading(record["record_id"], rid, path)
-        return rid
-
-    def clean(self, value, record, path="", owned=False):
-        if isinstance(value, list):
-            return [self.clean(item, record, f"{path}[{index}]", owned=owned)
-                    for index, item in enumerate(value)]
-        if not isinstance(value, dict):
-            return value
-        result = {}
-        policy = {}
-        for key, item in value.items():
-            child = f"{path}.{key}" if path else key
-            if key in TRANSPORT_FIELDS:
-                continue
-            if key in ("original_target_vector", "original_target_pools", "original_preset"):
-                continue
-            if key in SNAPSHOTS:
-                kind, basis = SNAPSHOTS[key]
-                if kind == "owned" and value.get("owned_basis", "").startswith("bag_OCR"):
-                    basis = "bag_OCR_and_confirmed_selection_history"
-                content = _snapshot(item) if kind in ("owned", "maa_owned") else self.clean(item, record, child)
-                oid = _hash([kind, basis, content])
-                self.objects.setdefault(oid, dict(object_id=oid, kind=kind, basis=basis, content_json=_json(content)))
-                self.object_links.add((record["record_id"], child, oid))
-                result[key + "_object_id"] = oid
-                continue
-            if key in {"raw_ocr", "raw_result", "raw", "score_raw"}:
-                evidence = _raw_result(item) if key == "raw_result" else item
-                result[key + "_reading_id"] = self.inline_reading(evidence, record, child)
-                continue
-            if key in POLICY_FIELDS and ("potential_id" in value or "old_level" in value):
-                policy[key] = item
-                continue
-            if key == "derived_concertos":
-                result[key] = [dict(self.clean(entry, record, f"{child}[{index}]"), basis=entry.get("basis", "local_rules_derivation"))
-                               for index, entry in enumerate(item)]
-                continue
-            result[key] = self.clean(item, record, child)
-        if policy:
-            # These are Maa policy fields; probability=0 is not a game probability.
-            result["maa_policy"] = dict(basis="maa_policy_metadata_not_game_probability", **policy)
-        return result
 
     def inspect_quality(self, row, value, path=""):
         if row["event_type"] == "wallet_recognition_attempt":
@@ -418,7 +579,8 @@ class _Builder:
             elif reason == "route_observation_gap":
                 self.issue(rid, "recovered_node", reason, "suspect", "路线状态曾与当前页面不符，已重新定位；恢复位置属于推断。",
                            {key: value.get(key) for key in ("previous_node", "recovered_node", "skipped_observation_count")})
-            elif value.get("model_decision_recorded") is False and value.get("recovery_action") != "use_native_for_page":
+            elif (value.get("recovery_action") in {"stop_task", "use_native_fallback", "leave_shop"}
+                  or value.get("missing")) and value.get("recovery_action") != "use_native_for_page":
                 self.issue(rid, "recovery_action", reason or "native_fallback", "partial",
                            "识别信息未完整，已按记录的界面依据继续；本次没有模型决策。",
                            {key: value.get(key) for key in ("missing", "recovery_action", "continuation_basis")})
@@ -456,13 +618,7 @@ def build_payload(run_path, session_path=None):
     session_tail = {}
     session = _session_rows(run_path, run, session_path, session_tail)
     session_ids = {row["record_id"]: f"session:{run_id}:{row['record_id']}" for row in session}
-    for row in session:
-        row["_original_record_id"] = row["record_id"]
     session = _session_record_ids(session, session_ids)
-    # Keep the original ID separately; only database identities and references
-    # are scoped to the run when the same session serves consecutive runs.
-    for row in session:
-        row["_original_record_id"] = row["record_id"].split(":", 2)[2]
     run = _session_record_ids(run, session_ids)
     all_rows = sorted(session + run, key=lambda row: row.get("sequence") or 0)
     _normalize_wallet_attempts(all_rows)
@@ -477,70 +633,38 @@ def build_payload(run_path, session_path=None):
     original = binding["original_preset"] if binding else next((row.get("original_preset") for row in run + session if row.get("original_preset")), None)
     vector = binding.get("target_vector") if binding and binding.get("target_vector_complete") else next(
         (row.get("target_vector") for row in run + session if row.get("target_vector_complete")), None)
-    preset_content = deepcopy(original) if original is not None else {}
-    preset_content.pop("pools", None)
-    static_source_keys = {"target_authority", "name_and_id_catalog", "catalog_provenance", "catalog_language_support", "method"}
-    original_source = preset_content.pop("source", {})
-    preset_content["source"] = {key: value for key, value in original_source.items() if key in static_source_keys}
-    preset_evidence = {key: value for key, value in original_source.items() if key not in static_source_keys}
+    if vector is None and original:
+        vector = original.get("target_vector") if original.get("target_vector_complete") else None
+    preset_content = compact_preset(original or {})
+    preset_evidence = {}
     for key in ("game_display_role_totals", "game_display_total", "initial_inventory", "bag_party"):
-        if key in preset_content:
-            preset_evidence[key] = preset_content.pop(key)
+        if key in (original or {}):
+            preset_evidence[key] = original[key]
     preset_key = _hash([preset_content, vector])
     preset_evidence_record = binding["record_id"] if binding else next((row["record_id"] for row in session if row["event_type"] == "preset_observed"), start["record_id"])
     builder.tables["presets"].append(dict(preset_key=preset_key,
-        source_preset_id=binding.get("preset_id") if binding else start.get("preset_id"), target_vector_json=_json(vector),
+        target_vector_json=_json(vector),
         target_vector_complete=vector is not None, content_json=_json(preset_content)))
 
     task_end = next((row for row in reversed(session) if row["event_type"] == "task_end"), None)
     completed = bool(end and end.get("completion_observed"))
     lifecycle = "completed" if completed else "interrupted" if end or task_end else "open"
     termination = end.get("reason") if end else ("task_" + str(task_end.get("status")) if task_end else None)
-    configs = {}
-    for row in run:
-        params = (row.get("state") or {}).get("params") if isinstance(row.get("state"), dict) else None
-        if params:
-            configs[_hash(params)] = params
-    builder.tables["runs"].append(dict(run_id=run_id, participant_id=start.get("participant_id"),
-        session_id=start.get("session_id"), task_id=start.get("task_id"), preset_key=preset_key,
-        language=start.get("lang_type"), started_at=start.get("timestamp"),
-        ended_at=(end or task_end or {}).get("timestamp"), lifecycle_status=lifecycle,
-        termination_reason=termination,
+    builder.tables["runs"].append(dict(run_id=run_id, physical_game_id=run_id,
+        segment_index=1, segment_count=1, preset_key=preset_key, language=start.get("lang_type"),
+        lifecycle_status=lifecycle, termination_reason=termination,
         termination_basis=("local_log_recovery" if end and end.get("boundary_recovered") else
                            "exploration_end" if end else "task_end" if task_end else "no_end_observed"),
-        full_run_start_observed=full_start,
-        completion_observed=completed, quality_status="valid",
-        collector_version=start.get("collector_version"), source_schema_version=start.get("schema_version"),
-        runtime_versions_json=_json(start.get("runtime_versions", {})),
-        model_versions_json=_json((binding or {}).get("model_versions") or start.get("model_versions", {})),
-        config_json=_json(configs), observation_kind="local_game_UI_not_teacher_labels"))
+        full_run_start_observed=full_start, completion_observed=completed, quality_status="valid"))
 
     semantic = []
     for row in all_rows:
         event = row["event_type"]
-        if event in ("context_run_recognition", "context_run_task", "collector_loaded", "preset_screenshot"):
+        if event in _DISCARD_EVENTS:
             continue
         if event == "lifecycle_observed" and row.get("lifecycle_type") == "pipeline_node_completed":
             continue
         semantic.append(row)
-    referenced = set().union(*(_references(row) for row in semantic)) if semantic else set()
-    last_preset_crop = None
-    for row in all_rows:
-        if row["event_type"] == "preset_level_crop":
-            last_preset_crop = row
-        if row["event_type"] == "context_run_recognition":
-            raw = row.get("raw_result") or {}
-            if (raw.get("algorithm") == "OCR" or row["record_id"] in referenced
-                    or (row in session and raw.get("algorithm") == "ColorMatch")):
-                args = row.get("arguments") or []
-                override = row.get("keyword_arguments", {}).get("pipeline_override", args[1] if len(args) > 1 else {})
-                params = (override.get(row.get("node_name"), {}).get("recognition", {}).get("param", {})
-                          if isinstance(override, dict) else {})
-                input_crop = last_preset_crop if row.get("node_name", "").endswith("预设OCR") and params.get("only_rec") else None
-                builder.add_recognition(row, input_crop)
-                if input_crop:
-                    builder.link_reading(input_crop["record_id"], row["record_id"], "preset_level_OCR")
-
     wallets = [row for row in run if row["event_type"] == "wallet_observed"]
     attempts = {row.get("operation_id"): row for row in run if row["event_type"] == "purchase_attempt"}
     action_attempts = {}
@@ -577,13 +701,17 @@ def build_payload(run_path, session_path=None):
                     {key: value for key, value in evidence.items() if key.endswith("record_id") or key.endswith("observation_id")})
         if event in ("event_menu_observed", "event_menu_reobserved", "event_choice", "event_choice_click_observed"):
             row["event_identity_basis"] = "local_menu_correlation"
-            row["game_event_id"] = None
-            row["game_option_id"] = None
-            if "model_mapping" in row:
-                row["model_mapping_basis"] = "model_inference_not_game_server_identity"
         if event == "settlement_observed":
             previous_complete = row.get("potential_counts_complete")
             conflicts = list(row.get("potential_counts_conflicts") or [])
+            if row.get("owned_complete") and not row.get("owned_counts") and ("final_owned" in row or "owned" in row):
+                owned = row.get("final_owned", row.get("owned", [])) + row.get("owned_anonymous", [])
+                row["owned_counts"] = [dict(role=role,
+                    core_count=sum(item.get("count", 1) for item in owned if item.get("role") == role
+                                   and (item.get("core") or item.get("rarity", item.get("canonical_rarity")) == "core")),
+                    noncore_level_sum=sum(item.get("level", item.get("level_after")) * item.get("count", 1) for item in owned
+                        if item.get("role") == role and not (item.get("core")
+                            or item.get("rarity", item.get("canonical_rarity")) == "core"))) for role in (1, 2, 3)]
             checked = check_potential_counts(row.get("potential_counts") or [], row)
             for conflict in checked["potential_counts_conflicts"]:
                 if conflict not in conflicts:
@@ -599,12 +727,8 @@ def build_payload(run_path, session_path=None):
         if row.get("source_attribution") == "confirmed_event_choice_and_following_reward_page":
             row["source_basis"] = "confirmed_history_reconstruction"
         basis = ("local_log_recovery" if row.get("observer") == "local_log_recovery" else
-                 "maa_policy_decision" if row.get("policy_mode") == "native_fallback" and event in ("policy_decision", "fallback_policy_decision") else
-                 "model_inference" if event in ("model_decision", "policy_decision") else
-                 "maa_cache_unverified" if event == "selection_cache" else
                  "inventory_difference_derivation" if event == "note_delta" else "game_UI_observation")
-        for key in ("original_preset", "model_versions", "runtime_versions"):
-            row.pop(key, None)
+        row.pop("original_preset", None)
         payload = {key: item for key, item in row.items() if key not in BASE_FIELDS}
         if event == "note_setup_observed":
             payload.pop("raw", None)  # repeated main_discs[].raw and readings[].raw
@@ -613,7 +737,8 @@ def build_payload(run_path, session_path=None):
                 payload["observation"].pop("counts", None)
         if event == "shop_observed":
             shop_payload = payload.pop("payload", {})
-            payload["slots"] = shop_payload.get("slots", [])
+            if "slots" not in payload:
+                payload["slots"] = shop_payload.get("slots", [])
             payload.pop("stock_snapshot", None)  # same shelf items already live in slots
         if event in ("exploration_start", "preset_observed"):
             payload["preset_key"] = preset_key
@@ -621,42 +746,16 @@ def build_payload(run_path, session_path=None):
             payload["start_confirmation_record_id"] = start_confirmation["record_id"]
         if rid == preset_evidence_record and preset_evidence:
             payload["preset_read_evidence"] = preset_evidence
-        if isinstance(payload.get("decision"), dict):
-            payload["decision"]["basis"] = "model_inference"
-        # Parameters are run configuration, not per-page observed state.
-        for field in ("state", "previous_state"):
-            if isinstance(payload.get(field), dict) and "params" in payload[field]:
-                params = payload[field].pop("params")
-                payload[field]["run_config_id"] = _hash(params)
         builder.inspect_quality(row, payload)
         if row.get("journal_gap"):
             builder.issue(rid, "journal_gap", "journal_record_missing", "partial",
                 "本地写入失败后仍未补写的记录形成缺口；此前独立确认的前缀保留。",
                 dict(row["journal_gap"], affected_through_sequence=run[-1].get("sequence")))
         normalized[rid] = row
-        clean = builder.clean(payload, row)
-        builder.tables["records"].append(dict(record_id=rid, original_record_id=row.get("_original_record_id", rid), run_id=run_id,
-            origin="run" if source.get("run_id") == run_id else "session",
-            sequence=source.get("sequence"), run_sequence=source.get("run_sequence"),
-            timestamp=source.get("timestamp"), event_type=event, basis=basis,
-            quality_status="valid", payload_json=_json(clean)))
-        linked = _references(row)
-        # A read_id identifies one acquisition. Event/operation IDs can cover
-        # many later pages and must not attach their entire OCR history here.
-        for key in ("read_id",):
-            if row.get(key):
-                linked.update(builder.read_groups.get((key, row[key]), set()))
-        if event in ("event_menu_observed", "event_menu_reobserved"):
-            # Event OCR precedes menu emission and is linked by the menu ID.
-            linked.update(builder.read_groups.get(("event_id", row.get("event_id")), set()))
-        for reading_id in linked & builder.readings.keys():
-            builder.link_reading(rid, reading_id, "recognition_evidence")
-        if event == "preset_observed":
-            for reading_id, reading in builder.recognitions.items():
-                if reading.get("task_id") == source.get("task_id") and reading in session:
-                    builder.link_reading(rid, reading_id, "preset_OCR_and_card_boundaries")
+        builder.tables["records"].append(dict(record_id=rid, run_id=run_id,
+            sequence=source.get("sequence"), event_type=event, basis=basis,
+            quality_status="valid", payload_json=_json(payload)))
 
-    record_ids = {row["record_id"] for row in builder.tables["records"]}
     offer_ids = {row.get("offer_id") for row in run if row["event_type"] == "offer_observed"}
     for row, reused in reused_interval_components(normalized.values()):
         builder.issue(row["record_id"], "mixed_sources", "combined_source_already_attributed", "suspect",
@@ -740,32 +839,21 @@ def build_payload(run_path, session_path=None):
     for record in builder.tables["records"]:
         record["quality_status"] = builder.record_quality[record["record_id"]]
     builder.tables["runs"][0]["quality_status"] = max(builder.record_quality.values(), key=QUALITY_RANK.get, default="valid")
-    builder.tables["objects"] = sorted(builder.objects.values(), key=lambda row: row["object_id"])
-    builder.tables["record_objects"] = [dict(record_id=rid, field_path=path, object_id=oid)
-        for rid, path, oid in sorted(builder.object_links)]
-    builder.tables["readings"] = sorted(builder.readings.values(), key=lambda row: row["reading_id"])
-    builder.tables["record_readings"] = [dict(record_id=rid, reading_id=reading, field_path=path)
-        for rid, reading, path in sorted(builder.reading_links)]
     builder.tables["quality_issues"] = sorted(builder.issues.values(), key=lambda row: row["issue_id"])
-    return dict(format=FORMAT, schema_version=SCHEMA_VERSION, tables=builder.tables)
+    return compact_payload(dict(format=FORMAT, schema_version=SCHEMA_VERSION, tables=builder.tables))
 
 
 def import_payload(database_path, payload):
     """Idempotently insert the same rows used by transport, returning table totals."""
-    if payload.get("format") != FORMAT or payload.get("schema_version") != SCHEMA_VERSION:
-        raise ValueError("Unsupported state-space database payload")
+    payload = compact_payload(payload)
     database_path = Path(database_path)
     database_path.parent.mkdir(parents=True, exist_ok=True)
     with closing(sqlite3.connect(database_path)) as connection, connection:
-        # Refresh views and replace the run in one commit, including on old databases.
+        # Replace a checkpoint and its quality together in one commit.
         connection.executescript("PRAGMA foreign_keys=ON;\nBEGIN;\n" +
             Path(__file__).with_name("research_schema.sql").read_text(encoding="utf-8"))
         for run in payload["tables"]["runs"]:
             connection.execute("DELETE FROM quality_issues WHERE run_id=?", (run["run_id"],))
-            for table in ("record_readings", "record_objects"):
-                connection.execute(f'DELETE FROM "{table}" WHERE record_id IN (SELECT record_id FROM records WHERE run_id=?)',
-                                   (run["run_id"],))
-            connection.execute("DELETE FROM readings WHERE run_id=?", (run["run_id"],))
             connection.execute("DELETE FROM records WHERE run_id=?", (run["run_id"],))
         for table in TABLES:
             rows = payload["tables"].get(table, [])
@@ -782,7 +870,6 @@ def import_payload(database_path, payload):
             # rows when the same run is imported again.
             connection.executemany(f'INSERT INTO "{table}" ({names}) VALUES ({values}) ON CONFLICT({target}) {action}',
                                    ([row[column] for column in columns] for row in rows))
-        connection.execute("DELETE FROM objects WHERE NOT EXISTS (SELECT 1 FROM record_objects r WHERE r.object_id=objects.object_id)")
         connection.execute("DELETE FROM presets WHERE NOT EXISTS (SELECT 1 FROM runs r WHERE r.preset_key=presets.preset_key)")
         return {table: connection.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0] for table in TABLES}
 
@@ -799,10 +886,6 @@ def export_payload(database_path, run_id):
             "presets": "SELECT p.* FROM presets p JOIN runs r USING(preset_key) WHERE r.run_id=? ORDER BY p.preset_key",
             "runs": "SELECT * FROM runs WHERE run_id=?",
             "records": "SELECT * FROM records WHERE run_id=? ORDER BY sequence,record_id",
-            "objects": "SELECT DISTINCT o.* FROM objects o JOIN record_objects l USING(object_id) JOIN records r USING(record_id) WHERE r.run_id=? ORDER BY o.object_id",
-            "record_objects": "SELECT l.* FROM record_objects l JOIN records r USING(record_id) WHERE r.run_id=? ORDER BY l.record_id,l.field_path,l.object_id",
-            "readings": "SELECT * FROM readings WHERE run_id=? ORDER BY reading_id",
-            "record_readings": "SELECT l.* FROM record_readings l JOIN records r USING(record_id) WHERE r.run_id=? ORDER BY l.record_id,l.reading_id,l.field_path",
             "quality_issues": "SELECT * FROM quality_issues WHERE run_id=? ORDER BY issue_id",
         }
         tables = {table: [dict(row) for row in connection.execute(queries[table], (run_id,))]

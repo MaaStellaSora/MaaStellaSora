@@ -43,8 +43,10 @@ def read_floor_observation(context, image, expected_floors=()):
     )
     if expected_floors:
         variants = variants[2:] + variants[:2]
-    early_completed = False
+    early_completed, confirmed, floors = False, False, []
     for index, (name, plane, region) in enumerate(variants):
+        if context.tasker.stopping:
+            break
         left, top, width, height = region
         digits = plane[top - y:top - y + height, left - x:left - x + width]
         digits = cv2.resize(digits, None, fx=RULES["scale"], fy=RULES["scale"], interpolation=cv2.INTER_CUBIC)
@@ -66,6 +68,7 @@ def read_floor_observation(context, image, expected_floors=()):
         if confirmed and floors[0] in expected_floors:
             early_completed = index + 1 < len(variants)
             break
+    confirmed = confirmed and not context.tasker.stopping
     floor = floors[0] if confirmed else None
     return {"floor": floor, "observed_floor": floor, "observed_floors": floors,
             "complete": confirmed, "expected_floors": expected_floors,

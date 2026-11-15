@@ -287,6 +287,8 @@ def read_settlement(context, image, concerto_order=None):
     """Read the final score and six visible actual concerto levels."""
     concertos = []
     for slot, (x, y, width, height) in enumerate(SETTLEMENT_CARD_REGIONS, 1):
+        if context.tasker.stopping:
+            break
         if concerto_order is not None:
             previous = next((row for row in concerto_order if row["slot"] == slot), None)
             if previous is None:
@@ -303,8 +305,8 @@ def read_settlement(context, image, concerto_order=None):
             continue
         names = read_text(context, image, (x, y, width, CONCERTO_RULES["settlement_title_height"]))
         offset = CONCERTO_RULES["settlement_level_offset_y"]
-        levels = read_text(context, image, (x, y + offset,
-            CONCERTO_RULES["settlement_cold_level_width"], height - offset), node=TEXT_RULE_NODES["concerto_level"])
+        levels = ([] if context.tasker.stopping else read_text(context, image, (x, y + offset,
+            CONCERTO_RULES["settlement_cold_level_width"], height - offset), node=TEXT_RULE_NODES["concerto_level"]))
         name = "".join(row["text"] for row in sorted(names, key=lambda row: row["box"][0]))
         name_complete = bool(name) and all(valid_text(row) for row in names)
         level = _concerto_level(levels, context)
@@ -317,10 +319,12 @@ def read_settlement(context, image, concerto_order=None):
                           "source": "settlement", "box": [x, y, width, height],
                           "raw": {"name": names, "level": levels},
                           "complete": name_complete and level is not None})
-    score_raw = read_text(context, image, CONCERTO_RULES["settlement_score_region"], only_rec=True,
-                          expected=(OCR_RULES["ocr"]["numeric_pattern"],))
+    score_raw = ([] if context.tasker.stopping else read_text(
+        context, image, CONCERTO_RULES["settlement_score_region"], only_rec=True,
+        expected=(OCR_RULES["ocr"]["numeric_pattern"],)))
     values = _numeric_values(score_raw)
     score = next(iter(values)) if len(values) == 1 else None
     return {"actual_concertos": concertos, "score": score, "score_raw": score_raw,
             "mapping_complete": all(row.get("group_id") is not None for row in concertos),
-            "complete": score is not None and all(row["complete"] for row in concertos)}
+            "complete": score is not None and all(row["complete"] for row in concertos)
+                and not context.tasker.stopping}

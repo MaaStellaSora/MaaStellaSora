@@ -122,6 +122,8 @@ def find_icons(context, image, roi, scales=None, threshold=None, melodies=MELODI
             image, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC))
         scaled_roi = [round(value * scale) for value in roi]
         for melody in melodies:
+            if context.tasker.stopping:
+                break
             detail = context.run_recognition(ICON_NODE, scaled, {
                 ICON_NODE: {"recognition": {"param": {
                     "template": [OCR_RULES["icons"]["template"].format(melody=melody)],

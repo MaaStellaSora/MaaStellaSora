@@ -218,6 +218,7 @@
     "interface.task.option.邀约旅人.inputs.4号.label": "4人目",
     "interface.task.option.邀约旅人.inputs.5号.description": "巡遊者名を入力してください（例：シア）。招待しない場合はxを入力するか、空欄にしてください。",
     "interface.task.option.邀约旅人.inputs.5号.label": "5人目",
+    "interface.task.option.邀约旅人.label": "招待する巡遊者",
     "interface.task.option.邀约旅人_1号_送礼.cases.不送.label": "贈らない",
     "interface.task.option.邀约旅人_1号_送礼.cases.所有.label": "すべて",
     "interface.task.option.邀约旅人_1号_送礼.cases.最爱.label": "大好きなもの",

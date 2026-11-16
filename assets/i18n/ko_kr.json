@@ -218,6 +218,7 @@
     "interface.task.option.邀约旅人.inputs.4号.label": "4번",
     "interface.task.option.邀约旅人.inputs.5号.description": "여행가 이름을 입력하세요(예: 시아). 약속 신청 대상이 없으면 영문자 x를 입력하거나 비워 두세요.",
     "interface.task.option.邀约旅人.inputs.5号.label": "5번",
+    "interface.task.option.邀约旅人.label": "약속 신청 대상",
     "interface.task.option.邀约旅人_1号_送礼.cases.不送.label": "보내지 않음",
     "interface.task.option.邀约旅人_1号_送礼.cases.所有.label": "전체",
     "interface.task.option.邀约旅人_1号_送礼.cases.最爱.label": "최애",

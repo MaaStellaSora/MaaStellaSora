@@ -218,6 +218,7 @@
     "interface.task.option.邀约旅人.inputs.4号.label": "Slot 4",
     "interface.task.option.邀约旅人.inputs.5号.description": "Enter the Trekker's name as shown in-game, e.g. Xia. Enter x or leave empty if none.",
     "interface.task.option.邀约旅人.inputs.5号.label": "Slot 5",
+    "interface.task.option.邀约旅人.label": "Trekkers to Invite",
     "interface.task.option.邀约旅人_1号_送礼.cases.不送.label": "Don't Send",
     "interface.task.option.邀约旅人_1号_送礼.cases.所有.label": "All",
     "interface.task.option.邀约旅人_1号_送礼.cases.最爱.label": "Favorite",

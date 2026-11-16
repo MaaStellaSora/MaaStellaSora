@@ -24,6 +24,7 @@
     "option": {
         "邀约旅人": {
             "type": "input",
+            "label": "$interface.task.option.邀约旅人.label",
             "resource": [
                 "台服",
                 "日服",

@@ -218,6 +218,7 @@
     "interface.task.option.邀约旅人.inputs.4号.label": "4号",
     "interface.task.option.邀约旅人.inputs.5号.description": "请输入旅人名字，如希娅。如没有邀约对象请输入字母x或留空。",
     "interface.task.option.邀约旅人.inputs.5号.label": "5号",
+    "interface.task.option.邀约旅人.label": "邀约旅人",
     "interface.task.option.邀约旅人_1号_送礼.cases.不送.label": "不送",
     "interface.task.option.邀约旅人_1号_送礼.cases.所有.label": "所有",
     "interface.task.option.邀约旅人_1号_送礼.cases.最爱.label": "最爱",

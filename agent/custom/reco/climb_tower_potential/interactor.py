@@ -158,8 +158,28 @@ class PotentialInteractor(Interactor):
                 },
             )
             return ["common", "common", "common"]
+        elif potential_count < 3:
+            potentials_rarity = self._fill_missing_three_card_slots(potentials, potentials_rarity)
 
         return potentials_rarity
+
+    @staticmethod
+    def _fill_missing_three_card_slots(potentials: list[list], potentials_rarity: list[str]) -> list[str]:
+        """补全三卡布局中漏识别的卡片。
+
+        三张卡片的 x 坐标约为 154/498/842，两张卡片约为 326/670。若识别到位于左右两侧位置的卡片，
+        说明当前一定是三卡布局，此时有卡片未被普通/稀有模板命中，按普通潜能补齐，避免误用两卡布局的 ROI。
+        """
+        slots = [154, 498, 842]
+        by_slot = {}
+        for rarity, box in potentials:
+            index = min(range(3), key=lambda i: abs(box[0] - slots[i]))
+            if abs(box[0] - slots[index]) <= 30:
+                by_slot[index] = rarity
+        if len(by_slot) != len(potentials) or not ({0, 2} & by_slot.keys()):
+            return potentials_rarity
+        logger.debug(f"潜能卡片只识别到 {len(potentials)} 张（位置 {sorted(by_slot)}），按三卡布局补齐")
+        return [by_slot.get(i, "common") for i in range(3)]
 
     def get_recommended_potential(self, roi: list[int] | None = None) -> list:
         """识别系统推荐图标，返回识别到的推荐潜能图标的坐标列表"""

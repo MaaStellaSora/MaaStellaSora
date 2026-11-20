@@ -72,7 +72,7 @@ jobs:
           python tools/ci/prepare_maafw.py --maafw-tag "${{ steps.upstream.outputs.maafw_tag }}" --platform-tag macosx_13_0_arm64
           python -m pip install --disable-pip-version-check --find-links install/deps --requirement tools/checks/requirements.txt "maafw==${{ steps.upstream.outputs.maafw_python_version }}"
 
-      - name: Check cataclysm survivor stop and key release behavior
+      - name: Run agent and resource unit tests
         run: python -m unittest discover -s tools/checks/tests -v
 
       - name: Check Resource (BASE)

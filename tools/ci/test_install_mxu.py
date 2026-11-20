@@ -57,7 +57,10 @@ class InstallMxuTests(unittest.TestCase):
                     ],
                 },
             ],
-            "import": ["interface/tasks/login.json"],
+            "import": [
+                "interface/tasks/login.json",
+                "interface/tasks/climb_tower_neural.json",
+            ],
         }
         self._write(
             self.root / "assets" / "interface.json",
@@ -69,6 +72,9 @@ class InstallMxuTests(unittest.TestCase):
             '{"interface.label":"测试"}',
         )
         self._write(self.root / "assets" / "interface" / "tasks" / "login.json")
+        self._write(
+            self.root / "assets" / "interface" / "tasks" / "climb_tower_neural.json"
+        )
         self._write(self.root / "assets" / "resource" / "windows" / "base.json")
         self._write(self.root / "assets" / "resource" / "en" / "base.json")
         for name in install_mxu.REQUIRED_OCR_FILES:
@@ -77,10 +83,26 @@ class InstallMxuTests(unittest.TestCase):
             )
         self._write(self.root / "agent" / "main.py")
         self._write(self.root / "agent" / "custom" / "action.py")
+        self._write(
+            self.root / "agent" / "custom" / "action" / "climb_tower_neural" / "__init__.py"
+        )
+        self._write(
+            self.root
+            / "agent"
+            / "custom"
+            / "action"
+            / "climb_tower_neural"
+            / "models"
+            / "M213.npz"
+        )
         self._write(self.root / "agent" / "__pycache__" / "main.pyc")
 
         for name in install_mxu.PROJECT_FILES:
             self._write(self.root / name, f"project {name}")
+        self._write(
+            self.root / "assets" / "requirements-win-x64.txt",
+            "-r requirements.txt\nnumpy\nopencv-python-headless\n",
+        )
         self._write(
             self.root / "assets" / "MaaCommonAssets" / "LICENSE",
             "MaaCommonAssets license",
@@ -126,6 +148,10 @@ class InstallMxuTests(unittest.TestCase):
         self.assertEqual(interface["title"], "星塔助手 MXU")
         self.assertEqual(interface["icon"], "Assets/logo.ico")
         self.assertEqual(interface["license"], "LICENSE")
+        self.assertEqual(
+            interface["agent"]["child_args"],
+            ["-u", "./agent/main.py"],
+        )
         self.assertEqual(interface["resource"][0]["path"], ["resource/base"])
         self.assertEqual(
             interface["controller"][0]["attach_resource_path"],
@@ -156,6 +182,16 @@ class InstallMxuTests(unittest.TestCase):
         self.assertEqual(
             (output / "i18n" / "zh_cn.json").read_text(encoding="utf-8"),
             '{"interface.label":"测试"}',
+        )
+        self.assertIn(
+            "opencv-python-headless",
+            (output / "requirements.txt").read_text(encoding="utf-8"),
+        )
+        self.assertTrue(
+            (output / "agent/custom/action/climb_tower_neural/__init__.py").is_file()
+        )
+        self.assertTrue(
+            (output / "agent/custom/action/climb_tower_neural/models/M213.npz").is_file()
         )
         self.assertEqual(
             (self.root / "assets" / "interface.json").read_text(encoding="utf-8"),

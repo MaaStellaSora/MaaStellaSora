@@ -309,5 +309,9 @@
     "pipeline.邀约_还是算了.focus.Node.Recognition.Succeeded": "选择不送礼物",
     "pipeline.邀约_送出礼物.focus.Node.Recognition.Succeeded": "选择送出礼物",
     "pipeline.邀约_特殊回忆选项.focus.Node.Action.Starting": "选择带爱心卡片的特殊回忆选项",
-    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未发现爱心卡片，选择默认对话选项"
+    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未发现爱心卡片，选择默认对话选项",
+    "interface.tower_neural.task.description": "本模块是社区热心贡献者提供的基于神经网络决策的自动化爬塔，相比于原版爬塔，神经网络爬塔可以抓取更多潜能，并能适配突破潜能种类软上限的情况。<br>如使用该模块进行爬塔，请先提前设置好队伍及目标潜能预设，然后从主页开始运行。<br>当前该模块处于测试版，仅供Windows 64位系统的官服、日服玩家使用。测试版目前仅支持潜能抓取，不会购买音符。<br>神经网络需要基于大量数据训练，希望大家能打开分享数据选项，帮助模块作者改善模型。",
+    "interface.tower_neural.task.label": "自动爬塔（神经网络）",
+    "interface.tower_neural.upload.description": "开启后，每局向模块作者分享预设、游戏内观测、实际操作和结算，用于推导爬塔机制。缺失或存疑的数据会标记，不含个人标识或截图。",
+    "interface.tower_neural.upload.label": "分享数据，帮助改进模型"
 }

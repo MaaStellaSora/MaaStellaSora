@@ -7,6 +7,9 @@ from .fight import *
 from .activity import *
 from .cataclysm_survivor_move import *
 from .cataclysm_survivor_record import *
+from .climb_tower_neural import register_lazy_callbacks
+
+register_lazy_callbacks()
 
 __all__ = [
     "ShopAction",

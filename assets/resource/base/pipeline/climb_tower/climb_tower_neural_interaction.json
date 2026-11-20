@@ -1,0 +1,32 @@
+{
+    "星塔_神经网络_交互_点击": {
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0
+    },
+    "星塔_神经网络_交互_等待": {
+        "action": {
+            "type": "DoNothing"
+        },
+        "post_delay": 0,
+        "rate_limit": 100,
+        "timeout": 3000,
+        "next": [
+            "星塔_神经网络_交互_观察"
+        ]
+    },
+    "星塔_神经网络_交互_观察": {
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "stella_value_frame_observation",
+                "custom_recognition_param": 0
+            }
+        },
+        "action": {
+            "type": "DoNothing"
+        },
+        "post_delay": 0
+    }
+}

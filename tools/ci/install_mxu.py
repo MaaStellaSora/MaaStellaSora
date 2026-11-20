@@ -21,6 +21,7 @@ from package_common import (  # noqa: E402
     COPY_IGNORE,
     PROJECT_FILES,
     REQUIRED_OCR_FILES,
+    copy_agent_files,
     copy_project_files as _copy_project_files,
     copy_tree as _copy_tree,
     remove_build_artifacts,
@@ -130,7 +131,7 @@ def _copy_project_payload(working_dir: Path, install_dir: Path, version: str) ->
     )
     _copy_tree(assets_dir / "interface", install_dir / "interface")
     _copy_tree(assets_dir / "i18n", install_dir / "i18n")
-    _copy_tree(working_dir / "agent", install_dir / "agent")
+    copy_agent_files(working_dir, install_dir)
 
     logo = assets_dir / "logo.ico"
     source_interface = assets_dir / "interface.json"
@@ -151,11 +152,10 @@ def _copy_project_payload(working_dir: Path, install_dir: Path, version: str) ->
     with source_interface.open(encoding="utf-8") as file:
         interface = json.load(file)
     transformed = transform_interface(interface, version)
+    _copy_project_files(working_dir, install_dir, platform_tag="win-x64")
     with (install_dir / "interface.json").open("w", encoding="utf-8") as file:
         json.dump(transformed, file, ensure_ascii=False, indent=4)
         file.write("\n")
-
-    _copy_project_files(working_dir, install_dir)
 
 
 def _package_path(install_dir: Path, value: str, label: str) -> Path:
@@ -252,7 +252,8 @@ def validate_package(install_dir: Path) -> dict[str, Any]:
         raise ValueError("interface.agent is invalid or still contains timeout")
     if agent.get("child_exec") != "./python/python.exe":
         raise ValueError("interface.agent.child_exec is not MXU-compatible")
-    if agent.get("child_args") != ["-u", "./agent/main.py"]:
+    child_args = agent.get("child_args")
+    if child_args != ["-u", "./agent/main.py"]:
         raise ValueError("interface.agent.child_args is not MXU-compatible")
 
     referenced_files: list[tuple[str, str]] = [
@@ -260,7 +261,6 @@ def validate_package(install_dir: Path) -> dict[str, Any]:
         (str(interface.get("license", "")), "interface.license"),
         (agent["child_exec"].removeprefix("./"), "interface.agent.child_exec"),
     ]
-    child_args = agent["child_args"]
     referenced_files.append(
         (child_args[-1].removeprefix("./"), "interface.agent.child_args")
     )

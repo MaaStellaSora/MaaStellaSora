@@ -1,0 +1,18 @@
+{
+    "actions": {
+        "星塔_入口_agent": {"name": "stella_value_preparation", "handler": "Preparation"},
+        "星塔_循环用节点_agent": {"name": "stella_value_loop", "handler": "TowerLoop"},
+        "星塔_节点_商店_商店主流程_agent": {"name": "stella_value_shop", "handler": "Shop"},
+        "星塔_记录界面_读取数值_agent": {"name": "stella_value_record_scan", "handler": "RecordScan"},
+        "星塔_编队秘纹_agent": {"name": "stella_note_start", "handler": "NoteStart"},
+        "星塔_点击空白处关闭_agent": {"name": "stella_note_continue", "handler": "NoteContinue"},
+        "星塔_开始爬塔_检测背包按钮_agent": {"name": "stella_note_scene", "handler": "NoteScene"},
+        "星塔_节点_进行对话选择_agent": {"name": "stella_note_event_click", "handler": "NoteEventClick"},
+        "星塔_节点_选择潜能_拿走_agent": {"name": "stella_value_potential_take", "handler": "PotentialTake"},
+        "星塔_神经网络_潜能刷新": {"name": "stella_value_potential_refresh", "handler": "PotentialRefresh"}
+    },
+    "recognitions": {
+        "星塔_节点_选择潜能_agent": {"name": "stella_value_potential", "handler": "Potential"},
+        "星塔_节点_进行对话选择_agent": {"name": "stella_value_event", "handler": "Event"}
+    }
+}

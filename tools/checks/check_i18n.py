@@ -36,6 +36,7 @@ class Finding:
 class ScanResult:
     references: dict[str, list[str]] = field(default_factory=dict)
     findings: list[Finding] = field(default_factory=list)
+    optional_references: set[str] = field(default_factory=set)
 
     def add_reference(self, key: str, location: str) -> None:
         self.references.setdefault(key, []).append(location)
@@ -348,41 +349,42 @@ class AgentScope:
                 result.findings.append(Finding(f"cannot read Python source: {error}", location))
                 continue
 
+            debug_nodes = {
+                child
+                for call in ast.walk(tree)
+                if isinstance(call, ast.Call) and self._is_logger_call(call, ("debug",))
+                for child in ast.walk(call)
+            }
             for node in ast.walk(tree):
+                if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                    if node in debug_nodes:
+                        if node.value.startswith("$agent."):
+                            result.optional_references.add(node.value[1:])
+                    else:
+                        self._collect_key(node.value, location, node, result)
                 if not isinstance(node, ast.Call):
                     continue
                 if self._is_logger_call(node):
                     self._scan_log_call(node, location, result)
-                elif self._is_fatal_error_helper(node):
-                    for argument in node.args:
-                        for item in ast.walk(argument):
-                            if isinstance(item, ast.Constant) and isinstance(item.value, str):
-                                self._collect_key(item.value, location, item, result)
         return result
 
     @staticmethod
-    def _is_logger_call(node: ast.Call) -> bool:
-        if not isinstance(node.func, ast.Attribute) or node.func.attr not in {
-            "info",
-            "warning",
-            "error",
-        }:
+    def _is_logger_call(
+        node: ast.Call, levels: tuple[str, ...] = ("info", "warning", "error")
+    ) -> bool:
+        if not isinstance(node.func, ast.Attribute) or node.func.attr not in levels:
             return False
         receiver = node.func.value
         return (isinstance(receiver, ast.Name) and receiver.id == "logger") or (
             isinstance(receiver, ast.Attribute) and receiver.attr == "logger"
         )
 
-    @staticmethod
-    def _is_fatal_error_helper(node: ast.Call) -> bool:
-        return isinstance(node.func, ast.Attribute) and node.func.attr == "_handle_fatal_error"
-
     def _scan_log_call(self, node: ast.Call, location: str, result: ScanResult) -> None:
         if not node.args:
             return
         message = node.args[0]
         if isinstance(message, ast.Constant) and isinstance(message.value, str):
-            if self._collect_key(message.value, location, message, result):
+            if message.value.startswith("$agent."):
                 return
             text = message.value
         elif isinstance(message, ast.JoinedStr):
@@ -502,11 +504,12 @@ def check_translation_coverage(
     references: dict[str, list[str]],
     translations: dict[str, dict[str, str]],
     location_root: str = "languages",
+    optional_references: set[str] | frozenset[str] = frozenset(),
 ) -> list[Finding]:
     findings = []
     for locale, entries in translations.items():
         missing = references.keys() - entries.keys()
-        unused = entries.keys() - references.keys()
+        unused = entries.keys() - references.keys() - optional_references
         for key in sorted(missing):
             findings.append(
                 Finding(
@@ -541,6 +544,7 @@ def check(root: Path) -> list[Finding]:
         target = agent_result if scope.name == "agent" else result
         for key, locations in scoped.references.items():
             target.references.setdefault(key, []).extend(locations)
+        target.optional_references.update(scoped.optional_references)
         result.findings.extend(scoped.findings)
 
     translations, translation_findings = load_translations(root, interface)
@@ -554,6 +558,7 @@ def check(root: Path) -> list[Finding]:
             agent_result.references,
             agent_translations,
             "agent/agent_config/i18n",
+            agent_result.optional_references,
         )
     )
     return result.findings

@@ -1,0 +1,3 @@
+-r requirements.txt
+numpy
+opencv-python-headless

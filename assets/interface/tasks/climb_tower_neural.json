@@ -1,0 +1,290 @@
+{
+    "task": [
+        {
+            "name": "爬塔（神经网络）",
+            "controller": [
+                "桌面端",
+                "桌面端（前台）"
+            ],
+            "resource": [
+                "官服",
+                "日服"
+            ],
+            "label": "$interface.tower_neural.task.label",
+            "entry": "星塔_神经网络_入口",
+            "description": "$interface.tower_neural.task.description",
+            "option": [
+                "神经网络爬塔_爬塔次数",
+                "神经网络爬塔_属性塔",
+                "神经网络爬塔_上传对局数据"
+            ],
+            "pipeline_override": {
+                "星塔_入口_agent": {
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_value_preparation"
+                        }
+                    },
+                    "next": [
+                        "星塔_出发_agent"
+                    ],
+                    "attach": {
+                        "reset_state": false
+                    }
+                },
+                "星塔_编队角色_选择队伍_agent": {
+                    "action": {
+                        "type": "DoNothing"
+                    }
+                },
+                "星塔_循环用节点_agent": {
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_value_loop"
+                        }
+                    }
+                },
+                "星塔_节点_商店_商店主流程_agent": {
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_value_shop"
+                        }
+                    }
+                },
+                "星塔_记录界面_读取数值_agent": {
+                    "recognition": {
+                        "type": "Or",
+                        "param": {
+                            "any_of": [
+                                "星塔_保存记录_agent",
+                                "星塔_神经网络_结算保存图形"
+                            ]
+                        }
+                    },
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_value_record_scan"
+                        }
+                    }
+                },
+                "星塔_编队秘纹_agent": {
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_note_start"
+                        }
+                    }
+                },
+                "星塔_点击空白处关闭_agent": {
+                    "pre_wait_freezes": {
+                        "time": 200,
+                        "target": [
+                            350,
+                            115,
+                            580,
+                            32
+                        ],
+                        "threshold": 0.001,
+                        "method": 1,
+                        "rate_limit": 50,
+                        "timeout": 3000
+                    },
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_note_continue"
+                        }
+                    }
+                },
+                "星塔_开始爬塔_检测背包按钮_agent": {
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_note_scene"
+                        }
+                    }
+                },
+                "星塔_节点_进行对话选择_agent": {
+                    "recognition": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_recognition": "stella_value_event"
+                        }
+                    },
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_note_event_click"
+                        }
+                    }
+                },
+                "星塔_节点_选择潜能_agent": {
+                    "recognition": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_recognition": "stella_value_potential"
+                        }
+                    },
+                    "attach": {
+                        "handler": "value_model",
+                        "environment": "tower_8"
+                    }
+                },
+                "星塔_跳过进入星塔流程_agent": {
+                    "enabled": false
+                },
+                "星塔_神经网络_运行环境": {
+                    "attach": {
+                        "research_recording": true,
+                        "research_upload": false
+                    }
+                },
+                "星塔_节点_选择潜能_拿走_agent": {
+                    "recognition": {
+                        "type": "DirectHit"
+                    },
+                    "action": {
+                        "type": "Custom",
+                        "param": {
+                            "custom_action": "stella_value_potential_take"
+                        }
+                    },
+                    "next": [
+                        "星塔_节点_选择潜能_已确认拿走_agent"
+                    ]
+                },
+                "星塔_星塔探索按钮_agent": {
+                    "next": [
+                        "星塔_属性塔选择_agent"
+                    ]
+                }
+            }
+        }
+    ],
+    "option": {
+        "神经网络爬塔_爬塔次数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "爬塔次数",
+                    "label": "$interface.task.option.新版爬塔_爬塔次数.inputs.爬塔次数.label",
+                    "pipeline_type": "int",
+                    "default": "1",
+                    "verify": "^[1-9]\\d*$",
+                    "pattern_msg": "$interface.task.option.新版爬塔_爬塔次数.inputs.爬塔次数.pattern_msg"
+                }
+            ],
+            "pipeline_override": {
+                "星塔_循环用节点_agent": {
+                    "attach": {
+                        "loop_count": "{爬塔次数}"
+                    }
+                }
+            }
+        },
+        "神经网络爬塔_属性塔": {
+            "type": "select",
+            "label": "$interface.task.option.新版爬塔_属性塔.label",
+            "default_case": "属性_光土",
+            "cases": [
+                {
+                    "name": "属性_光土",
+                    "label": "$interface.task.option.新版爬塔_属性塔.cases.属性_光土.label",
+                    "pipeline_override": {
+                        "星塔_属性塔选择_agent": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_光土__387_137_124_45__337_87_224_145.png"
+                                    ]
+                                }
+                            },
+                            "attach": {
+                                "active_melodies": [
+                                    "melody_of_lux",
+                                    "melody_of_terra"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_水风",
+                    "label": "$interface.task.option.新版爬塔_属性塔.cases.属性_水风.label",
+                    "pipeline_override": {
+                        "星塔_属性塔选择_agent": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_水风__384_271_129_39__334_221_229_139.png"
+                                    ]
+                                }
+                            },
+                            "attach": {
+                                "active_melodies": [
+                                    "melody_of_aqua",
+                                    "melody_of_ventus"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "属性_火暗",
+                    "label": "$interface.task.option.新版爬塔_属性塔.cases.属性_火暗.label",
+                    "pipeline_override": {
+                        "星塔_属性塔选择_agent": {
+                            "recognition": {
+                                "param": {
+                                    "template": [
+                                        "ClimbTower_agent/爬塔_火暗__381_404_129_39__331_354_229_139.png"
+                                    ]
+                                }
+                            },
+                            "attach": {
+                                "active_melodies": [
+                                    "melody_of_ignis",
+                                    "melody_of_umbra"
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "神经网络爬塔_上传对局数据": {
+            "type": "switch",
+            "label": "$interface.tower_neural.upload.label",
+            "description": "$interface.tower_neural.upload.description",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "label": "No",
+                    "pipeline_override": {
+                        "星塔_神经网络_运行环境": {
+                            "attach": {
+                                "research_upload": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "label": "Yes",
+                    "pipeline_override": {
+                        "星塔_神经网络_运行环境": {
+                            "attach": {
+                                "research_upload": true
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

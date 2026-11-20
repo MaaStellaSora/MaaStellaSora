@@ -1,0 +1,21 @@
+{
+    "checkpoint": "models/M213.npz",
+    "model_id": "M213",
+    "file_sha256": "3da6d695284d4af22a023cef1eac3b3bc6a4feeb08d2bd3b488ec874b540d87f",
+    "source_checkpoint_sha256": "416832dd369df42300fd1e9d4fd1e1cad937c9e3150ee3ef00b62cd5bf317a27",
+    "parameter_sha256": "b942adfcfae03fea820a2fc720b435aed79a34aa76fcf277156580af4a790d5e",
+    "source_checkpoint_id": "M000213_E003",
+    "critic_source": {
+        "repository": "https://github.com/dango636/StellaSora-Tower-Research",
+        "commit": "46372929b35212875a493b3a4d7dfa19820aaeed",
+        "directory": "NeuralNetwork/trainer/stella",
+        "adapted": ["network.py", "features.py", "policy.py", "presets.py", "environment.py"],
+        "unmodified": ["vendor/stella_sim.py"]
+    },
+    "license": {
+        "applies_to": ["models/M213.npz", "critic/"],
+        "copyright": "Copyright (c) 2026 dango636",
+        "spdx": "MIT",
+        "text": "LICENSE at the project or installation root"
+    }
+}

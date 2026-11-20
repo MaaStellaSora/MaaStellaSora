@@ -309,5 +309,9 @@
     "pipeline.邀约_还是算了.focus.Node.Recognition.Succeeded": "選擇不送禮物",
     "pipeline.邀约_送出礼物.focus.Node.Recognition.Succeeded": "選擇送出禮物",
     "pipeline.邀约_特殊回忆选项.focus.Node.Action.Starting": "選擇帶愛心卡片的特殊回憶選項",
-    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未發現愛心卡片，選擇預設對話選項"
+    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "未發現愛心卡片，選擇預設對話選項",
+    "interface.tower_neural.task.description": "本模組由社群熱心貢獻者提供，透過神經網路進行自動爬塔決策。相較於原版爬塔，神經網路爬塔可以獲得更多潛能，並能適應突破潛能種類軟上限的情況。<br>使用此模組爬塔前，請先設定好隊伍及目標潛能預設，然後從主頁開始執行。<br>目前此模組仍處於測試版，僅供 Windows 64 位元系統的官服、日服玩家使用。測試版目前僅支援潛能獲取，不會購買音符。<br>神經網路需要大量資料進行訓練，歡迎開啟資料分享選項，協助模組作者改善模型。",
+    "interface.tower_neural.task.label": "自動爬塔（神經網路）",
+    "interface.tower_neural.upload.description": "開啟後，每局向模組作者分享預設、遊戲內觀測、實際操作和結算，用於推導爬塔機制。缺失或存疑的資料會標記，不含個人標識或截圖。",
+    "interface.tower_neural.upload.label": "分享資料，幫助改進模型"
 }

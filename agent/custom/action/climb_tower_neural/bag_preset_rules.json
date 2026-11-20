@@ -1,0 +1,37 @@
+{
+    "controls": {
+        "all_cards": {
+            "roi": [
+                78,
+                642,
+                112,
+                43
+            ],
+            "right": false
+        },
+        "recommendations": {
+            "roi": [
+                32,
+                598,
+                48,
+                26
+            ],
+            "right": true
+        }
+    },
+    "collection_tab_patterns": {
+        "cn": [
+            "潜能[收蒐]集"
+        ],
+        "jp": [
+            "素[質质]収集|素[質质]收集"
+        ]
+    },
+    "unacquired_pattern": "未[獲获]得",
+    "obtained_count_pattern": "^(\\d{1,2})\\s*/\\s*16$",
+    "single_digit_pattern": "^[0-{maximum}]$",
+    "name_variant_glyphs": {
+        "増": "增",
+        "壊": "坏"
+    }
+}

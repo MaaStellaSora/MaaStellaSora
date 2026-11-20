@@ -1,0 +1,529 @@
+{
+    "ocr": {
+        "threshold": 0.6,
+        "numeric_confidence": 0.85,
+        "numeric_pattern": "\\d+",
+        "whitespace_pattern": "\\s+"
+    },
+    "icons": {
+        "template": "ClimbTower_agent/melodies/{melody}.png",
+        "default_scales": [
+            1.0
+        ],
+        "default_threshold": 0.7,
+        "overlap_fraction": 0.45
+    },
+    "disc_match": {
+        "long_name_minimum_length": 5,
+        "long_name_threshold": 0.82,
+        "short_name_threshold": 0.91,
+        "minimum_margin": 0.035
+    },
+    "white_glyphs": {
+        "lower": [
+            180,
+            180,
+            180
+        ],
+        "upper": [
+            255,
+            255,
+            255
+        ],
+        "border": 4,
+        "scale": 3
+    },
+    "inventory": {
+        "regions": {
+            "bag": [
+                650,
+                0,
+                630,
+                82
+            ],
+            "event": [
+                650,
+                0,
+                630,
+                100
+            ],
+            "result": [
+                350,
+                70,
+                580,
+                80
+            ],
+            "field": [
+                0,
+                600,
+                620,
+                112
+            ],
+            "settlement": [
+                430,
+                135,
+                820,
+                105
+            ]
+        },
+        "icon_scales": [
+            0.9,
+            1.0,
+            1.1
+        ],
+        "icon_threshold": 0.58,
+        "anchor_threshold": 0.7,
+        "spacing_range": [
+            45,
+            75
+        ],
+        "x_tolerance": 7,
+        "y_tolerance": 6,
+        "minimum_anchors": 5,
+        "minimum_anchor_span": 5,
+        "white_percentile": 95,
+        "minimum_white": 128,
+        "minimum_detail": 120,
+        "count_offset": [
+            -3,
+            30,
+            6,
+            -6
+        ],
+        "settlement_count_offset": [
+            -3,
+            36,
+            6,
+            0
+        ]
+    },
+    "bag_detail": {
+        "list_region": [
+            258,
+            206,
+            260,
+            382
+        ],
+        "icon_region": [
+            278,
+            206,
+            54,
+            382
+        ],
+        "title_icon_region": [
+            548,
+            182,
+            90,
+            88
+        ],
+        "icon_scales": [
+            0.9,
+            1.0,
+            1.1
+        ],
+        "icon_threshold": 0.7,
+        "title_icon_scales": [
+            0.5,
+            0.55,
+            0.6,
+            0.65,
+            0.7
+        ],
+        "title_icon_threshold": 0.65,
+        "row_padding": 11,
+        "count_offset": [
+            150,
+            -3,
+            65,
+            6
+        ],
+        "count_retry_offsets": [
+            [
+                154,
+                0,
+                65,
+                24
+            ],
+            [
+                150,
+                2,
+                65,
+                26
+            ]
+
+        ],
+        "count_retry_scale": 2,
+        "title_count_offset": [
+            355,
+            -17,
+            80,
+            40
+        ],
+        "maximum_pages": 4
+    },
+    "setup": {
+        "main_name_regions": [
+            [
+                30,
+                502,
+                280,
+                34
+            ],
+            [
+                320,
+                502,
+                280,
+                34
+            ],
+            [
+                615,
+                502,
+                280,
+                34
+            ]
+
+        ],
+        "supply_region": [
+            1178,
+            244,
+            44,
+            294
+        ],
+        "icon_scales": [
+            0.9,
+            1.0,
+            1.1
+        ],
+        "icon_threshold": 0.65,
+        "count_right": 1248,
+        "count_maximum_width": 35,
+        "count_y_offset": 2,
+        "count_minimum_height": 18,
+        "count_height_trim": 4,
+        "column_tolerance_divisor": 7
+    },
+    "concerto": {
+        "main_name_regions": [
+            [
+                414,
+                236,
+                129,
+                31
+            ],
+            [
+                564,
+                236,
+                133,
+                31
+            ],
+            [
+                713,
+                236,
+                135,
+                31
+            ]
+
+        ],
+        "card_regions": [
+            [
+                334,
+                349,
+                280,
+                72
+            ],
+            [
+                621,
+                349,
+                280,
+                72
+            ],
+            [
+                334,
+                431,
+                280,
+                72
+            ],
+            [
+                621,
+                431,
+                280,
+                72
+            ],
+            [
+                334,
+                514,
+                280,
+                72
+            ],
+            [
+                621,
+                514,
+                280,
+                72
+            ]
+
+        ],
+        "level_offset": [
+            206,
+            3,
+            -209,
+            31
+        ],
+        "maximum_level": 5,
+        "icon_offset": [
+            8,
+            10,
+            52,
+            48
+        ],
+        "icon_hue_range": [
+            110,
+            175
+        ],
+        "icon_minimum_saturation": 45,
+        "icon_minimum_value": 55,
+        "icon_minimum_fraction": 0.25,
+        "settlement_card_regions": [
+            [
+                510,
+                269,
+                302,
+                65
+            ],
+            [
+                910,
+                269,
+                302,
+                65
+            ],
+            [
+                510,
+                349,
+                302,
+                65
+            ],
+            [
+                910,
+                349,
+                302,
+                65
+            ],
+            [
+                510,
+                428,
+                302,
+                65
+            ],
+            [
+                910,
+                428,
+                302,
+                65
+            ]
+
+        ],
+        "settlement_title_height": 33,
+        "settlement_level_offset_y": 34,
+        "settlement_level_width": 130,
+        "settlement_cold_level_width": 100,
+        "settlement_score_region": [
+            261,
+            93,
+            81,
+            29
+        ]
+    },
+    "floor": {
+        "region": [
+            226,
+            136,
+            90,
+            75
+        ],
+        "digits": [
+            242,
+            156,
+            68,
+            45
+        ],
+        "inner_digits": [
+            247,
+            156,
+            60,
+            45
+        ],
+        "pattern": "(?:0[1-9]|1[0-9]|20)",
+        "scale": 3,
+        "accepted_confidence": 0.8,
+        "confirmed_confidence": 0.85,
+        "minimum_variants": 2
+    },
+    "cross_checks": {
+        "requirement_regions": {
+            "bag": [
+                [
+                    395,
+                    375,
+                    515,
+                    220
+                ]
+            ],
+            "event": [
+                [
+                    85,
+                    145,
+                    210,
+                    405
+                ]
+            ],
+            "shop": [
+                [
+                    65,
+                    75,
+                    225,
+                    500
+                ],
+                [
+                    830,
+                    275,
+                    90,
+                    42
+                ]
+
+            ],
+            "settlement": [
+                [
+                    440,
+                    255,
+                    790,
+                    270
+                ]
+            ]
+        },
+        "icon_hues": {
+            "aqua": 103,
+            "burst": 131,
+            "focus": 93,
+            "ignis": 177,
+            "luck": 13,
+            "lux": 19,
+            "pummel": 8,
+            "skill": 109,
+            "stamina": 71,
+            "terra": 13,
+            "ultimate": 167,
+            "umbra": 156,
+            "ventus": 40
+        },
+        "level_zero_pattern": "\\s*[LlI1][Vv][.:]?\\s*[Oo〇]\\s*",
+        "level_pattern": "\\d{1,3}",
+        "level_label_pattern": "[LlI1][Vv]",
+        "fraction_pattern": "(?<!\\d)(\\d{1,3})?\\s*/\\s*(\\d{1,3})(?!\\d)",
+        "fraction_anchor_pattern": "[/∕⁄]\\s*\\d",
+        "level_retry_scale": 2,
+        "result_region": [
+            350,
+            150,
+            570,
+            495
+        ],
+        "result_white_minimum": 180,
+        "result_white_channel_spread": 45,
+        "result_morphology_size": 3,
+        "result_minimum_width": 300,
+        "result_height_range": [
+            45,
+            110
+        ],
+        "result_minimum_fill": 0.55,
+        "result_icon_region": [
+            400,
+            155,
+            150,
+            485
+        ],
+        "result_icon_scales": [
+            0.55,
+            0.6,
+            0.65,
+            0.7,
+            0.75
+        ],
+        "result_icon_threshold": 0.62,
+        "result_retry_icon_threshold": 0.55,
+        "result_icon_anchor_width": 100,
+        "result_level_y_offset": 14,
+        "result_previous_level_offset": [
+            -139,
+            68,
+            38
+        ],
+        "result_current_level_offset": [
+            -70,
+            70,
+            38
+        ],
+        "result_retry_icon_offset": [
+            10,
+            8,
+            85,
+            -16
+        ],
+        "result_skipped_region": [
+            400,
+            155,
+            480,
+            485
+        ],
+        "shop_header_region": [
+            318,
+            172,
+            640,
+            38
+        ],
+        "shop_header_minimum": 120,
+        "shop_header_channel_difference": 60,
+        "shop_header_minimum_fraction": 0.5,
+        "shop_assist_header_height": 55,
+        "shop_assist_white_percentile": 99,
+        "shop_assist_minimum_white": 165,
+        "requirement_icon_scales": [
+            1.35,
+            1.55,
+            1.75,
+            1.95
+        ],
+        "bag_requirement_icon_threshold": 0.58,
+        "requirement_icon_threshold": 0.62,
+        "fraction_y_tolerance": 8,
+        "fraction_left_margin": 28,
+        "icon_minimum_saturation": 60,
+        "icon_minimum_value": 55,
+        "icon_hue_tolerance": 18,
+        "icon_minimum_fraction": 0.06,
+        "adjacent_icon_y_tolerance": 10,
+        "count_maximum_width": 55,
+        "count_right_margin": 2,
+        "count_x_offset": -1,
+        "count_y_padding": 4,
+        "count_minimum_width": 8
+    },
+    "text_rules": {
+        "bag_count": {
+            "zero": "未獲得|未获得|未獲取|Not acquired|Unobtained|미획득",
+            "count": "(?:[LlI1][Vv][.:]?\\s*(\\d+)|(\\d+)\\s*(?:个|個|枚|개))"
+        },
+        "concerto_level": {
+            "inactive": "未[発發发][動动]|未激活(?:状态)?|未解[锁鎖]|Inactive|Not activated|미발동|비활성",
+            "level": "(?:[Ll][Vv][.:]?|等级|等級|レベル|Level|레벨)\\s*(\\d+)",
+            "maximum": "(?:(?:[Ll][Vv][.:]?|レベル|等级|等級|Level|레벨)\\s*)?(?:MAX|最大|满级|滿級|최대)"
+        },
+        "event": {
+            "note": "音符|notes?|음표",
+            "potential": "素質|潜能|潛能|potential|잠재력",
+            "spend": "(?:消耗|消費)[^，,。;；]*音符|音符[^，,。;；]*(?:消耗|消費)|(?:spend|consume)[^.]*notes?|음표.*(?:소모|소비)",
+            "random": "随机|隨機|ランダム|random|무작위|랜덤",
+            "amount": "(\\d+)\\s*[个個枚][^，,、。;；\\d]{0,12}音符|音符[^，,、。;；\\d]*?(\\d+)\\s*[个個枚]|(\\d+)\\s*(?:notes?|음표)|음표\\s*(\\d+)\\s*개"
+        }
+    }
+}

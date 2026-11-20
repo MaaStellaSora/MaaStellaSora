@@ -1,0 +1,306 @@
+{
+  "source": {
+    "kind": "local_decoded_Character_localization",
+    "source_archive_sha256": "3798ddec0645851e88a25231f8194da72fd165a76d90de00ec48c11cb099b96d",
+    "table": "Character",
+    "character_id_namespace": "JP_artifact",
+    "source_path": "ReverseEngineering/work/jp_unreleased"
+  },
+  "characters": [
+    {
+      "character_id": 103,
+      "name_ja_jp": "コハク",
+      "name_zh_cn": "琥珀"
+    },
+    {
+      "character_id": 107,
+      "name_ja_jp": "ティリア",
+      "name_zh_cn": "缇莉娅"
+    },
+    {
+      "character_id": 108,
+      "name_ja_jp": "カシミラ",
+      "name_zh_cn": "卡西米拉"
+    },
+    {
+      "character_id": 110,
+      "name_ja_jp": "フィレン",
+      "name_zh_cn": "翡冷翠"
+    },
+    {
+      "character_id": 111,
+      "name_ja_jp": "アヤメ",
+      "name_zh_cn": "鸢尾"
+    },
+    {
+      "character_id": 112,
+      "name_ja_jp": "セイナ",
+      "name_zh_cn": "尘沙"
+    },
+    {
+      "character_id": 113,
+      "name_ja_jp": "シーミャオ",
+      "name_zh_cn": "师渺"
+    },
+    {
+      "character_id": 114,
+      "name_ja_jp": "シャトン",
+      "name_zh_cn": "猫眼"
+    },
+    {
+      "character_id": 115,
+      "name_ja_jp": "ホタル",
+      "name_zh_cn": "火垂"
+    },
+    {
+      "character_id": 116,
+      "name_ja_jp": "レイセン",
+      "name_zh_cn": "岭川"
+    },
+    {
+      "character_id": 117,
+      "name_ja_jp": "ジンリン",
+      "name_zh_cn": "璟麟"
+    },
+    {
+      "character_id": 118,
+      "name_ja_jp": "クルニス",
+      "name_zh_cn": "科洛妮丝"
+    },
+    {
+      "character_id": 119,
+      "name_ja_jp": "ナノハ",
+      "name_zh_cn": "花原"
+    },
+    {
+      "character_id": 120,
+      "name_ja_jp": "カナーチェ",
+      "name_zh_cn": "卡娜丝"
+    },
+    {
+      "character_id": 123,
+      "name_ja_jp": "アンズ",
+      "name_zh_cn": "杏子"
+    },
+    {
+      "character_id": 125,
+      "name_ja_jp": "フリージア",
+      "name_zh_cn": "苍兰"
+    },
+    {
+      "character_id": 126,
+      "name_ja_jp": "フローラ",
+      "name_zh_cn": "紫槿"
+    },
+    {
+      "character_id": 127,
+      "name_ja_jp": "テレサ",
+      "name_zh_cn": "特丽莎"
+    },
+    {
+      "character_id": 130,
+      "name_ja_jp": "トーナ",
+      "name_zh_cn": "多娜"
+    },
+    {
+      "character_id": 132,
+      "name_ja_jp": "ミネルバ",
+      "name_zh_cn": "密涅瓦"
+    },
+    {
+      "character_id": 133,
+      "name_ja_jp": "ナツカ",
+      "name_zh_cn": "夏花"
+    },
+    {
+      "character_id": 134,
+      "name_ja_jp": "フユカ",
+      "name_zh_cn": "冬香"
+    },
+    {
+      "character_id": 135,
+      "name_ja_jp": "ミスティ",
+      "name_zh_cn": "雾语"
+    },
+    {
+      "character_id": 137,
+      "name_ja_jp": "エレノア",
+      "name_zh_cn": "埃莉诺"
+    },
+    {
+      "character_id": 139,
+      "name_ja_jp": "エリー",
+      "name_zh_cn": "艾蕾"
+    },
+    {
+      "character_id": 140,
+      "name_ja_jp": "スパクル",
+      "name_zh_cn": "斯帕克拉"
+    },
+    {
+      "character_id": 141,
+      "name_ja_jp": "チーシア",
+      "name_zh_cn": "赤霞"
+    },
+    {
+      "character_id": 142,
+      "name_ja_jp": "コゼット",
+      "name_zh_cn": "珂赛特"
+    },
+    {
+      "character_id": 143,
+      "name_ja_jp": "レイス",
+      "name_zh_cn": "风影"
+    },
+    {
+      "character_id": 144,
+      "name_ja_jp": "チトセ",
+      "name_zh_cn": "千都世"
+    },
+    {
+      "character_id": 145,
+      "name_ja_jp": "オトハ",
+      "name_zh_cn": "乙叶"
+    },
+    {
+      "character_id": 147,
+      "name_ja_jp": "キャラメル",
+      "name_zh_cn": "焦糖"
+    },
+    {
+      "character_id": 149,
+      "name_ja_jp": "グレイ",
+      "name_zh_cn": "格芮"
+    },
+    {
+      "character_id": 150,
+      "name_ja_jp": "ラール",
+      "name_zh_cn": "菈露"
+    },
+    {
+      "character_id": 155,
+      "name_ja_jp": "シア",
+      "name_zh_cn": "希娅"
+    },
+    {
+      "character_id": 156,
+      "name_ja_jp": "ナズナ",
+      "name_zh_cn": "小禾"
+    },
+    {
+      "character_id": 157,
+      "name_ja_jp": "カリン",
+      "name_zh_cn": "花铃"
+    },
+    {
+      "character_id": 158,
+      "name_ja_jp": "ラール（聖夜）",
+      "name_zh_cn": "菈露（圣夜）"
+    },
+    {
+      "character_id": 159,
+      "name_ja_jp": "クルニス（華服）",
+      "name_zh_cn": "科洛妮丝（新春）"
+    },
+    {
+      "character_id": 160,
+      "name_ja_jp": "ウィロー（水着）",
+      "name_zh_cn": "薇洛（盛夏）"
+    },
+    {
+      "character_id": 161,
+      "name_zh_cn": "优叶",
+      "character_row_sha256": "b6d251190c79c7dacb4f81e49f150342924c11ccca8492ba992e51f078067906",
+      "name_key": "Character.161.1",
+      "character_id_namespace": "JP_artifact",
+      "name_provenance": [
+        {
+          "source_client_region": "CN",
+          "source_archive_sha256": "e90560da726e101e6cc0ed22cd710a6fa5e3c7841dd949db14d2f1b69bcc9afc",
+          "table_sha256": {
+            "Character": "d3218ba6bed0e02c3a8270b12c1ae55f37ec91eebbf632b92f3e867013ecbc2a",
+            "CharPotential": "9dfcf4616d179bf99ffb778bfabc0a2a8efccdfa5f1b9e2b342cd6df7e32be6d",
+            "Potential": "338958e40beb3ede3f03a2933734f27f3db64994ea74c8aa02f5fdccbefc65c9",
+            "Item": "a78108ef8309fa2c3d28c4b073df73b34cff7789cedfd5efd2046c0492f64374",
+            "Disc": "40c68559a0b76260f87e74f99366801079ad11b831640224e3305ffcc77df7a1",
+            "SecondarySkill": "61ec7fa47f93f7f3afa561e07c72da9a336593db275dcefe8f312e9815f10c45"
+          },
+          "localization_fid": "44902e68a2db423f",
+          "localization_json_sha256": "972d303d7e5ca93ddd7ae758054f65c32904541933368f1dfdd4bf2b08b537d8",
+          "source_language": "zh_cn",
+          "exact_name": "优叶",
+          "localization_key": "Character.161.1"
+        },
+        {
+          "source_client_region": "JP",
+          "source_archive_sha256": "4da896ece070bb150ded112a5b4160451f0d602fcda2e05037cd9c6ca1bc5a77",
+          "table_sha256": {
+            "Character": "d3218ba6bed0e02c3a8270b12c1ae55f37ec91eebbf632b92f3e867013ecbc2a",
+            "CharPotential": "9dfcf4616d179bf99ffb778bfabc0a2a8efccdfa5f1b9e2b342cd6df7e32be6d",
+            "Potential": "338958e40beb3ede3f03a2933734f27f3db64994ea74c8aa02f5fdccbefc65c9",
+            "Item": "a78108ef8309fa2c3d28c4b073df73b34cff7789cedfd5efd2046c0492f64374",
+            "Disc": "40c68559a0b76260f87e74f99366801079ad11b831640224e3305ffcc77df7a1",
+            "SecondarySkill": "61ec7fa47f93f7f3afa561e07c72da9a336593db275dcefe8f312e9815f10c45"
+          },
+          "localization_fid": "c0a03e77eb123eb4",
+          "localization_json_sha256": "b1d134338929895630e2929639c94c3e19f5655d8f994249c798f8f182fc2257",
+          "source_language": "ja_jp",
+          "exact_name": "スグハ",
+          "localization_key": "Character.161.1"
+        },
+        {
+          "source_client_region": "JP",
+          "source_archive_sha256": "4da896ece070bb150ded112a5b4160451f0d602fcda2e05037cd9c6ca1bc5a77",
+          "table_sha256": {
+            "Character": "d3218ba6bed0e02c3a8270b12c1ae55f37ec91eebbf632b92f3e867013ecbc2a",
+            "CharPotential": "9dfcf4616d179bf99ffb778bfabc0a2a8efccdfa5f1b9e2b342cd6df7e32be6d",
+            "Potential": "338958e40beb3ede3f03a2933734f27f3db64994ea74c8aa02f5fdccbefc65c9",
+            "Item": "a78108ef8309fa2c3d28c4b073df73b34cff7789cedfd5efd2046c0492f64374",
+            "Disc": "40c68559a0b76260f87e74f99366801079ad11b831640224e3305ffcc77df7a1",
+            "SecondarySkill": "61ec7fa47f93f7f3afa561e07c72da9a336593db275dcefe8f312e9815f10c45"
+          },
+          "localization_fid": "44902e68a2db423f",
+          "localization_json_sha256": "972d303d7e5ca93ddd7ae758054f65c32904541933368f1dfdd4bf2b08b537d8",
+          "source_language": "zh_cn",
+          "exact_name": "优叶",
+          "localization_key": "Character.161.1"
+        }
+      ],
+      "name_ja_jp": "スグハ"
+    },
+    {
+      "character_id": 162,
+      "name_ja_jp": "セイナ（原点）",
+      "name_zh_cn": "尘沙（源初）"
+    },
+    {
+      "character_id": 997,
+      "name_ja_jp": "太古ノ巨神兵（左手）",
+      "name_zh_cn": "魔侍巨像（左手）"
+    },
+    {
+      "character_id": 998,
+      "name_ja_jp": "太古ノ巨神兵（右手）",
+      "name_zh_cn": "魔侍巨像（右手）"
+    },
+    {
+      "character_id": 999,
+      "name_ja_jp": "太古ノ巨神兵",
+      "name_zh_cn": "魔侍巨像"
+    }
+  ],
+  "provenance": {
+    "last_catalog_update": {
+      "source_client_region": "JP",
+      "source_archive_sha256": "4da896ece070bb150ded112a5b4160451f0d602fcda2e05037cd9c6ca1bc5a77",
+      "table_sha256": {
+        "Character": "d3218ba6bed0e02c3a8270b12c1ae55f37ec91eebbf632b92f3e867013ecbc2a",
+        "CharPotential": "9dfcf4616d179bf99ffb778bfabc0a2a8efccdfa5f1b9e2b342cd6df7e32be6d",
+        "Potential": "338958e40beb3ede3f03a2933734f27f3db64994ea74c8aa02f5fdccbefc65c9",
+        "Item": "a78108ef8309fa2c3d28c4b073df73b34cff7789cedfd5efd2046c0492f64374",
+        "Disc": "40c68559a0b76260f87e74f99366801079ad11b831640224e3305ffcc77df7a1",
+        "SecondarySkill": "61ec7fa47f93f7f3afa561e07c72da9a336593db275dcefe8f312e9815f10c45"
+      }
+    }
+  }
+}

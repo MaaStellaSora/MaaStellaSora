@@ -13,7 +13,8 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from configure import configure_kr_ocr_model, configure_ocr_model
 from package_common import (
-    COPY_IGNORE, copy_project_files, copy_tree, remove_build_artifacts, require_file,
+    COPY_IGNORE, copy_agent_files, copy_project_files, copy_tree,
+    remove_build_artifacts, require_file,
 )
 from resource_layout import copy_resources, validate_staging_directory
 
@@ -112,8 +113,10 @@ def build_package(
     install_path.mkdir(parents=True, exist_ok=True)
     install_deps(working_dir, install_path, platform_tag)
     install_resource(working_dir, install_path)
-    copy_project_files(working_dir, install_path)
-    copy_tree(working_dir / "agent", install_path / "agent")
+    copy_project_files(working_dir, install_path, platform_tag=platform_tag)
+    copy_agent_files(
+        working_dir, install_path, include_neural_model=platform_tag == "win-x64"
+    )
     remove_build_artifacts(install_path)
     if platform_tag.startswith("win-"):
         (install_path / "用管理员身份运行喵.txt").touch()

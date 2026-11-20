@@ -1,0 +1,161 @@
+{
+    "星塔_神经网络_潜能刷新": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "stella_value_potential_refresh"
+            }
+        },
+        "post_delay": 0,
+        "timeout": 5000,
+        "next": [
+            "星塔_节点_选择潜能_agent"
+        ]
+    },
+    "星塔_神经网络_潜能_等待干扰文字消失": {
+        "action": {
+            "type": "DoNothing"
+        },
+        "post_delay": 0,
+        "rate_limit": 100,
+        "timeout": 10000,
+        "next": [
+            "星塔_神经网络_潜能_干扰文字已消失"
+        ]
+    },
+    "星塔_神经网络_潜能_干扰文字已消失": {
+        "inverse": true,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_节点_选择潜能_检测干扰文字_agent"
+                ]
+            }
+        },
+        "action": {
+            "type": "DoNothing"
+        },
+        "post_delay": 0
+    },
+    "星塔_神经网络_潜能_定位等级上升图标": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "ClimbTower_neural/潜能等级上升标记.png",
+                "threshold": 0.8
+            }
+        }
+    },
+    "星塔_神经网络_潜能_定位等级过渡图标": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "ClimbTower_neural/潜能等级过渡标记.png",
+                "threshold": 0.8
+            }
+        }
+    },
+    "星塔_神经网络_潜能_识别潜能等级": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [],
+                "threshold": 0.6
+            }
+        },
+        "attach": {
+            "strict_number_reading": true
+        }
+    },
+    "星塔_神经网络_潜能_识别潜能等级后值": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [],
+                "threshold": 0.6
+            }
+        },
+        "attach": {
+            "strict_number_reading": true
+        }
+    },
+    "星塔_神经网络_潜能_识别推荐等级": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": "星塔_节点_选择潜能_识别推荐图标_agent",
+                "roi_offset": [
+                    -69,
+                    4,
+                    0,
+                    -5
+                ],
+                "expected": [
+                    "\\d+"
+                ],
+                "replace": [],
+                "only_rec": true,
+                "threshold": 0.6
+            }
+        },
+        "attach": {
+            "strict_number_reading": true
+        }
+    },
+    "星塔_神经网络_潜能_识别潜能名称": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    ".+"
+                ],
+                "threshold": 0.6,
+                "order_by": "Vertical",
+                "roi_offset": [
+                    0,
+                    10,
+                    0,
+                    -10
+                ],
+                "only_rec": true
+            }
+        }
+    },
+    "星塔_神经网络_潜能_点击刷新": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_agent/爬塔_商店刷新按钮__1199_609_45_41__1149_559_131_141.png"
+                ],
+                "roi": [
+                    1090,
+                    550,
+                    190,
+                    170
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_delay": 0,
+        "post_wait_freezes": {
+            "time": 100,
+            "timeout": 1500,
+            "target": [
+                135,
+                135,
+                1010,
+                365
+            ]
+        }
+    }
+}

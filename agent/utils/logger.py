@@ -96,7 +96,18 @@ _TRANSLATIONS = _load_translations()
 
 
 def translate(key: str, **variables: object) -> str:
-    """Translate an inline fragment using the same language as user logs."""
+    """按照i18n配置将键翻译为文本。
+
+    用于需要先获得翻译文本，再传递或拼接到日志、结构化数据或
+    其他接口的场景；不直接负责输出日志。
+
+    Args:
+        key: 翻译键，可以带或不带开头的 `$`。
+        **variables: 翻译文本中的占位符及其替换值。
+
+    Returns:
+        翻译后的文本；未找到翻译时返回原始键。
+    """
     translation = _TRANSLATIONS.get(key.removeprefix("$"))
     return key if translation is None else translation.format_map(variables)
 

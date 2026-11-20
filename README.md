@@ -4,6 +4,7 @@
     <img src="assets/logo.png" alt="StellaSora-Auto-Helper" width="200" />
     <h1>MaaStellaSora</h1>
     <p>星塔助手（MaaStellaSora）提供自动签到、清理日常等功能，由 MaaFramework 强力驱动</p>
+    <p><strong>简体中文</strong> | <a href="docs/ko_kr/한국_서버_사용_안내.md">한국어</a></p>
 </div>
 
 遇到问题请去Issues反馈，或前往QQ交流群进行反馈

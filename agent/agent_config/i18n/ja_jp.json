@@ -139,6 +139,7 @@
     "agent.custom.reco.climb_tower_potential.interactor.get_recommend_level.recommended_level_not_found": "推奨レベルを認識できません。-1として扱います",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.recognition_failed": "素質を認識できません（素質がありません）。通常素質3個として扱います",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.potential_count_recognition_failed": "素質数が想定と異なります（認識数：{potential_count}個）。通常素質3個として扱います",
+    "agent.custom.reco.climb_tower_potential.interactor._fill_missing_three_card_slots.missing_cards_filled_as_common": "素質カードを{potential_count}枚しか認識できませんでした（位置：{positions}）。3枚配置として通常素質を補完します。素質の種類が不正確になる可能性があります",
     "agent.custom.reco.climb_tower_potential.interactor.get_selected_potential_index.recognition_failed": "取得ボタンを認識できず、素質選択で問題が発生する可能性があります",
     "agent.custom.reco.climb_tower_potential.main.analyze.no_matching_potential": "[素質選択] 条件に合う素質がありません。フォールバック順で選択します",
     "agent.custom.reco.climb_tower_potential.main.analyze.potential_no_matching_potential": "条件に合う素質がありません。更新を試みます",

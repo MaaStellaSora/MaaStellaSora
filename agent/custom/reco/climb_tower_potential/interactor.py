@@ -178,7 +178,14 @@ class PotentialInteractor(Interactor):
                 by_slot[index] = rarity
         if len(by_slot) != len(potentials) or not ({0, 2} & by_slot.keys()):
             return potentials_rarity
-        logger.debug(f"潜能卡片只识别到 {len(potentials)} 张（位置 {sorted(by_slot)}），按三卡布局补齐")
+        logger.warning(
+            "$agent.custom.reco.climb_tower_potential.interactor._fill_missing_three_card_slots."
+            "missing_cards_filled_as_common",
+            {
+                "potential_count": len(potentials),
+                "positions": sorted(by_slot),
+            },
+        )
         return [by_slot.get(i, "common") for i in range(3)]
 
     def get_recommended_potential(self, roi: list[int] | None = None) -> list:

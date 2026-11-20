@@ -119,6 +119,11 @@ class ShopHandler:
             self.interactor.screenshot()
             if self.interactor.get_refresh_remaining() < current_refresh_remaining:
                 logger.debug("刷新成功")
+                # 刷新动画期间剩余次数可能识别失败而默认为 0，导致提前判定成功；
+                # 等待新商品显示后重新截图，避免后续按刷新前的旧商品列表购买
+                # TODO: 这是临时措施，后续需要更改为准确判断是刷新用完还是识别失败，从而正确判断刷新情况
+                time.sleep(2)
+                self.interactor.screenshot()
                 return
             logger.debug("正在等待刷新完成……")
             time.sleep(1)

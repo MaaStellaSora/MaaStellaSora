@@ -139,6 +139,7 @@
     "agent.custom.reco.climb_tower_potential.interactor.get_recommend_level.recommended_level_not_found": "未識別到推薦等級，將預設為-1",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.recognition_failed": "潛能數量識別失敗（沒有潛能），將預設為3個普通潛能",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.potential_count_recognition_failed": "潛能數量識別失敗（識別到{potential_count}個潛能，不符合預期），將預設為3個普通潛能",
+    "agent.custom.reco.climb_tower_potential.interactor._fill_missing_three_card_slots.missing_cards_filled_as_common": "只識別到{potential_count}張潛能卡片（位置 {positions}），按三卡佈局補充普通潛能，可能會導致潛能類型不準確",
     "agent.custom.reco.climb_tower_potential.interactor.get_selected_potential_index.recognition_failed": "拿走按鈕識別失敗，潛能選擇可能會出現問題",
     "agent.custom.reco.climb_tower_potential.main.analyze.no_matching_potential": "[潛能選擇] 沒有找到符合條件的潛能，按照保底順序選擇",
     "agent.custom.reco.climb_tower_potential.main.analyze.potential_no_matching_potential": "沒有找到符合條件的潛能，嘗試重新整理",

@@ -139,6 +139,7 @@
     "agent.custom.reco.climb_tower_potential.interactor.get_recommend_level.recommended_level_not_found": "추천 레벨을 인식하지 못해 -1로 처리합니다",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.recognition_failed": "잠재력 수량을 인식하지 못했습니다(잠재력 없음). 일반 잠재력 3개로 처리합니다",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.potential_count_recognition_failed": "잠재력 수량을 인식하지 못했습니다(잠재력 {potential_count}개 인식, 예상과 다름). 일반 잠재력 3개로 처리합니다",
+    "agent.custom.reco.climb_tower_potential.interactor._fill_missing_three_card_slots.missing_cards_filled_as_common": "잠재력 카드 {potential_count}개만 인식했습니다(위치 {positions}). 3장 배치로 간주해 일반 잠재력을 보충하므로 잠재력 유형이 부정확할 수 있습니다",
     "agent.custom.reco.climb_tower_potential.interactor.get_selected_potential_index.recognition_failed": "획득 버튼을 인식하지 못했습니다. 잠재력 선택에 문제가 생길 수 있습니다",
     "agent.custom.reco.climb_tower_potential.main.analyze.no_matching_potential": "[잠재력 선택] 조건에 맞는 잠재력이 없어 기본 순서로 선택합니다",
     "agent.custom.reco.climb_tower_potential.main.analyze.potential_no_matching_potential": "조건에 맞는 잠재력이 없어 새로고침을 시도합니다",

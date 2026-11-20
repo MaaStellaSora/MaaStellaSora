@@ -139,6 +139,7 @@
     "agent.custom.reco.climb_tower_potential.interactor.get_recommend_level.recommended_level_not_found": "Recommended level not recognized; defaulting to -1",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.recognition_failed": "Failed to recognize potential count (no potentials); defaulting to 3 common potentials",
     "agent.custom.reco.climb_tower_potential.interactor.get_potentials_rarity.potential_count_recognition_failed": "Failed to recognize potential count (expected 3, got {potential_count}); defaulting to 3 common potentials",
+    "agent.custom.reco.climb_tower_potential.interactor._fill_missing_three_card_slots.missing_cards_filled_as_common": "Only recognized {potential_count} potential cards (positions {positions}); filling the three-card layout with common potentials, which may result in inaccurate potential types",
     "agent.custom.reco.climb_tower_potential.interactor.get_selected_potential_index.recognition_failed": "Failed to recognize the Take button; potential selection may fail",
     "agent.custom.reco.climb_tower_potential.main.analyze.no_matching_potential": "[Potential Selection] No matching potential found; selecting according to fallback order",
     "agent.custom.reco.climb_tower_potential.main.analyze.potential_no_matching_potential": "No matching potential found; attempting a refresh",

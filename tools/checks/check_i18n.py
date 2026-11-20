@@ -174,9 +174,25 @@ def collect_strings(
     result: ScanResult,
     parent_key: str = "",
     in_preset_task: bool = False,
+    in_option_map: bool = False,
 ) -> None:
     if isinstance(value, dict):
         name = value.get("name")
+        inputs = value.get("inputs")
+        if (
+            parent_key == "option"
+            and not in_option_map
+            and value.get("type") == "input"
+            and "label" not in value
+            and (
+                "description" in value
+                or (isinstance(inputs, list) and len(inputs) > 1)
+            )
+        ):
+            result.findings.append(
+                Finding("input option is displayed without a label; add an i18n label", location)
+            )
+
         if (
             parent_key in DISPLAY_ARRAYS
             and not in_preset_task
@@ -213,8 +229,9 @@ def collect_strings(
                 child,
                 child_location,
                 result,
-                key,
+                "option" if in_option_map else key,
                 in_preset_task or (parent_key == "preset" and key == "task"),
+                not in_option_map and key == "option" and isinstance(child, dict),
             )
     elif isinstance(value, list):
         for index, child in enumerate(value):
@@ -224,6 +241,7 @@ def collect_strings(
                 result,
                 parent_key,
                 in_preset_task,
+                in_option_map,
             )
 
 

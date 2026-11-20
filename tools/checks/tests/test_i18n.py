@@ -81,6 +81,49 @@ class PipelineI18nTests(unittest.TestCase):
             any("hardcoded Chinese in a Pipeline focus message" in item.message for item in findings)
         )
 
+    def test_requires_label_for_input_options_with_multiple_inputs(self):
+        self.task["option"]["InputOption"] = {
+            "type": "input",
+            "inputs": [{}, {}],
+        }
+        self._write_json("assets/interface/tasks/tasks.json", self.task)
+
+        findings = check(self.root)
+
+        self.assertIn(
+            "input option is displayed without a label; add an i18n label",
+            [item.message for item in findings],
+        )
+
+    def test_requires_label_for_input_options_with_description(self):
+        self.task["option"]["InputOption"] = {
+            "type": "input",
+            "inputs": [{}],
+            "description": "Description",
+        }
+        self._write_json("assets/interface/tasks/tasks.json", self.task)
+
+        findings = check(self.root)
+
+        self.assertIn(
+            "input option is displayed without a label; add an i18n label",
+            [item.message for item in findings],
+        )
+
+    def test_single_input_option_without_description_does_not_require_label(self):
+        self.task["option"]["InputOption"] = {
+            "type": "input",
+            "inputs": [{}],
+        }
+        self._write_json("assets/interface/tasks/tasks.json", self.task)
+
+        findings = check(self.root)
+
+        self.assertNotIn(
+            "input option is displayed without a label; add an i18n label",
+            [item.message for item in findings],
+        )
+
     def test_ignores_language_specific_pipeline_files(self):
         self._write_json(
             "assets/interface/tasks/tasks_en.json",

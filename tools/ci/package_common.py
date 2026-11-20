@@ -1,5 +1,6 @@
 """各平台发行包共用的文件复制和校验。"""
 
+import json
 import shutil
 from pathlib import Path
 
@@ -16,42 +17,51 @@ PROJECT_FILES = {
     "assets/requirements.txt": "requirements.txt",
 }
 REQUIRED_OCR_FILES = ("det.onnx", "rec.onnx", "keys.txt")
-NEURAL_TASK = "interface/tasks/climb_tower_neural.json"
+NEURAL_MODULE = Path("custom/action/climb_tower_neural")
 
 
-def payload_ignore(platform_tag: str | None = None):
-    """Unsupported releases keep the original tasks and omit neural resources."""
-    def ignored(directory, names):
-        result = set(COPY_IGNORE(directory, names))
-        if platform_tag is not None and platform_tag != "win-x64":
-            result.update(name for name in names if name.startswith("climb_tower_neural") and name.endswith(".json"))
-            result.update({"ClimbTower_neural"} & set(names))
-        return result
-    return ignored
+def _neural_checkpoint_path(agent_dir: Path) -> Path:
+    module_dir = agent_dir / NEURAL_MODULE
+    metadata_path = module_dir / "model.json"
+    if not metadata_path.is_file():
+        raise FileNotFoundError(f"Neural model metadata not found: {metadata_path}")
+
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if not isinstance(metadata, dict):
+        raise ValueError(f"Invalid neural model metadata: {metadata_path}")
+    checkpoint_name = metadata.get("checkpoint")
+    if not isinstance(checkpoint_name, str) or not checkpoint_name:
+        raise ValueError(f"Invalid checkpoint path in {metadata_path}")
+
+    checkpoint = Path(checkpoint_name)
+    if checkpoint.is_absolute():
+        raise ValueError(f"Neural checkpoint path must be relative: {checkpoint_name}")
+    checkpoint_path = (module_dir / checkpoint).resolve()
+    try:
+        checkpoint_path.relative_to(module_dir.resolve())
+    except ValueError as error:
+        raise ValueError(
+            f"Neural checkpoint path escapes its module: {checkpoint_name}"
+        ) from error
+    require_file(checkpoint_path)
+    return checkpoint_path
 
 
-def configure_agent(interface: dict, platform_tag: str) -> None:
-    """Select the portable package entry point without changing the ordinary Agent."""
-    supported = platform_tag == "win-x64"
-    interface["agent"]["child_args"] = ["-u", "./agent/neural_main.py" if supported else "./agent/main.py"]
-    if not supported:
-        interface["import"] = [path for path in interface["import"] if path != NEURAL_TASK]
-
-
-def copy_agent_files(working_dir: Path, install_dir: Path, platform_tag: str) -> None:
-    """Copy runtime code and the fixed model; keep development tools out of releases."""
+def copy_agent_files(
+    working_dir: Path, install_dir: Path, *, include_neural_model: bool = True
+) -> None:
+    """Copy runtime code, optionally omitting the large neural checkpoint."""
     source = working_dir / "agent"
     require_dir(source)
+    omitted_checkpoint = (
+        _neural_checkpoint_path(source) if not include_neural_model else None
+    )
 
     def ignored(directory, names):
         result = set(COPY_IGNORE(directory, names))
         result.update({"tests", "benchmarks"} & set(names))
-        relative = Path(directory).relative_to(source).as_posix()
-        if platform_tag != "win-x64":
-            if relative == ".":
-                result.update(name for name in names if name.startswith("neural_") and name.endswith(".py"))
-            elif relative == "custom/action":
-                result.update({"climb_tower_neural"} & set(names))
+        if omitted_checkpoint and Path(directory).resolve() == omitted_checkpoint.parent:
+            result.add(omitted_checkpoint.name)
         return result
 
     shutil.copytree(source, install_dir / "agent", dirs_exist_ok=True, ignore=ignored)
@@ -69,24 +79,29 @@ def require_dir(path: Path) -> None:
         raise FileNotFoundError(f"Required directory not found: {path}")
 
 
-def copy_tree(source: Path, destination: Path, *, platform_tag: str | None = None) -> None:
+def copy_tree(source: Path, destination: Path) -> None:
     """复制发行内容并过滤构建缓存。"""
     require_dir(source)
-    shutil.copytree(source, destination, dirs_exist_ok=True, ignore=payload_ignore(platform_tag))
+    shutil.copytree(source, destination, dirs_exist_ok=True, ignore=COPY_IGNORE)
 
 
-def copy_project_files(working_dir: Path, install_dir: Path, *, platform_tag: str = "") -> None:
+def copy_project_files(
+    working_dir: Path, install_dir: Path, *, platform_tag: str = ""
+) -> None:
     """复制说明、许可证和运行依赖清单。"""
     for source, destination in PROJECT_FILES.items():
         path = working_dir / source
         require_file(path)
         shutil.copy2(path, install_dir / destination)
     if platform_tag == "win-x64":
-        # The distributed list is standalone; its include refers to source assets.
-        optional = working_dir / "assets" / "requirements-win-x64.txt"
-        base = (working_dir / "assets" / "requirements.txt").read_text(encoding="utf-8")
+        extra_requirements = working_dir / "assets" / "requirements-win-x64.txt"
+        base_requirements = (
+            working_dir / "assets" / "requirements.txt"
+        ).read_text(encoding="utf-8")
         (install_dir / "requirements.txt").write_text(
-            optional.read_text(encoding="utf-8").replace("-r requirements.txt", base.rstrip()),
+            extra_requirements.read_text(encoding="utf-8").replace(
+                "-r requirements.txt", base_requirements.rstrip()
+            ),
             encoding="utf-8",
         )
 

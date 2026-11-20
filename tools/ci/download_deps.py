@@ -64,13 +64,14 @@ def build_download_command(
     deps_path, platform_tag=None, *, python_version=None, maafw_version=None
 ):
     """构造 pip download 命令。"""
+    requirements_file = requirements_for_platform(platform_tag or get_platform_tag())
     cmd = [
         sys.executable,
         "-m",
         "pip",
         "download",
         "-r",
-        str(requirements_for_platform(platform_tag or get_platform_tag())),
+        str(requirements_file),
         "-d",
         str(deps_path),
         "--only-binary=:all:",
@@ -87,8 +88,11 @@ def build_download_command(
 
 
 def requirements_for_platform(platform_tag):
-    return (REQUIREMENTS_FILE.with_name("requirements-win-x64.txt")
-            if platform_tag == "win_amd64" else REQUIREMENTS_FILE)
+    return (
+        REQUIREMENTS_FILE.with_name("requirements-win-x64.txt")
+        if platform_tag == "win_amd64"
+        else REQUIREMENTS_FILE
+    )
 
 
 def validate_maafw_wheel(deps_path, expected_version):

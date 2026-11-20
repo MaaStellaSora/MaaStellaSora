@@ -13,8 +13,8 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from configure import configure_kr_ocr_model, configure_ocr_model
 from package_common import (
-    COPY_IGNORE, configure_agent, copy_agent_files, copy_project_files, copy_tree,
-    payload_ignore, remove_build_artifacts, require_file,
+    COPY_IGNORE, copy_agent_files, copy_project_files, copy_tree,
+    remove_build_artifacts, require_file,
 )
 from resource_layout import copy_resources, validate_staging_directory
 
@@ -46,11 +46,11 @@ def install_deps(working_dir: Path, install_path: Path, platform_tag: str) -> No
     )
 
 
-def install_resource(working_dir: Path, install_path: Path, platform_tag: str) -> None:
+def install_resource(working_dir: Path, install_path: Path) -> None:
     copy_resources(
         working_dir / "assets" / "resource",
         install_path / "resource",
-        ignore=payload_ignore(platform_tag),
+        ignore=COPY_IGNORE,
     )
     configure_ocr_model(
         working_dir / "assets", install_path / "resource" / "base" / "model" / "ocr"
@@ -61,7 +61,6 @@ def install_resource(working_dir: Path, install_path: Path, platform_tag: str) -
     copy_tree(
         working_dir / "assets" / "interface",
         install_path / "interface",
-        platform_tag=platform_tag,
     )
     copy_tree(
         working_dir / "assets" / "i18n",
@@ -92,7 +91,7 @@ def transform_interface(interface: dict, version: str, platform_tag: str) -> dic
     transformed["version"] = version
     transformed["custom_title"] = f"星塔助手{version}"
     transformed["agent"]["child_exec"] = child_exec
-    configure_agent(transformed, platform_tag)
+    transformed["agent"]["child_args"] = ["-u", "./agent/main.py"]
     return transformed
 
 
@@ -113,9 +112,11 @@ def build_package(
 
     install_path.mkdir(parents=True, exist_ok=True)
     install_deps(working_dir, install_path, platform_tag)
-    install_resource(working_dir, install_path, platform_tag)
+    install_resource(working_dir, install_path)
     copy_project_files(working_dir, install_path, platform_tag=platform_tag)
-    copy_agent_files(working_dir, install_path, platform_tag)
+    copy_agent_files(
+        working_dir, install_path, include_neural_model=platform_tag == "win-x64"
+    )
     remove_build_artifacts(install_path)
     if platform_tag.startswith("win-"):
         (install_path / "用管理员身份运行喵.txt").touch()

@@ -18,8 +18,16 @@ def register():
     return _runtime
 
 
-def register_if_supported():
+def register_lazy_callbacks():
     """Keep ordinary tasks independent of OpenCV and optional runtime settings."""
+    try:
+        _register_lazy_callbacks()
+    except Exception:
+        if _runtime_is_available():
+            raise
+
+
+def _register_lazy_callbacks():
     global _task_sink
     from maa.agent.agent_server import AgentServer
     from maa.custom_action import CustomAction
@@ -28,27 +36,27 @@ def register_if_supported():
     from .interactor import FrameObservation
     from .shop_ui.purchase import SHOP_PRICE_RECOGNITION, ShopItemPrice
 
-    class LazyAction(CustomAction):
-        def __init__(self, name):
-            super().__init__()
-            self.name = name
+    def register_lazy_action(name):
+        @AgentServer.custom_action(name)
+        class LazyAction(CustomAction):
+            def run(self, context, argv):
+                runtime = _load_supported_runtime()
+                if runtime is None:
+                    return False
+                return runtime.callbacks[name].run(context, argv)
 
-        def run(self, context, argv):
-            runtime = _load_supported_runtime()
-            if runtime is None:
-                return False
-            return runtime.callbacks[self.name].run(context, argv)
+        return LazyAction
 
-    class LazyRecognition(CustomRecognition):
-        def __init__(self, name):
-            super().__init__()
-            self.name = name
+    def register_lazy_recognition(name):
+        @AgentServer.custom_recognition(name)
+        class LazyRecognition(CustomRecognition):
+            def analyze(self, context, argv):
+                runtime = _load_supported_runtime()
+                if runtime is None:
+                    return CustomRecognition.AnalyzeResult(box=None, detail={})
+                return runtime.callbacks[name].analyze(context, argv)
 
-        def analyze(self, context, argv):
-            runtime = _load_supported_runtime()
-            if runtime is None:
-                return CustomRecognition.AnalyzeResult(box=None, detail={})
-            return runtime.callbacks[self.name].analyze(context, argv)
+        return LazyRecognition
 
     class LazyTaskSink(TaskerEventSink):
         """Remember the first task's start before its preparation loads the runtime."""
@@ -65,18 +73,16 @@ def register_if_supported():
                 self.current = None
 
     bindings = json.loads((Path(__file__).parent / "agent_bindings.json").read_text(encoding="utf-8"))
-    for kind, callback, add in (
-        ("actions", LazyAction, AgentServer.register_custom_action),
-        ("recognitions", LazyRecognition, AgentServer.register_custom_recognition),
-    ):
-        for binding in bindings[kind].values():
-            proxy = callback(binding["name"])
-            _lazy_callbacks[binding["name"]] = proxy
-            add(binding["name"], proxy)
-    AgentServer.register_custom_recognition("stella_value_frame_observation", FrameObservation())
+    for binding in bindings["actions"].values():
+        name = binding["name"]
+        _lazy_callbacks[name] = register_lazy_action(name)
+    for binding in bindings["recognitions"].values():
+        name = binding["name"]
+        _lazy_callbacks[name] = register_lazy_recognition(name)
+    AgentServer.custom_recognition("stella_value_frame_observation")(FrameObservation)
     # Maa exchanges the available names when the client connects. A shop may be
     # hours after that handshake; publish its price reader before loading any model.
-    AgentServer.register_custom_recognition(SHOP_PRICE_RECOGNITION, ShopItemPrice())
+    AgentServer.custom_recognition(SHOP_PRICE_RECOGNITION)(ShopItemPrice)
     _task_sink = LazyTaskSink()
     AgentServer.add_tasker_sink(_task_sink)
 
@@ -84,19 +90,35 @@ def register_if_supported():
 def _load_supported_runtime():
     if _runtime is not None:
         return _runtime
-    # Check the interpreter architecture, including x64 Python emulated on ARM.
-    from sysconfig import get_platform
-    if get_platform() == "win-amd64":
-        try:
-            import cv2  # noqa: F401
-        except (ImportError, OSError):
-            pass
-        else:
-            return register()
+    if _runtime_is_available():
+        return register()
     from utils.logger import get_logger
     logger = get_logger(__name__)
     logger.error("$agent.custom.action.climb_tower_neural.unsupported_runtime")
     return None
+
+
+def _runtime_is_available():
+    try:
+        import cv2  # noqa: F401
+    except Exception:
+        return False
+
+    module_dir = Path(__file__).resolve().parent
+    metadata_path = module_dir / "model.json"
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        checkpoint = Path(metadata["checkpoint"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return True
+    if checkpoint.is_absolute():
+        return True
+    checkpoint_path = (module_dir / checkpoint).resolve()
+    try:
+        checkpoint_path.relative_to(module_dir)
+    except ValueError:
+        return True
+    return checkpoint_path.is_file()
 
 
 def _register_task_sink(sink):

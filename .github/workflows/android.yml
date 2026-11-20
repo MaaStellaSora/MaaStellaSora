@@ -113,18 +113,16 @@ jobs:
 
           project_root = Path(os.environ["PROJECT_ROOT"])
           sys.path.insert(0, str(project_root / "tools/ci"))
-          from package_common import configure_agent, copy_agent_files, copy_tree, require_file
+          from package_common import copy_agent_files, copy_tree, require_file
 
           pi_root = Path(sys.argv[1])
-          copy_tree(project_root / "assets", pi_root, platform_tag="android-arm64")
-          copy_agent_files(project_root, pi_root, "android-arm64")
+          copy_tree(project_root / "assets", pi_root)
+          copy_agent_files(project_root, pi_root, include_neural_model=False)
           require_file(pi_root / "agent/main.py")
           interface_path = pi_root / "interface.json"
           interface = json.loads(interface_path.read_text(encoding="utf-8"))
-          configure_agent(interface, "android-arm64")
-          version = sys.argv[2]
-
-          interface["version"] = version
+          interface["agent"]["child_args"] = ["-u", "./agent/main.py"]
+          interface["version"] = sys.argv[2]
           interface["welcome"] = "welcome_android.md"
 
           for imported in interface.get("import", []):
@@ -147,7 +145,7 @@ jobs:
               json.dumps(interface, ensure_ascii=False, indent=4) + "\n",
               encoding="utf-8",
           )
-          print(f"Prepared Android PI version {version}")
+          print(f"Prepared Android PI version {sys.argv[2]}")
           PY
 
       - name: Prepare OCR model

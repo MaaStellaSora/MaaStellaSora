@@ -320,5 +320,7 @@
     "interface.group.daily.label": "일퀘",
     "interface.group.periodic_activity.label": "정기 이벤트",
     "interface.group.ascension.label": "별의 탑",
-    "interface.group.other.label": "기타 기능"
+    "interface.group.other.label": "기타 기능",
+    "interface.preset.daily_weekly.label": "일일·주간",
+    "interface.preset.ascension_and_other.label": "별의 탑 및 기타"
 }

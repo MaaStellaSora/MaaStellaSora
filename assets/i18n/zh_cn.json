@@ -320,5 +320,7 @@
     "interface.group.daily.label": "日常",
     "interface.group.periodic_activity.label": "周期性活动",
     "interface.group.ascension.label": "爬塔",
-    "interface.group.other.label": "其他功能"
+    "interface.group.other.label": "其他功能",
+    "interface.preset.daily_weekly.label": "日常周常",
+    "interface.preset.ascension_and_other.label": "爬塔及其他"
 }

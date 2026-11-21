@@ -60,6 +60,7 @@ class InstallMxuTests(unittest.TestCase):
             "import": [
                 "interface/tasks/login.json",
                 "interface/tasks/climb_tower_neural.json",
+                "interface/presets/daily_weekly.json",
             ],
         }
         self._write(
@@ -74,6 +75,10 @@ class InstallMxuTests(unittest.TestCase):
         self._write(self.root / "assets" / "interface" / "tasks" / "login.json")
         self._write(
             self.root / "assets" / "interface" / "tasks" / "climb_tower_neural.json"
+        )
+        self._write(
+            self.root / "assets" / "interface" / "presets" / "daily_weekly.json",
+            '{"preset":[{"name":"daily_weekly","task":[]}]}',
         )
         self._write(self.root / "assets" / "resource" / "windows" / "base.json")
         self._write(self.root / "assets" / "resource" / "en" / "base.json")
@@ -192,6 +197,9 @@ class InstallMxuTests(unittest.TestCase):
         )
         self.assertTrue(
             (output / "agent/custom/action/climb_tower_neural/models/M213.npz").is_file()
+        )
+        self.assertTrue(
+            (output / "interface/presets/daily_weekly.json").is_file()
         )
         self.assertEqual(
             (self.root / "assets" / "interface.json").read_text(encoding="utf-8"),

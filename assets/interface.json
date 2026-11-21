@@ -154,6 +154,8 @@
         "interface/tasks/climb_tower_shop.json",
         "interface/tasks/climb_tower_shop_enhance.json",
         "interface/tasks/climb_tower_target.json",
-        "interface/tasks/cataclysm_survivor.json"
+        "interface/tasks/cataclysm_survivor.json",
+        "interface/presets/daily_weekly.json",
+        "interface/presets/ascension_and_other.json"
     ]
 }

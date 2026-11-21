@@ -320,5 +320,7 @@
     "interface.group.daily.label": "Daily",
     "interface.group.periodic_activity.label": "Periodic Activities",
     "interface.group.ascension.label": "Ascension",
-    "interface.group.other.label": "Other Features"
+    "interface.group.other.label": "Other Features",
+    "interface.preset.daily_weekly.label": "Daily & Weekly",
+    "interface.preset.ascension_and_other.label": "Ascension & Other"
 }

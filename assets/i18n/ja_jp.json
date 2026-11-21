@@ -320,5 +320,7 @@
     "interface.group.daily.label": "デイリー",
     "interface.group.periodic_activity.label": "定期イベント",
     "interface.group.ascension.label": "星ノ塔",
-    "interface.group.other.label": "その他の機能"
+    "interface.group.other.label": "その他の機能",
+    "interface.preset.daily_weekly.label": "デイリー・ウィークリー",
+    "interface.preset.ascension_and_other.label": "星ノ塔・その他"
 }

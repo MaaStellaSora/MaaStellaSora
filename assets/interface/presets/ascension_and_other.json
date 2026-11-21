@@ -1,0 +1,14 @@
+{
+    "preset": [
+        {
+            "name": "ascension_and_other",
+            "label": "$interface.preset.ascension_and_other.label",
+            "task": [
+                {"name": "自动爬塔", "enabled": true},
+                {"name": "爬塔（神经网络）", "enabled": true},
+                {"name": "自动爬塔（维塔）", "enabled": true},
+                {"name": "活动挑战关卡自动战斗", "enabled": true}
+            ]
+        }
+    ]
+}

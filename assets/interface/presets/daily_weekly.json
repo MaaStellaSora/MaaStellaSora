@@ -1,0 +1,25 @@
+{
+    "preset": [
+        {
+            "name": "daily_weekly",
+            "label": "$interface.preset.daily_weekly.label",
+            "task": [
+                {"name": "登录游戏", "enabled": true},
+                {"name": "领取每日奖励", "enabled": true},
+                {"name": "魔王之塔", "enabled": true},
+                {"name": "心链送礼", "enabled": true},
+                {"name": "邀约", "enabled": true},
+                {"name": "活动快速战斗", "enabled": true},
+                {"name": "悬赏试炼快速战斗", "enabled": true},
+                {"name": "领取并重新派遣委托", "enabled": true},
+                {"name": "领取与赠送干劲", "enabled": true},
+                {"name": "领取任务奖励", "enabled": true},
+                {"name": "领取邮箱奖励", "enabled": true},
+                {"name": "领取基金奖励", "enabled": true},
+                {"name": "猎影合围", "enabled": true},
+                {"name": "真格挑战", "enabled": true},
+                {"name": "灾变防线", "enabled": true}
+            ]
+        }
+    ]
+}

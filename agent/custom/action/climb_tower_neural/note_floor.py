@@ -1,8 +1,7 @@
 """Read the background floor plaque without inspecting reward content."""
 import re
 
-import cv2
-
+from .image_ops import bgr_to_gray, gray_to_bgr, normalize_gray, resize_cubic
 from .note_ocr import OCR_RULES, read_text
 
 
@@ -30,8 +29,7 @@ def read_floor_observation(context, image, expected_floors=()):
     """
     x, y, width, height = FLOOR_REGION
     plaque = image[y:y + height, x:x + width]
-    gray = cv2.cvtColor(plaque, cv2.COLOR_BGR2GRAY)
-    gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+    gray = normalize_gray(bgr_to_gray(plaque))
     green = 255 - plaque[:, :, 1]
     expected_floors = list(dict.fromkeys(expected_floors))
     raw = []
@@ -49,8 +47,7 @@ def read_floor_observation(context, image, expected_floors=()):
             break
         left, top, width, height = region
         digits = plane[top - y:top - y + height, left - x:left - x + width]
-        digits = cv2.resize(digits, None, fx=RULES["scale"], fy=RULES["scale"], interpolation=cv2.INTER_CUBIC)
-        digits = cv2.cvtColor(digits, cv2.COLOR_GRAY2BGR)
+        digits = gray_to_bgr(resize_cubic(digits, scale=RULES["scale"]))
         rows = read_text(context, digits, (0, 0, digits.shape[1], digits.shape[0]), only_rec=True)
         for row in rows:
             # OCR can separate the two seven-segment digits with whitespace.

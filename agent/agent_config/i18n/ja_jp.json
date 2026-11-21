@@ -220,5 +220,5 @@
     "agent.custom.action.climb_tower_neural.sampling_recovery_failed": "[OCR収集] 攻略記録「{marker}」を復元できません：{error}",
     "agent.custom.action.climb_tower_neural.settlement_potential_counts_unconfirmed": "[OCR収集] リザルトの素質合計レベルを読み取りきれませんでした。記録に印を付けて続行します。",
     "agent.custom.action.climb_tower_neural.unsupported_controller": "[ニューラルネットワーク] Windows版ゲーム用のデスクトップコントローラーを選択してください。",
-    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[ニューラルネットワーク] Windows x64と同梱のOpenCVが必要です。"
+    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[ニューラルネットワーク] Windows x64版に同梱されているモデルが必要です。"
 }

@@ -10,8 +10,12 @@ from pathlib import Path
 import re
 from statistics import median
 
-import cv2
 import numpy as np
+
+from .image_ops import (
+    bgr_to_gray, gray_to_bgr, in_range, laplacian_variance,
+    resize_cubic, resize_cubic_for_roi, resize_linear,
+)
 
 
 ICON_NODE = "星塔_背包_识别音符_agent"
@@ -68,7 +72,7 @@ def normalize_image(image, client_rect=None, reference_size=None):
             sx, sy = image.shape[1] / reference_size[0], image.shape[0] / reference_size[1]
             x, y, width, height = round(x * sx), round(y * sy), round(width * sx), round(height * sy)
         image = image[y:y + height, x:x + width]
-    return cv2.resize(image, (1280, 720), interpolation=cv2.INTER_CUBIC)
+    return resize_cubic(image, (1280, 720))
 
 
 def _records(detail):
@@ -118,9 +122,8 @@ def find_icons(context, image, roi, scales=None, threshold=None, melodies=MELODI
     for scale in scales:
         if context.tasker.stopping:
             break
-        scaled = (image if scale == 1.0 else cv2.resize(
-            image, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC))
         scaled_roi = [round(value * scale) for value in roi]
+        scaled = resize_cubic_for_roi(image, scaled_roi, scale=scale)
         for melody in melodies:
             if context.tasker.stopping:
                 break
@@ -154,15 +157,14 @@ def white_glyph_image(image, roi):
     left, top, width, height = roi
     crop = image[top:top + height, left:left + width]
     rules = OCR_RULES["white_glyphs"]
-    white = cv2.inRange(crop, tuple(rules["lower"]), tuple(rules["upper"]))
-    points = cv2.findNonZero(white)
-    if points is None:
+    white = in_range(crop, rules["lower"], rules["upper"])
+    rows, columns = white.nonzero()
+    if not rows.size:
         return None
-    x, y, width, height = cv2.boundingRect(points)
+    glyph_mask = white[rows.min():rows.max() + 1, columns.min():columns.max() + 1]
     border, scale = rules["border"], rules["scale"]
-    glyphs = cv2.copyMakeBorder(255 - white[y:y + height, x:x + width],
-                                border, border, border, border, cv2.BORDER_CONSTANT, value=255)
-    return cv2.cvtColor(cv2.resize(glyphs, None, fx=scale, fy=scale), cv2.COLOR_GRAY2BGR)
+    glyphs = np.pad((~glyph_mask).astype(np.uint8) * 255, border, constant_values=255)
+    return gray_to_bgr(resize_linear(glyphs, scale=scale))
 
 
 def _locate_inventory_bar(image, icons, visible_melodies, *, append_elements=False):
@@ -234,9 +236,9 @@ def _locate_inventory_bar(image, icons, visible_melodies, *, append_elements=Fal
     quality = []
     for index, item in sorted(matched.items()):
         x, y, width, height = item["box"]
-        gray = cv2.cvtColor(image[y:y + height, x:x + width], cv2.COLOR_BGR2GRAY)
+        gray = bgr_to_gray(image[y:y + height, x:x + width])
         quality.append({"slot": index, "white_level": float(np.percentile(gray, rules["white_percentile"])),
-                        "detail": float(cv2.Laplacian(gray, cv2.CV_32F).var())})
+                        "detail": laplacian_variance(gray)})
     evidence.update(origin_x=origin, row_y=row_y, spacing=spacing,
                     matched_slots=sorted(matched), icon_quality=quality,
                     observed_order=[matched[index]["melody"] if index in matched else None

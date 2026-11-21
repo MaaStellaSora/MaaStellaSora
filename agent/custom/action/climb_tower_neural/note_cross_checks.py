@@ -4,16 +4,16 @@ from __future__ import annotations
 import re
 import unicodedata
 
-import cv2
 import numpy as np
 
+from .image_ops import bgr_to_gray, bgr_to_hsv, close_mask, connected_components, gray_to_bgr, resize_cubic
 from .note_ocr import OCR_RULES, find_icons, read_text, valid_text
 
 
 RULES = OCR_RULES["cross_checks"]
 REQUIREMENT_REGIONS = {key: tuple(map(tuple, regions))
                        for key, regions in RULES["requirement_regions"].items()}
-# Hue medians from the existing official icon templates (OpenCV's 0-179 scale).
+# Hue medians from the existing official icon templates on the 0–179 scale.
 ICON_HUES = RULES["icon_hues"]
 
 
@@ -40,10 +40,9 @@ def _read_level(context, image, roi):
     value = _level(raw)
     if value is None and re.search(RULES["level_label_pattern"], _text(raw)):
         x, y, width, height = roi
-        gray = cv2.cvtColor(image[y:y + height, x:x + width], cv2.COLOR_BGR2GRAY)
+        gray = bgr_to_gray(image[y:y + height, x:x + width])
         scale = RULES["level_retry_scale"]
-        enlarged = cv2.cvtColor(cv2.resize(gray, None, fx=scale, fy=scale,
-                                          interpolation=cv2.INTER_CUBIC), cv2.COLOR_GRAY2BGR)
+        enlarged = gray_to_bgr(resize_cubic(gray, scale=scale))
         retry = read_text(context, enlarged, (0, 0, width * scale, height * scale), only_rec=True)
         for item in retry:
             a, b, w, h = item["box"]
@@ -76,16 +75,16 @@ def _result_cards(image):
     left, top, width, height = RULES["result_region"]
     pixels = image[top:top + height, left:left + width, :3].astype(np.int16)
     white = ((pixels.min(axis=2) > RULES["result_white_minimum"]) &
-             (pixels.max(axis=2) - pixels.min(axis=2) < RULES["result_white_channel_spread"])).astype(np.uint8)
+             (pixels.max(axis=2) - pixels.min(axis=2) < RULES["result_white_channel_spread"]))
     size = RULES["result_morphology_size"]
-    white = cv2.morphologyEx(white, cv2.MORPH_CLOSE, np.ones((size, size), np.uint8))
-    _, _, stats, _ = cv2.connectedComponentsWithStats(white)
+    _, components = connected_components(close_mask(white, size))
     cards = []
-    for x, y, width, height, area in stats[1:]:
+    for component in components:
+        width, height = component.width, component.height
         if (width >= RULES["result_minimum_width"]
                 and RULES["result_height_range"][0] <= height <= RULES["result_height_range"][1]
-                and area > width * height * RULES["result_minimum_fill"]):
-            cards.append((int(x + left), int(y + top), int(width), int(height)))
+                and component.area > width * height * RULES["result_minimum_fill"]):
+            cards.append((component.left + left, component.top + top, width, height))
     return sorted(cards, key=lambda box: box[1])
 
 
@@ -173,7 +172,7 @@ def _requirements(context, image, layout):
                                 item["box"][0] + item["box"][2]
                                 for item in anchors)
             patch = image[y:y + height, x:x + width, :3]
-            hsv = cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)
+            hsv = bgr_to_hsv(patch)
             hue = ICON_HUES[icon["melody"].removeprefix("melody_of_")]
             distance = np.abs(hsv[:, :, 0].astype(np.int16) - hue)
             distance = np.minimum(distance, 180 - distance)

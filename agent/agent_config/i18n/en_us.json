@@ -220,5 +220,5 @@
     "agent.custom.action.climb_tower_neural.sampling_recovery_failed": "[OCR Collection] Could not recover run record {marker}: {error}",
     "agent.custom.action.climb_tower_neural.settlement_potential_counts_unconfirmed": "[OCR Collection] Total potential levels could not be read. Record flagged; continuing.",
     "agent.custom.action.climb_tower_neural.unsupported_controller": "[Neural Network] Select a desktop controller for the native Windows game.",
-    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[Neural Network] Requires Windows x64 and the bundled OpenCV."
+    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[Neural Network] Requires the model bundled with the Windows x64 package."
 }

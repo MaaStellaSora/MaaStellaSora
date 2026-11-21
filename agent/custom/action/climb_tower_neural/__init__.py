@@ -19,7 +19,7 @@ def register():
 
 
 def register_lazy_callbacks():
-    """Keep ordinary tasks independent of OpenCV and optional runtime settings."""
+    """Keep ordinary tasks independent of the optional strategy and model."""
     try:
         _register_lazy_callbacks()
     except Exception:
@@ -99,11 +99,6 @@ def _load_supported_runtime():
 
 
 def _runtime_is_available():
-    try:
-        import cv2  # noqa: F401
-    except Exception:
-        return False
-
     module_dir = Path(__file__).resolve().parent
     metadata_path = module_dir / "model.json"
     try:

@@ -220,5 +220,5 @@
     "agent.custom.action.climb_tower_neural.sampling_recovery_failed": "[OCR采集] 无法恢复对局记录 {marker}：{error}",
     "agent.custom.action.climb_tower_neural.settlement_potential_counts_unconfirmed": "[OCR采集] 结算潜能总级数未读全，已标记记录并继续。",
     "agent.custom.action.climb_tower_neural.unsupported_controller": "[神经网络] 请为 Windows 原生游戏选择桌面端控制器。",
-    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[神经网络] 需要 Windows x64 和随包的 OpenCV。"
+    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[神经网络] 需要 Windows x64 发行包内的模型。"
 }

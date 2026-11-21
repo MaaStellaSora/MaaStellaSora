@@ -239,18 +239,28 @@ jobs:
         run: |
           ./install/python/python.exe -c "import numpy; import maa; print('Windows Python dependencies verified successfully')"
 
-      - name: Verify OpenCV in Windows x64 package
-        if: matrix.arch == 'x86_64'
-        shell: bash
-        run: |
-          ./install/python/python.exe -c "import cv2; print(f'OpenCV {cv2.__version__} is available in the release Python')"
-
       - name: Package Windows archive
         shell: bash
         run: |
           ARCHIVE_NAME="MaaStellaSora-win-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}.zip"
           (cd install && 7z a -tzip "../$ARCHIVE_NAME" .)
           test -s "$ARCHIVE_NAME"
+
+      - name: Verify neural tower runtime in Windows x64 package
+        if: matrix.arch == 'x86_64'
+        shell: bash
+        working-directory: install
+        run: |
+          ./python/python.exe -B - <<'PY'
+          import sys
+
+          sys.path.insert(0, "agent")
+          from custom.action.climb_tower_neural import agent_callbacks, bag_preset_reader, maa_hook
+          from custom.action.climb_tower_neural.value_model import ValueModel
+
+          model = ValueModel()
+          assert model.checkpoint.resolve().is_relative_to(model.root.resolve()), "Expected a bundled neural model"
+          PY
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

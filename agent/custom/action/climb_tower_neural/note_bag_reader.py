@@ -6,8 +6,7 @@ list and selected note's title Lv supply counts; effect descriptions do not.
 import re
 import unicodedata
 
-import cv2
-
+from .image_ops import resize_cubic
 from .note_ocr import OCR_RULES, TEXT_RULE_NODES, combine_readings, find_icons, read_text, text_rules, valid_text
 
 
@@ -52,7 +51,7 @@ def _read_count(context, image, icon):
         left, top, width, height = retry_regions[-1]
         crop = image[top:top + height, left:left + width]
         scale = RULES["count_retry_scale"]
-        enlarged = cv2.resize(crop, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+        enlarged = resize_cubic(crop, scale=scale)
         retried = read_text(context, enlarged, (0, 0, width * scale, height * scale),
                             only_rec=True, node=TEXT_RULE_NODES["bag_count"])
         for record in retried:

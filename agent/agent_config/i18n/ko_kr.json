@@ -220,5 +220,5 @@
     "agent.custom.action.climb_tower_neural.sampling_recovery_failed": "[OCR 수집] 등반 기록 {marker}을(를) 복구하지 못했습니다: {error}",
     "agent.custom.action.climb_tower_neural.settlement_potential_counts_unconfirmed": "[OCR 수집] 정산 잠재력 총 레벨을 모두 읽지 못했습니다. 기록에 표시하고 계속합니다.",
     "agent.custom.action.climb_tower_neural.unsupported_controller": "[신경망] Windows 네이티브 게임용 데스크톱 컨트롤러를 선택하세요.",
-    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[신경망] Windows x64와 동봉된 OpenCV가 필요합니다."
+    "agent.custom.action.climb_tower_neural.unsupported_runtime": "[신경망] Windows x64 패키지에 포함된 모델이 필요합니다."
 }

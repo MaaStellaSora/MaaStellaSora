@@ -12,9 +12,12 @@ import json
 from pathlib import Path
 import re
 
-import cv2
 import numpy as np
 
+from .image_ops import (
+    bgr_to_gray, bgr_to_hsv, connected_components, gray_to_bgr, in_range,
+    match_vertical_strip, resize_cubic,
+)
 from .interactor import Interactor
 from .ocr_number import assess_amount
 
@@ -69,18 +72,16 @@ def _matches(context, node, image, box, threshold):
 
 def _knob(image, box):
     x, y, width, height = box
-    hsv = cv2.cvtColor(image[y:y + height, x:x + width], cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, (0, 0, 210), (179, 75, 255))
-    count, _, stats, centers = cv2.connectedComponentsWithStats(mask)
-    candidates = [i for i in range(1, count) if stats[i, cv2.CC_STAT_AREA] >= height * height * .13
-                  and stats[i, cv2.CC_STAT_HEIGHT] >= height * .55]
+    hsv = bgr_to_hsv(image[y:y + height, x:x + width])
+    mask = in_range(hsv, (0, 0, 210), (179, 75, 255))
+    _, components = connected_components(mask)
+    candidates = [blob for blob in components if blob.area >= height * height * .13
+                  and blob.height >= height * .55]
     if not candidates:
         raise ValueError("背包潜能筛选开关未读清")
-    index = max(candidates, key=lambda i: stats[i, cv2.CC_STAT_AREA])
-    a, b = centers[index]
-    left, top, found_width, found_height, _ = stats[index]
-    return dict(right=bool(a > width / 2), center=(float(x + a), float(y + b)),
-                box=[x + int(left), y + int(top), int(found_width), int(found_height)])
+    knob = max(candidates, key=lambda blob: blob.area)
+    return dict(right=knob.center_x > width / 2, center=(x + knob.center_x, y + knob.center_y),
+                box=[x + knob.left, y + knob.top, knob.width, knob.height])
 
 
 def _knob_right(image, box):
@@ -106,7 +107,7 @@ def _rarity_from_background(image, box):
     x, y, width, _ = box
     roi = [x + 8, y + 8, width - 16, 66]
     a, b, w, h = roi
-    hsv = cv2.cvtColor(image[b:b + h, a:a + w], cv2.COLOR_BGR2HSV)
+    hsv = bgr_to_hsv(image[b:b + h, a:a + w])
     hue = hsv[:, :, 0]
     colored = (hsv[:, :, 1] >= 65) & (hsv[:, :, 2] >= 45)
     fractions = {kind: float(np.mean(colored & band)) for kind, band in (
@@ -125,13 +126,12 @@ def _content_shift(previous, current):
     # The final universal row has only its first card. Other columns expose
     # the animated scene through the bag, so they cannot anchor the scroll.
     x, width = COLUMNS[0], 118
-    old = cv2.cvtColor(previous[y:y + height, x:x + width], cv2.COLOR_BGR2GRAY)
-    new = cv2.cvtColor(current[y:y + height, x:x + width], cv2.COLOR_BGR2GRAY)
+    old = bgr_to_gray(previous[y:y + height, x:x + width])
+    new = bgr_to_gray(current[y:y + height, x:x + width])
     matches = []
     for top in (55, 205, 355, 455):
         strip = old[top:top + 95]
-        result = cv2.matchTemplate(new, strip, cv2.TM_CCOEFF_NORMED)
-        _, score, _, (_, found_y) = cv2.minMaxLoc(result)
+        score, found_y = match_vertical_strip(new, strip)
         matches.append((score, found_y - top))
     score, shift = max(matches)
     if score < .75:
@@ -159,12 +159,12 @@ def _reflow_name(crop):
     # The title crop can overlap a badge above or the card outline below.
     # Their wide clipped components and thin clipped lower corners are
     # artwork, not another text line.
-    count, labels, stats, _ = cv2.connectedComponentsWithStats(ink.astype(np.uint8))
-    for index in range(1, count):
-        _, top, width, height, _ = stats[index]
+    labels, components = connected_components(ink)
+    for blob in components:
+        top, width, height = blob.top, blob.width, blob.height
         if ((width >= ink.shape[1] * .5 and (top <= 1 or top + height >= ink.shape[0] - 1))
                 or (height <= 2 and top + height == ink.shape[0])):
-            ink[labels == index] = False
+            ink[labels == blob.label] = False
     projection = ink.sum(axis=1)
     gaps = [y for y in range(12, 25) if projection[y] == 0
             and projection[:y].sum() > 40 and projection[y + 1:].sum() > 2]
@@ -235,7 +235,7 @@ class _Reader:
             raise ValueError("背包潜能截图缺失")
         self.capture_size = image.shape[1], image.shape[0]
         if image.shape[:2] != (720, 1280):
-            image = cv2.resize(image, (1280, 720), interpolation=cv2.INTER_CUBIC)
+            image = resize_cubic(image, (1280, 720))
         self.frame += 1
         if self.capture is not None:
             self.capture("preset_screenshot", image, frame=self.frame, source_page="bag_potential_collection")
@@ -355,8 +355,8 @@ class _Reader:
             image = self._ensure_control(image, name)
         self._confirm_display(image)
         for _ in range(7):
-            hsv = cv2.cvtColor(image[80:688, 947:954], cv2.COLOR_BGR2HSV)
-            yy, _ = np.where(cv2.inRange(hsv, (75, 100, 90), (105, 255, 255)) > 0)
+            hsv = bgr_to_hsv(image[80:688, 947:954])
+            yy, _ = np.where(in_range(hsv, (75, 100, 90), (105, 255, 255)))
             if len(yy) and yy.min() < 12:
                 break
             self.scroll(upward=False)
@@ -370,8 +370,7 @@ class _Reader:
 
     def _digit(self, image, box, maximum):
         x, y, width, height = box
-        crop = cv2.resize(image[y:y + height, x:x + width], None, fx=3, fy=3,
-                          interpolation=cv2.INTER_CUBIC)
+        crop = resize_cubic(image[y:y + height, x:x + width], scale=3)
         pattern = TEXT_RULES["single_digit_pattern"].format(maximum=maximum)
         rows = read_text(self.context, crop, (0, 0, width * 3, height * 3),
                          only_rec=True, expected=(pattern,))
@@ -577,8 +576,7 @@ class _Reader:
         lines = {}
         for scale in (1, 2):
             source = f"name_crop_{scale}x"
-            crop = card.crop if scale == 1 else cv2.resize(
-                card.crop, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+            crop = card.crop if scale == 1 else resize_cubic(card.crop, scale=scale)
             rows = read_text(self.context, crop, (0, 0, crop.shape[1], crop.shape[0]))
             for row in rows:
                 a, b, w, h = row["box"]
@@ -627,8 +625,8 @@ class _Reader:
         acquired = bool(card.levels - {0})
         if reflowed and acquired and not lines:
             ink = np.where(strip.max(axis=2) < 205, 0, 255).astype(np.uint8)
-            strip = cv2.cvtColor(ink, cv2.COLOR_GRAY2BGR)
-        crop = cv2.resize(strip, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+            strip = gray_to_bgr(ink)
+        crop = resize_cubic(strip, scale=3)
         rows = read_text(self.context, crop, (0, 0, crop.shape[1], crop.shape[0]), only_rec=True)
         source = "name_lines_3x" if reflowed else "name_line_3x"
         for row in rows:

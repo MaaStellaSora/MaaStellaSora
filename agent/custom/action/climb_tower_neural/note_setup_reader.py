@@ -8,8 +8,7 @@ import re
 from statistics import median
 import unicodedata
 
-import cv2
-
+from .image_ops import bgr_to_hsv, in_range
 from .name_matching import clean_name, match_name
 from .note_cross_checks import collect_cross_checks
 from .note_ocr import (OCR_RULES, TEXT_RULE_NODES, find_icons, read_text, text_rules,
@@ -113,10 +112,9 @@ def _supply_rows(image, readings):
         x, _, w, _ = row["box"]
         if row["current"] is None and abs(x + w / 2 - column) > tolerance:
             left, top, width, height = row["count_box"]
-            glyphs = cv2.inRange(image[top:top + height, left:left + width],
-                                 tuple(OCR_RULES["white_glyphs"]["lower"]),
-                                 tuple(OCR_RULES["white_glyphs"]["upper"]))
-            if not cv2.countNonZero(glyphs):
+            rules = OCR_RULES["white_glyphs"]
+            glyphs = in_range(image[top:top + height, left:left + width], rules["lower"], rules["upper"])
+            if not glyphs.any():
                 skipped.append(dict(row, reason="outside_supply_column_without_number"))
                 continue
         rows.append(row)
@@ -177,7 +175,7 @@ def _concerto_level(raw, context=None):
 def _card_icon_present(image, box):
     x, y, _, _ = box
     left, top, width, height = CONCERTO_RULES["icon_offset"]
-    icon = cv2.cvtColor(image[y + top:y + top + height, x + left:x + left + width], cv2.COLOR_BGR2HSV)
+    icon = bgr_to_hsv(image[y + top:y + top + height, x + left:x + left + width])
     low, high = CONCERTO_RULES["icon_hue_range"]
     colored = (icon[:, :, 0] >= low) & (icon[:, :, 0] <= high) & (
         icon[:, :, 1] > CONCERTO_RULES["icon_minimum_saturation"]) & (

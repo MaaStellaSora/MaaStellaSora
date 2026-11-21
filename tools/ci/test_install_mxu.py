@@ -106,7 +106,7 @@ class InstallMxuTests(unittest.TestCase):
             self._write(self.root / name, f"project {name}")
         self._write(
             self.root / "assets" / "requirements-win-x64.txt",
-            "-r requirements.txt\nnumpy\nopencv-python-headless\n",
+            "-r requirements.txt\nnumpy\n",
         )
         self._write(
             self.root / "assets" / "MaaCommonAssets" / "LICENSE",
@@ -188,9 +188,9 @@ class InstallMxuTests(unittest.TestCase):
             (output / "i18n" / "zh_cn.json").read_text(encoding="utf-8"),
             '{"interface.label":"测试"}',
         )
-        self.assertIn(
-            "opencv-python-headless",
-            (output / "requirements.txt").read_text(encoding="utf-8"),
+        self.assertEqual(
+            (output / "requirements.txt").read_text(encoding="utf-8").splitlines(),
+            ["project assets/requirements.txt", "numpy"],
         )
         self.assertTrue(
             (output / "agent/custom/action/climb_tower_neural/__init__.py").is_file()

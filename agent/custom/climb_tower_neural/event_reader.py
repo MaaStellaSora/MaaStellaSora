@@ -6,10 +6,10 @@ from types import SimpleNamespace
 from maa.custom_recognition import CustomRecognition
 from maa.define import BoxAndScoreResult, OCRResult
 
-from custom.reco.climb_tower_event.main import (
+from custom.climb_tower.climb_tower_event.main import (
     EventRecognition as OfficialEventRecognition, CUSTOM_RULE_REGISTRY, _match_regex,
 )
-from custom.reco.climb_tower_event.models import Choice as OfficialChoice, EventInfo
+from custom.climb_tower.climb_tower_event.models import Choice as OfficialChoice, EventInfo
 
 from .event_mapping import choice_complete
 

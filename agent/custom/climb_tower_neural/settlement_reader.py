@@ -5,7 +5,7 @@ from copy import deepcopy
 from maa.custom_action import CustomAction
 from maa.define import BoxAndScoreResult
 
-from custom.action.climb_tower_record_scan import (
+from custom.climb_tower.climb_tower_record_scan import (
     LEVEL_NODE, LOOP_NODE, POTENTIAL_LOCATION_NODE, POTENTIAL_RECOGNITION_NODE, RecordScanAction,
 )
 from .interactor import Interactor

@@ -10,9 +10,8 @@ from tower_temp_directory import TowerTempDirectory
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
-sys.path.insert(0, str(ROOT / "agent/custom/action"))
-from climb_tower_neural import research_store, sampling_data
-from climb_tower_neural.research_data import export_payload
+from custom.climb_tower_neural import research_store, sampling_data
+from custom.climb_tower_neural.research_data import export_payload
 
 
 class TowerNeuralRecoveryTests(unittest.TestCase):

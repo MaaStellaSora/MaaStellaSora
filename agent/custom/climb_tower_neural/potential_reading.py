@@ -6,9 +6,9 @@ from pathlib import Path
 import re
 import unicodedata
 
-from custom.reco.climb_tower_potential.context import PotentialContext
-from custom.reco.climb_tower_potential.interactor import PotentialInteractor
-from custom.reco.climb_tower_potential.main import ChoosePotentialRecognition
+from custom.climb_tower.climb_tower_potential.context import PotentialContext
+from custom.climb_tower.climb_tower_potential.interactor import PotentialInteractor
+from custom.climb_tower.climb_tower_potential.main import ChoosePotentialRecognition
 from utils import logger as logger_module
 
 from .interactor import Interactor

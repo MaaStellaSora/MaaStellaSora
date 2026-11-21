@@ -10,8 +10,7 @@ from tower_temp_directory import TowerTempDirectory
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
-sys.path.insert(0, str(ROOT / "agent/custom/action"))
-from climb_tower_neural import research_data
+from custom.climb_tower_neural import research_data
 
 
 def candidate(**overrides):

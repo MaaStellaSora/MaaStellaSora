@@ -6,8 +6,8 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "agent/custom/action"))
-from climb_tower_neural import image_ops
+sys.path.insert(0, str(ROOT / "agent"))
+from custom.climb_tower_neural import image_ops
 
 
 class TowerNeuralImageOpsTests(unittest.TestCase):

@@ -6,7 +6,7 @@
 import numpy as np
 from maa.context import Context
 
-from custom.action.climb_tower_shop.context import Melody
+from custom.climb_tower.climb_tower_shop.context import Melody
 from utils import logger as logger_module
 logger = logger_module.get_logger(__name__)
 

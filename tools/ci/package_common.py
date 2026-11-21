@@ -17,7 +17,7 @@ PROJECT_FILES = {
     "assets/requirements.txt": "requirements.txt",
 }
 REQUIRED_OCR_FILES = ("det.onnx", "rec.onnx", "keys.txt")
-NEURAL_MODULE = Path("custom/action/climb_tower_neural")
+NEURAL_MODULE = Path("custom/climb_tower_neural")
 
 
 def _neural_checkpoint_path(agent_dir: Path) -> Path:

@@ -4,7 +4,7 @@ import json
 
 from maa.agent.agent_server import AgentServer
 from utils.logger import get_logger
-from custom.reco.climb_tower_potential.state import OwnedPotentials
+from custom.climb_tower.climb_tower_potential.state import OwnedPotentials
 
 from .log_filter import ModelLogFilter
 from .observation import ObservationTracker

@@ -1,7 +1,7 @@
 """Per-visit neural data; the native shop's configuration tables are read-only."""
 from dataclasses import dataclass, field
 
-from custom.action.climb_tower_shop.context import (
+from custom.climb_tower.climb_tower_shop.context import (
     ITEM_STANDARD_PRICES, Item as NativeItem, ShopParams,
 )
 

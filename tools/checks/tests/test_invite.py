@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
-spec = importlib.util.spec_from_file_location("invite", ROOT / "agent/custom/action/invite.py")
+spec = importlib.util.spec_from_file_location("invite", ROOT / "agent/custom/invite.py")
 invite = importlib.util.module_from_spec(spec)
 # 单测不启动原生 AgentServer 的消息线程；动作逻辑仍使用真实 Python 绑定类型。
 with patch("maa.agent.agent_server.AgentServer.custom_action", side_effect=lambda _name: lambda cls: cls):

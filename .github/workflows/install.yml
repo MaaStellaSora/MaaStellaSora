@@ -255,8 +255,8 @@ jobs:
           import sys
 
           sys.path.insert(0, "agent")
-          from custom.action.climb_tower_neural import agent_callbacks, bag_preset_reader, maa_hook
-          from custom.action.climb_tower_neural.value_model import ValueModel
+          from custom.climb_tower_neural import agent_callbacks, bag_preset_reader, maa_hook
+          from custom.climb_tower_neural.value_model import ValueModel
 
           model = ValueModel()
           assert model.checkpoint.resolve().is_relative_to(model.root.resolve()), "Expected a bundled neural model"

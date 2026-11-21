@@ -4,10 +4,10 @@ from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
 
 from .interactor import Interactor
-from custom.action.climb_tower_preparation import AscensionPreparation
-from custom.action.climb_tower_loop import AscensionLoop, HOME_NODE_OFF, HOME_NODE_ON
-from custom.action.climb_tower_shop.main import ShopAction
-from custom.reco.climb_tower_event.main import EventRecognition as OfficialEventRecognition
+from custom.climb_tower.climb_tower_preparation import AscensionPreparation
+from custom.climb_tower.climb_tower_loop import AscensionLoop, HOME_NODE_OFF, HOME_NODE_ON
+from custom.climb_tower.climb_tower_shop.main import ShopAction
+from custom.climb_tower.climb_tower_event.main import EventRecognition as OfficialEventRecognition
 from .event_reader import EventRecognition
 
 from .events import _read_event_menu, analyze_model_event
@@ -79,7 +79,7 @@ class TowerLoop(RuntimeCallback, AscensionLoop):
 class Potential(RuntimeCallback, ChoosePotentialRecognition):
     def analyze(self, context, argv):
         if not self.runtime.requested(context):
-            from custom.reco.climb_tower_potential.main import ChoosePotentialRecognition as NativeRecognition
+            from custom.climb_tower.climb_tower_potential.main import ChoosePotentialRecognition as NativeRecognition
 
             return NativeRecognition().analyze(context, argv)
         context = self.runtime.collector.context(context)

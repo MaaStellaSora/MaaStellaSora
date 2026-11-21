@@ -1,7 +1,7 @@
 import re
 import unicodedata
 
-from custom.action.climb_tower_shop.interactor import ShopInteractor as NativeShopInteractor
+from custom.climb_tower.climb_tower_shop.interactor import ShopInteractor as NativeShopInteractor
 
 from ..interactor import Interactor
 from ..ocr_number import assess_amount, decimal_amount

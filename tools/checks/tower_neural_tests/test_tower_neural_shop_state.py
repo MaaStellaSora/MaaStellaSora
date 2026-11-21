@@ -8,10 +8,9 @@ from unittest.mock import Mock
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
-sys.path.insert(0, str(ROOT / "agent/custom/action"))
-from climb_tower_neural.critic.environment import heuristic_action, legal_actions, sim
-from climb_tower_neural.observation import ObservationTracker
-from climb_tower_neural.potential_adapter import prepare_actions
+from custom.climb_tower_neural.critic.environment import heuristic_action, legal_actions, sim
+from custom.climb_tower_neural.observation import ObservationTracker
+from custom.climb_tower_neural.potential_adapter import prepare_actions
 
 
 def replay_shop(seed, ordinal):

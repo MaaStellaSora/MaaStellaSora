@@ -8,9 +8,8 @@ from unittest.mock import Mock
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
-sys.path.insert(0, str(ROOT / "agent/custom/action"))
-from climb_tower_neural.observation import ObservationTracker
-from climb_tower_neural.value_model import ValueModel, replace, sim
+from custom.climb_tower_neural.observation import ObservationTracker
+from custom.climb_tower_neural.value_model import ValueModel, replace, sim
 
 
 def tracker_at_quiz():

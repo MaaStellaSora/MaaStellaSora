@@ -10,7 +10,7 @@ Custom 函数应聚焦于 Pipeline 不适合承担的自定义逻辑。尽量让
 
 ## 模块组织与扩展
 
-按功能和职责组织模块，沿用 `agent/custom/action/` 与 `agent/custom/reco/` 下的现有目录结构。使用 `AgentServer.custom_action` 或 `AgentServer.custom_recognition` 注册实现，并确保注册名与 Pipeline 中的 `custom_action` 或 `custom_recognition` 引用完全一致。注册名是调用接口，修改时应同步检查所有引用。
+按功能规模和职责组织模块：代码量较小、逻辑简单的功能，以及通用模块，直接放在 `agent/custom/`；当一个功能代码较多、需要拆分为多个职责明确的文件时，再为其建立专属子目录，并按功能或任务命名，例如标准爬塔使用 `agent/custom/climb_tower/`，神经网络爬塔使用 `agent/custom/climb_tower_neural/`。不要仅因功能属于某个任务就单独建目录。使用 `AgentServer.custom_action` 或 `AgentServer.custom_recognition` 注册实现，并确保注册名与 Pipeline 中的 `custom_action` 或 `custom_recognition` 引用完全一致。注册名是调用接口，修改时应同步检查所有引用。
 
 模块入口负责适配 MaaFramework 参数、调用内部逻辑并返回接口要求的结果；可复用的业务判断和数据处理应拆分到职责明确的函数或组件中，避免在注册类中堆积过多细节。
 
@@ -22,7 +22,7 @@ Custom 函数应聚焦于 Pipeline 不适合承担的自定义逻辑。尽量让
 
 MaaFramework 的 Agent 编写说明可能不覆盖所有 Python 绑定接口用法。实现前应先确认项目实际使用的 MaaFramework 版本，并查阅对应版本的绑定源码、方法文档字符串和类型定义；也可结合项目中已有的自定义动作与识别实现了解调用方式。不要仅依据其他版本的示例推断接口行为。
 
-重点核对回调方法、参数类型、返回值及上下文操作，并根据实际接口约定处理失败和停止场景。项目中的实现示例包括 `agent/custom/action/` 和 `agent/custom/reco/`；Pipeline 中的调用方式见 [Pipeline 编写规范](Pipeline编写规范.md#节点引用与执行顺序)。
+重点核对回调方法、参数类型、返回值及上下文操作，并根据实际接口约定处理失败和停止场景。项目中的实现示例位于 `agent/custom/` 及其任务子目录；Pipeline 中的调用方式见 [Pipeline 编写规范](Pipeline编写规范.md#节点引用与执行顺序)。
 
 ## 任务中止检查
 

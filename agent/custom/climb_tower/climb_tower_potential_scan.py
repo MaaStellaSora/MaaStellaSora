@@ -4,8 +4,8 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
-from custom.reco.climb_tower_potential.interactor import PotentialInteractor
-from custom.reco.climb_tower_potential.state import OwnedPotential, Trekker
+from custom.climb_tower.climb_tower_potential.interactor import PotentialInteractor
+from custom.climb_tower.climb_tower_potential.state import OwnedPotential, Trekker
 
 from utils import logger as logger_module
 logger = logger_module.get_logger(__name__)

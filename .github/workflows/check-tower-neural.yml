@@ -7,7 +7,9 @@ on:
     paths:
       - ".github/workflows/check-tower-neural.yml"
       - "assets/interface.json"
-      - "agent/custom/action/climb_tower_neural/**"
+      - "agent/custom/__init__.py"
+      - "agent/custom/climb_tower_neural/**"
+      - "agent/custom/climb_tower/**"
       - "assets/interface/tasks/climb_tower_neural.json"
       - "assets/requirements-win-x64.txt"
       - "assets/resource/**/pipeline/climb_tower/climb_tower_neural*.json"
@@ -18,7 +20,9 @@ on:
     paths:
       - ".github/workflows/check-tower-neural.yml"
       - "assets/interface.json"
-      - "agent/custom/action/climb_tower_neural/**"
+      - "agent/custom/__init__.py"
+      - "agent/custom/climb_tower_neural/**"
+      - "agent/custom/climb_tower/**"
       - "assets/interface/tasks/climb_tower_neural.json"
       - "assets/requirements-win-x64.txt"
       - "assets/resource/**/pipeline/climb_tower/climb_tower_neural*.json"

@@ -1,7 +1,7 @@
 """Neural shelf reading, refresh confirmation and enhancement operations."""
 import re
 
-from custom.action.climb_tower_shop.handler import ShopHandler as NativeShopHandler
+from custom.climb_tower.climb_tower_shop.handler import ShopHandler as NativeShopHandler
 
 from .context import Item, ShopContext
 from .interactor import ShopInteractor

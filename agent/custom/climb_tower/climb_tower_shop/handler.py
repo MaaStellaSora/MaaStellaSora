@@ -7,8 +7,8 @@ from typing import Any, Generator
 from . import pipeline
 from .context import ShopContext, Item
 from .interactor import ShopInteractor
-from custom.action.climb_tower_melody_scan import auto_scan_melody_counts
-from custom.reco.climb_tower_potential.state import State
+from custom.climb_tower.climb_tower_melody_scan import auto_scan_melody_counts
+from custom.climb_tower.climb_tower_potential.state import State
 from utils import logger as logger_module
 logger = logger_module.get_logger(__name__)
 

@@ -9,7 +9,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 
-from custom.reco.climb_tower_potential.state import State
+from custom.climb_tower.climb_tower_potential.state import State
 
 from utils import logger as logger_module
 

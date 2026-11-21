@@ -13,7 +13,7 @@ def register():
     if _runtime is None:
         from .maa_hook import ValueModelRuntime
         module_dir = Path(__file__).resolve().parent
-        _runtime = ValueModelRuntime(module_dir, module_dir.parents[3])
+        _runtime = ValueModelRuntime(module_dir, module_dir.parents[2])
         _runtime.register()
     return _runtime
 

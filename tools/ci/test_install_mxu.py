@@ -87,15 +87,14 @@ class InstallMxuTests(unittest.TestCase):
                 self.root / "assets" / "resource" / "base" / "model" / "ocr" / name
             )
         self._write(self.root / "agent" / "main.py")
-        self._write(self.root / "agent" / "custom" / "action.py")
+        self._write(self.root / "agent" / "custom" / "invite.py")
         self._write(
-            self.root / "agent" / "custom" / "action" / "climb_tower_neural" / "__init__.py"
+            self.root / "agent" / "custom" / "climb_tower_neural" / "__init__.py"
         )
         self._write(
             self.root
             / "agent"
             / "custom"
-            / "action"
             / "climb_tower_neural"
             / "models"
             / "M213.npz"
@@ -193,11 +192,12 @@ class InstallMxuTests(unittest.TestCase):
             ["project assets/requirements.txt", "numpy"],
         )
         self.assertTrue(
-            (output / "agent/custom/action/climb_tower_neural/__init__.py").is_file()
+            (output / "agent/custom/climb_tower_neural/__init__.py").is_file()
         )
         self.assertTrue(
-            (output / "agent/custom/action/climb_tower_neural/models/M213.npz").is_file()
+            (output / "agent/custom/climb_tower_neural/models/M213.npz").is_file()
         )
+        self.assertTrue((output / "agent/custom/invite.py").is_file())
         self.assertTrue(
             (output / "interface/presets/daily_weekly.json").is_file()
         )

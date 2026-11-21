@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
 spec = importlib.util.spec_from_file_location(
     "cataclysm_survivor_move",
-    ROOT / "agent/custom/action/cataclysm_survivor_move.py",
+    ROOT / "agent/custom/cataclysm_survivor_move.py",
 )
 move = importlib.util.module_from_spec(spec)
 # 单测不启动原生 AgentServer 的消息线程；动作逻辑仍使用真实 Python 绑定类型。

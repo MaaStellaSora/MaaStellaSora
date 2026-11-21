@@ -13,7 +13,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "agent"))
 spec = importlib.util.spec_from_file_location(
-    "cataclysm_survivor_record", ROOT / "agent/custom/action/cataclysm_survivor_record.py",
+    "cataclysm_survivor_record", ROOT / "agent/custom/cataclysm_survivor_record.py",
 )
 record = importlib.util.module_from_spec(spec)
 with patch("maa.agent.agent_server.AgentServer.custom_action", side_effect=lambda _name: lambda cls: cls):

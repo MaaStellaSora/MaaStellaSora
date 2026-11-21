@@ -2,9 +2,9 @@
 from dataclasses import dataclass
 
 import numpy as np
-from custom.reco.climb_tower_potential.handler_preset import RecommendationHandler
-from custom.reco.climb_tower_potential.context import Potential, Trekker
-from custom.reco.climb_tower_potential.handler_default import ChoosePotentialHandler
+from custom.climb_tower.climb_tower_potential.handler_preset import RecommendationHandler
+from custom.climb_tower.climb_tower_potential.context import Potential, Trekker
+from custom.climb_tower.climb_tower_potential.handler_default import ChoosePotentialHandler
 
 from .decision_log import log_forecast
 from .name_matching import clean_name

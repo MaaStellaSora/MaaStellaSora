@@ -1,0 +1,426 @@
+{
+    "星塔_维塔托管": {
+        "next": [
+            "[JumpBack]星塔_维塔托管_托管中",
+            "星塔_维塔托管_爬塔完成",
+            "[JumpBack]星塔_维塔托管_词元不足",
+            "[JumpBack]星塔_维塔托管_开启维塔托管",
+        ]
+    },
+    "__星塔_维塔托管_检测维塔托管按钮": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/on_button.png"
+                ],
+                "roi": [
+                    200,
+                    0,
+                    220,
+                    80
+                ],
+                "green_mask": true
+            }
+        }
+    },
+    "__星塔_维塔托管_识别维塔托管按钮文本": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "开启托管"
+                ],
+                "roi": "__星塔_维塔托管_检测维塔托管按钮"
+            }
+        }
+    },
+    "__星塔_维塔托管_爬塔完成标记1": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/ascension_done_1.png"
+                ],
+                "roi": [
+                    460,
+                    400,
+                    370,
+                    110
+                ]
+            }
+        }
+    },
+    "__星塔_维塔托管_爬塔完成标记2": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/ascension_done_2.png"
+                ],
+                "roi": [
+                    460,
+                    400,
+                    370,
+                    110
+                ]
+            }
+        }
+    },
+    "__星塔_维塔托管_识别补充词元道具": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/token_item.png"
+                ],
+                "roi": [
+                    305,
+                    70,
+                    670,
+                    400
+                ]
+            }
+        }
+    },
+    "__星塔_维塔托管_使用道具": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "使用"
+                ],
+                "roi": "__星塔_维塔托管_识别补充词元道具",
+                "roi_offset": [
+                    460,
+                    0,
+                    40,
+                    0
+                ]
+            }
+        }
+    },
+    "__星塔_维塔托管_识别词元是否充足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^[1-9]\\d*%$"
+                ],
+                "roi": [
+                    240,
+                    33,
+                    21,
+                    14
+                ],
+                "only_rec": true
+            }
+        }
+    },
+    "星塔_维塔托管_词元不足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^0%$"
+                ],
+                "roi": [
+                    240,
+                    33,
+                    21,
+                    14
+                ],
+                "only_rec": true
+            }
+        },
+        "next": [
+            "[JumpBack]星塔_维塔托管_是否处于商店层购物界面",
+            "星塔_维塔托管_补充词元"
+        ]
+    },
+    "星塔_维塔托管_是否处于商店层购物界面": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_节点_商店_确认处于购物界面_agent"
+                ]
+            }
+        },
+        "next": [
+            "星塔_维塔托管_回到商店层",
+            "[JumpBack]星塔_节点_商店_购物_返回商店层_agent"
+        ]
+    },
+    "星塔_维塔托管_回到商店层": {
+        "description": "不知道为什么在商店购物界面跟强化之后不给进入维塔界面，就算从商店购物界面返回之后也得等一阵子才能进入维塔界面。只好先解决商店购物界面的问题了",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_节点_商店_回到商店层_agent"
+                ]
+            }
+        },
+        "post_delay": 5000
+    },
+    "星塔_维塔托管_补充词元": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_维塔托管_词元不足"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/vita_interface.png"
+                ],
+                "roi": [
+                    50,
+                    640,
+                    400,
+                    80
+                ]
+            }
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面_点击词元补充按钮"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面_点击词元补充按钮": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/add_token.png"
+                ],
+                "roi": [
+                    50,
+                    640,
+                    400,
+                    80
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面_词元补充界面"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面_词元补充界面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "close.png"
+                ],
+                "roi": [
+                    900,
+                    70,
+                    75,
+                    60
+                ]
+            }
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面_词元补充界面_使用免费词元补充"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面_词元补充界面_使用免费词元补充": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "__星塔_维塔托管_识别补充词元道具",
+                    "__星塔_维塔托管_使用道具"
+                ],
+                "roi": [
+                    50,
+                    640,
+                    400,
+                    80
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面_词元补充界面_确认使用界面"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面_词元补充界面_确认使用界面": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "使用"
+                ],
+                "roi": [
+                    530,
+                    490,
+                    220,
+                    65
+                ]
+            }
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面_词元补充界面_确认使用界面_点击使用"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面_词元补充界面_确认使用界面_点击使用": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_维塔托管_补充词元_维塔界面_词元补充界面_确认使用界面"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面_回到词元补充界面"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面_回到词元补充界面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "close.png"
+                ],
+                "roi": [
+                    900,
+                    70,
+                    75,
+                    60
+                ]
+            }
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "星塔_维塔托管_补充词元_维塔界面_回到词元补充界面_关闭界面"
+        ]
+    },
+    "星塔_维塔托管_补充词元_维塔界面_回到词元补充界面_关闭界面": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_维塔托管_补充词元_维塔界面_回到词元补充界面"
+                ],
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "next": [
+            "星塔_维塔托管_补充词元_回到维塔界面"
+        ]
+    },
+    "星塔_维塔托管_补充词元_回到维塔界面": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/close_vita_interface.png"
+                ],
+                "roi": [
+                    1200,
+                    0,
+                    80,
+                    100
+                ]
+            }
+        },
+        "post_wait_freezes": 100,
+        "next": [
+            "星塔_维塔托管_补充词元_回到维塔界面_关闭界面"
+        ]
+    },
+    "星塔_维塔托管_补充词元_回到维塔界面_关闭界面": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "星塔_维塔托管_补充词元_回到维塔界面",
+                ]
+            }
+        },
+        "action": {
+            "type": "Click"
+        }
+    },
+    "星塔_维塔托管_开启维塔托管": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "__星塔_维塔托管_识别词元是否充足",
+                    "__星塔_维塔托管_检测维塔托管按钮",
+                    "__星塔_维塔托管_识别维塔托管按钮文本"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click"
+        },
+        "post_wait_freeze": 100
+    },
+    "星塔_维塔托管_托管中": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "ClimbTower_vita/pause_button.png"
+                ],
+                "roi": [
+                    752,
+                    141,
+                    64,
+                    64
+                ],
+                "green_mask": true
+            }
+        },
+        "post_delay": 2000
+    },
+    "星塔_维塔托管_爬塔完成": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "__星塔_维塔托管_爬塔完成标记1",
+                    "__星塔_维塔托管_爬塔完成标记2"
+                ]
+            }
+        },
+        "next": [
+            "星塔_保存记录_agent",
+            "[JumpBack]星塔_确认_agent",
+            "[JumpBack]星塔_点击空白处关闭_agent",
+            "[JumpBack]星塔_默契提升_agent"
+        ]
+    }
+}

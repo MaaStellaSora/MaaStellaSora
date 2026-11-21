@@ -252,6 +252,8 @@
     "interface.task.悬赏试炼快速战斗.description": "Automatically opens the Enemy Hunting page and performs quick battles on the selected stage",
     "interface.task.自动爬塔.label": "Auto Ascension",
     "interface.task.自动爬塔.description": "Auto Ascension is still in testing. Please report issues via GitHub Issues (at this rate, probably until I retire).\n\nAutomatic runs are intended only for completing daily and weekly missions. Climb manually if you are aiming for a ranking record.",
+    "interface.task.自动爬塔（维塔）.label": "Auto Ascension (Vita)",
+    "interface.task.自动爬塔（维塔）.description": "Automatically climbs the tower using Vita's built-in autopilot. Free Tokens are replenished automatically when needed.<br>This mode takes control of the mouse less than the original auto-climb task, and may be preferable if you only need weekly rewards.",
     "interface.task.活动快速战斗.label": "Event Quick Battle",
     "interface.task.活动快速战斗.description": "Automatically opens the event page and performs quick battles on the specified event stage",
     "interface.task.活动挑战关卡自动战斗.label": "Event Challenge Stage Auto Battle",

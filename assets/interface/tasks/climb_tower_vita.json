@@ -1,0 +1,40 @@
+{
+    "task": [
+        {
+            "name": "自动爬塔（维塔）",
+            "resource": [
+                "官服",
+                "台服",
+                "国际服",
+                "日服"
+            ],
+            "label": "$interface.task.自动爬塔（维塔）.label",
+            "entry": "星塔_入口_agent",
+            "description": "$interface.task.自动爬塔（维塔）.description",
+            "option": [
+                "新版爬塔_开始位置",
+                "新版爬塔_爬塔次数",
+                "新版爬塔_属性塔"
+            ],
+            "pipeline_override": {
+                "星塔_入口_agent": {
+                    "action": {
+                        "type": "DoNothing",
+                    }
+                },
+                "星塔_编队角色_选择队伍_agent": {
+                    "action": {
+                        "type": "DoNothing"
+                    }
+                },
+                "星塔_开始爬塔_agent": {
+                    "next": [
+                        "星塔_维塔托管"
+                    ],
+                    "pre_delay": 0,
+                    "post_delay": 0
+                }
+            }
+        }
+    ]
+}

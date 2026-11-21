@@ -5,6 +5,7 @@
             "label": "$interface.task.猎影合围.label",
             "entry": "猎影合围_入口",
             "description": "$interface.task.猎影合围.description",
+            "group": ["periodic_activity"],
             "option": [
                 "猎影合围_开启协助讨伐",
                 "猎影合围_开启追踪目标"

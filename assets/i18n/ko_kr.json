@@ -316,5 +316,9 @@
     "interface.tower_neural.task.description": "이 모듈은 커뮤니티 기여자가 제공하는 신경망 기반 별의 탑 자동 등반 기능입니다. 기본 별의 탑 임무보다 더 많은 잠재력을 획득할 수 있으며, 잠재력 종류 수의 소프트 상한을 넘는 경우에도 대응할 수 있습니다.<br>사용 전에 팀과 목표 잠재력 프리셋을 설정한 뒤 홈 화면에서 시작하세요.<br>현재 베타 버전은 Windows x64 및 중국·일본 서버에서만 사용할 수 있습니다. 잠재력 획득만 지원하며 음표는 구매하지 않습니다.<br>신경망 학습에는 많은 데이터가 필요합니다. 모듈 개발자가 모델을 개선할 수 있도록 데이터 공유를 켜 주시면 감사하겠습니다.",
     "interface.tower_neural.task.label": "별의 탑 자동 등반 (신경망)",
     "interface.tower_neural.upload.description": "이 기능을 켜면 별의 탑 규칙을 분석할 수 있도록 매 판의 프리셋, 게임에서 확인한 상태, 실제 행동과 결과를 모듈 개발자에게 보냅니다. 누락되거나 불확실한 값은 표시하며 개인 식별 정보와 스크린샷은 포함하지 않습니다.",
-    "interface.tower_neural.upload.label": "데이터 공유로 모델 개선에 참여"
+    "interface.tower_neural.upload.label": "데이터 공유로 모델 개선에 참여",
+    "interface.group.daily.label": "일퀘",
+    "interface.group.periodic_activity.label": "정기 이벤트",
+    "interface.group.ascension.label": "별의 탑",
+    "interface.group.other.label": "기타 기능"
 }

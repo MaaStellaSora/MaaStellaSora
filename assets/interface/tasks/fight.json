@@ -5,6 +5,7 @@
             "label": "$interface.task.悬赏试炼快速战斗.label",
             "entry": "战斗_入口",
             "description": "$interface.task.悬赏试炼快速战斗.description",
+            "group": ["daily"],
             "option": [
                 "悬赏试炼关卡",
                 "悬赏试炼跳过难度选择",

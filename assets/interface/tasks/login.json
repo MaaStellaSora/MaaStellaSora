@@ -4,7 +4,8 @@
             "name": "登录游戏",
             "label": "$interface.task.登录游戏.label",
             "entry": "登录_登录",
-            "description": "$interface.task.登录游戏.description"
+            "description": "$interface.task.登录游戏.description",
+            "group": ["daily"]
         }
     ]
 }

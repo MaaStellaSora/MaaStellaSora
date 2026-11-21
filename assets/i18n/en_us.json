@@ -316,5 +316,9 @@
     "pipeline.邀约_还是算了.focus.Node.Recognition.Succeeded": "Choosing not to send gift",
     "pipeline.邀约_送出礼物.focus.Node.Recognition.Succeeded": "Choosing to send gift",
     "pipeline.邀约_特殊回忆选项.focus.Node.Action.Starting": "Selecting special memory option with heart card",
-    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "No heart card found, selecting default dialogue option"
+    "pipeline.邀约_对话选项按钮.focus.Node.Action.Starting": "No heart card found, selecting default dialogue option",
+    "interface.group.daily.label": "Daily",
+    "interface.group.periodic_activity.label": "Periodic Activities",
+    "interface.group.ascension.label": "Ascension",
+    "interface.group.other.label": "Other Features"
 }

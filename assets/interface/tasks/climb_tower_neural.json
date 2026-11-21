@@ -13,6 +13,7 @@
             "label": "$interface.tower_neural.task.label",
             "entry": "星塔_神经网络_入口",
             "description": "$interface.tower_neural.task.description",
+            "group": ["ascension"],
             "option": [
                 "神经网络爬塔_爬塔次数",
                 "神经网络爬塔_属性塔",

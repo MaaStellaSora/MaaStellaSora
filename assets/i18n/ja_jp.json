@@ -316,5 +316,9 @@
     "interface.tower_neural.task.description": "本モジュールはコミュニティの有志によって提供される、ニューラルネットワークの判断に基づいて星の塔を自動攻略する機能です。通常の星の塔タスクと比べて、より多くの素質を獲得でき、素質の種類数のソフト上限を超える場合にも対応できます。<br>使用前にチームと目標素質のプリセットを設定し、ホーム画面から開始してください。<br>現在ベータ版で、Windows x64 の中国版・日本版サーバーのみ利用できます。素質の獲得にのみ対応しており、音符は購入しません。<br>ニューラルネットワークの学習には大量のデータが必要です。モジュール作者のモデル改善に協力するため、データ共有を有効にしていただけると助かります。",
     "interface.tower_neural.task.label": "星の塔自動攻略（ニューラルネットワーク）",
     "interface.tower_neural.upload.description": "オンにすると、各回のプリセット、ゲーム内で確認した状態、実際の操作と結果を、星ノ塔の仕組みの調査のためモジュール作者に送信します。欠損や不確かな値には印を付けます。個人識別子やスクリーンショットは含みません。",
-    "interface.tower_neural.upload.label": "データを共有してモデル改善に協力"
+    "interface.tower_neural.upload.label": "データを共有してモデル改善に協力",
+    "interface.group.daily.label": "デイリー",
+    "interface.group.periodic_activity.label": "定期イベント",
+    "interface.group.ascension.label": "星ノ塔",
+    "interface.group.other.label": "その他の機能"
 }

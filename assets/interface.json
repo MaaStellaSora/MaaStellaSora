@@ -112,6 +112,24 @@
             ]
         }
     ],
+    "group": [
+        {
+            "name": "daily",
+            "label": "$interface.group.daily.label"
+        },
+        {
+            "name": "periodic_activity",
+            "label": "$interface.group.periodic_activity.label"
+        },
+        {
+            "name": "ascension",
+            "label": "$interface.group.ascension.label"
+        },
+        {
+            "name": "other",
+            "label": "$interface.group.other.label"
+        }
+    ],
     "import": [
         "interface/tasks/common.json",
         "interface/tasks/login.json",

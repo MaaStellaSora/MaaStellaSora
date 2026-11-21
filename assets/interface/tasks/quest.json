@@ -4,7 +4,8 @@
             "name": "领取并重新派遣委托",
             "label": "$interface.task.领取并重新派遣委托.label",
             "entry": "委托_入口",
-            "description": "$interface.task.领取并重新派遣委托.description"
+            "description": "$interface.task.领取并重新派遣委托.description",
+            "group": ["daily"]
         }
     ]
 }

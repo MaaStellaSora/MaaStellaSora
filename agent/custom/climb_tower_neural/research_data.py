@@ -13,6 +13,7 @@ from pathlib import Path
 import sqlite3
 
 from .purchase_evidence import purchase_wallet_evidence
+from .language import catalog_name_fields
 from .settlement_counts import check_potential_counts
 from .sampling_evidence import planned_combined_interval, reused_interval_components, battle_floor_outside_route
 from .sampling_journal import DAMAGE_SUFFIX
@@ -167,8 +168,8 @@ def _compact_value(value, event_type="", *, potential=False):
                 result.pop("name", None)
             result.pop("trekker", None)
         if value.get("potential_id") is not None:
-            result.pop("name_ja_jp", None)
-            result.pop("name_zh_cn", None)
+            for key in catalog_name_fields():
+                result.pop(key, None)
         if result.get("rarity") == "core":
             result.pop("core", None)
     # The inventory map already gives all successful reads. Keep only extra
@@ -204,7 +205,7 @@ def _compact_value(value, event_type="", *, potential=False):
             result.pop("skipped_regions")
     for disc in result.get("main_discs", []):
         if disc.get("id") is not None and disc.get("status") == "confirmed":
-            for key in ("text", "name", "name_ja", "name_zh", "name_ja_jp", "name_zh_cn"):
+            for key in ("text", "name", "name_ja", "name_zh", *catalog_name_fields()):
                 disc.pop(key, None)
     return result
 
@@ -272,6 +273,7 @@ def compact_record(event_type, payload):
 def compact_preset(original):
     """Keep the party and each target's identity/level, without the OCR/catalog copies."""
     content = {}
+    name_fields = catalog_name_fields()
     for key in ("party", "recognition_catalog"):
         if key in original:
             content[key] = _compact_value(original[key])
@@ -279,13 +281,13 @@ def compact_preset(original):
         for key in tuple(party):
             if key not in {"role", "character_id", "character_id_namespace", "local_character_identity",
                            "local_potential_catalogue", "targets", "catalogue_order",
-                           "name", "name_ja_jp", "name_zh_cn"}:
+                           "name", *name_fields}:
                 party.pop(key)
         for target, original_target in zip(party.get("targets", []), original_party.get("targets", [])):
             if "target_level" in original_target:
                 target["target_level"] = original_target["target_level"]
         if party.get("character_id") is not None:
-            for key in ("name", "name_ja_jp", "name_zh_cn", "local_character_identity"):
+            for key in ("name", *name_fields, "local_character_identity"):
                 party.pop(key, None)
     for target, original_target in zip(content.get("recognition_catalog", []), original.get("recognition_catalog", [])):
         if "target_level" in original_target:

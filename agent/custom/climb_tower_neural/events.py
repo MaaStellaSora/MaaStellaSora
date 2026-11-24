@@ -7,6 +7,7 @@ from .ui_flow import read_until
 
 from .event_mapping import note_descriptor, quiz_correct_option, quiz_event_id
 from .event_reader import EventRecognition
+from .language import normalize_language
 
 
 def _read_event_coins(context, image, *, on_wallet=None):
@@ -51,7 +52,7 @@ class EventMenuRead:
 
 def _read_event_menu(recognizer, context, argv, runtime):
     node = context.get_node_data(argv.node_name) or {}
-    lang = node.get("attach", {}).get("lang_type", "cn")
+    lang = normalize_language(node.get("attach", {}).get("lang_type", "cn"))
     latest = EventMenuRead(image=argv.image, missing=["question", "choices", "coin"])
 
     def observe(image):

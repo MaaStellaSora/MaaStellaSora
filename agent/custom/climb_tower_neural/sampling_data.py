@@ -16,6 +16,7 @@ import time
 import uuid
 
 from .critic.rules import MAX_POTENTIAL_LEVEL
+from .language import catalog_name_field, catalog_name_fields
 
 from .event_mapping import has_potential_reward
 from .sampling_evidence import ObservedInventory, ReadEvidence, observation_signature, raw_ocr, recognition_roi
@@ -423,12 +424,12 @@ class SamplingCollector:
                 identities.append(dict(target, role=member["role"], character_id=member["character_id"]))
         identities.extend(preset.get("recognition_catalog", []))
         for item in identities:
-            for field in ("name_ja_jp", "name_zh_cn", "name_en_us", "name_zh_tw"):
+            for field in catalog_name_fields():
                 if item.get(field):
                     key = clean_name(item[field])
                     if item not in self.names[key]:
                         self.names[key].append(item)
-                    if (field == ("name_zh_cn" if self.language == "cn" else "name_ja_jp")):
+                    if field == catalog_name_field(self.language):
                         self.local_names[key].append(item)
         key = [{"role": m["role"], "character_id": m["character_id"], "targets": m["targets"]}
                for m in preset["party"]]
@@ -553,7 +554,7 @@ class SamplingCollector:
                    role=resolved_role,
                    target_level=item["target_level"] if item else None,
                    identity_basis=(item.get("identity_basis") or resolution.method + ("_and_role" if role else "_unique_in_party")) if item else "unresolved",
-                   identity_name=(item.get("name_zh_cn" if self.language == "cn" else "name_ja_jp") if item else None),
+                   identity_name=(item.get(catalog_name_field(self.language)) if item else None),
                    identity_similarity=resolution.similarity,
                    identity_inferred=bool(item and resolution.method == "closest_name" and not validated),
                    identity_match_validated=validated,

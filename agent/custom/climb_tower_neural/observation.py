@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .critic.rules import MAX_POTENTIAL_LEVEL
 from .decision_log import forecast_rows, log_forecast
+from .language import catalog_name_field, catalog_name_fields
 from .name_matching import clean_name as _clean, identity_key, is_anonymous_non_target, match_name
 from .pool_identity import IdentityPools, pool_contract
 from .session import RunSession
@@ -41,7 +42,7 @@ class ObservationTracker:
         self.model = model
         self.preset = self.model.preset(preset_data)
         self.preset_data = preset_data
-        self.name_field = "name_zh_cn" if preset_data.get("language") == "cn" else "name_ja_jp"
+        self.name_field = catalog_name_field(preset_data.get("language"))
         self.local_roles = {int(member["role"]): member for member in preset_data["party"]
                             if member.get("local_potential_catalogue")}
         self.names, self.local_names, self.catalogue = defaultdict(list), defaultdict(list), {}
@@ -67,7 +68,7 @@ class ObservationTracker:
         self.reset()
 
     def _index_names(self, item):
-        for field in ("name_ja_jp", "name_zh_cn", "name_en_us", "name_zh_tw"):
+        for field in catalog_name_fields():
             if item.get(field):
                 key = _clean(item[field])
                 if item not in self.names[key]:

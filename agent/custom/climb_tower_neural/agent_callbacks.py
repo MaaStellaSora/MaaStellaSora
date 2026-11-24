@@ -12,6 +12,7 @@ from .event_reader import EventRecognition
 
 from .events import _read_event_menu, analyze_model_event
 from .event_mapping import is_quiz_consequence
+from .language import SUPPORTED_LANGUAGES
 from .potential import (
     ModelPotentialHandler, PotentialObservationIncomplete, commit_potential_take, finish_potential_take,
 )
@@ -40,7 +41,7 @@ class Preparation(RuntimeCallback, AscensionPreparation):
         if not self.runtime.settings.get("enabled", True):
             self.runtime.stop_model(context, "model_disabled", phase="preparation")
             return False
-        if self.runtime.language(context) not in ("cn", "jp"):
+        if self.runtime.language(context) not in SUPPORTED_LANGUAGES:
             self.runtime.logger.error("$agent.custom.action.climb_tower_neural.preset_language_unsupported")
             return False
         environment = context.get_node_data("星塔_神经网络_运行环境") or {}
@@ -155,7 +156,7 @@ class Potential(RuntimeCallback, ChoosePotentialRecognition):
 
     def _load_handler(self, interactor, data):
         self.runtime.require_tracker()
-        data.params = replace(data.params, environment="tower_8", max_refresh_count=100000, reserved_coin=0)
+        data.params = replace(data.params, max_refresh_count=100000, reserved_coin=0)
         handler = ModelPotentialHandler(interactor, data, self.runtime)
         return ObservedPotentialHandler(handler, self.runtime.collector, self.runtime.notes)
 

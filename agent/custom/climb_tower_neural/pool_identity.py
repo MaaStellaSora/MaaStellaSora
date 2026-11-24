@@ -2,9 +2,11 @@
 import json
 
 if __package__:
+    from .language import normalize_language
     from .name_matching import identity_key
     from .paths import data_path
 else:
+    from language import normalize_language
     from name_matching import identity_key
     from paths import data_path
 
@@ -13,6 +15,7 @@ ORDERS = json.loads(data_path("pool_orders.json").read_text(encoding="utf-8"))
 
 
 def pool_contract(party, language):
+    language = normalize_language(language)
     identities, labels, evidence = [], [], []
     for member in party:
         role_type = "master" if member["role"] == 1 else "assist"

@@ -7,6 +7,7 @@ from maa.agent.agent_server import AgentServer
 from utils.logger import get_logger
 
 from .log_filter import ModelLogFilter
+from .language import catalog_name_field, normalize_language
 from .observation import ObservationTracker
 from .sampling_data import SamplingCollector
 from .session import RunSession
@@ -165,7 +166,7 @@ class ValueModelRuntime:
     def language(context):
         node = context.get_node_data("星塔_节点_进行对话选择_agent") or {}
         language = node.get("attach", {}).get("lang_type", "cn")
-        return {"zh_cn": "cn", "ja_jp": "jp"}.get(language, language)
+        return normalize_language(language)
 
     @staticmethod
     def _bag_task(context, node):
@@ -233,7 +234,7 @@ class ValueModelRuntime:
             self.tracker, self.confirmed_preset = tracker, preset
             self.collector.bind_preset(preset, tracker)
             self.collector.initialize_bag_inventory(preset)
-            field = "name_zh_cn" if language == "cn" else "name_ja_jp"
+            field = catalog_name_field(language)
             targets = [total + 2 for total in preset["role_ordinary_totals"]]
             self.logger.info("$agent.custom.action.climb_tower_neural.preset_loaded", {
                 "party": " / ".join(member[field] for member in preset["party"]),

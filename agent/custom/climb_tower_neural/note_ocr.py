@@ -6,7 +6,6 @@ Only the complete inventory bar is read; other page content is excluded.
 from collections import defaultdict
 from functools import lru_cache
 import json
-from pathlib import Path
 import re
 from statistics import median
 
@@ -16,6 +15,7 @@ from .image_ops import (
     bgr_to_gray, gray_to_bgr, in_range, laplacian_variance,
     resize_cubic, resize_cubic_for_roi, resize_linear,
 )
+from .paths import data_path
 
 
 ICON_NODE = "星塔_背包_识别音符_agent"
@@ -30,7 +30,7 @@ TEXT_RULE_NODES = {
 
 @lru_cache(maxsize=1)
 def load_ocr_rules():
-    return json.loads(Path(__file__).with_name("note_ocr_rules.json").read_text(encoding="utf-8"))
+    return json.loads(data_path("note_ocr_rules.json").read_text(encoding="utf-8"))
 
 
 OCR_RULES = load_ocr_rules()
@@ -286,12 +286,8 @@ def _read_count(context, image, icon, layout):
     return (next(iter(values)) if len(values) == 1 else None), records
 
 
-def read_inventory(context, image, layout, visible_melodies=(), *, tower=None):
-    """Return counts, independent readings, and explicit missing/conflict states.
-
-    ``visible_melodies`` is tower/UI metadata, never a source of count values.
-    Unshown types remain unknown; no missing value is converted to zero.
-    """
+def locate_inventory_bar(context, image, layout, visible_melodies=(), *, tower=None):
+    """Locate a clear note inventory row without reading its count digits."""
     if tower is not None:
         visible_melodies = visible_melodies_for_tower(tower)
     elif not visible_melodies:
@@ -300,7 +296,7 @@ def read_inventory(context, image, layout, visible_melodies=(), *, tower=None):
         if elements:
             tower = next((name for name, pair in TOWER_ELEMENTS.items() if set(pair) == set(elements)), None)
             visible_melodies = visible_melodies_for_tower(tower) if tower else COMMON_MELODIES + elements
-    readings = []
+    icons = []
     region = INVENTORY_REGIONS.get(layout)
     bar_reason, bar_evidence, bar_present = "unsupported_layout", {}, False
     if region and visible_melodies:
@@ -311,23 +307,36 @@ def read_inventory(context, image, layout, visible_melodies=(), *, tower=None):
         icons, bar_reason, bar_evidence = _locate_inventory_bar(image, candidates, visible_melodies,
                                                               append_elements=append_elements)
         bar_present = bool(icons)
-        for icon in icons:
-            current, raw = _read_count(context, image, icon, layout)
-            readings.append({"melody": icon["melody"], "source": "inventory",
-                             "current": current, "raw": raw, "box": icon["box"],
-                             "icon_score": icon["score"],
-                             "conflicting_values": sorted(_numeric_values(raw)) if len(_numeric_values(raw)) > 1 else []})
-        if append_elements and bar_present:
-            visible_melodies = tuple(dict.fromkeys((*visible_melodies, *(item["melody"] for item in icons))))
-            for slot, melody in enumerate(bar_evidence["observed_order"]):
-                if slot >= 9 and melody is None:
-                    readings.append(dict(melody=None, current=None, source="inventory",
-                                         raw=[], slot=slot, reason="unresolved_inventory_slot"))
     elif region:
         bar_reason = "tower_not_selected"
+    return dict(tower=tower, visible_melodies=visible_melodies, icons=icons,
+                bar_present=bar_present, bar_reason=bar_reason, bar_evidence=bar_evidence)
+
+
+def read_inventory(context, image, layout, visible_melodies=(), *, tower=None):
+    """Return counts, independent readings, and explicit missing/conflict states.
+
+    ``visible_melodies`` is tower/UI metadata, never a source of count values.
+    Unshown types remain unknown; no missing value is converted to zero.
+    """
+    bar = locate_inventory_bar(context, image, layout, visible_melodies, tower=tower)
+    visible_melodies, icons = bar["visible_melodies"], bar["icons"]
+    readings = []
+    for icon in icons:
+        current, raw = _read_count(context, image, icon, layout)
+        readings.append({"melody": icon["melody"], "source": "inventory",
+                         "current": current, "raw": raw, "box": icon["box"],
+                         "icon_score": icon["score"],
+                         "conflicting_values": sorted(_numeric_values(raw)) if len(_numeric_values(raw)) > 1 else []})
+    if layout == "settlement" and bar["bar_present"]:
+        visible_melodies = tuple(dict.fromkeys((*visible_melodies, *(item["melody"] for item in icons))))
+        for slot, melody in enumerate(bar["bar_evidence"]["observed_order"]):
+            if slot >= 9 and melody is None:
+                readings.append(dict(melody=None, current=None, source="inventory",
+                                     raw=[], slot=slot, reason="unresolved_inventory_slot"))
     result = combine_readings(readings, layout, visible_melodies)
-    result.update(tower=tower, bar_present=bar_present, bar_reason=bar_reason, bar_evidence=bar_evidence)
-    result["complete"] = bar_present and result["complete"]
+    result.update({key: bar[key] for key in ("tower", "bar_present", "bar_reason", "bar_evidence")})
+    result["complete"] = bar["bar_present"] and result["complete"]
     return result
 
 

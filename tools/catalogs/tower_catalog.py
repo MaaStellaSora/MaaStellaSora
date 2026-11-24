@@ -7,7 +7,7 @@ import re
 import unicodedata
 
 
-ROOT = Path(__file__).resolve().parents[2] / "agent/custom/climb_tower_neural"
+ROOT = Path(__file__).resolve().parents[2] / "agent/custom/climb_tower_neural/data"
 NAME_FIELDS = ("name_ja_jp", "name_zh_cn")
 NAME_PROOF_FIELDS = {"source_language", "exact_name", "item_title_key", "localization_key"}
 

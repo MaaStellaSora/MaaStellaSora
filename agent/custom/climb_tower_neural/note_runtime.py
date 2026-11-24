@@ -10,7 +10,7 @@ from .note_bag import OPEN_SKILLS, SKILLS_READY, _retain_conflicts, _run, read_f
 from .note_ledger import NoteLedger
 from .note_ocr import TOWER_ELEMENTS, normalize_image, read_inventory, text_rules
 from .note_setup_reader import load_rules, read_bag_skill_page, read_setup, read_settlement
-from .critic.vendor.stella_sim import ROUTE
+from .critic.rules import BATTLE_FLOORS, LAST_FLOOR, ROUTE
 from .ui_flow import read_until
 
 
@@ -193,7 +193,7 @@ class NoteRuntime:
         expected = []
         inferred = getattr(self.collector, "inferred_state", lambda: {})() or {}
         hint = inferred.get("floor")
-        if hint and 1 <= hint <= 20 and (self.floor is None or hint >= self.floor):
+        if hint and 1 <= hint <= LAST_FLOOR and (self.floor is None or hint >= self.floor):
             expected.append(hint)
         pending = self.ledger.pending if self.ledger else None
         if page in {"field", "result"} and pending and pending["source_type"] in {"event", "combined_interval"}:
@@ -326,7 +326,7 @@ class NoteRuntime:
                     floor_observation=floor_observation, independently_observed=True,
                     analysis_eligible=True, analysis_exclusion_reason=None)
             elif (floor is not None and (self.floor is None or floor > self.floor)
-                    and any(kind == "BATTLE" and value == floor for kind, value, _ in ROUTE)):
+                    and floor in BATTLE_FLOORS):
                 self._battle(floor, floor_observation)
             else:
                 self.ledger.update_pending_metadata(independently_observed=False,
@@ -335,7 +335,7 @@ class NoteRuntime:
         elif pending and pending["source_type"] == "combined_interval":
             if (floor is not None and (self.floor is None or floor > self.floor)
                     and not any(source["source_type"] == "battle" for source in pending["mixed_sources"])
-                    and any(kind == "BATTLE" and value == floor for kind, value, _ in ROUTE)):
+                    and floor in BATTLE_FLOORS):
                 self._battle(floor, floor_observation)
             if floor is not None:
                 self.floor = floor
@@ -402,7 +402,7 @@ class NoteRuntime:
             return
         self.capture(context, image, "event")
 
-    def before_event(self, context, image, *, event_id=None, choice="", consequence="",
+    def before_event(self, context, image, *, event_id=None, event_choice_record_id=None, choice="", consequence="",
                      note_effect=None, allow_text_effect=True, model_event_id=None, option_id=None):
         if not self.observing or self.ledger is None:
             return
@@ -410,9 +410,8 @@ class NoteRuntime:
         note_text = bool(re.search(rules["note"], choice + consequence, re.I))
         spends = (note_effect["operation"] == "spend" if note_effect else
                   bool(allow_text_effect and note_text and re.search(rules["spend"], consequence, re.I)))
-        event = getattr(self.collector, "event", None) or {}
         selection = dict(choice=choice, consequence=consequence, note_effect=note_effect, spends_notes=spends,
-            event_choice_record_id=event.get("choice_record_id"), model_event_id=model_event_id, option_id=option_id)
+            event_choice_record_id=event_choice_record_id, model_event_id=model_event_id, option_id=option_id)
         pending = self.ledger.pending
         current_event = self._pending_event(pending) if pending else {}
         current_event_id = (pending["operation_id"] if pending and pending["source_type"] == "event" else
@@ -466,7 +465,7 @@ class NoteRuntime:
         if self.floor is None:
             return []
         next_battle = next((floor for kind, floor, _ in ROUTE
-                            if kind == "BATTLE" and floor > self.floor), 21)
+                            if kind == "BATTLE" and floor > self.floor), LAST_FLOOR + 1)
         return sorted({floor for kind, floor, _ in ROUTE
                        if kind in {"EVENT", "EXTRA"} and self.floor <= floor < next_battle})
 
@@ -558,8 +557,12 @@ class NoteRuntime:
             self.mode = "combined_complete" if combined else "event_complete"
         return restored, navigated
 
-    def complete_potential_reward_inventory(self, screen):
-        """Only a bag visit requires re-locating the reward page and its controls."""
+    def complete_potential_reward_inventory(self, screen, *, source_event_id):
+        """Complete this event's pending notes; re-locate controls only after navigation."""
+        pending = self.ledger.pending if self.ledger is not None else None
+        if (source_event_id is None or not pending or pending["source_type"] != "event"
+                or source_event_id != pending["operation_id"]):
+            return True, False
         restored, navigated = self.complete_event_inventory(screen.context, page="stable_event_potential")
         if restored and navigated:
             screen.screenshot()

@@ -6,6 +6,7 @@ from custom.climb_tower.climb_tower_potential.handler_preset import Recommendati
 from custom.climb_tower.climb_tower_potential.context import Potential, Trekker
 from custom.climb_tower.climb_tower_potential.handler_default import ChoosePotentialHandler
 
+from .critic.rules import MAX_POTENTIAL_LEVEL
 from .decision_log import log_forecast
 from .name_matching import clean_name
 from .observation import PotentialObservationIncomplete, potential_levels_valid
@@ -27,7 +28,6 @@ class PendingPotentialTake:
     tracker: object
     page_signature: tuple
     page_key: tuple | None = None
-    commit_inventory: object = None
     committed: bool = False
     data: object = None
     evidence: dict | None = None
@@ -119,15 +119,11 @@ def commit_potential_take(runtime):
         return False
     if not pending.committed:
         pending.tracker.selected(pending.potential)
-        if pending.commit_inventory is not None:
-            pending.commit_inventory(pending.potential)
         pending.committed = True
         # A following reward can have similar cards and the same wallet.
         # The confirmed exit, rather than the old signature, opens a new page.
         if pending.tracker is not None:
-            pending.tracker._current_cards = None
-            pending.tracker._page_key = None
-            pending.tracker.selected_page_index = None
+            pending.tracker.close_potential_page()
             purchase = getattr(pending.tracker, "pending_shop_purchase", None)
             confirmed_page = (pending.evidence or {}).get("take_confirmation")
             if purchase is not None and confirmed_page in (BY_NAME["shop"].node, BY_NAME["shop_main"].node):
@@ -203,7 +199,7 @@ def read_potential_take_page(screen, pending, *, buttons=None, reuse_offer_level
         and identities is not None
         and tuple((item["identity"], item["role"], p.rarity) for p, item in zip(potentials, identities))
             == tuple(card[:3] for card in pending.page_signature)
-        and all(0 <= card[3] < card[4] <= 6 for card in pending.page_signature))
+        and all(0 <= card[3] < card[4] <= MAX_POTENTIAL_LEVEL for card in pending.page_signature))
     for i, potential in enumerate(potentials):
         old, new = 0, 1
         if not core:
@@ -213,7 +209,7 @@ def read_potential_take_page(screen, pending, *, buttons=None, reuse_offer_level
                 roi = list(potential.layout.general_potential_level_roi)
                 roi[1] -= pending.selected_offset if i == page.selected_index else 0
                 old, new = screen.get_potential_level(roi)
-                if not 0 <= old < new <= 6:
+                if not 0 <= old < new <= MAX_POTENTIAL_LEVEL:
                     return page
         potential.old_level, potential.new_level = old, new
     if identities is None:
@@ -533,10 +529,10 @@ class ModelPotentialHandler(NeuralRecommendationHandler):
                               for i, p in enumerate(self.data.potentials, 1)],
             "refresh_cost": self.data.refresh_cost,
         })
-        actions = self.runtime.model.prepare_actions(tracker.state, candidates, decision_context)
+        prepared = self.runtime.model.prepare_actions(tracker.state, candidates, decision_context)
         labels = {a: self.data.potentials[a.index-1].name
-                  for a in actions if a.kind == "SELECT"}
-        action = tracker.choose(tuple(actions), labels, decision_context=decision_context)
+                  for a in prepared.actions if a.kind == "SELECT"}
+        action = tracker.choose(prepared.actions, labels, decision_context=decision_context)
         self.decision_method = "model_policy"
         return None if action.kind == "REROLL" else self.data.potentials[action.index-1]
 
@@ -546,7 +542,7 @@ class ModelPotentialHandler(NeuralRecommendationHandler):
         self.runtime.pending_take = PendingPotentialTake(
             potential, self.data.params.selected_potential_offset,
             self.data.params.potential_layouts, tracker, signature,
-            self._pending_page_key(signature), self.runtime.cache_potential, data=self.data,
+            self._pending_page_key(signature), data=self.data,
             evidence={"decision_method": self.decision_method})
 
     def _page_signature(self, tracker):

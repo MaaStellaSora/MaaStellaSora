@@ -3,11 +3,15 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 import re
 import json
-from pathlib import Path
 import unicodedata
 
+if __package__:
+    from .paths import data_path
+else:
+    from paths import data_path
 
-GLYPHS = str.maketrans(json.loads(Path(__file__).with_name("bag_preset_rules.json")
+
+GLYPHS = str.maketrans(json.loads(data_path("bag_preset_rules.json")
                                   .read_text(encoding="utf-8"))["name_variant_glyphs"])
 
 

@@ -4,10 +4,11 @@ from copy import deepcopy
 import json
 from pathlib import Path
 
+from .critic.rules import MAX_POTENTIAL_LEVEL
+from .paths import data_path
 from .name_matching import clean_name, identity_key, is_anonymous_non_target, local_potential_identity, match_name
 from .pool_identity import pool_contract
 
-ROOT = Path(__file__).resolve().parent
 
 
 def read(path):
@@ -36,7 +37,7 @@ def compile_bag_preset(party, language, catalog):
     rows = catalog_rows(catalog)
     character_data = catalog.get("characters")
     if character_data is None:
-        character_data = read(ROOT / "character_name_catalog.json")["characters"]
+        character_data = read(data_path("character_name_catalog.json"))["characters"]
     character_names = {clean_name(row.get(name_field)): row["character_id"]
                        for row in character_data if row.get(name_field)}
 
@@ -68,7 +69,7 @@ def compile_bag_preset(party, language, catalog):
         if Counter(card["rarity_class"] for card in cards) != {"core": 4, "rare": 3, "common": 9}:
             raise ValueError(f"角色{role}背包未确认完整4/3/9潜能布局。")
         for card in cards:
-            cap = 1 if card["rarity_class"] == "core" else 6
+            cap = 1 if card["rarity_class"] == "core" else MAX_POTENTIAL_LEVEL
             if any(type(card[key]) is not int or not 0 <= card[key] <= cap for key in ("level", "target_level")):
                 raise ValueError(f"角色{role}潜能等级未完整读取。")
             if card["target_level"] and not (card.get("name_confirmed") and clean_name(card.get("name"))):

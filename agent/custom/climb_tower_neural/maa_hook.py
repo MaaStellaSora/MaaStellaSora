@@ -1,14 +1,15 @@
 """Agent runtime. Register callbacks without modifying official classes."""
+from copy import deepcopy
 from pathlib import Path
 import json
 
 from maa.agent.agent_server import AgentServer
 from utils.logger import get_logger
-from custom.climb_tower.climb_tower_potential.state import OwnedPotentials
 
 from .log_filter import ModelLogFilter
 from .observation import ObservationTracker
-from .tower_sampling_collector import SamplingCollector
+from .sampling_data import SamplingCollector
+from .paths import data_path
 from .value_model import ValueModel
 from .note_runtime import NoteRuntime
 from .pages import classify
@@ -52,10 +53,9 @@ class ValueModelRuntime:
     def __init__(self, root, app_dir):
         self.root = Path(root)
         self.app_dir = Path(app_dir).resolve()
-        self.settings = json.loads((self.root / "config.json").read_text(encoding="utf-8-sig"))
+        self.settings = json.loads(data_path("config.json", module_root=self.root).read_text(encoding="utf-8-sig"))
         self.logger = get_logger(__name__)
         self.ui_logs = ModelLogFilter()
-        self.owned_cache = OwnedPotentials()
         self.collector = SamplingCollector(
             self.app_dir, get_logger(f"{__package__}.sampling"),
         )
@@ -72,8 +72,8 @@ class ValueModelRuntime:
         self.pending_start = None
         self.fresh_entry = False
         self.bag_returned = True
-        self.event_page_cache = None
         self.notes = NoteRuntime(self)
+
 
     def requested(self, context):
         node = context.get_node_data("星塔_节点_选择潜能_agent") or {}
@@ -143,14 +143,12 @@ class ValueModelRuntime:
                 self.collector.upload = None
                 # Private settings may contain credentials; the reason is enough for diagnostics.
                 self.logger.debug("Research uploader configuration unavailable (%s)", type(error).__name__)
-        self.owned_cache = OwnedPotentials()
         self.tracker = None
         self.pending_take = None
         self.pending_potential_refresh = None
         self.pending_start = None
         self.fresh_entry = False
         self.bag_returned = True
-        self.event_page_cache = None
 
     @staticmethod
     def language(context):
@@ -195,7 +193,8 @@ class ValueModelRuntime:
                     party = read_bag_party(context, language)
                     if context.tasker.stopping:
                         return False
-                    preset = compile_bag_preset(party, language, read(self.root / "potential_name_catalog.json"))
+                    preset = compile_bag_preset(party, language,
+                        read(data_path("potential_name_catalog.json", module_root=self.root)))
                 except (ValueError, RuntimeError, OSError) as exc:
                     if not context.tasker.stopping:
                         self.stop_model(context, "bag_preset_unconfirmed", phase="bag",
@@ -268,17 +267,15 @@ class ValueModelRuntime:
         return self.tracker
 
     def decision_context(self, kind, payload):
-        from .decision_context import decision_context
-        return decision_context(self, kind, payload)
+        """Keep the visible decision inputs isolated from later UI updates."""
+        return deepcopy(dict(payload, kind=kind))
 
     def reset_run(self):
-        self.owned_cache = OwnedPotentials()
         self.pending_take = None
         self.pending_potential_refresh = None
         self.pending_start = None
         self.fresh_entry = False
         self.bag_returned = True
-        self.event_page_cache = None
         self.notes.reset()
         self.tracker = None
         self.collector.tracker = None
@@ -290,15 +287,6 @@ class ValueModelRuntime:
         self.task_open = False
         self.reset_run()
         self.confirmed_preset = None
-
-    def cache_potential(self, potential):
-        """Keep this sweep's confirmed takes separate from the legacy strategy's state."""
-        if potential.name:
-            previous = self.owned_cache.find(potential.name, mode="EXACT", trekker=potential.trekker)
-            if previous:
-                previous.update(potential)
-            else:
-                self.owned_cache.add(potential)
 
     def register(self):
         from . import _lazy_callbacks, _register_task_sink

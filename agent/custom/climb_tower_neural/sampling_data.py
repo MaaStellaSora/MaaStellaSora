@@ -15,6 +15,7 @@ import threading
 import time
 import uuid
 
+from .critic.rules import MAX_POTENTIAL_LEVEL
 from .ocr_number import assess_amount, decimal_amount
 
 from .event_mapping import has_potential_reward
@@ -114,6 +115,29 @@ def process_alive(pid):
         kernel.CloseHandle(handle)
 
 
+class SamplingContext:
+    """A view passed only to our callbacks; the actual Maa Context is untouched."""
+    __slots__ = ("_context", "_collector", "_language")
+
+    def __init__(self, context, collector):
+        self._context = context
+        self._collector = collector
+        node = context.get_node_data("星塔_节点_商店_商店主流程_agent") or {}
+        self._language = node.get("attach", {}).get("lang", "unknown")
+
+    def __getattr__(self, name):
+        return getattr(self._context, name)
+
+    def run_recognition(self, entry, *args, **kwargs):
+        result = self._context.run_recognition(entry, *args, **kwargs)
+        if isinstance(entry, str) and "星塔" in entry:
+            self._collector.record_recognition(entry, args, kwargs, result, self._language)
+        return result
+
+    def run_task(self, entry, *args, **kwargs):
+        return self._context.run_task(entry, *args, **kwargs)
+
+
 class SamplingCollector:
     def __init__(self, app_dir, logger):
         self.app_dir, self.logger = Path(app_dir), logger
@@ -164,12 +188,10 @@ class SamplingCollector:
         self.settlement_seen = False
         self.settlement_result = None
         self.event = None
-        self.event_question = ""
         self.stock_scan_id = None
         self.upload = None
 
     def context(self, context):
-        from .tower_sampling_collector import SamplingContext
         return context if not self.enabled or isinstance(context, SamplingContext) else SamplingContext(context, self)
 
     def loaded(self):
@@ -448,7 +470,6 @@ class SamplingCollector:
         self._initial_pool_order_evidence = []
         self._observations.clear()
         self.reward = self.pending_selection = self.event = None
-        self.event_question = ""
         self.emit("task_start", strategy=strategy, observation_policy="stable_pages_only_v1")
 
     def bind_preset(self, preset, tracker):
@@ -551,7 +572,6 @@ class SamplingCollector:
         self._last_pool_observation = None
         self._observations.clear()
         self.reward = self.pending_selection = self.event = None
-        self.event_question = ""
         self.stock_scan_id = None
         self.settlement_seen = False
         self.settlement_result = None
@@ -617,7 +637,7 @@ class SamplingCollector:
                    canonical_rarity=item["rarity_class"] if item else None,
                    trekker_index=resolved_role-1 if resolved_role else None, core=core,
                    level_before=before, offered_level_after=after,
-                   level_after=min(after, 1 if core else 6) if after is not None and after >= 0 else None,
+                   level_after=min(after, 1 if core else MAX_POTENTIAL_LEVEL) if after is not None and after >= 0 else None,
                    level_delta=after-before if after is not None and before is not None else None,
                    is_new=before == 0 if before is not None else None,
                    level_basis="Maa_core_0_to_1_convention" if core else "card_level_OCR")
@@ -833,12 +853,11 @@ class SamplingCollector:
                                origin_operation_id=read.links.get("operation_id") if read else None)
         return self.reward
 
-    def prepare_offer(self, handler):
-        chain = self.reward_chain(handler.data.params.potential_source)
+    def prepare_offer(self, data):
+        chain = self.reward_chain(data.params.potential_source)
         if chain is None:
             return
         if chain["page"] is None:
-            data = handler.data
             source_raw = data.params.potential_source
             source = ("core" if data.core_potential else "level_up" if data.level_upped
                       else source_raw if source_raw != "default" else "unknown")
@@ -882,12 +901,11 @@ class SamplingCollector:
         chain["page"] = page
         return page
 
-    def observe_offer(self, handler, read=None):
+    def observe_offer(self, data, read=None):
         if not self.ensure_run("potential_page"):
             return
-        data = handler.data
         chain = self.reward_chain(data.params.potential_source)
-        page = self.prepare_offer(handler)
+        page = self.prepare_offer(data)
         repeated = page["observation_count"] > 0
         offer_id = page["offer_id"]
         read = read if read is not None else self.new_read("potential_page", offer_id=offer_id)
@@ -975,14 +993,6 @@ class SamplingCollector:
                                             else "last_observed_event_not_reward_attribution"))
         return offer_id
 
-    def observed_offer_candidate(self, offer_id, candidate_index):
-        """Return evidence only from this exact open offer and card slot."""
-        chain = self.reward
-        page = chain.get("page") if chain and not chain["closed"] else None
-        if page is None or page["offer_id"] != offer_id:
-            return None
-        return next((snapshot(candidate) for candidate in page["candidates"]
-                     if candidate["slot"] == candidate_index), None)
 
     def cache_selection(self, potential, offer_id, operation_id):
         if not self.enabled or not self.run_confirmed:
@@ -1043,16 +1053,16 @@ class SamplingCollector:
                   stock_scan_id=self.stock_scan_id,
                   **({"initial_order_evidence": self._initial_pool_order_evidence} if first else {}))
 
-    def event_menu(self, choices):
+    def event_menu(self, question, choices):
         if not self.ensure_run("event_menu"):
             return
-        menu = dict(question=self.event_question, choices=snapshot(choices))
+        menu = dict(question=question, choices=snapshot(choices))
         observed_choices = [dict(ui_index=index, text=choice.get("text"),
             consequence=choice.get("consequence"), available=choice.get("available"),
             observations={field: {key: value for key, value in reading.items() if key == "complete"}
                           for field, reading in choice.get("observations", {}).items()})
             for index, choice in enumerate(menu["choices"])]
-        observed = dict(question=self.event_question, choices=observed_choices)
+        observed = dict(question=question, choices=observed_choices)
         signature = json.dumps(observed, sort_keys=True, ensure_ascii=False)
         repeated = (self.event and self.event["signature"] == signature
                     and not self.event["clicked"] and not self.event.get("reward_boundary_seen"))
@@ -1066,7 +1076,7 @@ class SamplingCollector:
 
     def event_choice(self, result, attach):
         if not self.run_confirmed or self.event is None or result.box is None:
-            return
+            return {}
         self.event["wallet_before"] = (snapshot(self.last_wallet)
                                        if result.detail.get("observed_coins") is not None else None)
         selected_box = snapshot(result.box)
@@ -1081,15 +1091,15 @@ class SamplingCollector:
                   **{key: result.detail[key] for key in ("floor", "floor_confirmed", "floor_candidates")
                      if key in result.detail},
                   operation_confirmed=False)
-        if self.event.get("choice_signature") == choice:
-            return
-        self.event["choice_signature"] = choice
-        record_id = self.emit("event_choice", event_id=self.event["event_id"], **choice)
-        self.event["choice_record_id"] = record_id
-        matches = [choice for choice in self.event["choices"] if choice.get("box") == selected_box]
-        self.event["selection"] = (dict(record_id=record_id, selected_box=selected_box,
-            selected_text=matches[0]["text"], displayed_consequence=matches[0]["consequence"])
-            if len(matches) == 1 else None)
+        if self.event.get("choice_signature") != choice:
+            self.event["choice_signature"] = choice
+            record_id = self.emit("event_choice", event_id=self.event["event_id"], **choice)
+            self.event["choice_record_id"] = record_id
+            matches = [choice for choice in self.event["choices"] if choice.get("box") == selected_box]
+            self.event["selection"] = (dict(record_id=record_id, selected_box=selected_box,
+                selected_text=matches[0]["text"], displayed_consequence=matches[0]["consequence"])
+                if len(matches) == 1 else None)
+        return dict(event_id=self.event["event_id"], event_choice_record_id=self.event.get("choice_record_id"))
 
     def event_clicked(self, evidence):
         if not self.run_confirmed or self.event is None or self.event["clicked"]:
@@ -1101,153 +1111,3 @@ class SamplingCollector:
         selection = self.event.get("selection")
         self.event["potential_reward_pending"] = bool(selection and not self.event.get("reward_boundary_seen")
             and has_potential_reward(selection["displayed_consequence"]))
-
-    def operation(self, event, handler, function, *args, before=False, offer_id=None, operation_id=None):
-        if not self.ensure_run(event):
-            return function(*args)
-        data = handler.data
-        initial = snapshot(data)
-        common = dict(operation_id=operation_id or uuid.uuid4().hex, offer_id=offer_id,
-                      reward_chain_id=self.reward["reward_chain_id"] if self.reward and not self.reward["closed"] else None,
-                      stock_scan_id=self.stock_scan_id,
-                      source_type=getattr(data.params, "potential_source", None))
-        if event == "selection_result" and args:
-            common["selected_candidate_index"] = args[0].index
-        if offer_id and self.reward and not self.reward["closed"]:
-            common.update(self.reward["source_fields"], source_raw=data.params.potential_source)
-        if before:
-            self.emit(event + "_attempt", phase="before", coin_before=initial.get("current_coin"),
-                      refresh_price=initial.get("refresh_cost"), **common)
-        with self.action_scope(**common), self.capture(event, **common) as read:
-            result = function(*args)
-        next_offer_id = (self.refresh_succeeded(offer_id, common["operation_id"])
-                         if event == "refresh_result" and result else None)
-        outcome = dict(result=snapshot(result),
-                       Maa_reported_success=result if isinstance(result, bool) else None,
-                       next_offer_id=next_offer_id, coin_before=initial.get("current_coin"),
-                       read_id=read.read_id, **common)
-        if event == "shop_refresh_result" and result is True and not handler.interactor.context.tasker.stopping:
-            # The adapter publishes the final confirmed frame before completing this operation.
-            outcome["refresh_remaining_after_action"] = data.refresh_remaining
-            outcome["previous_state"] = initial
-            handler.pending_refresh = outcome
-        else:
-            self.emit(event, phase="after",
-                      coin_after=None if event == "shop_refresh_result" else getattr(data, "current_coin", None),
-                      **outcome)
-        return result
-
-    def complete_shop_refresh(self, handler, read):
-        if not self.enabled or not self.run_confirmed:
-            return
-        pending = handler.pending_refresh
-        if pending is None:
-            return
-        handler.pending_refresh = None
-        before, data = pending["previous_state"], handler.data
-        wallet = self.last_wallet
-        coin_after = (wallet["coin"] if wallet and wallet["coin_complete"]
-                      and wallet["recognition_record_id"] in read.record_ids else None)
-        coin_before, price = before.get("current_coin"), before.get("refresh_cost")
-        debit_confirmed = (coin_before is not None and coin_before >= 0 and price is not None
-                           and price > 0 and coin_after is not None and coin_after >= 0
-                           and coin_before - coin_after == price)
-        remaining_before, remaining_after = before.get("refresh_remaining"), data.refresh_remaining
-        action_remaining = pending.get("refresh_remaining_after_action")
-        remaining_decreased = (remaining_before is not None and remaining_before > 0
-                               and (remaining_after == remaining_before - 1
-                                    or action_remaining == remaining_before - 1))
-        items = snapshot(data.items)
-        stock_complete = (len(items) == len(data.params.item_rois)
-                          and {item["grid_num"] for item in items} == set(range(1, len(items) + 1)))
-        shelf_changed = items != before.get("items")
-        success = True if debit_confirmed and stock_complete and (remaining_decreased or shelf_changed) else None
-        pending.update(result=success, Maa_return_value=pending["result"])
-        pending.pop("previous_state")
-        self.emit("shop_refresh_result", phase="after", coin_after=coin_after,
-                  success=success, operation_confirmed=success is True,
-                  confirmation_basis="next_shelf_wallet_and_refresh_count_or_stock_change",
-                  confirmation_status="confirmed" if success else "incomplete",
-                  debit_confirmed=debit_confirmed, refresh_remaining_before=remaining_before,
-                  refresh_remaining_after=remaining_after, refresh_remaining_decreased=remaining_decreased,
-                  stock_read_complete=stock_complete, shelf_changed=shelf_changed,
-                  next_stock_scan_id=self.stock_scan_id, stock_read_id=read.read_id,
-                  wallet_observation_id=wallet["record_id"] if coin_after is not None else None,
-                  **pending)
-
-    def observe_shop(self, handler, read, previous_state):
-        if not self.ensure_run("shop_page"):
-            return
-        data = handler.data
-        remaining = data.refresh_remaining
-        previous_generation = handler.stock_generation_id
-        previous_remaining = next((count for count, generation in handler.stock_generations.items()
-                                   if generation == previous_generation), None)
-        pending = handler.pending_refresh
-        refreshed = bool(pending and pending.get("result") is True)
-        advanced = remaining >= 0 and previous_remaining is not None and remaining < previous_remaining
-        generation = (uuid.uuid4().hex if refreshed or advanced or
-                      (previous_generation is None and remaining >= 0) else previous_generation)
-        generation_remaining = pending.get("refresh_remaining_after_action", remaining) if refreshed else remaining
-        if generation is not None and generation_remaining >= 0 and (refreshed or advanced or previous_generation is None):
-            handler.stock_generations[generation_remaining] = generation
-        repeated = generation is not None and generation == previous_generation
-        handler.stock_generation_id = generation
-        if repeated:
-            previous_items = {item["grid_num"]: item for item in previous_state.get("items", [])}
-            identity = ("internal_name", "quantity", "price", "trekker_specified")
-            for item in data.items:
-                previous = previous_items.get(item.grid_num)
-                if previous and all(previous.get(key) == getattr(item, key) for key in identity):
-                    item.bought = item.bought or previous.get("bought", False)
-                    item.checked = item.checked or previous.get("checked", False)
-        items = snapshot(data.items)
-        by_slot = {p["grid_num"]-1: p for p in items}
-        slots = []
-        for slot, rois in enumerate(data.params.item_rois):
-            name = read.matching("星塔_节点_商店_购物_识别物品内容_agent", rois["name_roi"])
-            price = read.matching(("星塔_神经网络_商店_识别物品价格",
-                                   "星塔_节点_商店_购物_识别物品价格_agent"), rois["price_roi"])
-            item = by_slot.get(slot)
-            observed_item = {key: item[key] for key in (
-                "internal_name", "quantity", "price", "display_name", "trekker_specified", "missing")
-                if key in item} if item else None
-            if observed_item:
-                missing = observed_item.get("missing", [])
-                for field, column in (("name", "internal_name"), ("quantity", "quantity"), ("price", "price")):
-                    if field in missing:
-                        observed_item[column] = None
-                if "name" in missing:
-                    observed_item["trekker_specified"] = None
-            effective_price = observed_item.get("price") if observed_item else None
-            slots.append(dict(slot=slot,
-                item_instance_id=f"{generation}:{slot}" if generation else None, item=observed_item,
-                effective_price=effective_price if effective_price is not None and effective_price >= 0 else None))
-            if observed_item is None or observed_item.get("missing"):
-                slots[-1]["unresolved_values"] = {key: list(dict.fromkeys(row.get("text", "") for row in raw_ocr(records)))
-                    for key, records in (("name", name), ("price", price)) if records}
-        signature = (generation, slots, data.current_coin, remaining,
-                     getattr(data, "refresh_remaining_basis", "ocr"), data.refresh_cost)
-        if repeated and getattr(handler, "observed_stock_signature", None) == signature:
-            self.stock_scan_id = handler.observed_stock_scan_id
-            return
-        handler.observed_stock_signature = signature
-        handler.observed_stock_scan_id = self.stock_scan_id
-        self.emit("shop_observed", phase="after", shop_event_type="stock_snapshot",
-                  stock_scan_id=self.stock_scan_id, shop_visit_id=handler.shop_visit_id,
-                  shop_entry_id=handler.shop_visit_id, stock_generation_id=generation,
-                  shelf_generation_id=generation, previous_shelf_generation_id=previous_generation,
-                  shelf_generation_basis=("confirmed_refresh_operation" if refreshed else
-                      "confirmed_global_refresh_counter" if generation and not repeated
-                      and getattr(data, "refresh_remaining_basis", "ocr") == "global_confirmed_refreshes_exhausted" else
-                      "visible_remaining_refresh_count" if generation and not repeated else
-                      "same_visit_without_confirmed_refresh" if repeated else "refresh_count_not_observed"),
-                  shelf_generation_complete=generation is not None,
-                  repeated_scan=repeated, refresh_remaining=remaining,
-                  refresh_remaining_observed=getattr(data, "refresh_remaining_observed", remaining),
-                  refresh_remaining_basis=getattr(data, "refresh_remaining_basis", "ocr"),
-                  refresh_controls_expected_visible=(getattr(data, "refresh_remaining_basis", "ocr")
-                                                     != "global_confirmed_refreshes_exhausted"),
-                  payload=dict(slots=slots), coin=data.current_coin,
-                  refresh_price=data.refresh_cost, read_id=read.read_id,
-                  missing=data.goods_missing)

@@ -5,6 +5,7 @@ from datetime import datetime
 from fractions import Fraction
 from pathlib import Path
 
+from .critic.rules import MAX_POTENTIAL_LEVEL
 from .decision_log import forecast_rows, log_forecast
 from .name_matching import clean_name as _clean, identity_key, is_anonymous_non_target, match_name
 from .pool_identity import IdentityPools, pool_contract
@@ -23,8 +24,8 @@ def potential_levels_valid(old, new, source):
     if old == 0:
         return source != "enhance" and 1 <= new <= 3
     if source == "enhance":
-        return 1 <= old < 6 and new in (old + 1, min(6, old + 2))
-    return 1 <= old < 6 and new == old + 1
+        return 1 <= old < MAX_POTENTIAL_LEVEL and new in (old + 1, min(MAX_POTENTIAL_LEVEL, old + 2))
+    return 1 <= old < MAX_POTENTIAL_LEVEL and new == old + 1
 
 
 class ObservationTracker:
@@ -90,9 +91,7 @@ class ObservationTracker:
         self.route_estimated = False
         self.route_candidates = ((self.state.node, self.state.k, self.state.A,
                                   self.state.cBel, Fraction(1)),)
-        self._current_cards = None
-        self._page_key = None
-        self.selected_page_index = None
+        self.close_potential_page()
         self.event_page_cache = None
         self._event_transaction = None
         self.expected_total = None
@@ -509,8 +508,14 @@ class ObservationTracker:
         if source_name in ("drink", "specified_drink") and purchase is not None:
             if purchase["source_type"] != source_name:
                 raise PotentialObservationIncomplete("饮品奖励来源与本次购买不一致")
-            from .potential_adapter import confirm_drink_purchase
-            self.state = confirm_drink_purchase(self.state, purchase)
+            from .potential_adapter import consume_drink_stock
+            if not purchase["committed"]:
+                item = purchase["item"]
+                next_state = consume_drink_stock(self.state, price=item.price,
+                                                trekker_specified=item.trekker_specified)
+                item.bought = True
+                purchase["committed"] = True
+                self.state = next_state
             source_observation["purchase_operation_id"] = purchase["operation_id"]
         self.state = replace(self.state, phase=phase, source=source, offer=tuple(cards),
                              pools=pools.projection(), P=p, Q=q, eBel=belief,
@@ -593,6 +598,12 @@ class ObservationTracker:
             self.collector.model_decision(record)
         self.last_decision = record
         return action
+
+    def close_potential_page(self):
+        """End this offer so an identical following reward is a new page."""
+        self._current_cards = None
+        self._page_key = None
+        self.selected_page_index = None
 
     def selected(self, potential):
         item = self.identify(potential.name, role=potential.trekker.index + 1, rarity=potential.rarity)

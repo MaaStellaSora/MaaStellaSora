@@ -1,9 +1,11 @@
 """Model economics with neural-only shop observations and confirmed operations."""
 import uuid
+from .critic.rules import MAX_POTENTIAL_LEVEL, MAX_SHOP_RESTOCKS
 from .shop_ui.interactor import ShopInteractor
 from .shop_ui.purchase import purchase_override
 
-from .tower_sampling_collector import ObservedShopHandler, snapshot
+from .tower_sampling_collector import ObservedShopHandler
+from .sampling_data import snapshot
 from .purchase_evidence import purchase_wallet_evidence
 from .pages import BY_NAME, classify
 from .ui_flow import read_until
@@ -110,7 +112,7 @@ def run_model_shop(action_handler, context, argv, runtime):
         controls = {"refresh_exhausted": True} if tracker.state.restocks == 0 else {}
         handler.read_goods_page_info(**controls)
         return ((["current_coin"] if data.current_coin < 0 else []) + data.goods_missing
-                + (["refresh_remaining"] if not 0 <= data.refresh_remaining <= 2 else [])
+                + (["refresh_remaining"] if not 0 <= data.refresh_remaining <= MAX_SHOP_RESTOCKS else [])
                 + (["refresh_cost"] if data.refresh_remaining > 0 and data.refresh_cost <= 0 else []))
 
     try:
@@ -131,7 +133,7 @@ def run_model_shop(action_handler, context, argv, runtime):
         cost = data.current_enhancement_cost
         missing = ((["current_coin"] if data.current_coin < 0 else []) + data.goods_missing
                    + (["current_enhancement_cost"] if cost not in (0, *sim.PRICES) else [])
-                   + (["refresh_remaining"] if not 0 <= data.refresh_remaining <= 2 else [])
+                   + (["refresh_remaining"] if not 0 <= data.refresh_remaining <= MAX_SHOP_RESTOCKS else [])
                    + (["refresh_cost"] if data.refresh_remaining > 0 and data.refresh_cost <= 0 else []))
         if missing:
             return stop_for_missing(missing)
@@ -143,7 +145,7 @@ def run_model_shop(action_handler, context, argv, runtime):
                               price=item.price, bought=item.bought, trekker_specified=item.trekker_specified))
             if not item.bought and 0 < item.price <= data.current_coin:
                 candidates.append(Action("BUY", index=slot, price=item.price, key=f"shop_slot_{slot}"))
-        if cost <= data.current_coin and any(row[3] < 6 for row in state.H):
+        if cost <= data.current_coin and any(row[3] < MAX_POTENTIAL_LEVEL for row in state.H):
             candidates.append(Action("ENHANCE", price=cost))
         if data.refresh_remaining > 0 and 0 < data.refresh_cost <= data.current_coin:
             candidates.append(Action("RESTOCK", price=data.refresh_cost))
@@ -164,10 +166,10 @@ def run_model_shop(action_handler, context, argv, runtime):
             return stop_for_missing(["confirmed_route_position"], reason="shop_model_inputs_unconfirmed")
         if not tracker.identity_pools.available:
             return stop_for_missing(["complete_pool_catalogue"], reason="shop_model_inputs_unconfirmed")
-        actions = runtime.model.prepare_actions(tracker.state, candidates, decision_context)
-        tracker.state = decision_context.pop("model_state", tracker.state)
+        prepared = runtime.model.prepare_actions(tracker.state, candidates, decision_context)
+        tracker.state = prepared.state
         paid_index = tracker.state.paidIndex
-        action = tracker.choose(tuple(actions), decision_context=decision_context)
+        action = tracker.choose(prepared.actions, decision_context=decision_context)
         if action.kind == "LEAVE":
             if shopping_page:
                 interactor.back_to_main_page()
@@ -193,7 +195,7 @@ def run_model_shop(action_handler, context, argv, runtime):
         if action.kind == "ENHANCE":
             before_enhance = tracker.state
             staged_enhance = replace(before_enhance, freeEnhance=False,
-                                    paidIndex=paid_index if cost == 0 else min(6, paid_index+1),
+                                    paidIndex=paid_index if cost == 0 else min(len(sim.PRICES) - 1, paid_index + 1),
                                     source=sim.Source("regular", "any", 0, "SHOP", False))
             tracker.state = staged_enhance
             try:
@@ -215,7 +217,7 @@ def run_model_shop(action_handler, context, argv, runtime):
             except ShopNavigationFailed as error:
                 return stop_after_failed_action("OPEN_SHOP", navigation=error)
             shopping_page = True
-        slot = decision_context.get("action_slots", {}).get(action.key or sim.action_key(action), action.index)
+        slot = prepared.action_slots.get(action.key or sim.action_key(action), action.index)
         item = goods[slot]
         source = "specified_drink" if item.trekker_specified else "drink"
         transaction = dict(operation_id=uuid.uuid4().hex, stock_scan_id=runtime.collector.stock_scan_id,

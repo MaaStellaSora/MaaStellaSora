@@ -9,17 +9,18 @@ This module neither opens nor closes the bag and never writes a catalogue.
 from collections import Counter
 from dataclasses import dataclass, field
 import json
-from pathlib import Path
 import re
 
 import numpy as np
 
+from .critic.rules import MAX_POTENTIAL_LEVEL
 from .image_ops import (
     bgr_to_gray, bgr_to_hsv, connected_components, gray_to_bgr, in_range,
     match_vertical_strip, resize_cubic,
 )
 from .interactor import Interactor
 from .ocr_number import assess_amount
+from .paths import data_path
 
 from .name_matching import clean_name
 from .note_ocr import read_text
@@ -35,7 +36,7 @@ LIST_BOX = (352, 95, 592, 591)
 COLUMNS = (358, 475, 593, 710, 828)
 ROW_OFFSETS = (47, 211, 377, 526)
 ROW_CARD_COUNTS = (5, 5, 5, 1)
-TEXT_RULES = json.loads(Path(__file__).with_name("bag_preset_rules.json").read_text(encoding="utf-8"))
+TEXT_RULES = json.loads(data_path("bag_preset_rules.json").read_text(encoding="utf-8"))
 CONTROLS = TEXT_RULES["controls"]
 UNACQUIRED = re.compile(TEXT_RULES["unacquired_pattern"])
 OBTAINED_COUNT = re.compile(TEXT_RULES["obtained_count_pattern"])
@@ -464,7 +465,7 @@ class _Reader:
                         elif rarity == "core":
                             level, level_basis = 1, "core_acquired_badge_absent"
                         else:
-                            level, level_raw = self._digit(image, (left + 6, top + 2, 29, 26), 6)
+                            level, level_raw = self._digit(image, (left + 6, top + 2, 29, 26), MAX_POTENTIAL_LEVEL)
                             level_basis = "left_actual_level"
                     target, target_raw = None, []
                     thumb = [hit for hit in thumbs if _inside(hit, (left + 69, top, 49, 40))]
@@ -474,7 +475,7 @@ class _Reader:
                         elif rarity == "core":
                             target = 1
                         else:
-                            target, target_raw = self._digit(image, (left + 102, top + 2, 17, 29), 6)
+                            target, target_raw = self._digit(image, (left + 102, top + 2, 17, 29), MAX_POTENTIAL_LEVEL)
                             if target == 0:
                                 target = None
                     if level is not None:

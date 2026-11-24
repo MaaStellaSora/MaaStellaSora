@@ -86,6 +86,7 @@ class ValueModel:
 
     @staticmethod
     def prepare_actions(state, candidates, decision_context):
+        """Return the prepared state, legal candidates, and visible shop slots."""
         from .potential_adapter import prepare_actions
         return prepare_actions(state, candidates, decision_context)
 

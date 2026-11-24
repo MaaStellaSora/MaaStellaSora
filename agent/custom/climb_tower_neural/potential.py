@@ -491,10 +491,8 @@ class ModelPotentialHandler(NeuralRecommendationHandler):
             return self.data.potentials[pending.potential.index]
         self.runtime.pending_take = None
         self.decision_method = "official_policy"
-        notes = getattr(self.runtime, "notes", None)
-        floor_observation = (getattr(notes, "last_floor_observation", None)
-                             if self.data.params.potential_source == "default"
-                             and notes is not None and notes.observing else None)
+        floor_observation = (self.runtime.session.current_floor_observation
+                             if self.data.params.potential_source == "default" else None)
         if floor_observation and floor_observation.get("complete") and floor_observation.get("source") == "floor_hud":
             tracker.open_page(self.data, observed_floor=floor_observation)
         else:

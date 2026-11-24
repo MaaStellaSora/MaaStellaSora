@@ -18,6 +18,7 @@ import uuid
 from .critic.rules import MAX_POTENTIAL_LEVEL
 from .ocr_number import assess_amount, decimal_amount
 
+from .session import RunSession
 from .event_mapping import has_potential_reward
 from .sampling_evidence import ObservedInventory, ReadEvidence, observation_signature, raw_ocr, recognition_roi
 from .name_matching import clean_name, identity_key, match_name
@@ -139,8 +140,9 @@ class SamplingContext:
 
 
 class SamplingCollector:
-    def __init__(self, app_dir, logger):
+    def __init__(self, app_dir, logger, *, session=None):
         self.app_dir, self.logger = Path(app_dir), logger
+        self.session = session if session is not None else RunSession()
         config = self.app_dir / "agent/agent_config/tower_sampling.json"
         try:
             self.config = json.loads(config.read_text(encoding="utf-8-sig")) if config.exists() else {}
@@ -218,7 +220,7 @@ class SamplingCollector:
             return [self._safe(v) for v in value]
         return value
 
-    def emit(self, event_type, **payload):
+    def emit(self, event_type, *, record_id=None, **payload):
         if not self.enabled:
             return
         try:
@@ -256,7 +258,7 @@ class SamplingCollector:
                 run_id = self.run["run_id"] if self.run else None
                 run_sequence = self.run["record_count"] + 1 if self.run else None
                 row = dict(schema_version=SCHEMA_VERSION, collector_version=VERSION, event_type=event_type,
-                           record_type=event_type, timestamp=timestamp(), record_id=uuid.uuid4().hex,
+                           record_type=event_type, timestamp=timestamp(), record_id=record_id or uuid.uuid4().hex,
                            session_id=self.session_id,
                            task_id=self.task_id, run_id=run_id, exploration_id=run_id,
                            sequence=sequence, run_sequence=run_sequence,
@@ -643,12 +645,6 @@ class SamplingCollector:
                    level_basis="Maa_core_0_to_1_convention" if core else "card_level_OCR")
         return row
 
-    def inferred_state(self):
-        if not self.tracker:
-            return None
-        return dict(floor=self.tracker.state.floor, node=self.tracker.state.node,
-                    phase=self.tracker.state.phase, source="neural_network_route_inference",
-                    observation_not_game_truth=True)
 
     def finish_at_boundary(self, reason):
         with self.lock:

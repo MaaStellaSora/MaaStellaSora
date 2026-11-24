@@ -77,6 +77,13 @@ class ValueModelRuntime:
         self.bag_returned = True
         self.notes = NoteRuntime(self)
 
+    def observe_wallet(self, reading):
+        """Publish the UI's final wallet result before optional research storage."""
+        values = dict(reading)
+        native_reco_id = values.pop("native_reco_id", None)
+        observation = self.session.observe_wallet(values)
+        self.collector.record_wallet(observation, native_reco_id=native_reco_id)
+        return observation
 
     def requested(self, context):
         node = context.get_node_data("星塔_节点_选择潜能_agent") or {}

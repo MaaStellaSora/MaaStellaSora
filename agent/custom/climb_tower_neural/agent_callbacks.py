@@ -112,7 +112,7 @@ class Potential(RuntimeCallback, ChoosePotentialRecognition):
             tracker = self.runtime.require_tracker()
             refresh = getattr(self.runtime, "pending_potential_refresh", None)
             data = refresh[0].data if refresh is not None and refresh[1] is tracker and refresh[2] else None
-            screen = PotentialInteractor(context)
+            screen = PotentialInteractor(context, on_wallet=self.runtime.observe_wallet)
             screen.image = argv.image
             if data is None:
                 data = PotentialContext(params=self._get_params(context, argv.node_name))
@@ -187,11 +187,12 @@ class PotentialTake(RuntimeCallback, CustomAction):
         context = self.runtime.collector.context(context)
         if self.runtime.pending_take is None:
             return False
-        screen = PotentialInteractor(context)
+        screen = PotentialInteractor(context, on_wallet=self.runtime.observe_wallet)
         with self.runtime.collector.capture("potential_take"):
             result = finish_potential_take(screen, self.runtime.pending_take, self.runtime.logger, runtime=self.runtime)
         if result:
-            commit_potential_take(self.runtime)
+            if commit_potential_take(self.runtime):
+                self.runtime.collector.selection_confirmed("potential_page_transition")
         elif not context.tasker.stopping and self.runtime.collector.enabled:
             selection = self.runtime.collector.pending_selection or {}
             self.runtime.collector.emit("potential_take_unresolved", reason="take_transition_unconfirmed",
@@ -220,7 +221,7 @@ class Shop(RuntimeCallback, ShopAction):
         self.runtime.notes.enter_shop()
         self.runtime.collector.emit("lifecycle_observed", lifecycle_type="shop_entry",
                                    node_name=argv.node_name)
-        with self.runtime.ui_logs.scope():
+        with self.runtime.collector.defer_finish(), self.runtime.ui_logs.scope():
             try:
                 if not self.runtime.ensure_tracker(context, "shop"):
                     return False

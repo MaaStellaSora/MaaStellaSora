@@ -93,7 +93,7 @@ _ACTION_FIELDS = set("""operation_id offer_id next_offer_id reward_chain_id stoc
     shop_visit_id shelf_generation_id item item_instance_id slot source source_type source_attribution
     source_inferred source_basis phase selected selected_slot selected_ui_index planned_name
     selection_confirmed selection_basis selection_observation_complete selected_candidate_index operation_confirmed
-    confirmation_basis confirmation_status debit_confirmed success result coin_before coin_after
+    confirmation_basis confirmation_status debit_confirmed success pipeline_succeeded reward_committed result coin_before coin_after
     coins coins_before coins_after observed_coins purchase_debit pipeline_coins_after
     pipeline_wallet_observation_id wallet_before_observation_id wallet_observation_id
     wallet_observation_complete refresh_price refresh_remaining_before refresh_remaining_after
@@ -665,7 +665,8 @@ def build_payload(run_path, session_path=None):
         if event == "lifecycle_observed" and row.get("lifecycle_type") == "pipeline_node_completed":
             continue
         semantic.append(row)
-    wallets = [row for row in run if row["event_type"] == "wallet_observed"]
+    wallets = [dict(row, observation_id=row["record_id"])
+               for row in run if row["event_type"] == "wallet_observed"]
     attempts = {row.get("operation_id"): row for row in run if row["event_type"] == "purchase_attempt"}
     action_attempts = {}
     results = defaultdict(list)
@@ -685,15 +686,17 @@ def build_payload(run_path, session_path=None):
             attempt = attempts.get(row.get("operation_id"))
             before_seq = (attempt or row).get("sequence", 0)
             end_seq = row.get("sequence", 0)
-            before = next((wallet for wallet in reversed(wallets) if wallet.get("sequence", 0) < before_seq
-                           and wallet.get("coin_complete") and wallet.get("record_id")), None)
+            if attempt and "wallet_before_observation_id" in attempt:
+                before = next((wallet for wallet in wallets
+                               if wallet["observation_id"] == attempt["wallet_before_observation_id"]), None)
+            else:
+                before = next((wallet for wallet in reversed(wallets) if wallet.get("sequence", 0) < before_seq
+                               and wallet.get("coin_complete") and wallet.get("record_id")), None)
             observed = [wallet for wallet in wallets if before_seq < wallet.get("sequence", 0) < end_seq]
             pipeline = observed[-1] if observed else None
             evidence = purchase_wallet_evidence(row.get("operation_id"), (row.get("item") or {}).get("price"),
                 observed, before_wallet=before, pipeline_wallet=pipeline)
-            row["pipeline_reported_success"] = row.get("pipeline_succeeded", row.get("success"))
             row.update(evidence)
-            row["success"] = row["debit_confirmed"]
             if row["confirmation_status"] != "confirmed":
                 builder.issue(rid, "coins_after", "purchase_" + row["confirmation_status"],
                     "partial" if row["confirmation_status"] == "wallet_missing" else "suspect",
@@ -784,9 +787,6 @@ def build_payload(run_path, session_path=None):
                 confirmed = result["operation_confirmed"] is True
             elif result_event == "refresh_result":
                 confirmed = result.get("next_offer_id") in offer_ids
-            elif result_event == "enhancement_result":
-                confirmed = any(row["event_type"] == "offer_observed" and row.get("origin_operation_id") == operation
-                                and row.get("source") == "enhance" for row in run)
             else:
                 confirmed = False
             if not confirmed:

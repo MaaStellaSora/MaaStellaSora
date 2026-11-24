@@ -16,43 +16,23 @@ import time
 import uuid
 
 from .critic.rules import MAX_POTENTIAL_LEVEL
-from .ocr_number import assess_amount, decimal_amount
 
-from .session import RunSession
 from .event_mapping import has_potential_reward
 from .sampling_evidence import ObservedInventory, ReadEvidence, observation_signature, raw_ocr, recognition_roi
 from .name_matching import clean_name, identity_key, match_name
 from .research_data import compact_preset, compact_record
 from .research_store import DATABASE_FILE, ResearchStore, valid_upload_consent
 from .sampling_journal import JournalRollbackError, append_record, repair_journal, rollback
+from .session import LINK_FIELDS, RunSession
 
 
 VERSION = "maa-run-observations-20261115.1"
 SCHEMA_VERSION = 4
 SKIP_FIELDS = {"image", "raw_image", "draw_images", "layout", "potential_layouts"}
-LINK_FIELDS = {"operation_id", "origin_operation_id", "offer_id", "reward_chain_id",
-               "stock_scan_id", "shop_visit_id", "event_id", "source_type"}
 
 
 def timestamp():
     return datetime.now().astimezone().isoformat(timespec="milliseconds")
-
-
-def wallet_reading(raw, *, observed_extra=()):
-    """Parse complete decimal amounts without changing OCR letters or digits."""
-    raw = raw or {}
-    values = [row.get("text", "") for row in raw.get("filtered_results", [])]
-    raw_values = [row.get("text", "") for row in raw.get("all_results", [])]
-    observed = [(row.get("text", ""), row.get("score", 0)) for row in raw.get("all_results", [])]
-    observed.extend(observed_extra)
-    parsed = [decimal_amount(text) for text in values]
-    accepted = [row.get("text", "") for row in raw.get("filtered_results", []) if row.get("score", 0) >= .85]
-    coin, status, conflicts = assess_amount(accepted if raw.get("hit") else (), observed)
-    result = dict(values=values, raw_values=raw_values, parsed_values=parsed,
-                  coin=coin, coin_complete=status == "ok", recognition_status=status)
-    if conflicts:
-        result["conflicts"] = list(conflicts)
-    return result
 
 
 def snapshot(value):
@@ -159,8 +139,6 @@ class SamplingCollector:
         self.sequence = 0
         self.lock = threading.RLock()
         self._read = ContextVar("tower_sampling_read", default=None)
-        self._operations = []
-        self._purchase_wallets = {}
         self.inventory = ObservedInventory()
         self.offer_index = 0
         self.last_wallet = None
@@ -181,12 +159,15 @@ class SamplingCollector:
         self.language = "unknown"
         self.run = None
         self.reward = None
+        self.last_enhancement_take = (None, None)
         self.pending_selection = None
         self.start_pending = False
         self.run_confirmed = False
         self._journal_rollback = {}
         self._pending_journal_gap = None
         self._pending_archives = set()
+        self._finish_holds = 0
+        self._deferred_finish = None
         self.settlement_seen = False
         self.settlement_result = None
         self.event = None
@@ -334,10 +315,8 @@ class SamplingCollector:
 
     def new_read(self, kind, **links):
         parent = self._read.get()
-        with self.lock:
-            inherited = dict(self._operations[-1]) if self._operations else {}
-        if parent:
-            inherited.update(parent.links)
+        inherited = dict(parent.links) if parent else {}
+        inherited.update(self.session.current_action_links)
         inherited.update({key: value for key, value in links.items() if key in LINK_FIELDS})
         read = ReadEvidence(kind, inherited)
         if kind == "potential_callback":
@@ -348,30 +327,6 @@ class SamplingCollector:
     @property
     def current_read(self):
         return self._read.get()
-
-    @contextmanager
-    def action_scope(self, **links):
-        # Nested Maa run_task callbacks can execute on another Python thread.
-        # Keep their causal action on this collector, not in official classes.
-        links = {key: value for key, value in links.items() if key in LINK_FIELDS}
-        with self.lock:
-            self._operations.append(links)
-        try:
-            yield
-        finally:
-            with self.lock:
-                self._operations.remove(links)
-
-    @contextmanager
-    def purchase_wallet_capture(self, operation_id):
-        evidence = dict(before_wallet=self.last_wallet, wallets=[])
-        with self.lock:
-            self._purchase_wallets[operation_id] = evidence
-        try:
-            yield evidence
-        finally:
-            with self.lock:
-                self._purchase_wallets.pop(operation_id)
 
     @contextmanager
     def capture(self, kind=None, *, read=None, **links):
@@ -388,60 +343,35 @@ class SamplingCollector:
         if not self.enabled or not self.run_confirmed:
             return
         read = self._read.get()
-        links = dict(read_id=read.read_id, read_kind=read.kind, **read.links) if read else {}
         raw = snapshot(result)
         roi = recognition_roi(entry, args, kwargs)
-        coin_node = next((name for name in ("星塔_神经网络_识别当前金币", "星塔_通用_识别当前金币_agent")
-                          if entry in (name, name + "__数字重读")), None)
         override = kwargs.get("pipeline_override", args[1] if len(args) > 1 else {})
         origin = dict(override.get(entry, {}).get("attach", {})) if isinstance(override, dict) else {}
         native_reco_id = raw.get("reco_id") if isinstance(raw, dict) else None
         if native_reco_id is None:
             native_reco_id = getattr(result, "reco_id", None)
         locator_id = origin.get("source_locator_reco_id")
-        locator = read.recognition_by_id(locator_id) if read else None
-        if locator:
-            origin["source_locator_record_id"] = locator["record_id"]
         # OCR attempts support the current read in memory. Persist its game
         # value and quality at the business boundary, rather than every poll.
         record_id = uuid.uuid4().hex
         if read:
             read.recognitions.append(dict(record_id=record_id, node_name=entry, roi=roi, raw_result=raw,
                 native_reco_id=native_reco_id, purpose=origin.get("purpose"), source_locator_reco_id=locator_id))
-        if coin_node is not None:
-            # The color box supplies the crop; only its OCR parent can contradict the amount.
-            text_locator = (read.recognition_by_id(locator["source_locator_reco_id"])
-                            if locator and locator["purpose"] == "wallet_digit_locator" else locator)
-            locator_rows = (text_locator.get("raw_result") or {}).get("all_results", []) if text_locator else []
-            wallet = wallet_reading(raw, observed_extra=[(row.get("text", ""), row.get("score", 0))
-                for row in locator_rows])
-            if locator:
-                wallet["locator_raw_values"] = [row.get("text", "") for row in locator_rows]
-            previous = self.last_wallet
-            if (read and entry != coin_node and previous
-                    and previous.get("read_id") == read.read_id):
-                values = set(previous.get("conflicts", [])) | set(wallet.get("conflicts", []))
-                values.update(row["coin"] for row in (previous, wallet) if row.get("coin_complete"))
-                if len(values) > 1 or previous["recognition_status"] == "conflict":
-                    wallet.update(coin=None, coin_complete=False, recognition_status="conflict", conflicts=sorted(values))
-            observed = {key: wallet[key] for key in ("coin", "coin_complete", "recognition_status", "conflicts")
-                        if key in wallet}
-            if not wallet["coin_complete"]:
-                values = list(dict.fromkeys(wallet["values"] + wallet["raw_values"]))
-                if values:
-                    observed["unresolved_values"] = values
-            context = {key: links.get(key) for key in ("operation_id", "offer_id", "reward_chain_id", "shop_visit_id")}
-            context["preceding_event_id"] = self.event["event_id"] if self.event else None
-            signature = ({key: value for key, value in observed.items() if key != "unresolved_values"}, context)
-            wallet_id = (previous["record_id"] if previous and previous.get("signature") == signature else
-                self.emit("wallet_observed", **observed, **context,
-                          read_id=read.read_id if read else None))
-            self.last_wallet = dict(**wallet, record_id=wallet_id, recognition_record_id=record_id,
-                                    signature=signature, **links)
-            with self.lock:
-                purchase = self._purchase_wallets.get(links.get("operation_id"))
-                if purchase is not None:
-                    purchase["wallets"].append(self.last_wallet)
+
+    def record_wallet(self, observation, *, native_reco_id=None):
+        """Record the UI's final wallet reading without interpreting its OCR again."""
+        if not self.enabled or not self.run_confirmed:
+            return
+        read = self._read.get()
+        fields = dict(read_id=read.read_id, read_kind=read.kind, **read.links) if read else {}
+        fields.update(observation)
+        observation_id = fields.pop("observation_id")
+        fields["preceding_event_id"] = self.event["event_id"] if self.event else None
+        recognition = read.recognition_by_id(native_reco_id) if read else None
+        wallet_id = self.emit("wallet_observed", record_id=observation_id, **fields)
+        self.last_wallet = dict(fields, record_id=wallet_id,
+            recognition_record_id=recognition["record_id"] if recognition else None)
+        return wallet_id
 
     def owned_fields(self):
         return self.inventory.fields()
@@ -498,7 +428,7 @@ class SamplingCollector:
                     key = clean_name(item[field])
                     if item not in self.names[key]:
                         self.names[key].append(item)
-                    if field == ("name_zh_cn" if self.language == "cn" else "name_ja_jp"):
+                    if (field == ("name_zh_cn" if self.language == "cn" else "name_ja_jp")):
                         self.local_names[key].append(item)
         key = [{"role": m["role"], "character_id": m["character_id"], "targets": m["targets"]}
                for m in preset["party"]]
@@ -645,6 +575,21 @@ class SamplingCollector:
                    level_basis="Maa_core_0_to_1_convention" if core else "card_level_OCR")
         return row
 
+    @contextmanager
+    def defer_finish(self):
+        """Let nested callbacks stop immediately, then persist the outer outcome."""
+        with self.lock:
+            self._finish_holds += 1
+        try:
+            yield
+        finally:
+            with self.lock:
+                self._finish_holds -= 1
+                pending = self._deferred_finish if not self._finish_holds else None
+                if pending is not None:
+                    self._deferred_finish = None
+            if pending is not None:
+                self.finish_run(**pending)
 
     def finish_at_boundary(self, reason):
         with self.lock:
@@ -654,6 +599,12 @@ class SamplingCollector:
                         completion_observed=self.settlement_seen, settlement=self.settlement_result)
 
     def finish_run(self, reason, *, completion_observed, settlement=None):
+        with self.lock:
+            if self._finish_holds:
+                if self._deferred_finish is None:
+                    self._deferred_finish = dict(reason=reason, completion_observed=completion_observed,
+                                                 settlement=settlement)
+                return
         if not self.enabled or not self.run:
             self.run_confirmed = self.start_pending = False
             return
@@ -990,7 +941,6 @@ class SamplingCollector:
                                             else "last_observed_event_not_reward_attribution"))
         return offer_id
 
-
     def cache_selection(self, potential, offer_id, operation_id):
         if not self.enabled or not self.run_confirmed:
             return
@@ -1021,13 +971,16 @@ class SamplingCollector:
         record_id = uuid.uuid4().hex
         self.pending_selection["selection_observation_complete"] = self.inventory.confirm(
             self.pending_selection["selected"], record_id)
-        self.emit("selection_ui_transition_observed", **self.pending_selection,
-                  record_id=record_id,
-                  operation_confirmed=True, confirmation_basis=evidence,
-                  owned_complete=self.inventory.complete, owned_issues=list(self.inventory.issues))
-        self.pending_selection = None
+        written_id = self.emit("selection_ui_transition_observed", **self.pending_selection,
+                               record_id=record_id,
+                               operation_confirmed=True, confirmation_basis=evidence,
+                               owned_complete=self.inventory.complete, owned_issues=list(self.inventory.issues))
         if self.reward:
+            if (self.reward.get("source") == "enhance"
+                    and self.reward["reward_chain_id"] == self.pending_selection["reward_chain_id"]):
+                self.last_enhancement_take = self.reward["origin_operation_id"], written_id
             self.reward["closed"] = True
+        self.pending_selection = None
 
     def refresh_succeeded(self, offer_id, operation_id):
         if not self.enabled or not self.run_confirmed:

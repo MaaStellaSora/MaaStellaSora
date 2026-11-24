@@ -53,7 +53,8 @@ class ShopInteractor(Interactor):
             }
         }
         run_result = self.context.run_task("星塔_节点_商店_点击强化_agent", pipeline_override)
-        if not (run_result and run_result.status.succeeded):
+        self.last_enhance_pipeline_succeeded = bool(run_result.status.succeeded) if run_result is not None else None
+        if not self.last_enhance_pipeline_succeeded:
             logger.error(
                 "$agent.custom.action.climb_tower_shop.interactor.enhance.enhancement_failed"
             )

@@ -44,7 +44,7 @@ def tracker_at_quiz(*, collector=None, session=None):
 
 def page(coins, quality):
     index = 0 if quality == "rare" else 3
-    card = SimpleNamespace(name=f"card_1_{index}", rarity=quality, old_level=0,
+    card = SimpleNamespace(index=0, name=f"card_1_{index}", rarity=quality, old_level=0,
                            new_level=1, trekker=SimpleNamespace(index=0))
     return SimpleNamespace(params=SimpleNamespace(potential_source="default"),
         current_coin=coins, potentials=[card], core_potential=False,

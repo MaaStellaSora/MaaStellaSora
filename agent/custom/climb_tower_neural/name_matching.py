@@ -43,10 +43,6 @@ def identity_key(item):
     return item.get("potential_id") if item.get("potential_id") is not None else item.get("local_identity", item.get("id"))
 
 
-def local_potential_identity(role, character, rarity, name):
-    return f"bag:{role}:{clean_name(character)}:{rarity}:{clean_name(name)}"
-
-
 def is_anonymous_non_target(item):
     return item.get("potential_id") is None and item.get("target_level") == 0
 

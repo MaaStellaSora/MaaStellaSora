@@ -335,6 +335,34 @@ class TowerNeuralResearchDataTests(unittest.TestCase):
         self.assertEqual([(row["potential_id"], row["history_level"]) for row in conflicts],
                          [(101, 2), (102, 1)])
 
+    def test_runtime_candidate_only_take_reanchors_the_next_clear_level(self):
+        collector = sampling_data.SamplingCollector(self.directory, Mock())
+
+        def reading(item, before, status):
+            card = SimpleNamespace(name="弱点" if status == "inferred" else "弱点标定",
+                                   rarity="rare", old_level=before, new_level=before + 1)
+            resolved = dict(item, role=1, rarity_class="rare", target_level=6, identity_runtime_status=status)
+            return collector.potential(card, resolved_item=resolved)
+
+        for item, candidates in (
+            (dict(potential_id=101), "id_candidates"),
+            (dict(local_identity="bag-slot:1:rare:2", provisional=True), "local_identity_candidates"),
+        ):
+            identity = sampling_data.identity_key(item)
+            with self.subTest(identity=identity):
+                inventory = sampling_data.ObservedInventory(full_start=True)
+                self.assertTrue(inventory.confirm(reading(item, 0, "confirmed"), "first"))
+                inferred = reading(item, 1, "inferred")
+                self.assertTrue(inferred["identity_inferred"])
+                self.assertIsNone(sampling_data.identity_key(inferred))
+                self.assertEqual(inferred[candidates], [identity])
+                self.assertFalse(inventory.confirm(inferred, "upgrade"))
+                self.assertEqual(inventory.audit([reading(item, 2, "confirmed")], "clear"), [])
+                self.assertEqual(inventory.items[identity]["level"], 1)
+                self.assertFalse(inventory.complete)
+                conflicts = inventory.audit([reading(item, 3, "confirmed")], "no_intervening_take")
+                self.assertEqual([row["history_level"] for row in conflicts], [2])
+
     def test_compaction_drops_personal_identity_and_duplicate_recognition_evidence(self):
         raw = dict(algorithm="OCR", hit=True, all_results=[dict(text="raw-success-only",
             score=.99, box=[1, 2, 3, 4])], filtered_results=[dict(text="raw-success-only",

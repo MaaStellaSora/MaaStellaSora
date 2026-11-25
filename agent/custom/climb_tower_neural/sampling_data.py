@@ -20,7 +20,7 @@ from .language import catalog_name_field, catalog_name_fields
 
 from .event_mapping import has_potential_reward
 from .sampling_evidence import ObservedInventory, ReadEvidence, observation_signature, raw_ocr, recognition_roi
-from .name_matching import clean_name, identity_key, match_name
+from .name_matching import NameMatch, clean_name, identity_key, match_name
 from .research_data import compact_preset, compact_record
 from .research_store import DATABASE_FILE, ResearchStore, valid_upload_consent
 from .sampling_journal import JournalRollbackError, append_record, repair_journal, rollback
@@ -427,9 +427,12 @@ class SamplingCollector:
             for field in catalog_name_fields():
                 if item.get(field):
                     key = clean_name(item[field])
-                    if item not in self.names[key]:
+                    if not any((identity_key(existing), existing.get("role")) ==
+                               (identity_key(item), item.get("role")) for existing in self.names[key]):
                         self.names[key].append(item)
-                    if field == catalog_name_field(self.language):
+                    if field == catalog_name_field(self.language) and not any(
+                            (identity_key(existing), existing.get("role")) ==
+                            (identity_key(item), item.get("role")) for existing in self.local_names[key]):
                         self.local_names[key].append(item)
         key = [{"role": m["role"], "character_id": m["character_id"], "targets": m["targets"]}
                for m in preset["party"]]
@@ -518,17 +521,27 @@ class SamplingCollector:
                   original_preset=self.preset, target_vector=self.target_vector,
                   **self.owned_fields())
 
-    def potential(self, potential, *, name_readings=()):
+    def potential(self, potential, *, name_readings=(), resolved_item=None):
         value = snapshot(potential)
         row = {key: value[key] for key in ("index", "name", "rarity", "old_level", "new_level") if key in value}
         role = getattr(getattr(potential, "trekker", None), "index", -1) + 1
-        resolution = match_name(row.get("name", ""), self.names, role=role or None,
-                                rarity=row.get("rarity"), preferred=self.local_names, party_bound=True)
-        matches = resolution.items
-        item = matches[0] if len(matches) == 1 else None
-        if item is None and self.tracker is not None and role in getattr(self.tracker, "local_roles", {}):
-            item = self.tracker.identify(row.get("name", ""), role=role, rarity=row.get("rarity"))
-            matches = (item,)
+        runtime_item = bool(resolved_item and (resolved_item.get("provisional")
+                            or any(key.startswith("identity_runtime_") for key in resolved_item)))
+        if runtime_item:
+            resolution = NameMatch((resolved_item,), "runtime_resolved_item", 1.)
+            matches, item = resolution.items, resolved_item
+        else:
+            resolution = match_name(row.get("name", ""), self.names, role=role or None,
+                                    rarity=row.get("rarity"), preferred=self.local_names, party_bound=True)
+            matches = resolution.items
+            item = matches[0] if len(matches) == 1 else None
+            if item is None and self.tracker is not None and role in getattr(self.tracker, "local_roles", {}):
+                item = self.tracker.identify(row.get("name", ""), role=role, rarity=row.get("rarity"))
+                matches = (item,)
+        runtime_status = resolved_item.get("identity_runtime_status") if resolved_item is not None else None
+        runtime_unconfirmed = runtime_item and runtime_status != "confirmed"
+        if runtime_unconfirmed:
+            item = None
         resolved_role = item["role"] if item else role or None
         core = row.get("rarity") == "core"
         before, after = row.get("old_level"), row.get("new_level")
@@ -555,8 +568,8 @@ class SamplingCollector:
                    target_level=item["target_level"] if item else None,
                    identity_basis=(item.get("identity_basis") or resolution.method + ("_and_role" if role else "_unique_in_party")) if item else "unresolved",
                    identity_name=(item.get(catalog_name_field(self.language)) if item else None),
-                   identity_similarity=resolution.similarity,
-                   identity_inferred=bool(item and resolution.method == "closest_name" and not validated),
+                   identity_similarity=None if runtime_item else resolution.similarity,
+                   identity_inferred=runtime_unconfirmed or bool(item and resolution.method == "closest_name" and not validated),
                    identity_match_validated=validated,
                    identity_matched_alias=resolution.matched_alias or None,
                    identity_runner_up_similarity=resolution.runner_up_similarity,
@@ -574,6 +587,9 @@ class SamplingCollector:
                    level_delta=after-before if after is not None and before is not None else None,
                    is_new=before == 0 if before is not None else None,
                    level_basis="Maa_core_0_to_1_convention" if core else "card_level_OCR")
+        if runtime_status is not None:
+            row.update(identity_runtime_status=runtime_status,
+                       identity_runtime_basis=resolved_item.get("identity_runtime_basis"))
         return row
 
     @contextmanager
@@ -873,7 +889,9 @@ class SamplingCollector:
             name_roi, level_roi = adjusted(name_roi), adjusted(level_roi)
             name = read.matching_within(name_node, name_roi) if name_roi else names[slot:slot+1]
             level = read.matching_within(level_nodes, level_roi) if level_roi else levels[slot:slot+1]
-            p = self.potential(potential, name_readings=name)
+            resolved_items = getattr(data, "resolved_items", None)
+            p = self.potential(potential, name_readings=name,
+                               resolved_item=resolved_items[slot] if resolved_items else None)
             candidates.append(p)
             errors = []
             if identity_key(p) is None:
@@ -953,8 +971,7 @@ class SamplingCollector:
             return
         page = self.reward["page"]
         observed = next((p for p in page["candidates"] if p["slot"] == potential.index), {})
-        selected = dict(observed, **self.potential(potential))
-        self._reuse_identity_evidence(selected, observed)
+        selected = dict(observed)
         self.pending_selection = dict(offer_id=offer_id, operation_id=operation_id,
             reward_chain_id=self.reward["reward_chain_id"], selected=selected,
             source_type=self.reward["source"], source_raw=self.reward["source"],

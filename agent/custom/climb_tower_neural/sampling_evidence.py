@@ -123,7 +123,11 @@ class ObservedInventory:
 
     def initialize_bag_inventory(self, rows):
         self.items, self.anonymous = {}, Counter()
+        unresolved = []
         for row in rows:
+            if row.get("provisional") or row.get("identity_inferred"):
+                row = dict(row, identity_inferred=True, identity_confirmed=False)
+                unresolved.append(identity_key(row))
             identity = identity_key(row)
             kind = row["rarity_class"]
             if identity is None or is_anonymous_non_target(row):
@@ -133,6 +137,9 @@ class ObservedInventory:
                     level_after=row["level"], inventory_basis="visible_bag_level_OCR")
         self._audit_levels = {identity: (row["level"], True) for identity, row in self.items.items()}
         self.complete, self.bag_verified, self.issues = True, True, []
+        if unresolved:
+            self.uncertain("bag_identity_unconfirmed", identities=unresolved)
+            self.bag_verified = False
         self.bag_initialized = True
         self.revision += 1
 
@@ -167,9 +174,12 @@ class ObservedInventory:
         if (selected.get("recognition_status") == "unresolved" or selected.get("identity_inferred")
                 or identity is None or level is None or level < 1 or selected.get("role") not in (1, 2, 3)
                 or selected.get("canonical_rarity") not in ("core", "rare", "common") or selected.get("core") is None):
-            if selected.get("identity_inferred") and identity in self._audit_levels:
-                last_level, _ = self._audit_levels[identity]
-                self._audit_levels[identity] = (last_level, False)
+            if selected.get("identity_inferred"):
+                candidates = {identity, *selected.get("id_candidates", ()),
+                              *selected.get("local_identity_candidates", ())}
+                for key in candidates.intersection(self._audit_levels):
+                    last_level, _ = self._audit_levels[key]
+                    self._audit_levels[key] = (last_level, False)
             self.uncertain("selected_potential_unresolved", confirmation_record_id=record_id)
             return False
         row = dict(selected, level=level, confirmation_record_id=record_id,

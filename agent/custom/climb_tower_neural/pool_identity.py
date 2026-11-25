@@ -125,6 +125,22 @@ class IdentityPools:
         self.slots, self.unknown = slots, unknown
         self.inferred = quality
 
+    def reassign_held(self, pi, correct, previous):
+        """Return a guessed holding to the pool in the actual holding's place."""
+        row, unknown = self.slots[pi], self.unknown[pi]
+        if correct in row:
+            index = row.index(correct)
+            row[index] = previous
+            self.inferred[pi][index] = True
+        elif correct in unknown:
+            unknown.remove(correct)
+            unknown.add(previous)
+            for index, key in enumerate(row):
+                if key is None:
+                    self.inferred[pi][index] = True
+        else:
+            raise ValueError("待纠正的潜能身份不在剩余池中")
+
     def remove(self, pi, key):
         row, unknown = self.slots[pi], self.unknown[pi]
         if key in row:

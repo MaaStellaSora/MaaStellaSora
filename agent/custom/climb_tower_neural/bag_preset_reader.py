@@ -23,6 +23,7 @@ from .image_ops import (
 from .interactor import Interactor
 from .ocr_number import assess_amount
 from .paths import data_path
+from .preset_tool import bag_member_character_id, read
 
 from .name_matching import BAG_HEADER_MIN_SCORE, clean_name
 from .note_bag import SKILLS_READY
@@ -227,12 +228,12 @@ class _Card:
             return self.name_evidence["text"], True
         return self.readings[0]["text"] if self.readings else "", False
 
-    def missing(self):
+    def missing(self, *, provisional=False):
         return [name for name, complete in (
             ("rarity", len(self.rarities) == 1),
             ("level", len(self.levels) == 1),
             ("target_level", len(self.targets) == 1),
-            ("name", self.name()[1])) if not complete]
+            ("name", self.name()[1] or (provisional and bool(clean_name(self.name()[0]))))) if not complete]
 
 
 class _Reader:
@@ -244,6 +245,23 @@ class _Reader:
         self.members = []
         self.display_conditions = {}
         self.missing = []
+        self.catalog = read(data_path("potential_name_catalog.json"))
+        self.catalog["characters"] = read(data_path("character_name_catalog.json"))["characters"]
+
+    def _known_member(self, member):
+        role = next(index for index, item in enumerate(self.members, 1) if item is member)
+        observed = dict(role=role, name=member.get("name", ""), cards=[
+            dict(name=card.name()[0], name_confirmed=card.name()[1], rarity_class=card.rarity)
+            for card in member["cards"]])
+        # Crop OCR can add a decisive character vote without advancing the frame.
+        if member.get("known_observed") == observed:
+            return member["known_member"]
+        member["known_member"] = bag_member_character_id(observed, self.language, self.catalog) is not None
+        member["known_observed"] = observed
+        return member["known_member"]
+
+    def _card_missing(self, member, card):
+        return card.missing(provisional=bool(clean_name(member.get("name"))) and not self._known_member(member))
 
     def screenshot(self):
         return self._record_frame(Interactor.capture(self.context))
@@ -478,12 +496,24 @@ class _Reader:
                 member["obtained_count"] = totals.pop()
             else:
                 missing.append(f"member@{position}:obtained_count")
+        # Collect the page's raw titles before classifying its member. A weak
+        # header can still be recovered by distinct core/rare card-name votes.
+        for member, card, _, box in self._visible_cards():
+            if card.name()[1]:
+                continue
+            left, top, _, _ = box
+            name_box = (left + 3, top + 108, 112, 39)
+            rows = [row for row in texts if _inside(row, name_box) and row["score"] >= .6]
+            self._add_name(card, rows, name_box, "page")
+            a, b, w, h = name_box
+            card.crop = image[b:b + h, a:a + w].copy()
+            card.crop_box, card.crop_frame = list(name_box), self.frame
         thumbs = _matches(self.context, THUMB_NODE, image, LIST_BOX, .7)
         for member, card, index, box in self._visible_cards():
             if self.context.tasker.stopping:
                 return ["task_stopped"]
             visible += 1
-            if not card.missing():
+            if not self._card_missing(member, card):
                 continue
             left, top, _, _ = box
             rarity_evidence = None
@@ -536,16 +566,10 @@ class _Reader:
                 thumb_readings=thumb, target_readings=target_raw,
                 rarity_class=rarity, rarity_basis="bag_card_background_color",
                 rarity_color_evidence=rarity_evidence))
-            if not card.name()[1]:
-                name_box = (left + 3, top + 108, 112, 39)
-                rows = [row for row in texts if _inside(row, name_box) and row["score"] >= .6]
-                self._add_name(card, rows, name_box, "page")
-                a, b, w, h = name_box
-                card.crop = image[b:b + h, a:a + w].copy()
-                card.crop_box, card.crop_frame = list(name_box), self.frame
+            if not card.name()[1] and (self._known_member(member) or not clean_name(card.name()[0])):
                 self._confirm_name(card)
             missing.extend(f"member@{member['position']}:card{index}:{field}"
-                           for field in card.missing())
+                           for field in self._card_missing(member, card))
         if not visible:
             missing.append("visible_card_layout")
         self.missing = missing
@@ -575,7 +599,7 @@ class _Reader:
             if len(self.missing) == 1 and self.missing[0].endswith(":name"):
                 for member in self.members:
                     for card in member["cards"]:
-                        if card.crop_frame == self.frame and card.missing() == ["name"]:
+                        if card.crop_frame == self.frame and self._card_missing(member, card) == ["name"]:
                             detail = self._read_detail_name(last_frame, card)
                             if detail is not None or self.context.tasker.stopping:
                                 return detail
@@ -785,6 +809,8 @@ class _Reader:
     def finish_names(self):
         for member in self.members:
             for card in member["cards"]:
+                if not self._known_member(member):
+                    continue
                 if self.context.tasker.stopping:
                     raise ValueError("任务已停止")
                 if card.crop is None:
@@ -792,6 +818,9 @@ class _Reader:
                 self._confirm_name(card)
 
     def result(self):
+        # Later rows can identify a known character after its first titles
+        # scrolled away. Revisit saved crops once before the strict name gate.
+        self.finish_names()
         party = []
         for role, member in enumerate(self.members, 1):
             cards = []
@@ -803,7 +832,7 @@ class _Reader:
                 name, confirmed = card.name()
                 target = next(iter(card.targets))
                 level = next(iter(card.levels))
-                if not confirmed:
+                if not confirmed and (self._known_member(member) or not clean_name(name)):
                     raise ValueError(f"背包角色{role}卡片{card.index + 1}完整名称未确认")
                 cards.append(dict(name=name, rarity_class=card.rarity, target_level=target,
                     level=level, name_confirmed=confirmed,
@@ -838,7 +867,7 @@ def read_bag_party(context, language, capture=None):
         if image is None:
             return None
         if len(reader.members) == 3 and all(
-                not card.missing()
+                not reader._card_missing(member, card)
                 for member in reader.members for card in member["cards"]):
             break
         reader.scroll()

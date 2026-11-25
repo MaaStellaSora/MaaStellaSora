@@ -27,6 +27,8 @@ NAME_NODE = "星塔_神经网络_潜能_识别潜能名称"
 
 @dataclass(slots=True)
 class NeuralPotentialContext(PotentialContext):
+    resolved_items: tuple = ()
+
     def __post_init__(self):
         layouts = deepcopy(self.params.potential_layouts)
         top, height = RULES["level_band"]

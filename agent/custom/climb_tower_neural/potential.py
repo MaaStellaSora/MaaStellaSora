@@ -12,6 +12,7 @@ from .observation import PotentialObservationIncomplete, potential_levels_valid
 from .value_model import Action, sim
 from .ui_flow import read_until, wait_for
 from .pages import BAG_RETURN_PAGES, BY_NAME, classify
+from .provisional_cards import CardReading, matches_target
 from .potential_reading import NeuralPotentialContext as PotentialContext
 from utils import logger as logger_module
 
@@ -38,6 +39,8 @@ class PotentialTakePage:
     selected_index: int = -1
     button: list | None = None
     visible: bool = False
+    identity_observed: bool = True
+    visible_offer: str | None = None
 
 
 def _card_signature(item, rarity, old_level, new_level):
@@ -64,10 +67,181 @@ def _read_recommendations(screen, potentials):
     return boxes
 
 
+def _same_badge(first, second):
+    return (first.recommended == second.recommended
+            and (first.recommended_level == second.recommended_level
+                 or min(first.recommended_level, second.recommended_level) < 0))
+
+
+def _common_roles(candidates):
+    return set.intersection(*({item["role"] for item in items} for items in candidates))
+
+
+def _matching_portraits(screen, card, offset, portraits, roles=None):
+    x, y, width, height = _trekker_roi(card, offset)
+    roi = [x - 15, y - 15, width + 30, height + 30]
+    return {role for role, image in portraits.items()
+            if (roles is None or role in roles) and screen.match_trekker(image, roi)}
+
+
+def _filter_portrait_roles(screen, tracker, potentials, candidates, selected_offset, *, portraits=None):
+    if portraits is None:
+        portraits = {role: trekker.image for role, trekker in tracker.trekkers.items() if trekker.image.size}
+    for potential, items in zip(potentials, candidates):
+        roles = {item["role"] for item in items}
+        if len(roles) < 2 or not roles.intersection(portraits):
+            continue
+        matched = _matching_portraits(screen, potential, selected_offset, portraits, roles)
+        if len(matched) == 1:
+            items[:] = [item for item in items if item["role"] in matched]
+
+
+def _recover_held_prefix(screen, tracker, card, offset, portraits, pending_level):
+    """Recover a known teammate's truncated title only within its portrait and holdings."""
+    roles = _matching_portraits(screen, card, offset, portraits)
+    if len(roles) != 1 or tracker.provisional_items[0]["role"] in roles:
+        return None
+    prefix = clean_name(card.name)
+    recovered = {}
+    for name, items in tracker.local_names.items():
+        if len(prefix) < 2 or not name.startswith(prefix):
+            continue
+        for item in items:
+            key = item["role"], item["identity"]
+            if (item["role"] in roles and item["rarity_class"] == card.rarity
+                    and matches_target(card.recommended_level, item["target_level"])
+                    and (tracker.identity_levels.get(key, 0) == card.old_level or pending_level == (key, card.old_level))):
+                recovered[key] = item
+    if len(recovered) != 1:
+        raise PotentialObservationIncomplete("潜能名称尚未对应已识别角色头像，等待下一帧识别")
+    return dict(next(iter(recovered.values())), identity_runtime_status="inferred",
+                identity_runtime_basis="held_portrait_name_prefix")
+
+
+def _bind_local_slots(screen, tracker, potentials, candidates, selected_offset, *, single_role, pending,
+                      ignore_recommendations=False):
+    observed = [CardReading(p.name, p.rarity, p.recommended_level, None if p.core else p.old_level)
+                for p in potentials]
+    readings = ([CardReading(r.name, r.rarity_class, None, r.old_level) for r in observed]
+                if ignore_recommendations else observed)
+    pending_level = None
+    if pending is not None:
+        identity, role, _, _, level = pending.page_signature[pending.potential.index]
+        pending_level = (role, identity), level
+    # Catalogue uniqueness is only partial when a teammate uses bag slots.
+    # Keep exact local names in the same candidate set until role, held level
+    # and portraits have disambiguated them, including mixed enhancements.
+    for items, reading in zip(candidates, readings):
+        if not items:
+            continue
+        shared = tracker.provisional_matcher.name_candidates(
+            tracker.provisional_items, reading.name, reading.rarity_class)
+        if not shared:
+            continue
+        binding = tracker.provisional_matcher.resolve_page([reading], [[]], tracker.provisional_items,
+            tracker.identity_levels, pending_level=pending_level)[0]
+        for item in shared:
+            confirmed = not ignore_recommendations and binding.item is item and not binding.estimated
+            items.append(dict(item, identity_runtime_status="confirmed" if confirmed else "inferred",
+                              identity_runtime_basis="provisional_name"))
+    for i, (items, reading) in enumerate(zip(candidates, readings)):
+        candidates[i] = [item for item in items
+                         if (matches_target(reading.target_level, item["target_level"])
+                             or item in tracker.local_names.get(clean_name(reading.name), ())
+                             and len(items) == 1)
+                         and (reading.old_level is None or reading.old_level < 0
+                              or tracker.identity_levels.get((item["role"], item["identity"]), 0) == reading.old_level
+                              or pending_level == ((item["role"], item["identity"]), reading.old_level))]
+    if not single_role:
+        portraits = {role: trekker.image for role, trekker in tracker.trekkers.items() if trekker.image.size}
+        for card, items in zip(potentials, candidates):
+            if not items and not card.core and card.old_level > 0 and portraits:
+                recovered = _recover_held_prefix(screen, tracker, card, selected_offset, portraits, pending_level)
+                if recovered:
+                    items.append(recovered)
+    if all(candidates) and (not single_role or _common_roles(candidates)):
+        return
+    if single_role:
+        local_page_supported = all(
+            not any(item in tracker.local_names.get(clean_name(p.name), ()) for item in items)
+            or tracker.provisional_matcher.name_candidates(tracker.provisional_items, p.name, p.rarity)
+            for p, items in zip(potentials, candidates))
+        if not local_page_supported:
+            local_role = tracker.provisional_items[0]["role"]
+            known_roles = {item["role"] for items in candidates for item in items
+                           if item["role"] != local_role}
+            if known_roles:
+                known_support = max(sum(any(item["role"] == role for item in items)
+                                        for items in candidates) for role in known_roles)
+                local_support = sum(any(
+                    matches_target(reading.target_level, item["target_level"])
+                    and (reading.old_level is None or reading.old_level < 0
+                         or tracker.identity_levels.get((local_role, item["identity"]), 0) == reading.old_level
+                         or pending_level == ((local_role, item["identity"]), reading.old_level))
+                    for item in tracker.provisional_matcher.name_candidates(
+                        tracker.provisional_items, reading.name, reading.rarity_class))
+                    for reading in readings)
+                local_page_supported = local_support > known_support
+        if local_page_supported:
+            # A catalogue hit with no known local alias can still be a shared
+            # title. Require stronger positive local-name evidence; one unreadable
+            # known-page title supplies none. The solver below checks feasibility.
+            candidates[:] = [[] for _ in potentials]
+    # Resolve shared roles before assigning unnamed local cards: if the
+    # shared card is local, its slot must already be occupied in that assignment.
+    _filter_portrait_roles(screen, tracker, potentials, candidates, selected_offset)
+    levels = tracker.identity_levels
+    matcher = tracker.provisional_matcher
+    transfers = matcher.correct_held_slots(observed, candidates, tracker.provisional_items, levels)
+    if transfers:
+        levels = levels.copy()
+        for index, (previous, correct) in transfers.items():
+            levels[correct] = levels.pop(previous)
+            item = next(item for item in tracker.provisional_items if item["identity"] == correct[1])
+            candidates[index] = [dict(item, identity_runtime_status="confirmed",
+                identity_runtime_basis="provisional_holding_corrected", identity_reassigned_from=previous[1])]
+    fixed = {}
+    preferred = {}
+    returned_to_pool = {correct[1]: previous[1] for previous, correct in transfers.values()}
+    if pending is None:
+        role = tracker.provisional_items[0]["role"]
+        for quality, offset in (("rare", 0), ("common", 1)):
+            indices = [i for i, row in enumerate(readings)
+                       if not candidates[i] and row.rarity_class == quality and row.old_level == 0]
+            pool_index = 2 * (role - 1) + offset
+            slots = tracker.identity_pools.slots[pool_index]
+            if indices and len(indices) == len(slots):
+                # Guessed positions remain useful model state, but a clear
+                # later page must be able to correct their identities.
+                for i, key, inferred in zip(indices, slots, tracker.identity_pools.inferred[pool_index]):
+                    if key in returned_to_pool:
+                        preferred[i] = returned_to_pool[key]
+                    elif key is not None:
+                        (preferred if inferred else fixed)[i] = key
+    bindings = matcher.resolve_page(readings, candidates, tracker.provisional_items,
+        levels, pending_level=pending_level, full_pool_slots=fixed or None,
+        preferred_pool_slots=preferred or None,
+        ribbon_hints=[r.target_level for r in observed] if ignore_recommendations else None)
+    for i, binding in enumerate(bindings):
+        if not candidates[i] and binding.item and binding.item.get("provisional"):
+            candidates[i] = [dict(binding.item,
+                identity_runtime_status="inferred" if binding.estimated or ignore_recommendations else "confirmed",
+                identity_runtime_basis="provisional_recommendation_fallback" if ignore_recommendations else binding.method)]
+
+
 def _resolve_potential_items(screen, tracker, potentials, selected_offset, *, single_role=False, pending=None):
     """Resolve shared names from this page, held levels and this run's portraits."""
     candidates = [tracker.name_candidates(p.name, rarity=p.rarity) for p in potentials]
-    if all(len(items) == 1 for items in candidates):
+    if tracker.provisional_items:
+        named = candidates
+        for ignore_recommendations in (False, True):
+            candidates = [items.copy() for items in named]
+            _bind_local_slots(screen, tracker, potentials, candidates, selected_offset,
+                              single_role=single_role, pending=pending, ignore_recommendations=ignore_recommendations)
+            if all(candidates) and (not single_role or _common_roles(candidates)):
+                break
+    if all(len(items) == 1 for items in candidates) and (not single_role or
+            len({items[0]["role"] for items in candidates}) == 1):
         return [items[0] for items in candidates]
 
     def held_levels(item):
@@ -83,7 +257,7 @@ def _resolve_potential_items(screen, tracker, potentials, selected_offset, *, si
 
     def same_role():
         if single_role:
-            roles = set.intersection(*({item["role"] for item in items} for items in candidates))
+            roles = _common_roles(candidates)
             for items in candidates:
                 items[:] = [item for item in items if item["role"] in roles]
         if any(not items for items in candidates):
@@ -103,22 +277,16 @@ def _resolve_potential_items(screen, tracker, potentials, selected_offset, *, si
                 role = items[0]["role"]
                 if role not in portraits:
                     portraits[role] = screen.crop_screenshot(_trekker_roi(potential, selected_offset)).copy()
-        for potential, items in zip(potentials, candidates):
-            if len(items) == 1:
-                continue
-            x, y, width, height = _trekker_roi(potential, selected_offset)
-            roi = [x - 15, y - 15, width + 30, height + 30]
-            roles = {item["role"] for item in items}
-            matched = {role for role in roles if role in portraits and screen.match_trekker(portraits[role], roi)}
-            if len(matched) == 1:
-                items[:] = [item for item in items if item["role"] in matched]
-                same_role()
+        _filter_portrait_roles(screen, tracker, potentials, candidates, selected_offset, portraits=portraits)
+        same_role()
     if any(len(items) != 1 for items in candidates):
         raise PotentialObservationIncomplete("本帧同名潜能的角色尚未确认")
     return [items[0] for items in candidates]
 
 
 def _needs_trekker_portrait(tracker, role):
+    if tracker.provisional_items:
+        return True
     return any(item["role"] == role and any(other["role"] != role
         and other["rarity_class"] == item["rarity_class"] for other in items)
         for items in tracker.local_names.values() for item in items)
@@ -197,7 +365,13 @@ def read_potential_take_page(screen, pending, *, buttons=None, reuse_offer_level
     single_role = (before_take and not core and pending.data is not None
                    and pending.data.params.potential_source != "enhance")
     identities = None
-    if reuse_offer_levels:
+    if pending.tracker.provisional_items:
+        try:
+            _read_recommendations(screen, potentials)
+        except PotentialObservationIncomplete:
+            return page
+    if reuse_offer_levels and not any(
+            item.get("provisional") for item in getattr(pending.data, "resolved_items", ())):
         try:
             identities = _resolve_potential_items(screen, pending.tracker, potentials,
                 pending.selected_offset, single_role=single_role, pending=pending)
@@ -224,14 +398,46 @@ def read_potential_take_page(screen, pending, *, buttons=None, reuse_offer_level
                 if not 0 <= old < new <= MAX_POTENTIAL_LEVEL:
                     return page
         potential.old_level, potential.new_level = old, new
+    original_items = getattr(pending.data, "resolved_items", ())
+    has_estimates = any(item.get("identity_runtime_status") == "inferred" for item in original_items)
+    if has_estimates:
+        old_values = tuple(card[2:] for card in pending.page_signature)
+        values = tuple((p.rarity, p.old_level, p.new_level) for p in potentials)
+        if values != old_values:
+            page.visible_offer = "changed"
+        elif all(clean_name(p.name) == clean_name(original.name) and _same_badge(p, original)
+                 for p, original in zip(potentials, pending.data.potentials)):
+            page.visible_offer = "same"
+    if before_take and has_estimates:
+        # A guess belongs to the accepted offer. OCR changes while selecting
+        # must not permute its slots or fabricate a different reward page.
+        if len(original_items) != len(potentials) or any(
+                (p.rarity, p.old_level, p.new_level) != card[2:]
+                or (clean_name(p.name) != clean_name(original.name) and not _same_badge(p, original)
+                    and not matches_target(p.recommended_level, item["target_level"]))
+                for p, card, item, original in zip(potentials, pending.page_signature,
+                                                  original_items, pending.data.potentials)):
+            return page
+        identities = original_items
     if identities is None:
         try:
             identities = _resolve_potential_items(screen, pending.tracker, potentials,
                 pending.selected_offset, single_role=single_role, pending=pending)
         except PotentialObservationIncomplete:
             return page
+    # A known following reward can prove a transition despite guesses on the
+    # original offer. A clearer reading that merely rebinds its local slots
+    # cannot: compare confirmed slots, or official identities of another role.
+    page.identity_observed = not any(
+        item.get("identity_runtime_status") == "inferred" for item in identities)
     page.signature = tuple(_card_signature(item, p.rarity, p.old_level, p.new_level)
                            for p, item in zip(potentials, identities))
+    if has_estimates:
+        page.identity_observed = page.identity_observed and any(
+            current != original and (
+                item.get("identity_runtime_status") != "inferred"
+                or (isinstance(current[0], int) and current[1] != original[1]))
+            for current, original, item in zip(page.signature, pending.page_signature, original_items))
     return page
 
 
@@ -270,9 +476,13 @@ def _confirm_potential_take(screen, pending, logger, *, timeout, max_clicks, tak
         page_left = page_left or absent_frames >= 2
         absent_frames = 0
         page = read_potential_take_page(screen, pending, buttons=buttons)
+        if page.visible_offer == "changed":
+            return "page", page.signature or "changed_card_values"
         if page.signature is not None:
             incomplete_frames = 0
-            if page.signature != pending.page_signature:
+            if page_left and not page.identity_observed:
+                return "next_take", page.selected_index
+            if page.identity_observed and page.signature != pending.page_signature:
                 return "page", page.signature
             page_left = False
         elif page_left and page.selected_index >= 0:
@@ -292,7 +502,8 @@ def _confirm_potential_take(screen, pending, logger, *, timeout, max_clicks, tak
         if len(buttons) != 1:
             return False
         page = read_potential_take_page(screen, pending, buttons=buttons)
-        same = page.signature == pending.page_signature and page.selected_index == pending.potential.index
+        same = ((page.identity_observed or page.visible_offer == "same")
+                and page.signature == pending.page_signature and page.selected_index == pending.potential.index)
         if not same:
             return False
         logger.debug("Retrying potential %(name)s (attempt %(attempt)s)", {
@@ -415,7 +626,7 @@ class ModelPotentialHandler(NeuralRecommendationHandler):
             return True
         tracker = self.runtime.require_tracker()
         pending = PendingPotentialTake(potential, self.data.params.selected_potential_offset,
-            self.data.params.potential_layouts, tracker, self._page_signature(tracker), data=self.data)
+            self.data.params.potential_layouts, tracker, self._page_signature(), data=self.data)
 
         def selected(image):
             self.screen.image = image
@@ -486,22 +697,31 @@ class ModelPotentialHandler(NeuralRecommendationHandler):
         keys = [(item["role"], item["identity"]) for item in identities]
         if len(set(keys)) != len(keys):
             raise PotentialObservationIncomplete("本帧候选包含重复潜能身份，等待下一帧识别")
-        if not self.data.core_potential and any(tracker.identity_levels.get(key, 0) != potential.old_level
-                for key, potential in zip(keys, self.data.potentials)):
+        if not self.data.core_potential and any(tracker.identity_levels.get(
+                (item["role"], item.get("identity_reassigned_from", item["identity"])), 0) != potential.old_level
+                for item, potential in zip(identities, self.data.potentials)):
             raise PotentialObservationIncomplete("本帧潜能等级与已确认持有尚未一致，等待下一帧识别")
         for potential, item in zip(self.data.potentials, identities):
             self._set_trekker(tracker, potential, item["role"])
+            if item.get("provisional"):
+                tracker.provisional_matcher.remember(potential.name, item,
+                    estimated=item.get("identity_runtime_status") == "inferred")
+        self.data.resolved_items = tuple(identities)
 
     def _set_trekker(self, tracker, potential, role):
         if role not in tracker.trekkers:
-            image = (self.screen.crop_screenshot(_trekker_roi(potential, self.data.params.selected_potential_offset)).copy()
-                     if _needs_trekker_portrait(tracker, role) else np.array([]))
-            tracker.trekkers[role] = Trekker(index=role - 1, image=image, is_main=role == 1)
-        potential.trekker = tracker.trekkers[role]
+            tracker.trekkers[role] = Trekker(index=role - 1, image=np.array([]), is_main=role == 1)
+        trekker = tracker.trekkers[role]
+        # A local slot may learn a shared-name alias only on a later page.
+        # Keep each resolved role's portrait now, while its identity is clear.
+        if not trekker.image.size and _needs_trekker_portrait(tracker, role):
+            trekker.image = self.screen.crop_screenshot(
+                _trekker_roi(potential, self.data.params.selected_potential_offset)).copy()
+        potential.trekker = trekker
 
     def choose_potential(self):
         tracker = self.runtime.require_tracker()
-        signature = self._page_signature(tracker)
+        signature = self._page_signature()
         page_key = self._pending_page_key(signature)
         pending = getattr(self.runtime, "pending_take", None)
         if pending is not None and pending.tracker is tracker and pending.page_key == page_key:
@@ -523,8 +743,7 @@ class ModelPotentialHandler(NeuralRecommendationHandler):
             decision_context = self.runtime.decision_context("core", {
                 "candidates": sim.to_jsonable(candidates),
                 "visible_cards": [dict(ui_index=i, name=p.name, role=p.trekker.index + 1,
-                                       target_level=tracker.identify(p.name, role=p.trekker.index + 1,
-                                                                      rarity=p.rarity)["target_level"])
+                                       target_level=self.data.resolved_items[i-1]["target_level"])
                                   for i, p in enumerate(self.data.potentials, 1)],
             })
             action = self.runtime.model.prepare_core(tracker.state, candidates, decision_context)
@@ -554,17 +773,16 @@ class ModelPotentialHandler(NeuralRecommendationHandler):
 
     def cache_potential_data(self, potential):
         tracker = self.runtime.require_tracker()
-        signature = self._page_signature(tracker)
+        signature = self._page_signature()
         self.runtime.pending_take = PendingPotentialTake(
             potential, self.data.params.selected_potential_offset,
             self.data.params.potential_layouts, tracker, signature,
             self._pending_page_key(signature), data=self.data,
             evidence={"decision_method": self.decision_method})
 
-    def _page_signature(self, tracker):
-        return tuple(_card_signature(
-            tracker.identify(p.name, role=p.trekker.index + 1, rarity=p.rarity),
-            p.rarity, p.old_level, p.new_level) for p in self.data.potentials)
+    def _page_signature(self):
+        return tuple(_card_signature(item, p.rarity, p.old_level, p.new_level)
+                     for item, p in zip(self.data.resolved_items, self.data.potentials))
 
     def _pending_page_key(self, signature):
         return (self.data.params.potential_source, self.data.core_potential,

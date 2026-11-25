@@ -136,8 +136,6 @@ class Potential(RuntimeCallback, ChoosePotentialRecognition):
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
     def _choose_on_page(self, context, node_name, handler, data, tracker):
-        if handler.wait_for_item_list_gone() is False:
-            raise PotentialObservationIncomplete("潜能页干扰文字未在等待后消失")
         handler.initialize_potentials()
         handler.read_potentials_info()
         potential = handler.choose_potential()
@@ -176,6 +174,7 @@ class PotentialRefresh(RuntimeCallback, CustomAction):
             return True
         handler.screen.context = self.runtime.collector.context(context)
         succeeded = handler.refresh()
+        tracker.state = replace(tracker.state, coins=handler.data.current_coin)
         self.runtime.pending_potential_refresh = (handler, tracker, True) if succeeded else None
         if not succeeded and not context.tasker.stopping:
             self.runtime.stop_model(context, "potential_refresh_unconfirmed", phase="potential_refresh",
@@ -326,6 +325,9 @@ class NoteScene(RuntimeCallback, CustomAction):
 
 
 class NoteEventClick(RuntimeCallback, CustomAction):
+    # Include transient prompts and loading in one budget, without resending the choice.
+    TRANSITION_TIMEOUT = 30.0
+
     def _current_choice(self, context, image, cached):
         if classify(context, image, candidates=BAG_RETURN_PAGES | {"settlement"}) != "event":
             return None
@@ -366,7 +368,7 @@ class NoteEventClick(RuntimeCallback, CustomAction):
         context = self.runtime.collector.context(context)
         tracker = self.runtime.tracker
         cached = tracker.event_page_cache if tracker is not None else None
-        if not cached:
+        if not cached or context.tasker.stopping:
             return False
         restored, inventory_navigation = self.runtime.notes.prepare_event_inventory(context)
         if not restored:
@@ -386,11 +388,15 @@ class NoteEventClick(RuntimeCallback, CustomAction):
             sent = _note_click(context, argv)
         if not sent:
             return False
+
         def observed(image):
             page = classify(context, image, candidates=BAG_RETURN_PAGES | {"settlement"})
             return page if page in (BAG_RETURN_PAGES | {"settlement"}) - {"event"} else None
 
-        if wait_for(context, observed, timeout=5., stable_frames=2) is None:
+        if wait_for(context, observed, timeout=self.TRANSITION_TIMEOUT, stable_frames=2) is None:
+            if not context.tasker.stopping:
+                self.runtime.stop_model(context, "event_transition_unconfirmed", phase="event",
+                    missing=("stable_event_page_transition",), timeout=self.TRANSITION_TIMEOUT)
             return False
         self.runtime.notes.confirm_event_choice()
         self.runtime.collector.event_clicked(dict(evidence, node_name=argv.node_name,

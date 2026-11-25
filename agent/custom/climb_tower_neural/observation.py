@@ -5,7 +5,7 @@ from datetime import datetime
 from fractions import Fraction
 from pathlib import Path
 
-from .critic.rules import MAX_POTENTIAL_LEVEL
+from .critic.rules import MAX_POTENTIAL_LEVEL, shared_enhancement_bonus
 from .decision_log import forecast_rows, log_forecast
 from .language import catalog_name_field, catalog_name_fields
 from .name_matching import clean_name as _clean, identity_key, is_anonymous_non_target, match_name
@@ -403,12 +403,9 @@ class ObservationTracker:
         identities = [(item["role"], item["identity"]) for item in normalized]
         if len(set(identities)) != len(identities):
             raise PotentialObservationIncomplete("同页候选包含重复潜能身份")
-        if not data.core_potential:
-            if source_name != "enhance" and len({item["role"] for item in normalized}) > 1:
-                raise PotentialObservationIncomplete("普通潜能页出现多个角色的候选")
-            if source_name == "enhance" and len({int(p.new_level) - int(p.old_level)
-                    for p in data.potentials if int(p.old_level) < 5}) > 1:
-                raise PotentialObservationIncomplete("强化页候选的共同升级增量冲突")
+        if (not data.core_potential and source_name != "enhance"
+                and len({item["role"] for item in normalized}) > 1):
+            raise PotentialObservationIncomplete("普通潜能页出现多个角色的候选")
         page_key = (source_name, bool(data.core_potential), coins, tuple(
             (item["identity"], int(p.old_level), int(p.new_level))
             for item, p in zip(normalized, data.potentials)))
@@ -505,8 +502,7 @@ class ObservationTracker:
             q = False
         belief = self.state.eBel
         if phase == "ENHANCE_PAGE":
-            observable = [card for card in cards if card[4] < 5]
-            bonus = observable[0][5] - observable[0][4] == 2 if observable else None
+            bonus = shared_enhancement_bonus((card[4], card[5]) for card in cards)
             belief = sim._enhance_posterior(belief, bonus)
         purchase = getattr(self, "pending_shop_purchase", None)
         if source_name in ("drink", "specified_drink") and purchase is not None:

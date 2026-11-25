@@ -37,6 +37,7 @@ _STOP_MESSAGES = {
     "shop_route_unresolved": "$agent.custom.action.climb_tower_neural.route_position_unconfirmed",
     "shop_model_inputs_unconfirmed": "$agent.custom.action.climb_tower_neural.route_position_unconfirmed",
     "shop_action_unconfirmed": "$agent.custom.action.climb_tower_neural.shop_action_failed",
+    "event_transition_unconfirmed": "$agent.custom.action.climb_tower_neural.event_transition_failed",
     "event_observation_incomplete": "$agent.custom.action.climb_tower_neural.event_observation_incomplete",
     "quiz_answer_unmatched": "$agent.custom.action.climb_tower_neural.quiz_answer_unmatched",
     "event_mapping_unavailable": "$agent.custom.action.climb_tower_neural.event_mapping_unavailable",
@@ -197,29 +198,33 @@ class ValueModelRuntime:
                 returned_frame[:] = [None]
             if not self._bag_task(context, "星塔_打开背包界面_agent"):
                 self.bag_returned = self._returned_from_bag(context, page, returned_frame=returned_frame)
-                if not context.tasker.stopping:
-                    self.stop_model(context, "bag_not_opened", phase=page, missing=("confirmed_bag_preset",))
-                return False
-            if preset is None:
-                try:
-                    party = read_bag_party(context, language)
-                    if context.tasker.stopping:
-                        return False
-                    preset = compile_bag_preset(party, language,
-                        read(data_path("potential_name_catalog.json", module_root=self.root)))
-                except (ValueError, RuntimeError, OSError) as exc:
-                    if not context.tasker.stopping:
-                        self.stop_model(context, "bag_preset_unconfirmed", phase="bag",
-                            missing=("confirmed_bag_preset",), observation_error=str(exc))
+                if context.tasker.stopping:
                     return False
-            try:
-                if not context.tasker.stopping and self.notes.observing:
-                    self.notes.read_bag_setup(context)
-            except (ValueError, RuntimeError, OSError) as exc:
-                self.collector.emit("note_bag_setup_observed", complete=False, reason=str(exc))
-            finally:
-                if not context.tasker.stopping and self._bag_task(context, "星塔_关闭背包界面_agent"):
-                    self.bag_returned = self._returned_from_bag(context, page, returned_frame=returned_frame)
+                if preset is None:
+                    self.stop_model(context, "bag_not_opened", phase=page, missing=("confirmed_bag_preset",))
+                    return False
+                self.collector.emit("note_bag_setup_observed", complete=False, reason="bag_not_opened")
+            else:
+                if preset is None:
+                    try:
+                        party = read_bag_party(context, language)
+                        if context.tasker.stopping:
+                            return False
+                        preset = compile_bag_preset(party, language,
+                            read(data_path("potential_name_catalog.json", module_root=self.root)))
+                    except (ValueError, RuntimeError, OSError) as exc:
+                        if not context.tasker.stopping:
+                            self.stop_model(context, "bag_preset_unconfirmed", phase="bag",
+                                missing=("confirmed_bag_preset",), observation_error=str(exc))
+                        return False
+                try:
+                    if not context.tasker.stopping and self.notes.observing:
+                        self.notes.read_bag_setup(context)
+                except (ValueError, RuntimeError, OSError) as exc:
+                    self.collector.emit("note_bag_setup_observed", complete=False, reason=str(exc))
+                finally:
+                    if not context.tasker.stopping and self._bag_task(context, "星塔_关闭背包界面_agent"):
+                        self.bag_returned = self._returned_from_bag(context, page, returned_frame=returned_frame)
             if not self.bag_returned:
                 if not context.tasker.stopping:
                     self.stop_model(context, "bag_return_unconfirmed", phase=page,

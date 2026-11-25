@@ -186,6 +186,7 @@
     "agent.custom.action.climb_tower_neural.action_select": "Potential {index}",
     "agent.custom.action.climb_tower_neural.action_skip_event": "Skip the event",
     "agent.custom.action.climb_tower_neural.decision_forecast": "[Neural Network] Forecast: {expected_total:.2f}{options}",
+    "agent.custom.action.climb_tower_neural.event_transition_failed": "[Neural Network] Timed out waiting for the event choice transition. Stopped.",
     "agent.custom.action.climb_tower_neural.model_observation_failed": "[Neural Network] Run state could not be confirmed. Stopped.",
     "agent.custom.action.climb_tower_neural.model_disabled": "[Neural Network] This feature is disabled. Stopped.",
     "agent.custom.action.climb_tower_neural.bag_open_failed": "[Neural Network] Could not open the bag. Stopped.",

@@ -338,15 +338,6 @@ class NeuralRecommendationHandler(ChoosePotentialHandler):
     """Reuse stateless current-page rules and neural navigation/confirmation."""
     _update_recommended_potentials = RecommendationHandler._update_recommended_potentials
 
-    def wait_for_item_list_gone(self):
-        if not self.screen.check_item_list_visibility():
-            return True
-        result = self.screen.context.run_task("星塔_神经网络_潜能_等待干扰文字消失")
-        if not result or not result.status.succeeded:
-            return False
-        self.screen.update_image()
-        return True
-
     def pick(self, potential):
         return potential.selected or self.screen.select_potential(potential)
 
@@ -359,6 +350,13 @@ class NeuralRecommendationHandler(ChoosePotentialHandler):
             matched[index] = box
         return matched
 
+
+class ModelPotentialHandler(NeuralRecommendationHandler):
+    def __init__(self, interactor, data, runtime):
+        super().__init__(interactor, data)
+        self.runtime = runtime
+        self.decision_method = "official_policy"
+
     def refresh(self):
         if self.screen.context.tasker.stopping:
             return False
@@ -366,29 +364,42 @@ class NeuralRecommendationHandler(ChoosePotentialHandler):
         expected_coin = old_coin - self.data.refresh_cost
         if not self.screen.refresh():
             return False
+        wallet_changed = False
+        last_coin = None
 
         def observed(image):
+            nonlocal wallet_changed, last_coin
             self.screen.image = image
             coin = self.screen.get_current_coin()
+            last_coin = coin
+            if coin >= 0 and coin != old_coin:
+                wallet_changed = True
             if coin != expected_coin:
                 return None
+            # A paid refresh changes the wallet even if its cards never finish loading.
+            self.data.current_coin = coin
             rarities = self.screen.get_potentials_rarity(self.data.core_potential)
             return (coin, rarities) if len(rarities) == self.data.potential_count else None
 
         result = read_until(self.screen.context, observed, initial_image=self.screen.image)
+        if (result is None and not self.screen.context.tasker.stopping and not wallet_changed
+                and self.data.refresh_cost > 0):
+            image = self.screen.screenshot()
+            if image is None or self.screen.context.tasker.stopping:
+                return False
+            result = observed(image)
+            if last_coin == old_coin and not self.screen.context.tasker.stopping:
+                logger.debug("Retrying paid potential refresh after unchanged wallet: %s", old_coin)
+                if self.screen.refresh():
+                    result = read_until(self.screen.context, observed, initial_image=self.screen.image)
+            elif result is None and wallet_changed:
+                result = read_until(self.screen.context, observed)
         if result is not None:
             self.data.current_coin, self.data.potential_rarities = result
             self.data.refresh_count += 1
             return True
         logger.debug("Potential refresh remains unconfirmed: expected=%s", expected_coin)
         return False
-
-
-class ModelPotentialHandler(NeuralRecommendationHandler):
-    def __init__(self, interactor, data, runtime):
-        super().__init__(interactor, data)
-        self.runtime = runtime
-        self.decision_method = "official_policy"
 
     def pick(self, potential):
         if self.screen.context.tasker.stopping:

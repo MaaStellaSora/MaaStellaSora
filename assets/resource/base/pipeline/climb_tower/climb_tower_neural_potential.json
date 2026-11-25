@@ -12,32 +12,6 @@
             "星塔_节点_选择潜能_agent"
         ]
     },
-    "星塔_神经网络_潜能_等待干扰文字消失": {
-        "action": {
-            "type": "DoNothing"
-        },
-        "post_delay": 0,
-        "rate_limit": 100,
-        "timeout": 10000,
-        "next": [
-            "星塔_神经网络_潜能_干扰文字已消失"
-        ]
-    },
-    "星塔_神经网络_潜能_干扰文字已消失": {
-        "inverse": true,
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "星塔_节点_选择潜能_检测干扰文字_agent"
-                ]
-            }
-        },
-        "action": {
-            "type": "DoNothing"
-        },
-        "post_delay": 0
-    },
     "星塔_神经网络_潜能_定位等级上升图标": {
         "recognition": {
             "type": "TemplateMatch",

@@ -228,6 +228,51 @@ class TowerNeuralResearchDataTests(unittest.TestCase):
         self.assertEqual([row["basis"] for row in compact_pools], ["game_UI_observation"] * 2)
         collector.logger.error.assert_not_called()
 
+    def test_enhancement_draw_keeps_observed_levels_and_separates_shared_bonus_statistics(self):
+        for transitions, bonus in (
+            ([(1, 2), (2, 4), (3, 5)], None),
+            ([(1, 3), (5, 6)], True),
+            ([(1, 2), (5, 6)], False),
+            ([(5, 6)], None),
+        ):
+            with self.subTest(transitions=transitions):
+                collector = sampling_data.SamplingCollector(self.directory, Mock())
+                collector.preset = dict(party=[dict(role=1, character_id=1, targets=[dict(
+                    potential_id=101, rarity_class="rare", target_level=6)])])
+                collector.target_vector = [6]
+                collector.start_intent("start")
+                collector.confirm_start("entered")
+                cards = [SimpleNamespace(index=i, rarity="rare", selected=False)
+                         for i in range(len(transitions))]
+                rows = [candidate(slot=i, name=f"potential {i}", potential_id=101+i,
+                    level_before=old, offered_level_after=new, level_after=new, level_delta=new-old,
+                    rarity="rare", core=False, is_new=False, identity_name_input_complete=True)
+                    for i, (old, new) in enumerate(transitions)]
+                for row in rows:
+                    collector.inventory.confirm(dict(row, level_before=0, level_after=row["level_before"]), "initial")
+                data = SimpleNamespace(potentials=cards, current_coin=80, refresh_cost=0, refresh_count=0,
+                    core_potential=False, level_upped=False, params=SimpleNamespace(potential_source="enhance"))
+                read = Mock(read_id="enhancement")
+                read.matching.return_value = []
+                with patch.object(collector, "potential", side_effect=lambda card, **kw: dict(rows[card.index])):
+                    offer_id = collector.observe_offer(data, read)
+                    collector.cache_selection(cards[0], offer_id, "take")
+                    collector.selection_confirmed("potential_page_transition")
+                self.assertEqual(collector.inventory.items[101]["level"], transitions[0][1])
+                path = collector.directory / "runs" / f"{collector.run['run_id']}.jsonl"
+                collector.emit("exploration_end", reason="settlement_saved", completion_observed=True)
+                research_data.import_payload(self.database, research_data.build_payload(path))
+                with closing(sqlite3.connect(self.database)) as connection:
+                    record, quality, usable = connection.execute(
+                        "SELECT r.payload_json,v.quality_status,v.usable_for_draw_statistics "
+                        "FROM records r JOIN potential_draw_validity v USING(record_id) WHERE v.offer_id=?",
+                        (offer_id,)).fetchone()
+                payload = json.loads(record)
+                self.assertEqual((quality, usable), ("valid", 1))
+                self.assertIs(payload["visible_shared_bonus"], bonus)
+                self.assertIs(payload["probability_eligible"], bonus is not None)
+                self.assertEqual([(c["level_before"], c["level_after"]) for c in payload["candidates"]], transitions)
+
     def test_inventory_history_fields_are_independent_snapshots(self):
         inventory = sampling_data.ObservedInventory(full_start=True)
         inventory.uncertain("selected_potential_unresolved", details=dict(values=[1]))

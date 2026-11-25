@@ -5,6 +5,7 @@ from custom.climb_tower.climb_tower_shop.interactor import ShopInteractor as Nat
 
 from ..interactor import Interactor
 from ..ocr_number import assess_amount, decimal_amount
+from .price import payable_amount
 from utils import logger as logger_module
 logger = logger_module.get_logger(__name__)
 
@@ -104,7 +105,6 @@ class ShopInteractor(Interactor):
         """识别当前刷新费用。"""
         return self._read_number(REFRESH_COST_NODE)
 
-    def recognize_item_price(self, roi: list[int]) -> list[str]:
-        """识别商店当前物品价格。"""
-        ocr_results = self._recognize(PRICE_NODE, roi = roi)
-        return [r.text for r in ocr_results]
+    def read_item_price(self, roi, standard_price):
+        """Return the shelf amount and its text box for purchase confirmation."""
+        return payable_amount(self._recognize(PRICE_NODE, roi=roi), roi, standard_price)

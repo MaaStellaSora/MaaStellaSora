@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "agent"))
 from maa.custom_recognition import CustomRecognition
 from custom.climb_tower_neural import agent_callbacks, events
 from custom.climb_tower_neural.event_policy import EventMenu, EventPolicy
+from custom.climb_tower_neural.interactor import FrameObservation
 from custom.climb_tower_neural.value_model import sim
 from test_tower_neural_wallet_state import tracker_at_quiz
 
@@ -98,13 +99,21 @@ class TowerNeuralEventDecisionTests(unittest.TestCase):
         argv.box = result.box
         click = agent_callbacks.NoteEventClick(runtime)
 
-        with patch.object(agent_callbacks, "wait_for", return_value=None):
-            self.assertFalse(click.run(context, argv))
-        self.assertEqual(tracker._event_snapshot(), before)
-        self.assertIsNotNone(tracker.event_page_cache)
-        runtime.collector.event_clicked.assert_not_called()
+        def run_frames(entry, override):
+            self.assertEqual(override[entry]["timeout"], 30000)
+            slot = override["星塔_神经网络_交互_观察"]["recognition"]["param"]["custom_recognition_param"]
+            observer = FrameObservation()
+            # Menu repetitions and an isolated field frame must not confirm or resend a click.
+            for page in ["event"] * 6 + [None, "field", "event", "field"]:
+                frame = SimpleNamespace(image=page, custom_recognition_param=slot)
+                self.assertIsNone(observer.analyze(context, frame))
+                self.assertEqual(tracker._event_snapshot(), before)
+                context.run_action.assert_called_once()
+                runtime.collector.event_clicked.assert_not_called()
+            self.assertIsNotNone(observer.analyze(context, frame))
 
-        with patch.object(agent_callbacks, "wait_for", return_value="field"):
+        context.run_task = run_frames
+        with patch.object(agent_callbacks, "classify", side_effect=lambda ctx, image, **kwargs: image):
             self.assertTrue(click.run(context, argv))
         self.assertEqual(tracker.pending_event, (101, 10101))
         self.assertEqual(tracker.state.coins, 500)
@@ -112,13 +121,54 @@ class TowerNeuralEventDecisionTests(unittest.TestCase):
         runtime.notes.confirm_event_choice.assert_called_once()
         runtime.collector.event_clicked.assert_called_once()
         self.assertFalse(click.run(context, argv))
-        self.assertEqual(context.run_action.call_count, 2)
+        context.run_action.assert_called_once()
 
         # A separately confirmed event with the same menu/wallet is a new
         # decision, even though its visible text matches the previous event.
         events.analyze_model_event(None, context, argv, runtime, reading=menu_read(coins=500))
         self.assertEqual(tracker.model.decide.call_count, 3)
         runtime.stop_model.assert_not_called()
+
+    def test_manual_stop_during_event_transition_leaves_choice_uncommitted(self):
+        tracker, runtime, context, argv = event_fixture()
+        before = tracker._event_snapshot()
+        argv.box = events.analyze_model_event(None, context, argv, runtime, reading=menu_read()).box
+
+        def stop_during_transition(entry, override):
+            context.tasker.stopping = True
+
+        context.run_task = stop_during_transition
+        self.assertFalse(agent_callbacks.NoteEventClick(runtime).run(context, argv))
+        context.run_action.assert_called_once()
+        runtime.notes.confirm_event_choice.assert_not_called()
+        runtime.collector.event_clicked.assert_not_called()
+        self.assertIsNotNone(tracker.event_page_cache)
+        self.assertEqual(tracker._event_snapshot(), before)
+        runtime.stop_model.assert_not_called()
+
+    def test_transition_timeout_stops_without_committing_or_repeating_click(self):
+        tracker, runtime, context, argv = event_fixture()
+        before = tracker._event_snapshot()
+        argv.box = events.analyze_model_event(None, context, argv, runtime, reading=menu_read()).box
+
+        def unresolved_transition(entry, override):
+            self.assertEqual(override[entry]["timeout"], 30000)
+            slot = override["星塔_神经网络_交互_观察"]["recognition"]["param"]["custom_recognition_param"]
+            observer = FrameObservation()
+            for page in ("event", None, "note_detail", "purchase_confirm", "event"):
+                frame = SimpleNamespace(image=page, custom_recognition_param=slot)
+                self.assertIsNone(observer.analyze(context, frame))
+
+        context.run_task = unresolved_transition
+        with patch.object(agent_callbacks, "classify", side_effect=lambda ctx, image, **kwargs: image):
+            self.assertFalse(agent_callbacks.NoteEventClick(runtime).run(context, argv))
+        context.run_action.assert_called_once()
+        runtime.notes.confirm_event_choice.assert_not_called()
+        runtime.collector.event_clicked.assert_not_called()
+        runtime.stop_model.assert_called_once_with(context, "event_transition_unconfirmed", phase="event",
+            missing=("stable_event_page_transition",), timeout=30.0)
+        self.assertIsNotNone(tracker.event_page_cache)
+        self.assertEqual(tracker._event_snapshot(), before)
 
     def test_quiz_without_wallet_keeps_matched_official_answer_and_pending_transaction(self):
         tracker, runtime, context, argv = event_fixture()

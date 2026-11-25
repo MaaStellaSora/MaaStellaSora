@@ -15,7 +15,7 @@ import threading
 import time
 import uuid
 
-from .critic.rules import MAX_POTENTIAL_LEVEL
+from .critic.rules import MAX_POTENTIAL_LEVEL, shared_enhancement_bonus
 from .language import catalog_name_field, catalog_name_fields
 
 from .event_mapping import has_potential_reward
@@ -917,6 +917,12 @@ class SamplingCollector:
         if repeated and page.get("observed_signature") == signature:
             return offer_id
         page["observed_signature"] = signature
+        bonus_fields = {}
+        if source_raw == "enhance":
+            bonus = None
+            if read_complete and consistent and not conflicts:
+                bonus = shared_enhancement_bonus((p["level_before"], p["offered_level_after"]) for p in candidates)
+            bonus_fields = dict(visible_shared_bonus=bonus, probability_eligible=bonus is not None)
         self.emit("offer_reobserved" if repeated else "offer_observed", offer_id=offer_id,
                   offer_index=page["offer_index"], reward_chain_id=chain["reward_chain_id"],
                   refresh_index=page["refresh_index"], refresh_parent_offer_id=page["refresh_parent_offer_id"],
@@ -931,7 +937,7 @@ class SamplingCollector:
                   candidates_complete=read_complete,
                   recognition_status="ok" if read_complete and consistent else "unresolved",
                   level_basis="Maa_core_0_to_1_convention" if data.core_potential else "card_level_OCR",
-                  inventory_conflicts=conflicts, **owned_history,
+                  inventory_conflicts=conflicts, **owned_history, **bonus_fields,
                   main_trekker_index=0, trekker_index_basis="game_preset_party_roles",
                   coin=data.current_coin, refresh_price=data.refresh_cost,
                   floor=floor_observation["floor"] if floor_observation else None,

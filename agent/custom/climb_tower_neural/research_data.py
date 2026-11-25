@@ -89,7 +89,7 @@ _OFFER_FIELDS = set("""offer_id reward_chain_id offer_index refresh_index same_p
     core_potential candidates candidates_complete candidate_read_complete recognition_status
     recognition_consistent recognition_errors inventory_conflicts owned_complete owned_basis owned_issues
     main_trekker_index trekker_index_basis level_basis level_upped page_generation_basis refresh_price
-    pool_identity_observation visible_shared_bonus""".split())
+    pool_identity_observation visible_shared_bonus probability_eligible""".split())
 _ACTION_FIELDS = set("""operation_id offer_id next_offer_id reward_chain_id stock_scan_id next_stock_scan_id
     shop_visit_id shelf_generation_id item item_instance_id slot source source_type source_attribution
     source_inferred source_basis phase selected selected_slot selected_ui_index planned_name

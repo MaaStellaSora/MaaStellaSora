@@ -960,7 +960,8 @@ class SamplingCollector:
         floor_basis = ("same_potential_callback_floor_hud" if floor_observation and not page["refresh_index"]
                        else "same_reward_chain_floor_hud" if floor_observation
                        else "not_observed_on_this_reward_chain")
-        signature = (candidates, consistent, conflicts, data.current_coin, data.refresh_cost, floor_observation)
+        owned_history = self.inventory.owned_history_fields()
+        signature = (candidates, consistent, conflicts, data.current_coin, data.refresh_cost, floor_observation, owned_history)
         if repeated and page.get("observed_signature") == signature:
             return offer_id
         page["observed_signature"] = signature
@@ -978,7 +979,7 @@ class SamplingCollector:
                   candidates_complete=read_complete,
                   recognition_status="ok" if read_complete and consistent else "unresolved",
                   level_basis="Maa_core_0_to_1_convention" if data.core_potential else "card_level_OCR",
-                  inventory_conflicts=conflicts,
+                  inventory_conflicts=conflicts, **owned_history,
                   main_trekker_index=0, trekker_index_basis="game_preset_party_roles",
                   coin=data.current_coin, refresh_price=data.refresh_cost,
                   floor=floor_observation["floor"] if floor_observation else None,
@@ -1038,12 +1039,15 @@ class SamplingCollector:
 
     def model_decision(self, record):
         observation = record.get("pool_identity_observation")
-        if not self.ensure_run("pool_observed") or observation is None or observation == self._last_pool_observation:
+        if not self.ensure_run("pool_observed") or observation is None:
+            return
+        observation = dict(pool_identity_observation=observation, **self.inventory.owned_history_fields())
+        if observation == self._last_pool_observation:
             return
         first = self._last_pool_observation is None
         self._last_pool_observation = snapshot(observation)
         chain = self.reward if self.reward and not self.reward["closed"] else None
-        self.emit("pool_observed", pool_identity_observation=observation,
+        self.emit("pool_observed", **observation,
                   offer_id=chain["page"]["offer_id"] if chain and chain["page"] else None,
                   event_id=self.event["event_id"] if self.event else None,
                   stock_scan_id=self.stock_scan_id,

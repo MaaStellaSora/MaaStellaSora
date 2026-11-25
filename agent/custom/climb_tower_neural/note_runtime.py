@@ -125,8 +125,11 @@ class NoteRuntime:
             main_discs=self.setup["main_discs"], setup_complete=self.setup["complete"]))
         self._record("note_setup_observed", **self.setup,
                             probability_eligible=self.setup["complete"])
-        self._emit(self.ledger.begin_battle("battle_1", floor=1,
-            floor_complete=True, floor_source="new_run_start"))
+        # The first result compares starting supply with inventory after both rewards.
+        self._emit(self.ledger.begin_battle("battle_1", floor=1, floor_complete=True,
+            floor_source="new_run_start", opening_included=True, independently_observed=False,
+            analysis_eligible=False, probability_eligible=False,
+            analysis_exclusion_reason="opening_and_first_battle_not_separable"))
         self.runtime.logger.debug("Initial note supply: %(starting_supply)s", {
             "starting_supply": self.setup["starting_supply"],
         })

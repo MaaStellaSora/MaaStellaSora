@@ -10,10 +10,12 @@ from collections import Counter
 from dataclasses import dataclass, field
 import json
 import re
+from time import monotonic
 
 import numpy as np
 
 from .critic.rules import MAX_POTENTIAL_LEVEL
+from .bag_cursor import park_bag_cursor
 from .image_ops import (
     bgr_to_gray, bgr_to_hsv, connected_components, gray_to_bgr, in_range,
     match_vertical_strip, resize_cubic,
@@ -22,17 +24,20 @@ from .interactor import Interactor
 from .ocr_number import assess_amount
 from .paths import data_path
 
-from .name_matching import clean_name
-from .note_ocr import read_text
-from .ui_flow import read_until, wait_for
+from .name_matching import BAG_HEADER_MIN_SCORE, clean_name
+from .note_bag import SKILLS_READY
+from .note_ocr import OCR_RULES, TEXT_NODE, read_text, valid_text
+from .ui_flow import READ_TIMEOUT, read_until, wait_for
 
 
 HEADER_NODE = "星塔_背包_潜能标记_agent"
 THUMB_NODE = "星塔_背包_识别推荐潜能_agent"
+DETAIL_THUMB_NODE = "星塔_节点_选择潜能_识别推荐图标_agent"
 CLICK_NODE = "星塔_神经网络_预设点击"
 SCROLL_NODE = "星塔_神经网络_背包潜能_向下"
 SCROLL_TOP_NODE = "星塔_神经网络_背包潜能_置顶"
 LIST_BOX = (352, 95, 592, 591)
+DETAIL_RECOMMENDATION_BOX = (1212, 84, 46, 46)
 COLUMNS = (358, 475, 593, 710, 828)
 ROW_OFFSETS = (47, 211, 377, 526)
 ROW_CARD_COUNTS = (5, 5, 5, 1)
@@ -87,6 +92,20 @@ def _knob(image, box):
 
 def _knob_right(image, box):
     return _knob(image, box)["right"]
+
+
+def _selected_card(image, box):
+    """Read the four green selection corners in a normalized card box."""
+    x, y, width, height = box
+    hsv = bgr_to_hsv(image[y:y + height, x:x + width])
+    green = in_range(hsv, (25, 80, 100), (55, 255, 255))
+    return all(corner.mean() >= .25 for corner in (
+        green[:18, :18], green[:18, -18:], green[-18:, :18], green[-18:, -18:]))
+
+
+def _detail_recommended(context, image):
+    """Match the existing white-thumb badge in the selected card's detail pane."""
+    return bool(_matches(context, DETAIL_THUMB_NODE, image, DETAIL_RECOMMENDATION_BOX, .85))
 
 
 def _unacquired(image, box, texts):
@@ -319,18 +338,30 @@ class _Reader:
         controls = {name: dict(_knob(image, control["roi"]), roi=control["roi"])
                     for name, control in CONTROLS.items()}
         if any(controls[name]["right"] != control["right"] for name, control in CONTROLS.items()):
-            raise ValueError("背包潜能全部卡片及推荐显示条件未确认")
+            raise ValueError("背包潜能全部卡片显示条件未确认")
         self.display_conditions[self.frame] = dict(frame=self.frame,
             basis="observed_white_knob_positions", controls=controls)
 
     def prepare(self):
         image = self.screenshot()
 
-        def locate(frame):
-            if self.headers(frame):
-                return frame, None
-            from .note_ocr import OCR_RULES, TEXT_NODE
+        def scrollbar_rows(frame):
+            hsv = bgr_to_hsv(frame[80:688, 947:954])
+            return np.where(in_range(hsv, (75, 100, 90), (105, 255, 255)))[0]
 
+        def collection_visible(frame):
+            if self.headers(frame):
+                return True
+            # Between character headers the list still has its scrollbar and All Cards control.
+            if not len(scrollbar_rows(frame)):
+                return False
+            try:
+                _knob(frame, CONTROLS["all_cards"]["roi"])
+            except ValueError:
+                return False
+            return True
+
+        def locate_tab(frame):
             detail = self.context.run_recognition(TEXT_NODE, frame, {
                 TEXT_NODE: {"recognition": {"type": "OCR", "param": {
                     "roi": [5, 95, 255, 90], "only_rec": False,
@@ -341,23 +372,38 @@ class _Reader:
                 return None
             return frame, max(rows, key=lambda row: row.score).box
 
-        located = self._read_until(locate, image)
+        located = self._read_until(lambda frame: (frame, None) if collection_visible(frame)
+                                   else locate_tab(frame), image)
         if located is None:
             raise ValueError("未找到背包潜能收集页签")
         image, tab = located
-        if tab is not None:
+        deadline = monotonic() + READ_TIMEOUT
+        for attempt in range(2):
+            if tab is None:
+                break
             x, y, width, height = tab
             self.click(x + width / 2, y + height / 2)
-            opened = self._read_until(lambda frame: (frame,) if self.headers(frame) else None)
+            retry_after = monotonic() + 1.5
+
+            def observe(raw):
+                frame = self._record_frame(raw)
+                if collection_visible(frame):
+                    return frame, None
+                if attempt == 0 and monotonic() >= retry_after:
+                    skills = self.context.run_recognition(SKILLS_READY, frame)
+                    if skills and skills.hit:
+                        return locate_tab(frame)
+                return None
+
+            opened = Interactor.wait_for(self.context, observe, timeout=max(0., deadline - monotonic()))
             if opened is None:
                 raise ValueError("背包潜能收集页未确认")
-            image = opened[0]
+            image, tab = opened
         for name in CONTROLS:
             image = self._ensure_control(image, name)
         self._confirm_display(image)
         for _ in range(7):
-            hsv = bgr_to_hsv(image[80:688, 947:954])
-            yy, _ = np.where(in_range(hsv, (75, 100, 90), (105, 255, 255)))
+            yy = scrollbar_rows(image)
             if len(yy) and yy.min() < 12:
                 break
             self.scroll(upward=False)
@@ -403,13 +449,16 @@ class _Reader:
             names = [row for row in texts if _inside(row, (295, y - 10, 460, 35)) and row["score"] >= .65]
             if not names:
                 names = read_text(self.context, image, (295, max(80, y - 10), 460, 35))
-            name = _joined(names)
-            if len(clean_name(name)) > len(clean_name(member["name"])):
-                member["name"] = name
             if names:
                 reading = names[0] if len(names) == 1 else dict(
-                    text=name, score=min(row["score"] for row in names), fragments=names)
+                    text=_joined(names), score=min(row["score"] for row in names), fragments=names)
                 member["header_readings"].append(dict(reading, frame=self.frame))
+                length = len(clean_name(reading["text"]))
+                score = reading["score"]
+                rank = (score >= BAG_HEADER_MIN_SCORE, length, score)
+                if length and rank > member.get("header_rank", ()):
+                    member["name"] = reading["text"]
+                    member["header_rank"] = rank
             if not member["name"]:
                 missing.append(f"member@{position}:name")
             if member["obtained_count"] is not None:
@@ -430,75 +479,73 @@ class _Reader:
             else:
                 missing.append(f"member@{position}:obtained_count")
         thumbs = _matches(self.context, THUMB_NODE, image, LIST_BOX, .7)
-        for member in self.members:
-            origin = member["position"] - self.offset
-            index = 0
-            for relative, count in zip(ROW_OFFSETS, ROW_CARD_COUNTS):
-                top = round(origin + relative)
-                for column in range(count):
-                    if self.context.tasker.stopping:
-                        return ["task_stopped"]
-                    card = member["cards"][index]
-                    index += 1
-                    if top < 98 or top + 148 > 688:
-                        continue
-                    visible += 1
-                    if not card.missing():
-                        continue
-                    left = COLUMNS[column]
-                    box = (left, top, 118, 148)
-                    rarity_evidence = None
-                    if not card.rarities:
-                        try:
-                            card.rarity, rarity_evidence = _rarity_from_background(image, box)
-                        except ValueError as error:
-                            card.observations.append(dict(frame=self.frame, box=list(box), error=str(error)))
-                            missing.append(f"member@{member['position']}:card{index}:rarity")
-                            continue
-                        card.rarities.add(card.rarity)
-                    rarity = card.rarity
-                    level, level_basis, level_raw, badge_raw = None, None, [], []
-                    if not card.levels:
-                        unacquired, badge_raw = _unacquired(image, box, texts)
-                        if unacquired:
-                            level, level_basis = 0, "unacquired_badge"
-                        elif rarity == "core":
-                            level, level_basis = 1, "core_acquired_badge_absent"
-                        else:
-                            level, level_raw = self._digit(image, (left + 6, top + 2, 29, 26), MAX_POTENTIAL_LEVEL)
-                            level_basis = "left_actual_level"
-                    target, target_raw = None, []
-                    thumb = [hit for hit in thumbs if _inside(hit, (left + 69, top, 49, 40))]
-                    if not card.targets:
-                        if not thumb:
-                            target = 0
-                        elif rarity == "core":
-                            target = 1
-                        else:
-                            target, target_raw = self._digit(image, (left + 102, top + 2, 17, 29), MAX_POTENTIAL_LEVEL)
-                            if target == 0:
-                                target = None
-                    if level is not None:
-                        card.levels.add(level)
-                    if target is not None:
-                        card.targets.add(target)
-                    card.observations.append(dict(frame=self.frame, box=list(box),
-                        display_condition_frame=self.frame,
-                        level=level, level_basis=level_basis, level_readings=level_raw,
-                        unacquired_readings=badge_raw, target_level=target,
-                        thumb_readings=thumb, target_readings=target_raw,
-                        rarity_class=rarity, rarity_basis="bag_card_background_color",
-                        rarity_color_evidence=rarity_evidence))
-                    if not card.name()[1]:
-                        name_box = (left + 3, top + 108, 112, 39)
-                        rows = [row for row in texts if _inside(row, name_box) and row["score"] >= .6]
-                        self._add_name(card, rows, name_box, "page")
-                        a, b, w, h = name_box
-                        card.crop = image[b:b + h, a:a + w].copy()
-                        card.crop_box, card.crop_frame = list(name_box), self.frame
-                        self._confirm_name(card)
-                    missing.extend(f"member@{member['position']}:card{index}:{field}"
-                                   for field in card.missing())
+        for member, card, index, box in self._visible_cards():
+            if self.context.tasker.stopping:
+                return ["task_stopped"]
+            visible += 1
+            if not card.missing():
+                continue
+            left, top, _, _ = box
+            rarity_evidence = None
+            if not card.rarities:
+                try:
+                    card.rarity, rarity_evidence = _rarity_from_background(image, box)
+                except ValueError as error:
+                    card.observations.append(dict(frame=self.frame, box=list(box), error=str(error)))
+                    missing.append(f"member@{member['position']}:card{index}:rarity")
+                    continue
+                card.rarities.add(card.rarity)
+            rarity = card.rarity
+            level, level_basis, level_raw, badge_raw = None, None, [], []
+            if not card.levels:
+                unacquired, badge_raw = _unacquired(image, box, texts)
+                if unacquired:
+                    level, level_basis = 0, "unacquired_badge"
+                elif rarity == "core":
+                    level, level_basis = 1, "core_acquired_badge_absent"
+                else:
+                    level, level_raw = self._digit(image, (left + 6, top + 2, 29, 26), MAX_POTENTIAL_LEVEL)
+                    level_basis = "left_actual_level"
+            target, target_raw, target_basis = None, [], None
+            thumb = [hit for hit in thumbs if _inside(hit, (left + 69, top, 49, 40))]
+            if not card.targets:
+                if (rarity == "core" and member is self.members[0] and card.index == 0
+                        and _selected_card(image, box)):
+                    target = int(_detail_recommended(self.context, image))
+                    target_basis = "selected_card_detail_badge"
+                elif not thumb:
+                    target = 0
+                    target_basis = "list_thumb_absent"
+                elif rarity == "core":
+                    target = 1
+                    target_basis = "list_thumb"
+                else:
+                    tx, ty, tw, _ = max(thumb, key=lambda hit: hit["score"])["box"]
+                    target, target_raw = self._digit(image, (tx + tw, ty + 1, 14, 22), MAX_POTENTIAL_LEVEL)
+                    target_basis = "list_thumb_right_digit"
+                    if target == 0:
+                        target = None
+            if level is not None:
+                card.levels.add(level)
+            if target is not None:
+                card.targets.add(target)
+            card.observations.append(dict(frame=self.frame, box=list(box),
+                display_condition_frame=self.frame,
+                level=level, level_basis=level_basis, level_readings=level_raw,
+                unacquired_readings=badge_raw, target_level=target, target_basis=target_basis,
+                thumb_readings=thumb, target_readings=target_raw,
+                rarity_class=rarity, rarity_basis="bag_card_background_color",
+                rarity_color_evidence=rarity_evidence))
+            if not card.name()[1]:
+                name_box = (left + 3, top + 108, 112, 39)
+                rows = [row for row in texts if _inside(row, name_box) and row["score"] >= .6]
+                self._add_name(card, rows, name_box, "page")
+                a, b, w, h = name_box
+                card.crop = image[b:b + h, a:a + w].copy()
+                card.crop_box, card.crop_frame = list(name_box), self.frame
+                self._confirm_name(card)
+            missing.extend(f"member@{member['position']}:card{index}:{field}"
+                           for field in card.missing())
         if not visible:
             missing.append("visible_card_layout")
         self.missing = missing
@@ -507,8 +554,11 @@ class _Reader:
     def read_page(self, image):
         """Fill this located page before traversing onward; inputs stay outside reads."""
         anchor = image
+        last_frame = image
 
         def observe(frame):
+            nonlocal last_frame
+            last_frame = frame
             try:
                 if frame is not anchor and abs(_content_shift(anchor, frame)) >= 3:
                     self.missing = ["stable_visible_page"]
@@ -522,8 +572,92 @@ class _Reader:
         if result is None:
             if self.context.tasker.stopping:
                 return None
+            if len(self.missing) == 1 and self.missing[0].endswith(":name"):
+                for member in self.members:
+                    for card in member["cards"]:
+                        if card.crop_frame == self.frame and card.missing() == ["name"]:
+                            detail = self._read_detail_name(last_frame, card)
+                            if detail is not None or self.context.tasker.stopping:
+                                return detail
             raise ValueError("背包当前可见页未读全：" + ", ".join(self.missing))
         return result[0]
+
+    def _visible_cards(self):
+        for member in self.members:
+            origin = member["position"] - self.offset
+            index = 0
+            for relative, count in zip(ROW_OFFSETS, ROW_CARD_COUNTS):
+                top = round(origin + relative)
+                for column, card in enumerate(member["cards"][index:index + count]):
+                    if 98 <= top and top + 148 <= 688:
+                        yield member, card, index + column + 1, (COLUMNS[column], top, 118, 148)
+                index += count
+
+    def _read_detail_name(self, image, card):
+        target_box = card.observations[-1]["box"]
+        title_roi = (974, 317, 272, 49)
+        last_frame = image
+        stale_title_seen = False
+
+        def title(frame):
+            rows = read_text(self.context, frame, title_roi)
+            if len(rows) == 1 and valid_text(rows[0], CLEAR_NAME_SCORE):
+                return rows[0]["text"].strip()
+            return ""
+
+        def click(box):
+            x, y, width, height = box
+            self.click(x + width / 2, y + height / 2)
+
+        def confirm(box, previous_title, required_title="", *, allow_list_name=False):
+            def selected(frame):
+                nonlocal last_frame, stale_title_seen
+                last_frame = self._record_frame(frame)
+                if not _selected_card(last_frame, box):
+                    return None
+                try:
+                    if abs(_content_shift(image, last_frame)) >= 3:
+                        return None
+                except ValueError:
+                    return None
+                text = title(last_frame)
+                key = clean_name(text, keep_long_vowel=True)
+                if required_title:
+                    return text if key == required_title else None
+                stale_title_seen = stale_title_seen or bool(key and key == previous_title)
+                same_name_on_card = allow_list_name and any(
+                    row["source"] == "page" and row["score"] >= .85
+                    and clean_name(row["text"], keep_long_vowel=True) == key
+                    for row in card.readings)
+                return text if key and (key != previous_title or same_name_on_card) else None
+
+            return wait_for(self.context, selected, stable_frames=2)
+
+        old_title = ""
+        if not _selected_card(image, target_box):
+            old_title = clean_name(title(image), keep_long_vowel=True)
+            if not old_title:
+                return None
+            click(target_box)
+        text = confirm(target_box, old_title, allow_list_name=True)
+        if not text and stale_title_seen and not self.context.tasker.stopping:
+            # Confirm a differently named visible card before returning, so a
+            # target with no list OCR still has a real detail-title transition.
+            for _, candidate, _, box in self._visible_cards():
+                name, confirmed = candidate.name()
+                key = clean_name(name, keep_long_vowel=True)
+                if candidate is card or not confirmed or not key or key == old_title:
+                    continue
+                click(box)
+                if confirm(box, old_title, key):
+                    click(target_box)
+                    text = confirm(target_box, key)
+                break
+        if text:
+            card.name_evidence = dict(text=text, source="selected_detail_title",
+                source_frame=self.frame, source_roi=list(title_roi), card_box=list(target_box))
+            return last_frame
+        return None
 
     def read_scrolled_page(self, previous):
         def observe(frame):
@@ -696,6 +830,7 @@ class _Reader:
 
 def read_bag_party(context, language, capture=None):
     """Read every member's complete 16-card bag; leave its collection tab open."""
+    park_bag_cursor(context)
     reader = _Reader(context, language, capture)
     image = reader.prepare()
     for _ in range(18):

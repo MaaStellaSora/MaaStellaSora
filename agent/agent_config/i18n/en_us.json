@@ -191,6 +191,7 @@
     "agent.custom.action.climb_tower_neural.model_disabled": "[Neural Network] This feature is disabled. Stopped.",
     "agent.custom.action.climb_tower_neural.bag_open_failed": "[Neural Network] Could not open the bag. Stopped.",
     "agent.custom.action.climb_tower_neural.preset_read_failed": "[Neural Network] Could not read the preset: incomplete readings or conflicting values",
+    "agent.custom.action.climb_tower_neural.preset_empty": "No preset is set, or Show Recommendations is not enabled in the bag.",
     "agent.custom.action.climb_tower_neural.potential_return_failed": "[Neural Network] Could not return to the potential screen. Stopped.",
     "agent.custom.action.climb_tower_neural.run_start_unconfirmed": "[Neural Network] Run start could not be confirmed. Stopped.",
     "agent.custom.action.climb_tower_neural.preset_not_read": "[Neural Network] This run's preset has not been read. Stopped.",

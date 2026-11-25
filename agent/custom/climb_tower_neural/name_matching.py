@@ -13,6 +13,7 @@ else:
 
 GLYPHS = str.maketrans(json.loads(data_path("bag_preset_rules.json")
                                   .read_text(encoding="utf-8"))["name_variant_glyphs"])
+BAG_HEADER_MIN_SCORE = .85
 
 
 def clean_name(value, *, keep_long_vowel=False):

@@ -191,6 +191,7 @@
     "agent.custom.action.climb_tower_neural.model_disabled": "[ニューラルネットワーク] 機能が無効のため、停止しました。",
     "agent.custom.action.climb_tower_neural.bag_open_failed": "[ニューラルネットワーク] バッグを開けず、停止しました。",
     "agent.custom.action.climb_tower_neural.preset_read_failed": "[ニューラルネットワーク] プリセットを読み取れません：読み取り不足または数値の不一致",
+    "agent.custom.action.climb_tower_neural.preset_empty": "プリセットが設定されていないか、バッグの「推奨表示」がオフになっています。",
     "agent.custom.action.climb_tower_neural.potential_return_failed": "[ニューラルネットワーク] 素質画面に戻れず、停止しました。",
     "agent.custom.action.climb_tower_neural.run_start_unconfirmed": "[ニューラルネットワーク] 攻略の開始を確認できず、停止しました。",
     "agent.custom.action.climb_tower_neural.preset_not_read": "[ニューラルネットワーク] 今回のプリセットをまだ読み取れていないため、停止しました。",

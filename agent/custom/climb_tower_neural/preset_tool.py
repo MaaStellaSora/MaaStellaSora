@@ -5,7 +5,10 @@ import json
 from pathlib import Path
 
 from .critic.rules import MAX_POTENTIAL_LEVEL
-from .name_matching import clean_name, identity_key, is_anonymous_non_target, local_potential_identity, match_name
+from .name_matching import (
+    BAG_HEADER_MIN_SCORE, clean_name, identity_key, is_anonymous_non_target,
+    local_potential_identity, match_name,
+)
 from .pool_identity import pool_contract
 from .paths import data_path
 from .language import catalog_name_field, catalog_name_fields, normalize_language
@@ -95,7 +98,8 @@ def compile_bag_preset(party, language, catalog):
         catalogue_complete = Counter(rarity(row) for row in known) == {"core": 4, "rare": 3, "common": 9}
         if not catalogue_complete:
             headers = raw_names(member.get("raw", {}).get("header_readings", member.get("raw", {}).get("name_readings", [])))
-            header_confirmed = any(clean_name(row["text"]) == clean_name(member["name"]) and row["score"] >= .85 for row in headers)
+            header_confirmed = any(clean_name(row["text"]) == clean_name(member["name"])
+                                   and row["score"] >= BAG_HEADER_MIN_SCORE for row in headers)
             names_confirmed = all(card.get("name_confirmed") and clean_name(card.get("name"))
                                   for card in cards)
             if not header_confirmed or not names_confirmed:

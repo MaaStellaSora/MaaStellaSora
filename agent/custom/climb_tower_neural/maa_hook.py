@@ -24,6 +24,7 @@ _STOP_MESSAGES = {
     "model_disabled": "$agent.custom.action.climb_tower_neural.model_disabled",
     "bag_not_opened": "$agent.custom.action.climb_tower_neural.bag_open_failed",
     "bag_preset_unconfirmed": "$agent.custom.action.climb_tower_neural.preset_read_failed",
+    "bag_preset_empty": "$agent.custom.action.climb_tower_neural.preset_empty",
     "bag_return_unconfirmed": "$agent.custom.action.climb_tower_neural.potential_return_failed",
     "model_start_unavailable": "$agent.custom.action.climb_tower_neural.run_start_unconfirmed",
     "potential_return_unconfirmed": "$agent.custom.action.climb_tower_neural.potential_return_failed",
@@ -212,6 +213,9 @@ class ValueModelRuntime:
                             return False
                         preset = compile_bag_preset(party, language,
                             read(data_path("potential_name_catalog.json", module_root=self.root)))
+                        if not any(card["target_level"] for member in preset["party"] for card in member["targets"]):
+                            self.stop_model(context, "bag_preset_empty", phase="bag", missing=("recommended_targets",))
+                            return False
                     except (ValueError, RuntimeError, OSError) as exc:
                         if not context.tasker.stopping:
                             self.stop_model(context, "bag_preset_unconfirmed", phase="bag",
@@ -240,7 +244,7 @@ class ValueModelRuntime:
             self.collector.bind_preset(preset, tracker)
             self.collector.initialize_bag_inventory(preset)
             field = catalog_name_field(language)
-            targets = [total + 2 for total in preset["role_ordinary_totals"]]
+            targets = [sum(card["target_level"] for card in member["targets"]) for member in preset["party"]]
             self.logger.info("$agent.custom.action.climb_tower_neural.preset_loaded", {
                 "party": " / ".join(member[field] for member in preset["party"]),
                 "total": sum(targets), "potential_targets": " + ".join(map(str, targets)),

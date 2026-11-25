@@ -191,6 +191,7 @@
     "agent.custom.action.climb_tower_neural.model_disabled": "[神经网络] 功能未启用，已停止。",
     "agent.custom.action.climb_tower_neural.bag_open_failed": "[神经网络] 未能打开背包，已停止。",
     "agent.custom.action.climb_tower_neural.preset_read_failed": "[神经网络] 预设读取失败：预设读取不完整或读数冲突",
+    "agent.custom.action.climb_tower_neural.preset_empty": "预设未设置，或未在背包打开“显示推荐”。",
     "agent.custom.action.climb_tower_neural.potential_return_failed": "[神经网络] 未能返回潜能页，已停止。",
     "agent.custom.action.climb_tower_neural.run_start_unconfirmed": "[神经网络] 未确认本局开始，已停止。",
     "agent.custom.action.climb_tower_neural.preset_not_read": "[神经网络] 本局预设尚未读取，已停止。",

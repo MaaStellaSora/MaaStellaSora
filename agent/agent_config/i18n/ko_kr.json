@@ -191,6 +191,7 @@
     "agent.custom.action.climb_tower_neural.model_disabled": "[신경망] 기능이 비활성화되어 중지했습니다.",
     "agent.custom.action.climb_tower_neural.bag_open_failed": "[신경망] 가방을 열지 못해 중지했습니다.",
     "agent.custom.action.climb_tower_neural.preset_read_failed": "[신경망] 프리셋 읽기 실패: 읽기가 불완전하거나 수치가 일치하지 않습니다.",
+    "agent.custom.action.climb_tower_neural.preset_empty": "프리셋이 설정되지 않았거나 가방에서 추천 표시를 켜지 않았습니다.",
     "agent.custom.action.climb_tower_neural.potential_return_failed": "[신경망] 잠재력 화면으로 돌아가지 못해 중지했습니다.",
     "agent.custom.action.climb_tower_neural.run_start_unconfirmed": "[신경망] 등반 시작을 확인하지 못해 중지했습니다.",
     "agent.custom.action.climb_tower_neural.preset_not_read": "[신경망] 이번 프리셋을 아직 읽지 못해 중지했습니다.",

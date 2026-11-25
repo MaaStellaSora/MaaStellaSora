@@ -19,9 +19,7 @@ from .paths import data_path
 logger = logger_module.get_logger(__name__)
 RULES = json.loads(data_path("potential_ocr_rules.json").read_text(encoding="utf-8"))
 LEVEL_ROW = re.compile(RULES["level_row_pattern"].replace("{max_level}", str(MAX_POTENTIAL_LEVEL)), re.IGNORECASE)
-RECOMMEND_LEVEL_ROW = re.compile(
-    RULES["recommend_level_row_pattern"].replace("{max_level}", str(MAX_POTENTIAL_LEVEL)), re.IGNORECASE
-)
+RECOMMEND_LEVEL_ROW = re.compile(RULES["recommend_level_row_pattern"])
 LEVEL_NODE = "星塔_神经网络_潜能_识别潜能等级"
 RECOMMEND_NODE = "星塔_神经网络_潜能_识别推荐等级"
 NAME_NODE = "星塔_神经网络_潜能_识别潜能名称"
@@ -153,7 +151,7 @@ class NeuralPotentialInteractor(Interactor, PotentialInteractor):
         value, _, _ = assess_amount(
             (amount(row) for row in result.filtered_results) if result and result.hit else (),
             ((amount(row), row.score) for row in result.all_results) if result else ())
-        return -1 if value is None else value
+        return value if value is not None and 1 <= value <= MAX_POTENTIAL_LEVEL else -1
 
     def get_potentials_rarity(self, core_potential=False):
         if core_potential:

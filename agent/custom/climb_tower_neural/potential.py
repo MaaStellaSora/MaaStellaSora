@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 
 import numpy as np
-from custom.climb_tower.climb_tower_potential.handler_preset import RecommendationHandler
 from custom.climb_tower.climb_tower_potential.context import Potential, Trekker
 from custom.climb_tower.climb_tower_potential.handler_default import ChoosePotentialHandler
 
@@ -50,6 +49,19 @@ def _trekker_roi(potential, selected_offset):
     if potential.selected:
         roi[1] -= selected_offset
     return roi
+
+
+def _read_recommendations(screen, potentials):
+    boxes = screen.get_recommended_potential()
+    for card in potentials:
+        card.recommended, card.recommended_level = False, 0
+    for box in boxes:
+        card = next((p for p in potentials if p.x_bound[0] <= box[0] <= p.x_bound[1]), None)
+        if card is None:
+            raise PotentialObservationIncomplete("推荐图标未对应实际潜能卡片")
+        card.recommended = True
+        card.recommended_level = 1 if card.core else screen.get_recommend_level(box)
+    return boxes
 
 
 def _resolve_potential_items(screen, tracker, potentials, selected_offset, *, single_role=False, pending=None):
@@ -336,19 +348,14 @@ def finish_potential_take(screen, pending, logger, *, timeout=15., max_clicks=2,
 
 class NeuralRecommendationHandler(ChoosePotentialHandler):
     """Reuse stateless current-page rules and neural navigation/confirmation."""
-    _update_recommended_potentials = RecommendationHandler._update_recommended_potentials
+
+    def _update_recommended_potentials(self):
+        boxes = _read_recommendations(self.screen, self.data.potentials)
+        if boxes:
+            self.data.preset_available = boxes[0][1] < 300
 
     def pick(self, potential):
         return potential.selected or self.screen.select_potential(potential)
-
-    def _get_recommended_potential_indices(self, boxes, borders):
-        matched = {}
-        for box in boxes:
-            index = next((i for i, (low, high) in enumerate(borders) if low <= box[0] <= high), None)
-            if index is None:
-                raise PotentialObservationIncomplete("推荐图标未对应实际潜能卡片")
-            matched[index] = box
-        return matched
 
 
 class ModelPotentialHandler(NeuralRecommendationHandler):

@@ -3,13 +3,13 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 from functools import lru_cache
 import json
-from pathlib import Path
 import re
 from statistics import median
 import unicodedata
 
 from .image_ops import bgr_to_hsv, in_range
 from .name_matching import clean_name, match_name
+from .paths import data_path
 from .note_cross_checks import collect_cross_checks
 from .note_ocr import (OCR_RULES, TEXT_RULE_NODES, find_icons, read_text, text_rules,
                        valid_text, white_glyph_image)
@@ -26,7 +26,7 @@ BAG_CONCERTO_REGIONS = tuple(map(tuple, CONCERTO_RULES["card_regions"]))
 @lru_cache(maxsize=1)
 def load_rules():
     """The shipped catalogue links CN/JP disc names to local concerto needs."""
-    return json.loads(Path(__file__).with_name("note_rules.json").read_text(encoding="utf-8"))
+    return json.loads(data_path("note_rules.json").read_text(encoding="utf-8"))
 
 
 @lru_cache(maxsize=1)

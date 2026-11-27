@@ -1,14 +1,15 @@
 """Identity-preserving pool swaps, with unweighted unknown-order compatibility."""
 import json
-from pathlib import Path
 
 if __package__:
     from .name_matching import identity_key
+    from .paths import data_path
 else:
     from name_matching import identity_key
+    from paths import data_path
 
 
-ORDERS = json.loads(Path(__file__).with_name("pool_orders.json").read_text(encoding="utf-8"))
+ORDERS = json.loads(data_path("pool_orders.json").read_text(encoding="utf-8"))
 
 
 def pool_contract(party, language):

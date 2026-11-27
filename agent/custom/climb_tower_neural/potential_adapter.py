@@ -1,24 +1,25 @@
 """Translate visible actions to the frozen potential-only action catalogue."""
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 from .critic.vendor import stella_sim as sim
 
 
-def confirm_drink_purchase(state, purchase):
-    """Commit one linked BUY when its first complete drink reward is observed."""
-    if purchase["committed"]:
-        return state
-    item = purchase["item"]
-    drink_type = 2 if item.trekker_specified else 1
-    price_index = sim.DRINK_PRICES.index(item.price)
+@dataclass(frozen=True)
+class PreparedActions:
+    state: sim.PublicState
+    actions: tuple[sim.Action, ...]
+    action_slots: dict[str, int]
+
+
+def consume_drink_stock(state, *, price, trekker_specified):
+    """Project one confirmed drink purchase onto the model's stock."""
+    drink_type = 2 if trekker_specified else 1
+    price_index = sim.DRINK_PRICES.index(price)
     stock = [list(row) for row in state.stock]
     if stock[drink_type - 1][price_index] < 1:
         raise ValueError("已确认饮品奖励没有对应的在售库存")
     stock[drink_type - 1][price_index] -= 1
-    state = replace(state, stock=tuple(map(tuple, stock)))
-    item.bought = True
-    purchase["committed"] = True
-    return state
+    return replace(state, stock=tuple(map(tuple, stock)))
 
 
 def prepare_core(state, candidates, decision_context):
@@ -27,11 +28,12 @@ def prepare_core(state, candidates, decision_context):
 
 
 def prepare_actions(state, candidates, decision_context):
+    """Return the model projection and UI slot mapping without changing observations."""
     candidates = tuple(candidates)
     if decision_context.get("kind") == "shop":
         if decision_context.get("stock_read_complete") is False:
             raise ValueError("商店货架尚有未确认的商品字段")
-        stock = [[0, 0, 0], [0, 0, 0]]
+        stock = [list(row) for row in sim.EMPTY_STOCK]
         available = {}
         slots = {}
         by_slot = {row["slot"]: row for row in decision_context["visible_items"]}
@@ -58,9 +60,9 @@ def prepare_actions(state, candidates, decision_context):
         cost = decision_context["enhancement_cost"]
         state = replace(state, phase="SHOP", stock=tuple(map(tuple, stock)), firstInitial=False,
                         paidIndex=sim.PRICES.index(cost) if cost else state.paidIndex)
-        decision_context["model_state"] = state
-        decision_context["action_slots"] = slots
-        return tuple(action for action in sim.legal_actions(state) if action in available)
+        actions = tuple(action for action in sim.legal_actions(state) if action in available)
+        return PreparedActions(state, actions, slots)
     available = {(action.kind, action.index, action.price) for action in candidates}
-    return tuple(action for action in sim.legal_actions(state)
-                 if (action.kind, action.index, action.price) in available)
+    actions = tuple(action for action in sim.legal_actions(state)
+                    if (action.kind, action.index, action.price) in available)
+    return PreparedActions(state, actions, {})

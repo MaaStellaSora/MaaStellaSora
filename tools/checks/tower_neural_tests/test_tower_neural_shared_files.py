@@ -27,7 +27,8 @@ class TowerNeuralSharedFilesTests(unittest.TestCase):
             (directory / folder).mkdir(parents=True)
         settings = dict(endpoint="https://offline.invalid", access_token="",
                         policy_version="test", recipient="test", purpose="test")
-        (self.app_dir / "upload_settings.json").write_text(json.dumps(settings), encoding="utf-8")
+        (self.app_dir / "data").mkdir()
+        (self.app_dir / "data/upload_settings.json").write_text(json.dumps(settings), encoding="utf-8")
         pair = [sample_upload.SampleUpload(self.app_dir, self.app_dir, directory, Mock()) for _ in range(2)]
         for uploader in pair:
             uploader.set_consent(True)
@@ -65,11 +66,11 @@ class TowerNeuralSharedFilesTests(unittest.TestCase):
         collector.start_intent("start")
         collector.confirm_start("entered")
         choices = [dict(text="take", consequence="potential reward", box=[1, 2, 3, 4])]
-        collector.event_menu(choices)
+        collector.event_menu("question", choices)
         first_event = collector.event["event_id"]
-        collector.event_menu(choices)
+        collector.event_menu("question", choices)
         self.assertEqual(collector.event["event_id"], first_event)
-        collector.event_menu([dict(text="leave", consequence="no reward", box=[1, 2, 3, 4])])
+        collector.event_menu("question", [dict(text="leave", consequence="no reward", box=[1, 2, 3, 4])])
         self.assertNotEqual(collector.event["event_id"], first_event)
         path = collector.directory / "runs" / f"{collector.run['run_id']}.jsonl"
         rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]

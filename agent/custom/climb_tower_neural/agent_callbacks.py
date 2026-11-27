@@ -245,19 +245,17 @@ class Event(RuntimeCallback, EventRecognition):
             reading = _read_event_menu(self, context, argv, self.runtime)
             if context.tasker.stopping:
                 return CustomRecognition.AnalyzeResult(box=None, detail={})
-            self.runtime.collector.event_question = reading.question
             if reading.choices and self.runtime.collector.enabled:
-                self.runtime.collector.event_menu(reading.choices)
+                self.runtime.collector.event_menu(reading.question, reading.choices)
             self.runtime.notes.observe_event(context, reading.image)
             result = analyze_model_event(self, context, argv, self.runtime, reading=reading)
         detail = result.detail if isinstance(result.detail, dict) else {}
         attach = (context.get_node_data(argv.node_name) or {}).get("attach", {})
-        self.runtime.collector.event_choice(result, attach)
+        event_reference = self.runtime.collector.event_choice(result, attach)
         if result and result.box is not None:
-            event = self.runtime.collector.event or {}
             consequence = attach.get("last_consequence", "")
             self.runtime.notes.before_event(context, reading.image,
-                event_id=event.get("event_id"), choice=attach.get("last_choice", ""),
+                **event_reference, choice=attach.get("last_choice", ""),
                 consequence=consequence, note_effect=detail.get("note_effect"),
                 model_event_id=detail.get("event"), option_id=detail.get("option"),
                 allow_text_effect=not is_quiz_consequence(consequence))
@@ -365,7 +363,7 @@ class NoteEventClick(RuntimeCallback, CustomAction):
     def run(self, context, argv):
         context = self.runtime.collector.context(context)
         tracker = self.runtime.tracker
-        cached = (tracker.event_page_cache if tracker is not None else None) or self.runtime.event_page_cache
+        cached = tracker.event_page_cache if tracker is not None else None
         if not cached:
             return False
         restored, inventory_navigation = self.runtime.notes.prepare_event_inventory(context)
@@ -397,5 +395,4 @@ class NoteEventClick(RuntimeCallback, CustomAction):
             decision_box=cached[2].get("selected_box"), confirmation_basis="stable_event_page_transition"))
         if self.runtime.tracker is not None:
             self.runtime.tracker.event_action_confirmed()
-        self.runtime.event_page_cache = None
         return True

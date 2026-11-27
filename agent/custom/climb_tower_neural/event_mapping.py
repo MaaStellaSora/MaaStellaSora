@@ -9,12 +9,13 @@ from copy import deepcopy
 from dataclasses import dataclass
 from itertools import permutations
 import json
-from pathlib import Path
 import re
 import unicodedata
 
+from .paths import data_path
 
-RULES = json.loads(Path(__file__).with_name("event_rules.json").read_text(encoding="utf-8"))
+
+RULES = json.loads(data_path("event_rules.json").read_text(encoding="utf-8"))
 TEXT_RULES = RULES["text"]
 
 

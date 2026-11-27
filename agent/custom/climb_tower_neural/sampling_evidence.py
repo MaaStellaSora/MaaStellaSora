@@ -1,11 +1,9 @@
 """Small recording-only types; no Maa calls, model state or export transforms."""
 from dataclasses import dataclass, field
 from collections import Counter
-import ast
-from functools import lru_cache
-from pathlib import Path
 import uuid
 
+from .critic.rules import BATTLE_FLOORS, MAX_POTENTIAL_LEVEL
 from .name_matching import identity_key, is_anonymous_non_target
 
 
@@ -59,19 +57,10 @@ def reused_interval_components(records):
     return reused
 
 
-@lru_cache(maxsize=1)
-def _route_battle_floors():
-    source = Path(__file__).with_name("critic") / "vendor/stella_sim.py"
-    tree = ast.parse(source.read_text(encoding="utf-8"))
-    route = next(ast.literal_eval(node.value) for node in tree.body if isinstance(node, ast.Assign)
-                 and any(isinstance(target, ast.Name) and target.id == "ROUTE" for target in node.targets))
-    return {floor for kind, floor, _ in route if kind == "BATTLE"}
-
-
 def battle_floor_outside_route(value):
     floor = value.get("floor")
     return (value.get("source_type") == "battle" and value.get("floor_complete") is True
-            and isinstance(floor, int) and not isinstance(floor, bool) and floor not in _route_battle_floors())
+            and isinstance(floor, int) and not isinstance(floor, bool) and floor not in BATTLE_FLOORS)
 
 
 @dataclass
@@ -116,8 +105,9 @@ def raw_ocr(records):
 class ObservedInventory:
     """Inventory reconstructed only from a fresh start and confirmed take actions.
 
-    Maa's eager cache remains separate. Completeness describes this observation
-    history, never an independently read bag or a server response.
+    This research projection is separate from the model's confirmed holdings.
+    Completeness describes this observation history, never an independently
+    read bag or a server response.
     """
     def __init__(self, full_start=False):
         self.items = {}
@@ -201,7 +191,7 @@ class ObservedInventory:
                                noncore_count=sum(p.get("count", 1) for p in noncore),
                                rare_count=sum(p.get("count", 1) for p in noncore if p["canonical_rarity"] == "rare"),
                                common_count=sum(p.get("count", 1) for p in noncore if p["canonical_rarity"] == "common"),
-                               below_max_count=sum(p.get("count", 1) for p in noncore if p["level"] < 6),
+                               below_max_count=sum(p.get("count", 1) for p in noncore if p["level"] < MAX_POTENTIAL_LEVEL),
                                noncore_level_sum=sum(p["level"]*p.get("count", 1) for p in noncore)))
         return dict(owned=owned, owned_anonymous=anonymous, owned_complete=self.complete,
                     owned_basis="bag_OCR_and_UI_confirmed_selection_history" if self.bag_initialized else "fresh_start_and_UI_confirmed_selection_history",

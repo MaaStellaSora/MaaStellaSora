@@ -43,7 +43,8 @@ class TowerNeuralUploadTests(unittest.TestCase):
             journal.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
             research_data.import_payload(directory / "research.sqlite3", research_data.build_payload(journal))
             original = research_data.export_payload(directory / "research.sqlite3", run_id)
-            (app / "upload_settings.json").write_text(json.dumps(dict(
+            (app / "data").mkdir()
+            (app / "data/upload_settings.json").write_text(json.dumps(dict(
                 endpoint="https://offline.invalid/v3/runs", access_token="",
                 policy_version="offline-fixture", recipient="fixture", purpose="fixture")), encoding="utf-8")
             uploader = sample_upload.SampleUpload(app, app, directory, Mock())

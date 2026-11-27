@@ -2,7 +2,6 @@
 from copy import deepcopy
 from dataclasses import dataclass, replace
 import json
-from pathlib import Path
 import re
 import unicodedata
 
@@ -11,14 +10,18 @@ from custom.climb_tower.climb_tower_potential.interactor import PotentialInterac
 from custom.climb_tower.climb_tower_potential.main import ChoosePotentialRecognition
 from utils import logger as logger_module
 
+from .critic.rules import MAX_POTENTIAL_LEVEL
 from .interactor import Interactor
 from .ocr_number import assess_amount
+from .paths import data_path
 
 
 logger = logger_module.get_logger(__name__)
-RULES = json.loads(Path(__file__).with_name("potential_ocr_rules.json").read_text(encoding="utf-8"))
-LEVEL_ROW = re.compile(RULES["level_row_pattern"], re.IGNORECASE)
-RECOMMEND_LEVEL_ROW = re.compile(RULES["recommend_level_row_pattern"], re.IGNORECASE)
+RULES = json.loads(data_path("potential_ocr_rules.json").read_text(encoding="utf-8"))
+LEVEL_ROW = re.compile(RULES["level_row_pattern"].replace("{max_level}", str(MAX_POTENTIAL_LEVEL)), re.IGNORECASE)
+RECOMMEND_LEVEL_ROW = re.compile(
+    RULES["recommend_level_row_pattern"].replace("{max_level}", str(MAX_POTENTIAL_LEVEL)), re.IGNORECASE
+)
 LEVEL_NODE = "星塔_神经网络_潜能_识别潜能等级"
 RECOMMEND_NODE = "星塔_神经网络_潜能_识别推荐等级"
 NAME_NODE = "星塔_神经网络_潜能_识别潜能名称"

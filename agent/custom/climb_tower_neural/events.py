@@ -84,15 +84,13 @@ def _read_event_menu(recognizer, context, argv, runtime):
     return latest
 
 
-def _finish_event_result(result, runtime, question, choices, missing, attempts, coins):
+def _finish_event_result(result, tracker, question, choices, missing, attempts, coins):
     detail = dict(result.detail) if isinstance(result.detail, dict) else {}
     detail.update(ocr_missing=list(missing), ocr_attempts=attempts, ocr_complete=not missing,
                   observed_coins=coins)
     if result.box is not None:
         detail["selected_box"] = list(result.box)
-        index = next((i for i, choice in enumerate(choices) if list(choice.box) == list(result.box)), None)
-        if index is not None:
-            runtime.event_page_cache = (event_page_key(question, choices), index, detail)
+        tracker.event_page_cache = (event_page_key(question, choices), detail["selected_ui_index"], detail)
     return CustomRecognition.AnalyzeResult(box=result.box, detail=detail)
 
 
@@ -102,7 +100,6 @@ def _same_event_read(cached, key, coins, missing):
 
 
 def _stop_event(context, runtime, reason, missing, **observed):
-    runtime.event_page_cache = None
     runtime.stop_model(context, reason, phase="event", missing=missing, **observed)
     return CustomRecognition.AnalyzeResult(box=None, detail={
         "policy_mode": "model", "model_decision_recorded": False,
@@ -123,34 +120,30 @@ def analyze_model_event(recognizer, context, argv, runtime, *, reading=None):
                   "event_observation_incomplete")
         result = _stop_event(context, runtime, reason, reading.required_missing,
                              ocr_attempts=attempts, question=question)
-        return _finish_event_result(result, runtime, question, choices, missing, attempts, coins)
+        return _finish_event_result(result, tracker, question, choices, missing, attempts, coins)
     page_key = event_page_key(question, choices)
     if _same_event_read(tracker.event_page_cache, page_key, coins, missing):
         _key, index, detail = tracker.event_page_cache
         detail = dict(detail, selected_box=list(choices[index].box), ocr_attempts=attempts)
         tracker.event_page_cache = (page_key, index, detail)
-        runtime.event_page_cache = (page_key, index, detail)
         return CustomRecognition.AnalyzeResult(box=choices[index].box, detail=detail)
     menu = reading.menu
     try:
         with tracker.event_evaluation(coins, event_id=menu.event_id or quiz_id):
             result = _evaluate_model_menu(recognizer, context, argv, runtime, tracker, menu,
-                                          question, choices, page_key, quiz_id, answer=reading.answer)
+                                          question, choices, quiz_id, answer=reading.answer)
             if result.box is not None:
                 result.detail.update(tracker.event_location())
                 tracker.stage_event_result()
-            result = _finish_event_result(result, runtime, question, choices, missing, attempts, coins)
-            if tracker.event_page_cache is not None:
-                tracker.event_page_cache = (tracker.event_page_cache[0], tracker.event_page_cache[1], result.detail)
-            return result
+            return _finish_event_result(result, tracker, question, choices, missing, attempts, coins)
     except ValueError as error:
         tracker.event_page_cache = None
         result = _stop_event(context, runtime, "event_model_inputs_unconfirmed", ["model_state"],
                              observed_error=str(error))
-        return _finish_event_result(result, runtime, question, choices, missing, attempts, coins)
+        return _finish_event_result(result, tracker, question, choices, missing, attempts, coins)
 
 
-def _select_quiz_answer(recognizer, context, argv, runtime, tracker, menu, question, choices, page_key, quiz_id,
+def _select_quiz_answer(recognizer, context, argv, runtime, tracker, menu, question, choices, quiz_id,
                         answer=None):
     result = answer if answer is not None else EventRecognition.match_from_menu(
         recognizer, context, argv, question, choices)
@@ -172,16 +165,15 @@ def _select_quiz_answer(recognizer, context, argv, runtime, tracker, menu, quest
         decision_method="official_answer_rule", selected_ui_index=index))
     detail.update(model_decision_recorded=False, selection_basis="official_answer_rule",
                   quiz_event_id=quiz_id, note_effect=note_descriptor(quiz_id, oid))
-    tracker.event_page_cache = (page_key, index, detail)
     return CustomRecognition.AnalyzeResult(box=result.box, detail=detail)
 
 
-def _evaluate_model_menu(recognizer, context, argv, runtime, tracker, menu, question, choices, page_key, quiz_id,
+def _evaluate_model_menu(recognizer, context, argv, runtime, tracker, menu, question, choices, quiz_id,
                          *, answer=None):
     policy = runtime.event_policy
     if quiz_id is not None:
         return _select_quiz_answer(recognizer, context, argv, runtime, tracker, menu,
-                                  question, choices, page_key, quiz_id, answer=answer)
+                                  question, choices, quiz_id, answer=answer)
     if menu.event_id is None:
         return _stop_event(context, runtime, "event_mapping_unavailable", ["event_mapping"],
                            question=question)
@@ -205,5 +197,4 @@ def _evaluate_model_menu(recognizer, context, argv, runtime, tracker, menu, ques
         decision_method="model_argmax", selected_ui_index=by_option[oid], decision=tracker.last_decision)
     detail["value_model"] = tracker.model.model_id
     detail["note_effect"] = note_descriptor(menu.event_id, oid)
-    tracker.event_page_cache = (page_key, by_option[oid], detail)
     return CustomRecognition.AnalyzeResult(box=choice.box, detail=detail)

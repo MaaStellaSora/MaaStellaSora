@@ -16,6 +16,7 @@ from .sampling_data import timestamp, write_json
 from .research_data import FORMAT, export_payload
 from .research_store import CONSENT_SOURCE, DATABASE_FILE, recycle_file, valid_upload_consent
 from .research_wire import WIRE_SCHEMA_VERSION, upload_payload
+from .paths import data_path
 
 
 class _RejectRedirects(urllib.request.HTTPRedirectHandler):
@@ -32,7 +33,8 @@ class SampleUpload:
         self.thread = None
         self.attempt_finished = threading.Condition()
         self.opener = urllib.request.build_opener(_RejectRedirects())
-        self.settings = json.loads((self.module_root / "upload_settings.json").read_text(encoding="utf-8-sig"))
+        self.settings = json.loads(data_path("upload_settings.json", module_root=self.module_root)
+                                   .read_text(encoding="utf-8-sig"))
         if not isinstance(self.settings, dict):
             raise ValueError("upload settings must be an object")
         local_settings = self.app_dir / "config/neural_network/research_upload.json"

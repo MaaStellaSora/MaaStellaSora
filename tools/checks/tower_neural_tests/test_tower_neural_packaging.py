@@ -29,7 +29,7 @@ class TowerNeuralPackagingTests(unittest.TestCase):
         self._write("custom/climb_tower_neural/models/replacement.npz", "large model")
         self._write("custom/climb_tower_neural/models/M213.npz", "old model")
         self._write("custom/climb_tower_neural/models/metadata.json")
-        self._write("custom/climb_tower_neural/potential_name_catalog.json")
+        self._write("custom/climb_tower_neural/data/potential_name_catalog.json")
 
         copy_agent_files(self.source, self.package, include_neural_model=False)
 
@@ -44,7 +44,7 @@ class TowerNeuralPackagingTests(unittest.TestCase):
             (model_dir / "metadata.json").is_file()
         )
         self.assertTrue(
-            (self.package / "agent/custom/climb_tower_neural/potential_name_catalog.json").is_file()
+            (self.package / "agent/custom/climb_tower_neural/data/potential_name_catalog.json").is_file()
         )
 
     def test_windows_package_keeps_configured_checkpoint(self):

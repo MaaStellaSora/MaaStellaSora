@@ -5,6 +5,7 @@ from custom.climb_tower.climb_tower_shop.handler import ShopHandler as NativeSho
 
 from .context import Item, ShopContext
 from .interactor import ShopInteractor
+from ..critic.rules import MAX_SHOP_RESTOCKS
 from ..ui_flow import read_until
 from utils import logger as logger_module
 
@@ -75,7 +76,7 @@ class ShopHandler:
                 coin_read = self.data.current_coin >= 0
             self._update_goods_info(missing_only=True)
             complete = (coin_read and not self.data.goods_missing
-                        and 0 <= self.data.refresh_remaining <= 2
+                        and 0 <= self.data.refresh_remaining <= MAX_SHOP_RESTOCKS
                         and (self.data.refresh_remaining == 0 or self.data.refresh_cost > 0))
             return True if complete else None
 
@@ -137,7 +138,7 @@ class ShopHandler:
                 return None
             self.update_coin()
             debit_confirmed = self.data.current_coin >= 0 and coin_before - self.data.current_coin == price
-            # The second global refresh removes these controls. A paid,
+            # The final global refresh removes these controls. A paid,
             # complete shelf can contain the same goods as the previous one.
             remaining = (-1 if debit_confirmed and current_refresh_remaining == 1
                          else self.interactor.get_refresh_remaining())
@@ -279,7 +280,7 @@ class ShopHandler:
 
     def _update_refresh_info(self, *, missing_only=False):
         """更新刷新相关信息"""
-        if not missing_only or not 0 <= self.data.refresh_remaining <= 2:
+        if not missing_only or not 0 <= self.data.refresh_remaining <= MAX_SHOP_RESTOCKS:
             self.data.refresh_remaining = self.interactor.get_refresh_remaining()
             self.data.refresh_remaining_observed = self.data.refresh_remaining
             self.data.refresh_remaining_basis = "ocr" if self.data.refresh_remaining >= 0 else "unconfirmed"

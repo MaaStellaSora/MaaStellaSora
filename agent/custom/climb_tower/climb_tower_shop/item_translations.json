@@ -1,0 +1,86 @@
+{
+    "potential_drink": {
+        "cn": ["潜能特饮", "能特", "特饮"],
+        "tw": ["潛能特飲", "能特"],
+        "en": ["Potential Drink", "Drink"],
+        "jp": ["素質メザメール", "メザ", "メサ", "メール"]
+    },
+    "melody_of_aqua": {
+        "cn": ["水之音"],
+        "tw": ["水之音"],
+        "en": ["Melody of Water"],
+        "jp": ["水の音符"]
+    },
+    "melody_of_ignis": {
+        "cn": ["火之音"],
+        "tw": ["火之音"],
+        "en": ["Melody of Ignis"],
+        "jp": ["火の音符"]
+    },
+    "melody_of_terra": {
+        "cn": ["地之音"],
+        "tw": ["地之音"],
+        "en": ["Melody of Terra"],
+        "jp": ["地の音符"]
+    },
+    "melody_of_ventus": {
+        "cn": ["风之音"],
+        "tw": ["風之音"],
+        "en": ["Melody of Ventus"],
+        "jp": ["風の音符"]
+    },
+    "melody_of_lux": {
+        "cn": ["光之音"],
+        "tw": ["光之音"],
+        "en": ["Melody of Lux"],
+        "jp": ["光の音符"]
+    },
+    "melody_of_umbra": {
+        "cn": ["暗之音"],
+        "tw": ["暗之音"],
+        "en": ["Melody of Umbra"],
+        "jp": ["闇の音符"]
+    },
+    "melody_of_focus": {
+        "cn": ["专注之音"],
+        "tw": ["專注之音"],
+        "en": ["Melody of Focus"],
+        "jp": ["集中の音符"]
+    },
+    "melody_of_skill": {
+        "cn": ["技巧之音"],
+        "tw": ["技巧之音"],
+        "en": ["Melody of Skill"],
+        "jp": ["器用の音符"]
+    },
+    "melody_of_ultimate": {
+        "cn": ["绝招之音"],
+        "tw": ["絕招之音"],
+        "en": ["Melody of Ultimate"],
+        "jp": ["必殺の音符"]
+    },
+    "melody_of_pummel": {
+        "cn": ["强攻之音"],
+        "tw": ["強攻之音"],
+        "en": ["Melody of Pummel"],
+        "jp": ["強撃の音符"]
+    },
+    "melody_of_luck": {
+        "cn": ["幸运之音"],
+        "tw": ["幸運之音"],
+        "en": ["Melody of Luck"],
+        "jp": ["幸運の音符"]
+    },
+    "melody_of_burst": {
+        "cn": ["暴发之音"],
+        "tw": ["爆發之音"],
+        "en": ["Melody of Burst"],
+        "jp": ["爆発の音符"]
+    },
+    "melody_of_stamina": {
+        "cn": ["体力之音"],
+        "tw": ["體力之音"],
+        "en": ["Melody of Stamina"],
+        "jp": ["体力の音符"]
+    }
+}

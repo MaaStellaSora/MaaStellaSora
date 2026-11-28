@@ -36,6 +36,10 @@ class FrameObservation(CustomRecognition):
 class Interactor(BaseInteractor):
     """Extend the stock interactor only for this task's frames and evidence."""
 
+    def __init__(self, context, *, on_wallet=None):
+        super().__init__(context)
+        self._on_wallet = on_wallet
+
     @staticmethod
     def capture(context: Context):
         """由 Pipeline 截取一帧，沿用框架的画面尺寸与坐标。"""
@@ -144,17 +148,35 @@ class Interactor(BaseInteractor):
         self._number_minimum = .85 if attach.get("strict_number_reading") else params.get("threshold", .3)
         self._number_locator_observed = ()
         self._number_locator_reco_id = None
+        status, conflicts, observed_detail = "missing", (), None
         for detail in self._number_attempts(node_name, params, attach.get("wallet_text_locator")):
             if detail is None:
                 continue
-            value, status, _ = assess_amount(
+            observed_detail = detail
+            value, status, conflicts = assess_amount(
                 (row.text for row in detail.filtered_results if row.score >= self._number_minimum) if detail.hit else (),
                 tuple((row.text, row.score) for row in detail.all_results) + self._number_locator_observed)
             if value is not None:
+                self._publish_wallet(node_name, value, status, conflicts, detail)
                 return value
             if status == "conflict":
                 break
+        self._publish_wallet(node_name, None, status, conflicts, observed_detail)
         return -1
+
+    def _publish_wallet(self, node_name, coin, status, conflicts, detail):
+        """Publish the existing read's result without another recognition pass."""
+        if node_name != WALLET_NODE or self._on_wallet is None:
+            return
+        observation = dict(coin=coin, coin_complete=coin is not None,
+                           recognition_status=status, conflicts=list(conflicts),
+                           native_reco_id=getattr(detail, "reco_id", None))
+        if coin is None:
+            values = [row.text for row in detail.all_results] if detail is not None else []
+            values.extend(text for text, _ in self._number_locator_observed)
+            if values:
+                observation["unresolved_values"] = list(dict.fromkeys(values))
+        self._on_wallet(observation)
 
     def click(self, box: list[int]) -> bool:
         """由框架点击调用方本帧识别得到的目标框。"""

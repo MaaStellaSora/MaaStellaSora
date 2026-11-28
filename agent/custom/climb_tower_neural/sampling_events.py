@@ -15,11 +15,7 @@ class TowerContextSink(ContextEventSink):
         if not collector.enabled or not collector.run_confirmed or not name.startswith("星塔_") or name.startswith("星塔_神经网络_"):
             return
         if msg == "Node.Action.Succeeded":
-            if name == "星塔_节点_选择潜能_已确认拿走_agent":
-                # This NoOp jump target emits Action.Succeeded, not a pipeline
-                # completion. Its recognition already confirmed page transition.
-                collector.selection_confirmed("potential_page_transition")
-            elif name == "星塔_节点_进行对话选择_agent":
+            if name == "星塔_节点_进行对话选择_agent":
                 collector.event_clicked(name)
             elif name == "星塔_保存记录_agent":
                 collector.settlement_seen = True

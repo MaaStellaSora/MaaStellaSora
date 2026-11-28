@@ -1,6 +1,7 @@
 """Small recording-only types; no Maa calls, model state or export transforms."""
 from dataclasses import dataclass, field
 from collections import Counter
+from copy import deepcopy
 import uuid
 
 from .critic.rules import BATTLE_FLOORS, MAX_POTENTIAL_LEVEL
@@ -111,6 +112,8 @@ class ObservedInventory:
     """
     def __init__(self, full_start=False):
         self.items = {}
+        # Audit levels can be read from offers. Keep them separate from confirmed holdings.
+        self._audit_levels = {}  # identity -> (last clear level, still exact)
         self.anonymous = Counter()
         self.bag_verified = False
         self.bag_initialized = False
@@ -128,6 +131,7 @@ class ObservedInventory:
             else:
                 self.items[identity] = dict(row, canonical_rarity=kind, core=kind == "core",
                     level_after=row["level"], inventory_basis="visible_bag_level_OCR")
+        self._audit_levels = {identity: (row["level"], True) for identity, row in self.items.items()}
         self.complete, self.bag_verified, self.issues = True, True, []
         self.bag_initialized = True
         self.revision += 1
@@ -142,12 +146,15 @@ class ObservedInventory:
         conflicts = []
         for p in candidates:
             identity, before = identity_key(p), p.get("level_before", -1)
-            if p.get("recognition_status") == "unresolved" or identity is None or before is None or before < 0:
+            if (p.get("recognition_status") == "unresolved" or p.get("identity_inferred")
+                    or identity is None or before is None or before < 0):
                 continue
-            known = self.items.get(identity)
             anonymous = self.anonymous[p.get("role"), p.get("canonical_rarity"), before]
-            expected = known["level"] if known else before if anonymous else 0 if self.complete else None
-            if expected is not None and before != expected:
+            fallback = before if anonymous else 0 if self.complete else None
+            expected, exact = self._audit_levels.get(identity, (fallback, True))
+            if not exact and before >= expected:
+                self._audit_levels[identity] = (before, True)
+            elif expected is not None and before != expected:
                 conflict = dict(potential_id=identity, history_level=expected, card_level_before=before)
                 conflicts.append(conflict)
                 self.uncertain("card_level_disagrees_with_history", offer_id=offer_id, **conflict)
@@ -157,16 +164,19 @@ class ObservedInventory:
         identity = identity_key(selected)
         level = selected.get("level_after", selected.get("new_level", -1))
         self.revision += 1
-        if (selected.get("recognition_status") == "unresolved"
+        if (selected.get("recognition_status") == "unresolved" or selected.get("identity_inferred")
                 or identity is None or level is None or level < 1 or selected.get("role") not in (1, 2, 3)
                 or selected.get("canonical_rarity") not in ("core", "rare", "common") or selected.get("core") is None):
+            if selected.get("identity_inferred") and identity in self._audit_levels:
+                last_level, _ = self._audit_levels[identity]
+                self._audit_levels[identity] = (last_level, False)
             self.uncertain("selected_potential_unresolved", confirmation_record_id=record_id)
             return False
         row = dict(selected, level=level, confirmation_record_id=record_id,
                    level_basis=selected.get("level_basis", "card_level_OCR"))
         bucket = selected["role"], selected["canonical_rarity"], selected.get("level_before")
         if is_anonymous_non_target(selected):
-            if selected.get("level_before", 0) > 0:
+            if selected.get("level_before", 0) > 0 and self.anonymous[bucket] > 0:
                 self.anonymous[bucket] -= 1
             self.anonymous[selected["role"], selected["canonical_rarity"], level] += 1
             self.bag_verified = False
@@ -174,8 +184,14 @@ class ObservedInventory:
         if identity not in self.items and self.anonymous[bucket]:
             self.anonymous[bucket] -= 1
         self.items[identity] = row
+        self._audit_levels[identity] = (level, True)
         self.bag_verified = False
         return True
+
+    def owned_history_fields(self):
+        return dict(owned_complete=self.complete,
+                    owned_basis="bag_OCR_and_UI_confirmed_selection_history" if self.bag_initialized else "fresh_start_and_UI_confirmed_selection_history",
+                    owned_issues=deepcopy(self.issues))
 
     def fields(self):
         owned = [dict(p) for _, p in sorted(self.items.items(), key=lambda row: str(row[0]))]
@@ -193,8 +209,7 @@ class ObservedInventory:
                                common_count=sum(p.get("count", 1) for p in noncore if p["canonical_rarity"] == "common"),
                                below_max_count=sum(p.get("count", 1) for p in noncore if p["level"] < MAX_POTENTIAL_LEVEL),
                                noncore_level_sum=sum(p["level"]*p.get("count", 1) for p in noncore)))
-        return dict(owned=owned, owned_anonymous=anonymous, owned_complete=self.complete,
-                    owned_basis="bag_OCR_and_UI_confirmed_selection_history" if self.bag_initialized else "fresh_start_and_UI_confirmed_selection_history",
+        return dict(owned=owned, owned_anonymous=anonymous, **self.owned_history_fields(),
                     owned_source="bag_inventory_and_confirmed_selection_history" if self.bag_initialized else "observed_selection_history", owned_revision=self.revision,
-                    owned_issues=list(self.issues), owned_counts=counts,
+                    owned_counts=counts,
                     owned_independently_verified=self.bag_verified)

@@ -493,8 +493,9 @@ class NoteLedger:
         if self._pending:
             links = {key: self._pending[key] for key in ("source_type", "operation_id")}
             if self._pending["metadata"].get("independently_observed") is False:
-                links.update({key: self._pending["metadata"][key] for key in (
-                    "independently_observed", "analysis_eligible", "probability_eligible", "analysis_exclusion_reason")})
+                metadata = self._pending["metadata"]
+                links.update({key: metadata[key] for key in ("independently_observed", "analysis_eligible",
+                    "probability_eligible", "analysis_exclusion_reason", "opening_included") if key in metadata})
             if source_id is not None and str(source_id) != str(self._pending["operation_id"]):
                 self._pending["mixed"] = True
                 self._pending["issues"].append("observation_source_mismatch")

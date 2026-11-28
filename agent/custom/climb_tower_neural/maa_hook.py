@@ -9,6 +9,7 @@ from utils.logger import get_logger
 from .log_filter import ModelLogFilter
 from .observation import ObservationTracker
 from .sampling_data import SamplingCollector
+from .session import RunSession
 from .paths import data_path
 from .value_model import ValueModel
 from .note_runtime import NoteRuntime
@@ -56,8 +57,10 @@ class ValueModelRuntime:
         self.settings = json.loads(data_path("config.json", module_root=self.root).read_text(encoding="utf-8-sig"))
         self.logger = get_logger(__name__)
         self.ui_logs = ModelLogFilter()
+        self.session = RunSession()
         self.collector = SamplingCollector(
             self.app_dir, get_logger(f"{__package__}.sampling"),
+            session=self.session,
         )
         self.task_open = False
         self.collection_enabled = self.collector.enabled
@@ -122,6 +125,7 @@ class ValueModelRuntime:
         if self.collector.upload is not None:
             self.collector.upload.set_consent(False)
         self.notes.reset()
+        self.session.reset()
         node = context.get_node_data("星塔_节点_选择潜能_agent") or {}
         options = (context.get_node_data("星塔_神经网络_运行环境") or {}).get("attach", {})
         upload_requested = options.get("research_upload") is True
@@ -216,7 +220,8 @@ class ValueModelRuntime:
         try:
             if self.model is None:
                 self.model = ValueModel(self.root)
-            tracker = ObservationTracker(self.root, preset, self.logger, self.model, self.collector)
+            tracker = ObservationTracker(self.root, preset, self.logger, self.model, self.collector,
+                                         session=self.session)
             tracker.initialize_bag_inventory()
             self.tracker, self.confirmed_preset = tracker, preset
             self.collector.bind_preset(preset, tracker)
@@ -245,6 +250,7 @@ class ValueModelRuntime:
         image, setup = self.pending_start
         self.pending_start = None
         self.fresh_entry = True
+        self.session.begin_run()
         self.collector.confirm_start(evidence)
         self.notes.start(context, image, setup=setup)
 
@@ -277,6 +283,7 @@ class ValueModelRuntime:
         self.fresh_entry = False
         self.bag_returned = True
         self.notes.reset()
+        self.session.reset()
         self.tracker = None
         self.collector.tracker = None
 

@@ -18,6 +18,7 @@ import uuid
 from .critic.rules import MAX_POTENTIAL_LEVEL
 from .ocr_number import assess_amount, decimal_amount
 
+from .session import RunSession
 from .event_mapping import has_potential_reward
 from .sampling_evidence import ObservedInventory, ReadEvidence, observation_signature, raw_ocr, recognition_roi
 from .name_matching import clean_name, identity_key, match_name
@@ -139,8 +140,9 @@ class SamplingContext:
 
 
 class SamplingCollector:
-    def __init__(self, app_dir, logger):
+    def __init__(self, app_dir, logger, *, session=None):
         self.app_dir, self.logger = Path(app_dir), logger
+        self.session = session if session is not None else RunSession()
         config = self.app_dir / "agent/agent_config/tower_sampling.json"
         try:
             self.config = json.loads(config.read_text(encoding="utf-8-sig")) if config.exists() else {}
@@ -218,7 +220,7 @@ class SamplingCollector:
             return [self._safe(v) for v in value]
         return value
 
-    def emit(self, event_type, **payload):
+    def emit(self, event_type, *, record_id=None, **payload):
         if not self.enabled:
             return
         try:
@@ -256,7 +258,7 @@ class SamplingCollector:
                 run_id = self.run["run_id"] if self.run else None
                 run_sequence = self.run["record_count"] + 1 if self.run else None
                 row = dict(schema_version=SCHEMA_VERSION, collector_version=VERSION, event_type=event_type,
-                           record_type=event_type, timestamp=timestamp(), record_id=uuid.uuid4().hex,
+                           record_type=event_type, timestamp=timestamp(), record_id=record_id or uuid.uuid4().hex,
                            session_id=self.session_id,
                            task_id=self.task_id, run_id=run_id, exploration_id=run_id,
                            sequence=sequence, run_sequence=run_sequence,
@@ -643,12 +645,6 @@ class SamplingCollector:
                    level_basis="Maa_core_0_to_1_convention" if core else "card_level_OCR")
         return row
 
-    def inferred_state(self):
-        if not self.tracker:
-            return None
-        return dict(floor=self.tracker.state.floor, node=self.tracker.state.node,
-                    phase=self.tracker.state.phase, source="neural_network_route_inference",
-                    observation_not_game_truth=True)
 
     def finish_at_boundary(self, reason):
         with self.lock:
@@ -964,7 +960,8 @@ class SamplingCollector:
         floor_basis = ("same_potential_callback_floor_hud" if floor_observation and not page["refresh_index"]
                        else "same_reward_chain_floor_hud" if floor_observation
                        else "not_observed_on_this_reward_chain")
-        signature = (candidates, consistent, conflicts, data.current_coin, data.refresh_cost, floor_observation)
+        owned_history = self.inventory.owned_history_fields()
+        signature = (candidates, consistent, conflicts, data.current_coin, data.refresh_cost, floor_observation, owned_history)
         if repeated and page.get("observed_signature") == signature:
             return offer_id
         page["observed_signature"] = signature
@@ -982,7 +979,7 @@ class SamplingCollector:
                   candidates_complete=read_complete,
                   recognition_status="ok" if read_complete and consistent else "unresolved",
                   level_basis="Maa_core_0_to_1_convention" if data.core_potential else "card_level_OCR",
-                  inventory_conflicts=conflicts,
+                  inventory_conflicts=conflicts, **owned_history,
                   main_trekker_index=0, trekker_index_basis="game_preset_party_roles",
                   coin=data.current_coin, refresh_price=data.refresh_cost,
                   floor=floor_observation["floor"] if floor_observation else None,
@@ -1042,12 +1039,15 @@ class SamplingCollector:
 
     def model_decision(self, record):
         observation = record.get("pool_identity_observation")
-        if not self.ensure_run("pool_observed") or observation is None or observation == self._last_pool_observation:
+        if not self.ensure_run("pool_observed") or observation is None:
+            return
+        observation = dict(pool_identity_observation=observation, **self.inventory.owned_history_fields())
+        if observation == self._last_pool_observation:
             return
         first = self._last_pool_observation is None
         self._last_pool_observation = snapshot(observation)
         chain = self.reward if self.reward and not self.reward["closed"] else None
-        self.emit("pool_observed", pool_identity_observation=observation,
+        self.emit("pool_observed", **observation,
                   offer_id=chain["page"]["offer_id"] if chain and chain["page"] else None,
                   event_id=self.event["event_id"] if self.event else None,
                   stock_scan_id=self.stock_scan_id,

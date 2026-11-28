@@ -331,7 +331,7 @@ def compact_payload(payload):
             continue
         tables["records"].append(dict(record_id=row["record_id"], run_id=row["run_id"],
             sequence=row.get("sequence"), event_type=event,
-            basis="game_UI_observation" if event == "pool_observed" else row.get("basis", "game_UI_observation"),
+            basis=row.get("basis", "game_UI_observation"),
             quality_status=row.get("quality_status", "partial"), payload_json=_json(data)))
     seen = set()
     for row in source["tables"].get("quality_issues", []):
@@ -727,7 +727,11 @@ def build_payload(run_path, session_path=None):
         if row.get("source_attribution") == "confirmed_event_choice_and_following_reward_page":
             row["source_basis"] = "confirmed_history_reconstruction"
         basis = ("local_log_recovery" if row.get("observer") == "local_log_recovery" else
-                 "inventory_difference_derivation" if event == "note_delta" else "game_UI_observation")
+                 "inventory_difference_derivation" if event == "note_delta" else
+                 "confirmed_history_reconstruction" if event == "pool_observed" else "game_UI_observation")
+        if event == "pool_observed" and any(any(flags) for flags in
+                row.get("pool_identity_observation", {}).get("position_identity_inferred", [])):
+            basis = "inferred_identity_history_reconstruction"
         row.pop("original_preset", None)
         payload = {key: item for key, item in row.items() if key not in BASE_FIELDS}
         if event == "note_setup_observed":

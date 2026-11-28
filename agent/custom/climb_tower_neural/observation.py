@@ -9,6 +9,7 @@ from .critic.rules import MAX_POTENTIAL_LEVEL
 from .decision_log import forecast_rows, log_forecast
 from .name_matching import clean_name as _clean, identity_key, is_anonymous_non_target, match_name
 from .pool_identity import IdentityPools, pool_contract
+from .session import RunSession
 from .value_model import Action, sim, replace
 
 
@@ -29,13 +30,14 @@ def potential_levels_valid(old, new, source):
 
 
 class ObservationTracker:
-    def __init__(self, root, preset_data, logger, model, collector=None):
+    def __init__(self, root, preset_data, logger, model, collector=None, *, session=None):
         if "pool_order_evidence" not in preset_data:
             pools, identities, evidence = pool_contract(preset_data["party"], preset_data.get("language", "jp"))
             if tuple(map(len, pools)) == (3, 9, 3, 9, 3, 9):
                 preset_data = dict(preset_data, pools=pools, pool_identity_order=identities, pool_order_evidence=evidence)
         self.root, self.logger = Path(root), logger
         self.collector = collector
+        self.session = session if session is not None else RunSession()
         self.model = model
         self.preset = self.model.preset(preset_data)
         self.preset_data = preset_data
@@ -105,7 +107,7 @@ class ObservationTracker:
     def decision_route_ready(self):
         """Whether the current observations identify one route position."""
         positions = {(node, k, a) for node, k, a, _belief, _probability in self.route_candidates}
-        observed = getattr(self.collector, "last_observed_floor_context", None)
+        observed = self.session.last_confirmed_floor
         anchored = isinstance(observed, dict) and observed.get("floor") == self.state.floor
         return len(positions) == 1 and (not self.route_estimated or anchored)
 
@@ -181,7 +183,7 @@ class ObservationTracker:
 
     def _route_observations(self, phase, coins, observed_floor=None, observed_event=None):
         """Match the page, crossing missed boundaries only when needed."""
-        observed = getattr(self.collector, "last_observed_floor_context", None)
+        observed = self.session.last_confirmed_floor
         floor_minimum = observed.get("floor") if isinstance(observed, dict) else None
         floor_exact = observed_floor.get("floor") if observed_floor else None
         frontier = defaultdict(Fraction)
@@ -249,7 +251,7 @@ class ObservationTracker:
 
     def _route_at_observed_floor(self, phase, observed_floor=None):
         """Recover an over-advanced tracker using the latest real floor HUD."""
-        observed = observed_floor or getattr(self.collector, "last_observed_floor_context", None)
+        observed = observed_floor or self.session.last_confirmed_floor
         if not isinstance(observed, dict) or observed.get("floor") is None:
             return {}, None
         kinds = {"CORE": {"CORE"}, "DRAW": {"DRAW"},
@@ -342,7 +344,8 @@ class ObservationTracker:
                     previous_node=current.node, previous_floor=current.floor, previous_coins=current.coins,
                     recovered_node=node, recovered_floor=floor, route_basis="model_route_inference",
                     skipped_observation_count=skipped, continued=True,
-                    observed_floor_record_id=floor_anchor.get("record_id") if floor_anchor else None)
+                    observed_floor_record_id=(floor_anchor.get("floor_observation_id")
+                        or floor_anchor.get("record_id")) if floor_anchor else None)
 
     def _record_event_wallet_interval(self, coins, candidates):
         """Record the observed total; component amounts remain rule inferences."""

@@ -60,6 +60,7 @@ class IdentityPools:
         confirmed = [row["status"] == "confirmed" for row in evidence]
         self.slots = [list(row) if known else [None] * len(row) for row, known in zip(rows, confirmed)]
         self.unknown = [set() if known else set(row) for row, known in zip(rows, confirmed)]
+        self.inferred = [[False] * len(row) for row in rows]
 
     @property
     def ready(self):
@@ -77,52 +78,78 @@ class IdentityPools:
     def copy(self):
         obj = object.__new__(type(self))
         obj.__dict__ = dict(self.__dict__, slots=[list(row) for row in self.slots],
-                            unknown=[set(row) for row in self.unknown])
+                            unknown=[set(row) for row in self.unknown],
+                            inferred=[list(row) for row in self.inferred])
         return obj
 
-    def observe(self, groups):
+    def observe(self, groups, *, inferred=None):
         slots = [list(row) for row in self.slots]
         unknown = [set(row) for row in self.unknown]
+        quality = [list(row) for row in self.inferred]
         for pi, observed in groups.items():
             row, missing = slots[pi], unknown[pi]
+            flags = quality[pi]
+            observed_flags = (inferred or {}).get(pi, [False] * len(observed))
             if len(observed) == len(row):
                 if set(observed) != {*missing, *(key for key in row if key is not None)} or any(
-                        known is not None and known != seen for known, seen in zip(row, observed)):
+                        known is not None and known != seen and not uncertain
+                        for known, seen, uncertain in zip(row, observed, flags)):
                     raise ValueError("整池展示与已确认潜能身份或顺序不一致")
                 slots[pi], unknown[pi] = list(observed), set()
+                quality[pi] = list(observed_flags)
                 continue
-            for offset, key in enumerate(observed):
+            for offset, (key, is_inferred) in enumerate(zip(observed, observed_flags)):
                 if key in row[offset:]:
                     found = row.index(key, offset)
+                    # A guessed identity does not identify the actual swap source.
+                    # A later clear identity at an uncertain predicted position
+                    # likewise cannot locate that source independently.
+                    if is_inferred or flags[found]:
+                        flags[offset:] = [True] * (len(flags) - offset)
+                    displaced_inferred = flags[offset] or flags[found]
                     row[offset], row[found] = row[found], row[offset]
+                    flags[found] = displaced_inferred
                 elif key in missing:
                     missing.remove(key)
                     if row[offset] is not None:
                         missing.add(row[offset])
                     row[offset] = key
+                    if is_inferred or flags[offset]:
+                        flags[offset:] = [True] * (len(flags) - offset)
                 else:
                     raise ValueError("候选新潜能身份不在已确认剩余池中")
+                flags[offset] = is_inferred
         self.slots, self.unknown = slots, unknown
+        self.inferred = quality
 
     def remove(self, pi, key):
         row, unknown = self.slots[pi], self.unknown[pi]
         if key in row:
             index = row.index(key)
             row[index] = row[-1]
+            self.inferred[pi][index] = self.inferred[pi][-1] or self.inferred[pi][index]
         elif key in unknown:
             unknown.remove(key)
             if row[-1] is not None:
                 unknown.add(row[-1])
+            if self.inferred[pi][-1]:
+                for index, identity in enumerate(row[:-1]):
+                    if identity is None:
+                        self.inferred[pi][index] = True
         else:
             raise ValueError("已取得潜能身份不在剩余池中")
         row.pop()
+        self.inferred[pi].pop()
 
     def forget_order(self):
         for index, row in enumerate(self.slots):
             self.unknown[index].update(key for key in row if key is not None)
             self.slots[index] = [None] * len(row)
+            self.inferred[index] = [any(self.inferred[index])] * len(row)
 
     def snapshot(self):
+        inferred = any(any(row) for row in self.inferred)
         return dict(positions=[list(row) for row in self.slots], unknown_identities=[
             [key for key in reference if key in unknown] for reference, unknown in zip(self.reference, self.unknown)],
+            **(dict(position_identity_inferred=[list(row) for row in self.inferred]) if inferred else {}),
             projection_unique=self.ready, compatibility="unknown_slots_without_prior")

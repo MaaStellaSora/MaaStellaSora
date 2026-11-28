@@ -21,8 +21,11 @@ import json
 import re
 import struct
 import sys
-from ctypes import wintypes
 from pathlib import Path
+
+if sys.platform == "win32":
+    ## 只在 Windows 分支用到；顶层无条件导入在裁剪过的解释器上会直接失败
+    from ctypes import wintypes
 
 OLD_APP_NAME = "MFAAvalonia"
 RT_ICON = 3
@@ -68,9 +71,11 @@ def rename_executable(install_dir: Path, app_name: str) -> Path | None:
     for suffix in (".exe", ""):
         existing = install_dir / f"{app_name}{suffix}"
         if existing.is_file():
+            ## 重跑路径同样要保证执行位，不能只靠首次 rename 那一支
+            if suffix == "":
+                existing.chmod(0o755)
             print(f"[branding] {existing.name} already renamed, apply icon only")
             return existing
-    print("[branding] warn: MFAAvalonia executable not found, skip rename")
     return None
 
 
@@ -104,6 +109,12 @@ def _load_ico(path: Path) -> list[dict]:
     return entries
 
 
+def _is_int_resource(value: int | None) -> bool:
+    """Win32 用高 16 位是否为 0 区分数值 ID 与字符串指针（IS_INTRESOURCE）。"""
+
+    return bool(value) and (value >> 16) == 0
+
+
 def _resource_ids(kernel32, module: int, resource_type: int) -> list[int]:
     """列出某个资源类型下所有整数 ID。"""
 
@@ -117,11 +128,48 @@ def _resource_ids(kernel32, module: int, resource_type: int) -> list[int]:
     ]
 
     def _callback(_module, _type, name, _param):
-        found.append(ctypes.cast(name, ctypes.c_void_p).value)
+        value = ctypes.cast(name, ctypes.c_void_p).value
+        ## 具名资源传进来的是指向模块内部的字符串指针，FreeLibrary 之后即失效，
+        ## 只收数值 ID，避免后面把野指针当资源 ID 用。
+        if _is_int_resource(value):
+            found.append(value)
         return True
 
     kernel32.EnumResourceNamesW(
         module, ctypes.c_void_p(resource_type), callback_type(_callback), 0
+    )
+    return found
+
+
+def _resource_languages(
+    kernel32, module: int, resource_type: int, resource_id: int
+) -> list[int]:
+    """列出某个资源 ID 下所有语言 ID。"""
+
+    found: list[int] = []
+    callback_type = ctypes.WINFUNCTYPE(
+        wintypes.BOOL,
+        wintypes.HMODULE,
+        wintypes.LPVOID,
+        wintypes.LPVOID,
+        wintypes.WORD,
+        wintypes.LPARAM,
+    )
+    kernel32.EnumResourceLanguagesW.restype = wintypes.BOOL
+    kernel32.EnumResourceLanguagesW.argtypes = [
+        wintypes.HMODULE, wintypes.LPVOID, wintypes.LPVOID, callback_type, wintypes.LPARAM,
+    ]
+
+    def _callback(_module, _type, _name, language, _param):
+        found.append(language)
+        return True
+
+    kernel32.EnumResourceLanguagesW(
+        module,
+        ctypes.c_void_p(resource_type),
+        ctypes.c_void_p(resource_id),
+        callback_type(_callback),
+        0,
     )
     return found
 
@@ -152,28 +200,30 @@ def set_windows_icon(exe: Path, ico: Path) -> None:
     kernel32.FreeLibrary.restype = wintypes.BOOL
     kernel32.FreeLibrary.argtypes = [wintypes.HMODULE]
 
-    ## 先读出原有资源 ID，删除时要按真实 ID（MFA 的 GROUP_ICON 用的是 32512）
+    ## 先读出原有资源 ID 与语言：删除必须 (类型, ID, 语言) 三者精确匹配，
+    ## 语言写错 Win32 一个字节都不会删，旧的 MFAAvalonia 图标就会留在 PE 里。
     module = kernel32.LoadLibraryExW(str(exe), None, 0x2)
     icon_ids: list[int] = []
     group_ids: list[int] = []
+    removals: list[tuple[int, int, int]] = []
     if module:
-        icon_ids = _resource_ids(kernel32, module, RT_ICON)
-        group_ids = _resource_ids(kernel32, module, RT_GROUP_ICON)
+        for resource_type, bucket in ((RT_ICON, icon_ids), (RT_GROUP_ICON, group_ids)):
+            for resource_id in _resource_ids(kernel32, module, resource_type):
+                bucket.append(resource_id)
+                languages = _resource_languages(kernel32, module, resource_type, resource_id)
+                ## 枚举不到语言（异常模块）时退回 LANG_NEUTRAL，不要什么都不删
+                for language in languages or [LANG_NEUTRAL]:
+                    removals.append((resource_type, resource_id, language))
         kernel32.FreeLibrary(module)
 
     handle = kernel32.BeginUpdateResourceW(str(exe), False)
     if not handle:
         raise ctypes.WinError(ctypes.get_last_error())
     try:
-        for resource_id in icon_ids:
+        for resource_type, resource_id, language in removals:
             kernel32.UpdateResourceW(
-                handle, ctypes.c_void_p(RT_ICON), ctypes.c_void_p(resource_id),
-                LANG_NEUTRAL, None, 0,
-            )
-        for resource_id in group_ids:
-            kernel32.UpdateResourceW(
-                handle, ctypes.c_void_p(RT_GROUP_ICON), ctypes.c_void_p(resource_id),
-                LANG_NEUTRAL, None, 0,
+                handle, ctypes.c_void_p(resource_type), ctypes.c_void_p(resource_id),
+                language, None, 0,
             )
 
         for index, entry in enumerate(entries, start=1):
@@ -231,8 +281,12 @@ def main(argv: list[str]) -> None:
         )
 
     executable = rename_executable(install_dir, app_name)
-    if executable is not None:
-        set_windows_icon(executable, install_dir / "Assets" / "logo.ico")
+    if executable is None:
+        ## 旧名字和新名字都不在，说明 MFA 文件没进来，继续往下跑只会产出没品牌的包
+        raise SystemExit(
+            f"neither {OLD_APP_NAME} nor {app_name} executable found in {install_dir}"
+        )
+    set_windows_icon(executable, install_dir / "Assets" / "logo.ico")
 
 
 if __name__ == "__main__":

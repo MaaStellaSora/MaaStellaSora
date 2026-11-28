@@ -13,6 +13,7 @@ from pathlib import Path
 import sqlite3
 
 from .purchase_evidence import purchase_wallet_evidence
+from .language import catalog_name_fields
 from .settlement_counts import check_potential_counts
 from .sampling_evidence import planned_combined_interval, reused_interval_components, battle_floor_outside_route
 from .sampling_journal import DAMAGE_SUFFIX
@@ -88,12 +89,12 @@ _OFFER_FIELDS = set("""offer_id reward_chain_id offer_index refresh_index same_p
     core_potential candidates candidates_complete candidate_read_complete recognition_status
     recognition_consistent recognition_errors inventory_conflicts owned_complete owned_basis owned_issues
     main_trekker_index trekker_index_basis level_basis level_upped page_generation_basis refresh_price
-    pool_identity_observation visible_shared_bonus""".split())
+    pool_identity_observation visible_shared_bonus probability_eligible""".split())
 _ACTION_FIELDS = set("""operation_id offer_id next_offer_id reward_chain_id stock_scan_id next_stock_scan_id
     shop_visit_id shelf_generation_id item item_instance_id slot source source_type source_attribution
     source_inferred source_basis phase selected selected_slot selected_ui_index planned_name
     selection_confirmed selection_basis selection_observation_complete selected_candidate_index operation_confirmed
-    confirmation_basis confirmation_status debit_confirmed success result coin_before coin_after
+    confirmation_basis confirmation_status debit_confirmed success pipeline_succeeded reward_committed result coin_before coin_after
     coins coins_before coins_after observed_coins purchase_debit pipeline_coins_after
     pipeline_wallet_observation_id wallet_before_observation_id wallet_observation_id
     wallet_observation_complete refresh_price refresh_remaining_before refresh_remaining_after
@@ -167,8 +168,8 @@ def _compact_value(value, event_type="", *, potential=False):
                 result.pop("name", None)
             result.pop("trekker", None)
         if value.get("potential_id") is not None:
-            result.pop("name_ja_jp", None)
-            result.pop("name_zh_cn", None)
+            for key in catalog_name_fields():
+                result.pop(key, None)
         if result.get("rarity") == "core":
             result.pop("core", None)
     # The inventory map already gives all successful reads. Keep only extra
@@ -204,7 +205,7 @@ def _compact_value(value, event_type="", *, potential=False):
             result.pop("skipped_regions")
     for disc in result.get("main_discs", []):
         if disc.get("id") is not None and disc.get("status") == "confirmed":
-            for key in ("text", "name", "name_ja", "name_zh", "name_ja_jp", "name_zh_cn"):
+            for key in ("text", "name", "name_ja", "name_zh", *catalog_name_fields()):
                 disc.pop(key, None)
     return result
 
@@ -272,6 +273,7 @@ def compact_record(event_type, payload):
 def compact_preset(original):
     """Keep the party and each target's identity/level, without the OCR/catalog copies."""
     content = {}
+    name_fields = catalog_name_fields()
     for key in ("party", "recognition_catalog"):
         if key in original:
             content[key] = _compact_value(original[key])
@@ -279,13 +281,13 @@ def compact_preset(original):
         for key in tuple(party):
             if key not in {"role", "character_id", "character_id_namespace", "local_character_identity",
                            "local_potential_catalogue", "targets", "catalogue_order",
-                           "name", "name_ja_jp", "name_zh_cn"}:
+                           "name", *name_fields}:
                 party.pop(key)
         for target, original_target in zip(party.get("targets", []), original_party.get("targets", [])):
             if "target_level" in original_target:
                 target["target_level"] = original_target["target_level"]
         if party.get("character_id") is not None:
-            for key in ("name", "name_ja_jp", "name_zh_cn", "local_character_identity"):
+            for key in ("name", *name_fields, "local_character_identity"):
                 party.pop(key, None)
     for target, original_target in zip(content.get("recognition_catalog", []), original.get("recognition_catalog", [])):
         if "target_level" in original_target:
@@ -331,7 +333,7 @@ def compact_payload(payload):
             continue
         tables["records"].append(dict(record_id=row["record_id"], run_id=row["run_id"],
             sequence=row.get("sequence"), event_type=event,
-            basis="game_UI_observation" if event == "pool_observed" else row.get("basis", "game_UI_observation"),
+            basis=row.get("basis", "game_UI_observation"),
             quality_status=row.get("quality_status", "partial"), payload_json=_json(data)))
     seen = set()
     for row in source["tables"].get("quality_issues", []):
@@ -665,7 +667,8 @@ def build_payload(run_path, session_path=None):
         if event == "lifecycle_observed" and row.get("lifecycle_type") == "pipeline_node_completed":
             continue
         semantic.append(row)
-    wallets = [row for row in run if row["event_type"] == "wallet_observed"]
+    wallets = [dict(row, observation_id=row["record_id"])
+               for row in run if row["event_type"] == "wallet_observed"]
     attempts = {row.get("operation_id"): row for row in run if row["event_type"] == "purchase_attempt"}
     action_attempts = {}
     results = defaultdict(list)
@@ -685,15 +688,17 @@ def build_payload(run_path, session_path=None):
             attempt = attempts.get(row.get("operation_id"))
             before_seq = (attempt or row).get("sequence", 0)
             end_seq = row.get("sequence", 0)
-            before = next((wallet for wallet in reversed(wallets) if wallet.get("sequence", 0) < before_seq
-                           and wallet.get("coin_complete") and wallet.get("record_id")), None)
+            if attempt and "wallet_before_observation_id" in attempt:
+                before = next((wallet for wallet in wallets
+                               if wallet["observation_id"] == attempt["wallet_before_observation_id"]), None)
+            else:
+                before = next((wallet for wallet in reversed(wallets) if wallet.get("sequence", 0) < before_seq
+                               and wallet.get("coin_complete") and wallet.get("record_id")), None)
             observed = [wallet for wallet in wallets if before_seq < wallet.get("sequence", 0) < end_seq]
             pipeline = observed[-1] if observed else None
             evidence = purchase_wallet_evidence(row.get("operation_id"), (row.get("item") or {}).get("price"),
                 observed, before_wallet=before, pipeline_wallet=pipeline)
-            row["pipeline_reported_success"] = row.get("pipeline_succeeded", row.get("success"))
             row.update(evidence)
-            row["success"] = row["debit_confirmed"]
             if row["confirmation_status"] != "confirmed":
                 builder.issue(rid, "coins_after", "purchase_" + row["confirmation_status"],
                     "partial" if row["confirmation_status"] == "wallet_missing" else "suspect",
@@ -727,7 +732,11 @@ def build_payload(run_path, session_path=None):
         if row.get("source_attribution") == "confirmed_event_choice_and_following_reward_page":
             row["source_basis"] = "confirmed_history_reconstruction"
         basis = ("local_log_recovery" if row.get("observer") == "local_log_recovery" else
-                 "inventory_difference_derivation" if event == "note_delta" else "game_UI_observation")
+                 "inventory_difference_derivation" if event == "note_delta" else
+                 "confirmed_history_reconstruction" if event == "pool_observed" else "game_UI_observation")
+        if event == "pool_observed" and any(any(flags) for flags in
+                row.get("pool_identity_observation", {}).get("position_identity_inferred", [])):
+            basis = "inferred_identity_history_reconstruction"
         row.pop("original_preset", None)
         payload = {key: item for key, item in row.items() if key not in BASE_FIELDS}
         if event == "note_setup_observed":
@@ -780,9 +789,6 @@ def build_payload(run_path, session_path=None):
                 confirmed = result["operation_confirmed"] is True
             elif result_event == "refresh_result":
                 confirmed = result.get("next_offer_id") in offer_ids
-            elif result_event == "enhancement_result":
-                confirmed = any(row["event_type"] == "offer_observed" and row.get("origin_operation_id") == operation
-                                and row.get("source") == "enhance" for row in run)
             else:
                 confirmed = False
             if not confirmed:

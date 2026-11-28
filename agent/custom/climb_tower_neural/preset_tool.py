@@ -5,10 +5,10 @@ import json
 from pathlib import Path
 
 from .critic.rules import MAX_POTENTIAL_LEVEL
-from .paths import data_path
 from .name_matching import clean_name, identity_key, is_anonymous_non_target, local_potential_identity, match_name
 from .pool_identity import pool_contract
-
+from .paths import data_path
+from .language import catalog_name_field, catalog_name_fields, normalize_language
 
 
 def read(path):
@@ -33,7 +33,10 @@ def compile_bag_preset(party, language, catalog):
     independently by the bag reader, including all new-character slots. Keep the
     original rows and current levels independently of the 36 target slots.
     """
-    name_field = "name_zh_cn" if language == "cn" else "name_ja_jp"
+    language = normalize_language(language)
+    name_field = catalog_name_field(language)
+    catalog_fields = (*catalog_name_fields(), "catalog_id_namespace",
+                      "region_validation_status", "cn_server_id_equivalence_verified")
     rows = catalog_rows(catalog)
     character_data = catalog.get("characters")
     if character_data is None:
@@ -107,8 +110,7 @@ def compile_bag_preset(party, language, catalog):
                 local_identity=None, character_id=character_id, role=role,
                 rarity_class=kind, target_level=card["target_level"], **{name_field: name or None})
             if match:
-                item.update({key: match[key] for key in ("name_ja_jp", "name_zh_cn", "catalog_id_namespace",
-                    "region_validation_status", "cn_server_id_equivalence_verified") if key in match})
+                item.update({key: match[key] for key in catalog_fields if key in match})
             elif not catalogue_complete and card.get("name_confirmed") and clean_name(name):
                 item["local_identity"] = local_potential_identity(role, member["name"], kind, name)
                 item["local_identity_namespace"] = "bag_role_and_observed_name"
@@ -124,8 +126,7 @@ def compile_bag_preset(party, language, catalog):
                 observed = named.get(row["potential_id"])
                 item = dict(potential_id=row["potential_id"], character_id=character_id, role=role,
                     rarity_class=rarity(row), target_level=observed["target_level"] if observed else 0,
-                    **{key: row[key] for key in ("name_ja_jp", "name_zh_cn", "catalog_id_namespace",
-                        "region_validation_status", "cn_server_id_equivalence_verified") if key in row})
+                    **{key: row[key] for key in catalog_fields if key in row})
                 (targets if item["rarity_class"] != "core" or item["target_level"] else recognition).append(item)
         else:
             for item in card_items:

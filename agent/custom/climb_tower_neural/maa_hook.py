@@ -7,8 +7,10 @@ from maa.agent.agent_server import AgentServer
 from utils.logger import get_logger
 
 from .log_filter import ModelLogFilter
+from .language import catalog_name_field, normalize_language
 from .observation import ObservationTracker
 from .sampling_data import SamplingCollector
+from .session import RunSession
 from .paths import data_path
 from .value_model import ValueModel
 from .note_runtime import NoteRuntime
@@ -35,6 +37,7 @@ _STOP_MESSAGES = {
     "shop_route_unresolved": "$agent.custom.action.climb_tower_neural.route_position_unconfirmed",
     "shop_model_inputs_unconfirmed": "$agent.custom.action.climb_tower_neural.route_position_unconfirmed",
     "shop_action_unconfirmed": "$agent.custom.action.climb_tower_neural.shop_action_failed",
+    "event_transition_unconfirmed": "$agent.custom.action.climb_tower_neural.event_transition_failed",
     "event_observation_incomplete": "$agent.custom.action.climb_tower_neural.event_observation_incomplete",
     "quiz_answer_unmatched": "$agent.custom.action.climb_tower_neural.quiz_answer_unmatched",
     "event_mapping_unavailable": "$agent.custom.action.climb_tower_neural.event_mapping_unavailable",
@@ -56,8 +59,10 @@ class ValueModelRuntime:
         self.settings = json.loads(data_path("config.json", module_root=self.root).read_text(encoding="utf-8-sig"))
         self.logger = get_logger(__name__)
         self.ui_logs = ModelLogFilter()
+        self.session = RunSession()
         self.collector = SamplingCollector(
             self.app_dir, get_logger(f"{__package__}.sampling"),
+            session=self.session,
         )
         self.task_open = False
         self.collection_enabled = self.collector.enabled
@@ -74,6 +79,13 @@ class ValueModelRuntime:
         self.bag_returned = True
         self.notes = NoteRuntime(self)
 
+    def observe_wallet(self, reading):
+        """Publish the UI's final wallet result before optional research storage."""
+        values = dict(reading)
+        native_reco_id = values.pop("native_reco_id", None)
+        observation = self.session.observe_wallet(values)
+        self.collector.record_wallet(observation, native_reco_id=native_reco_id)
+        return observation
 
     def requested(self, context):
         node = context.get_node_data("星塔_节点_选择潜能_agent") or {}
@@ -122,6 +134,7 @@ class ValueModelRuntime:
         if self.collector.upload is not None:
             self.collector.upload.set_consent(False)
         self.notes.reset()
+        self.session.reset()
         node = context.get_node_data("星塔_节点_选择潜能_agent") or {}
         options = (context.get_node_data("星塔_神经网络_运行环境") or {}).get("attach", {})
         upload_requested = options.get("research_upload") is True
@@ -154,7 +167,7 @@ class ValueModelRuntime:
     def language(context):
         node = context.get_node_data("星塔_节点_进行对话选择_agent") or {}
         language = node.get("attach", {}).get("lang_type", "cn")
-        return {"zh_cn": "cn", "ja_jp": "jp"}.get(language, language)
+        return normalize_language(language)
 
     @staticmethod
     def _bag_task(context, node):
@@ -185,29 +198,33 @@ class ValueModelRuntime:
                 returned_frame[:] = [None]
             if not self._bag_task(context, "星塔_打开背包界面_agent"):
                 self.bag_returned = self._returned_from_bag(context, page, returned_frame=returned_frame)
-                if not context.tasker.stopping:
-                    self.stop_model(context, "bag_not_opened", phase=page, missing=("confirmed_bag_preset",))
-                return False
-            if preset is None:
-                try:
-                    party = read_bag_party(context, language)
-                    if context.tasker.stopping:
-                        return False
-                    preset = compile_bag_preset(party, language,
-                        read(data_path("potential_name_catalog.json", module_root=self.root)))
-                except (ValueError, RuntimeError, OSError) as exc:
-                    if not context.tasker.stopping:
-                        self.stop_model(context, "bag_preset_unconfirmed", phase="bag",
-                            missing=("confirmed_bag_preset",), observation_error=str(exc))
+                if context.tasker.stopping:
                     return False
-            try:
-                if not context.tasker.stopping and self.notes.observing:
-                    self.notes.read_bag_setup(context)
-            except (ValueError, RuntimeError, OSError) as exc:
-                self.collector.emit("note_bag_setup_observed", complete=False, reason=str(exc))
-            finally:
-                if not context.tasker.stopping and self._bag_task(context, "星塔_关闭背包界面_agent"):
-                    self.bag_returned = self._returned_from_bag(context, page, returned_frame=returned_frame)
+                if preset is None:
+                    self.stop_model(context, "bag_not_opened", phase=page, missing=("confirmed_bag_preset",))
+                    return False
+                self.collector.emit("note_bag_setup_observed", complete=False, reason="bag_not_opened")
+            else:
+                if preset is None:
+                    try:
+                        party = read_bag_party(context, language)
+                        if context.tasker.stopping:
+                            return False
+                        preset = compile_bag_preset(party, language,
+                            read(data_path("potential_name_catalog.json", module_root=self.root)))
+                    except (ValueError, RuntimeError, OSError) as exc:
+                        if not context.tasker.stopping:
+                            self.stop_model(context, "bag_preset_unconfirmed", phase="bag",
+                                missing=("confirmed_bag_preset",), observation_error=str(exc))
+                        return False
+                try:
+                    if not context.tasker.stopping and self.notes.observing:
+                        self.notes.read_bag_setup(context)
+                except (ValueError, RuntimeError, OSError) as exc:
+                    self.collector.emit("note_bag_setup_observed", complete=False, reason=str(exc))
+                finally:
+                    if not context.tasker.stopping and self._bag_task(context, "星塔_关闭背包界面_agent"):
+                        self.bag_returned = self._returned_from_bag(context, page, returned_frame=returned_frame)
             if not self.bag_returned:
                 if not context.tasker.stopping:
                     self.stop_model(context, "bag_return_unconfirmed", phase=page,
@@ -216,12 +233,13 @@ class ValueModelRuntime:
         try:
             if self.model is None:
                 self.model = ValueModel(self.root)
-            tracker = ObservationTracker(self.root, preset, self.logger, self.model, self.collector)
+            tracker = ObservationTracker(self.root, preset, self.logger, self.model, self.collector,
+                                         session=self.session)
             tracker.initialize_bag_inventory()
             self.tracker, self.confirmed_preset = tracker, preset
             self.collector.bind_preset(preset, tracker)
             self.collector.initialize_bag_inventory(preset)
-            field = "name_zh_cn" if language == "cn" else "name_ja_jp"
+            field = catalog_name_field(language)
             targets = [total + 2 for total in preset["role_ordinary_totals"]]
             self.logger.info("$agent.custom.action.climb_tower_neural.preset_loaded", {
                 "party": " / ".join(member[field] for member in preset["party"]),
@@ -245,6 +263,7 @@ class ValueModelRuntime:
         image, setup = self.pending_start
         self.pending_start = None
         self.fresh_entry = True
+        self.session.begin_run()
         self.collector.confirm_start(evidence)
         self.notes.start(context, image, setup=setup)
 
@@ -277,6 +296,7 @@ class ValueModelRuntime:
         self.fresh_entry = False
         self.bag_returned = True
         self.notes.reset()
+        self.session.reset()
         self.tracker = None
         self.collector.tracker = None
 

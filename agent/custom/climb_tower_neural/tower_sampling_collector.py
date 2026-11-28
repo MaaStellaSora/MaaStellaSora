@@ -1,17 +1,17 @@
 """Connect potential and shop readers to optional research observations."""
 import uuid
+from contextlib import nullcontext
 
 from .shop_ui.handler import ShopHandler
 from .sampling_data import snapshot
 from .sampling_evidence import raw_ocr
 from .observation import PotentialObservationIncomplete
+from .purchase_evidence import purchase_wallet_evidence
 
 
 def run_observed_operation(collector, event, handler, function, *args, before=False, offer_id=None, operation_id=None):
-    if not collector.ensure_run(event):
-        return function(*args)
+    recording = collector.ensure_run(event)
     data = handler.data
-    initial = snapshot(data)
     common = dict(operation_id=operation_id or uuid.uuid4().hex, offer_id=offer_id,
                   reward_chain_id=collector.reward["reward_chain_id"] if collector.reward and not collector.reward["closed"] else None,
                   stock_scan_id=collector.stock_scan_id,
@@ -20,26 +20,53 @@ def run_observed_operation(collector, event, handler, function, *args, before=Fa
         common["selected_candidate_index"] = args[0].index
     if offer_id and collector.reward and not collector.reward["closed"]:
         common.update(collector.reward["source_fields"], source_raw=data.params.potential_source)
-    if before:
-        collector.emit(event + "_attempt", phase="before", coin_before=initial.get("current_coin"),
-                  refresh_price=initial.get("refresh_cost"), **common)
-    with collector.action_scope(**common), collector.capture(event, **common) as read:
-        result = function(*args)
+    with collector.session.action_scope(**common):
+        if not recording:
+            return function(*args)
+        initial = snapshot(data)
+        if before:
+            collector.emit(event + "_attempt", phase="before", coin_before=initial.get("current_coin"),
+                      refresh_price=initial.get("refresh_cost"), **common)
+        wallet_capture = (collector.session.purchase_wallet_capture(common["operation_id"])
+                          if event == "enhancement_result" else nullcontext(None))
+        failure = None
+        with wallet_capture as wallets, collector.capture(event, **common) as read:
+            try:
+                result = function(*args)
+            except Exception as error:
+                if event != "enhancement_result":
+                    raise
+                failure = error
+                result = None
     next_offer_id = (collector.refresh_succeeded(offer_id, common["operation_id"])
                      if event == "refresh_result" and result else None)
     outcome = dict(result=snapshot(result),
                    Maa_reported_success=result if isinstance(result, bool) else None,
                    next_offer_id=next_offer_id, coin_before=initial.get("current_coin"),
                    read_id=read.read_id, **common)
+    coin_after = None if event == "shop_refresh_result" else getattr(data, "current_coin", None)
+    if event == "enhancement_result":
+        outcome.update(purchase_wallet_evidence(common["operation_id"], initial["current_enhancement_cost"],
+            wallets["wallets"], before_wallet=wallets["before_wallet"],
+            pipeline_wallet=collector.session.current_wallet_observation))
+        coin_after = outcome["pipeline_coins_after"]
+        if initial["current_enhancement_cost"] == 0:
+            outcome["debit_confirmed"] = None
+        origin, take_id = collector.last_enhancement_take
+        confirmation_id = take_id if origin == common["operation_id"] else None
+        outcome.update(pipeline_succeeded=handler.interactor.last_enhance_pipeline_succeeded,
+                       operation_confirmed=confirmation_id is not None, confirmation_record_id=confirmation_id,
+                       confirmation_basis="enhancement_reward_take",
+                       confirmation_status="confirmed" if confirmation_id is not None else "unconfirmed")
     if event == "shop_refresh_result" and result is True and not handler.interactor.context.tasker.stopping:
         # The adapter publishes the final confirmed frame before completing this operation.
         outcome["refresh_remaining_after_action"] = data.refresh_remaining
         outcome["previous_state"] = initial
         handler.pending_refresh = outcome
     else:
-        collector.emit(event, phase="after",
-                  coin_after=None if event == "shop_refresh_result" else getattr(data, "current_coin", None),
-                  **outcome)
+        collector.emit(event, phase="after", coin_after=coin_after, **outcome)
+    if failure is not None:
+        raise failure
     return result
 
 
@@ -157,6 +184,7 @@ class ObservedShopHandler(ShopHandler):
         return result
 
     def _enhance(self):
+        self.interactor.last_enhance_pipeline_succeeded = None
         return run_observed_operation(self.collector, "enhancement_result", self, super()._enhance, before=True)
 
     def _record_stock(self, read):

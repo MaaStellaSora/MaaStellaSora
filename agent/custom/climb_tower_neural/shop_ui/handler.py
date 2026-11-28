@@ -1,10 +1,9 @@
 """Neural shelf reading, refresh confirmation and enhancement operations."""
-import re
-
 from custom.climb_tower.climb_tower_shop.handler import ShopHandler as NativeShopHandler
 
 from .context import Item, ShopContext
 from .interactor import ShopInteractor
+from .price import price_key
 from ..critic.rules import MAX_SHOP_RESTOCKS
 from ..ui_flow import read_until
 from utils import logger as logger_module
@@ -247,36 +246,9 @@ class ShopHandler:
     def _get_item_price(self, item_roi: dict[str, list[int]], item_name: str, quantity: int) -> int:
         """通过识别获得商品价格"""
         roi = item_roi["price_roi"]
-        reco_result = self.interactor.recognize_item_price(roi)
-        price_key = "potential_drink" if item_name == "potential_drink" else f"melody_{quantity}"
-        standard_price = (self.data.params.item_standard_prices.get(price_key)
-                          if item_name == "potential_drink" or item_name.startswith("melody_of_") else None)
-        item_price = self._clean_and_extract_price(reco_result, standard_price)
+        standard_price = self.data.params.item_standard_prices.get(price_key(item_name, quantity))
+        item_price, _ = self.interactor.read_item_price(roi, standard_price)
         return item_price
-
-    @staticmethod
-    def _clean_and_extract_price(reco_result: list[str], standard_price: int | None) -> int:
-        """按商品原价拆开同框的原价/实价；五折与八折冲突时保持未确认。"""
-        if standard_price is None:
-            return -1
-        discounts = {standard_price // 2, standard_price * 4 // 5}
-        values = set()
-        original = str(standard_price)
-        for text in reco_result:
-            text = text.strip()
-            if not re.fullmatch(r"[0-9]+", text):
-                continue
-            text = str(int(text))
-            if text.startswith(original) and text[len(original):]:
-                reduced = int(text[len(original):])
-                if reduced in discounts:
-                    values.add(reduced)
-            elif int(text) in discounts | {standard_price}:
-                values.add(int(text))
-        discounted = values & discounts
-        if len(discounted) == 1:
-            return discounted.pop()
-        return standard_price if values == {standard_price} else -1
 
     def _update_refresh_info(self, *, missing_only=False):
         """更新刷新相关信息"""

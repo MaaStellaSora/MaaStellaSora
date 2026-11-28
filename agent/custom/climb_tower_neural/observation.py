@@ -5,10 +5,12 @@ from datetime import datetime
 from fractions import Fraction
 from pathlib import Path
 
-from .critic.rules import MAX_POTENTIAL_LEVEL
+from .critic.rules import MAX_POTENTIAL_LEVEL, shared_enhancement_bonus
 from .decision_log import forecast_rows, log_forecast
+from .language import catalog_name_field, catalog_name_fields
 from .name_matching import clean_name as _clean, identity_key, is_anonymous_non_target, match_name
 from .pool_identity import IdentityPools, pool_contract
+from .session import RunSession
 from .value_model import Action, sim, replace
 
 
@@ -29,17 +31,18 @@ def potential_levels_valid(old, new, source):
 
 
 class ObservationTracker:
-    def __init__(self, root, preset_data, logger, model, collector=None):
+    def __init__(self, root, preset_data, logger, model, collector=None, *, session=None):
         if "pool_order_evidence" not in preset_data:
             pools, identities, evidence = pool_contract(preset_data["party"], preset_data.get("language", "jp"))
             if tuple(map(len, pools)) == (3, 9, 3, 9, 3, 9):
                 preset_data = dict(preset_data, pools=pools, pool_identity_order=identities, pool_order_evidence=evidence)
         self.root, self.logger = Path(root), logger
         self.collector = collector
+        self.session = session if session is not None else RunSession()
         self.model = model
         self.preset = self.model.preset(preset_data)
         self.preset_data = preset_data
-        self.name_field = "name_zh_cn" if preset_data.get("language") == "cn" else "name_ja_jp"
+        self.name_field = catalog_name_field(preset_data.get("language"))
         self.local_roles = {int(member["role"]): member for member in preset_data["party"]
                             if member.get("local_potential_catalogue")}
         self.names, self.local_names, self.catalogue = defaultdict(list), defaultdict(list), {}
@@ -65,7 +68,7 @@ class ObservationTracker:
         self.reset()
 
     def _index_names(self, item):
-        for field in ("name_ja_jp", "name_zh_cn", "name_en_us", "name_zh_tw"):
+        for field in catalog_name_fields():
             if item.get(field):
                 key = _clean(item[field])
                 if item not in self.names[key]:
@@ -105,7 +108,7 @@ class ObservationTracker:
     def decision_route_ready(self):
         """Whether the current observations identify one route position."""
         positions = {(node, k, a) for node, k, a, _belief, _probability in self.route_candidates}
-        observed = getattr(self.collector, "last_observed_floor_context", None)
+        observed = self.session.last_confirmed_floor
         anchored = isinstance(observed, dict) and observed.get("floor") == self.state.floor
         return len(positions) == 1 and (not self.route_estimated or anchored)
 
@@ -181,7 +184,7 @@ class ObservationTracker:
 
     def _route_observations(self, phase, coins, observed_floor=None, observed_event=None):
         """Match the page, crossing missed boundaries only when needed."""
-        observed = getattr(self.collector, "last_observed_floor_context", None)
+        observed = self.session.last_confirmed_floor
         floor_minimum = observed.get("floor") if isinstance(observed, dict) else None
         floor_exact = observed_floor.get("floor") if observed_floor else None
         frontier = defaultdict(Fraction)
@@ -249,7 +252,7 @@ class ObservationTracker:
 
     def _route_at_observed_floor(self, phase, observed_floor=None):
         """Recover an over-advanced tracker using the latest real floor HUD."""
-        observed = observed_floor or getattr(self.collector, "last_observed_floor_context", None)
+        observed = observed_floor or self.session.last_confirmed_floor
         if not isinstance(observed, dict) or observed.get("floor") is None:
             return {}, None
         kinds = {"CORE": {"CORE"}, "DRAW": {"DRAW"},
@@ -342,7 +345,8 @@ class ObservationTracker:
                     previous_node=current.node, previous_floor=current.floor, previous_coins=current.coins,
                     recovered_node=node, recovered_floor=floor, route_basis="model_route_inference",
                     skipped_observation_count=skipped, continued=True,
-                    observed_floor_record_id=floor_anchor.get("record_id") if floor_anchor else None)
+                    observed_floor_record_id=(floor_anchor.get("floor_observation_id")
+                        or floor_anchor.get("record_id")) if floor_anchor else None)
 
     def _record_event_wallet_interval(self, coins, candidates):
         """Record the observed total; component amounts remain rule inferences."""
@@ -399,12 +403,9 @@ class ObservationTracker:
         identities = [(item["role"], item["identity"]) for item in normalized]
         if len(set(identities)) != len(identities):
             raise PotentialObservationIncomplete("同页候选包含重复潜能身份")
-        if not data.core_potential:
-            if source_name != "enhance" and len({item["role"] for item in normalized}) > 1:
-                raise PotentialObservationIncomplete("普通潜能页出现多个角色的候选")
-            if source_name == "enhance" and len({int(p.new_level) - int(p.old_level)
-                    for p in data.potentials if int(p.old_level) < 5}) > 1:
-                raise PotentialObservationIncomplete("强化页候选的共同升级增量冲突")
+        if (not data.core_potential and source_name != "enhance"
+                and len({item["role"] for item in normalized}) > 1):
+            raise PotentialObservationIncomplete("普通潜能页出现多个角色的候选")
         page_key = (source_name, bool(data.core_potential), coins, tuple(
             (item["identity"], int(p.old_level), int(p.new_level))
             for item, p in zip(normalized, data.potentials)))
@@ -501,8 +502,7 @@ class ObservationTracker:
             q = False
         belief = self.state.eBel
         if phase == "ENHANCE_PAGE":
-            observable = [card for card in cards if card[4] < 5]
-            bonus = observable[0][5] - observable[0][4] == 2 if observable else None
+            bonus = shared_enhancement_bonus((card[4], card[5]) for card in cards)
             belief = sim._enhance_posterior(belief, bonus)
         purchase = getattr(self, "pending_shop_purchase", None)
         if source_name in ("drink", "specified_drink") and purchase is not None:

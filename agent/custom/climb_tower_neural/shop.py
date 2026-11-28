@@ -21,8 +21,8 @@ class ShopNavigationFailed(RuntimeError):
 
 
 class ModelShopInteractor(ShopInteractor):
-    def __init__(self, context):
-        super().__init__(context)
+    def __init__(self, context, *, on_wallet=None):
+        super().__init__(context, on_wallet=on_wallet)
         self.last_shop_page = None
 
     def is_shopping(self):
@@ -64,7 +64,7 @@ class ModelShopInteractor(ShopInteractor):
 def run_model_shop(action_handler, context, argv, runtime):
     tracker = runtime.require_tracker()
     data = action_handler._init_data(context, argv.node_name)
-    interactor = ModelShopInteractor(context)
+    interactor = ModelShopInteractor(context, on_wallet=runtime.observe_wallet)
     handler = ObservedShopHandler(interactor, data, runtime.collector)
     shopping_page = False
     refresh_before = None
@@ -223,7 +223,6 @@ def run_model_shop(action_handler, context, argv, runtime):
         transaction = dict(operation_id=uuid.uuid4().hex, stock_scan_id=runtime.collector.stock_scan_id,
                            item=snapshot(item), source_type=source)
         before_coin = data.current_coin
-        runtime.collector.emit("purchase_attempt", phase="before", coins=before_coin, **transaction)
         purchase = dict(operation_id=transaction["operation_id"], source_type=source,
                         item=item, committed=False)
         tracker.pending_shop_purchase = purchase
@@ -234,17 +233,22 @@ def run_model_shop(action_handler, context, argv, runtime):
                 "next": ["星塔_节点_进入潜能选择_agent"]},
             "星塔_节点_选择潜能_agent": {"attach": {"reserved_coin": 0, "potential_source": source}},
         }
-        with runtime.collector.purchase_wallet_capture(transaction["operation_id"]) as wallet_evidence:
-            with runtime.collector.action_scope(**transaction), runtime.collector.capture("purchase", **transaction):
+        with runtime.session.purchase_wallet_capture(transaction["operation_id"]) as wallet_evidence:
+            runtime.collector.emit("purchase_attempt", phase="before", coins=before_coin,
+                wallet_before_observation_id=(wallet_evidence["before_wallet"] or {}).get("observation_id"),
+                **transaction)
+            with runtime.session.action_scope(**transaction), runtime.collector.capture("purchase", **transaction):
+                failure = None
                 try:
                     result = context.run_task("星塔_节点_商店_购物_购买道具_agent", override)
+                except Exception as error:
+                    failure = error
+                    result = None
                 finally:
                     tracker.pending_shop_purchase = None
-                if context.tasker.stopping:
-                    return False
-                pipeline_succeeded = bool(result and result.status.succeeded)
+                pipeline_succeeded = bool(result and result.status.succeeded) if failure is None else None
                 succeeded = pipeline_succeeded and purchase["committed"]
-                if succeeded:
+                if succeeded and not context.tasker.stopping:
                     interactor.update_image()
                     shopping_page = purchase.get("return_page") != BY_NAME["shop_main"].node
                     if shopping_page:
@@ -254,9 +258,14 @@ def run_model_shop(action_handler, context, argv, runtime):
                         handler.read_main_page_info(read_coin=True)
             fields = purchase_wallet_evidence(transaction["operation_id"], item.price,
                 wallet_evidence["wallets"], before_wallet=wallet_evidence["before_wallet"],
-                pipeline_wallet=runtime.collector.last_wallet)
+                pipeline_wallet=runtime.session.current_wallet_observation)
             runtime.collector.emit("purchase_result", phase="after", success=succeeded,
-                pipeline_succeeded=pipeline_succeeded, **fields, **transaction)
+                pipeline_succeeded=pipeline_succeeded, reward_committed=purchase["committed"],
+                **fields, **transaction)
+            if failure is not None:
+                raise failure
+            if context.tasker.stopping:
+                return False
             if not succeeded:
                 return stop_for_missing(["purchase_confirmation"], reason="shop_action_unconfirmed")
             if purchase.get("return_page") == BY_NAME["shop_main"].node:

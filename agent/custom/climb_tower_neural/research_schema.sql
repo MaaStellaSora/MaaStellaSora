@@ -37,11 +37,19 @@ CREATE INDEX IF NOT EXISTS issues_record ON quality_issues(record_id);
 
 -- A missing/uncertain action affects its following interval. It never changes
 -- the quality of an earlier, independently confirmed prefix.
-CREATE VIEW IF NOT EXISTS record_issue_links AS
+-- A complete candidate page is independently observed even when the enclosing
+-- purchase/refresh/take later fails. Keep interval quality for note deltas.
+DROP VIEW IF EXISTS record_issue_links;
+CREATE VIEW record_issue_links AS
 SELECT r.record_id,q.issue_id,q.code,q.severity,q.field_path
 FROM records r JOIN quality_issues q ON q.run_id=r.run_id
  AND (q.record_id=r.record_id OR
       (json_extract(q.evidence_json,'$.affected_from_sequence') IS NOT NULL
+       AND NOT (r.event_type IN ('offer_observed','offer_reobserved')
+                AND q.code IN ('unconfirmed_action_tail','action_not_confirmed')
+                AND COALESCE(json_extract(r.payload_json,'$.source'),'') IN ('drink','specified_drink','enhance')
+                AND COALESCE(json_extract(r.payload_json,'$.origin_operation_id') =
+                             json_extract(q.evidence_json,'$.operation_id'),0))
        AND r.sequence >= json_extract(q.evidence_json,'$.affected_from_sequence')
        AND r.sequence <= json_extract(q.evidence_json,'$.affected_through_sequence')));
 

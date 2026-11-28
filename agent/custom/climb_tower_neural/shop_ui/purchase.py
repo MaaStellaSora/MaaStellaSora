@@ -19,8 +19,8 @@ def purchase_override(item, node="星塔_节点_商店_购物_购买道具_agent
 
 class ShopItemPrice(CustomRecognition):
     def analyze(self, context, argv):
-        from .handler import ShopHandler
-        from .interactor import PRICE_NODE, ShopInteractor
+        from .interactor import ShopInteractor
+        from .price import price_key
 
         if context.tasker.stopping:
             return None
@@ -28,19 +28,10 @@ class ShopItemPrice(CustomRecognition):
         roi = params["roi"]
         screen = ShopInteractor(context)
         screen.image = argv.image
-        rows = screen._recognize(PRICE_NODE, roi=roi)
-        # OCR can fall back to treating its entire ROI as a recognized box.
-        if not rows or any(tuple(row.box) == tuple(roi) for row in rows):
-            return None
-        price_key = ("potential_drink" if params["internal_name"] == "potential_drink"
-                     else f"melody_{params['quantity']}")
         from .context import ITEM_STANDARD_PRICES
-        price = ShopHandler._clean_and_extract_price(
-            [row.text for row in rows], ITEM_STANDARD_PRICES.get(price_key))
+        price, box = screen.read_item_price(roi,
+            ITEM_STANDARD_PRICES.get(price_key(params["internal_name"], params["quantity"])))
         if price != params["price"]:
             return None
-        left, top = min(row.box[0] for row in rows), min(row.box[1] for row in rows)
-        right = max(row.box[0] + row.box[2] for row in rows)
-        bottom = max(row.box[1] + row.box[3] for row in rows)
-        return CustomRecognition.AnalyzeResult(box=(left, top, right - left, bottom - top),
+        return CustomRecognition.AnalyzeResult(box=box,
                                                detail={"price": price, "price_roi": roi})

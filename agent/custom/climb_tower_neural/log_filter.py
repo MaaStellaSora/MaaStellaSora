@@ -7,9 +7,9 @@ import logging
 class ModelLogFilter(logging.Filter):
     PREPARATION_IMPORTED_KEY = "agent.custom.action.climb_tower_preparation.run.imported"
     LEGACY_LOGGERS = (
-        "custom.reco.climb_tower_potential.",
-        "custom.action.climb_tower_shop.",
-        "custom.reco.climb_tower_event.",
+        "custom.climb_tower.climb_tower_potential.",
+        "custom.climb_tower.climb_tower_shop.",
+        "custom.climb_tower.climb_tower_event.",
     )
 
     def __init__(self):
@@ -26,7 +26,7 @@ class ModelLogFilter(logging.Filter):
 
     def filter(self, record):
         if (self._active.get() and record.levelno == logging.INFO
-                and record.name == "custom.action.climb_tower_preparation"
+                and record.name == "custom.climb_tower.climb_tower_preparation"
                 and (getattr(record, "i18n_key", None) == self.PREPARATION_IMPORTED_KEY
                      or record.msg == f"${self.PREPARATION_IMPORTED_KEY}")):
             return False

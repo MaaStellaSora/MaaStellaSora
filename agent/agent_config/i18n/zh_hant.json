@@ -186,6 +186,7 @@
     "agent.custom.action.climb_tower_neural.action_select": "潛能{index}",
     "agent.custom.action.climb_tower_neural.action_skip_event": "跳過事件",
     "agent.custom.action.climb_tower_neural.decision_forecast": "[神經網路] 預期 {expected_total:.2f}{options}",
+    "agent.custom.action.climb_tower_neural.event_transition_failed": "[神經網路] 事件選擇後等待轉場逾時，已停止。",
     "agent.custom.action.climb_tower_neural.model_observation_failed": "[神經網路] 本局狀態未確認，已停止。",
     "agent.custom.action.climb_tower_neural.model_disabled": "[神經網路] 功能未啟用，已停止。",
     "agent.custom.action.climb_tower_neural.bag_open_failed": "[神經網路] 未能開啟揹包，已停止。",

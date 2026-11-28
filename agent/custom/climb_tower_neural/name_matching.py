@@ -13,6 +13,7 @@ else:
 
 GLYPHS = str.maketrans(json.loads(data_path("bag_preset_rules.json")
                                   .read_text(encoding="utf-8"))["name_variant_glyphs"])
+BAG_HEADER_MIN_SCORE = .85
 
 
 def clean_name(value, *, keep_long_vowel=False):
@@ -40,10 +41,6 @@ def _identity(item):
 def identity_key(item):
     """Game catalogue IDs and observed local identities keep separate namespaces."""
     return item.get("potential_id") if item.get("potential_id") is not None else item.get("local_identity", item.get("id"))
-
-
-def local_potential_identity(role, character, rarity, name):
-    return f"bag:{role}:{clean_name(character)}:{rarity}:{clean_name(name)}"
 
 
 def is_anonymous_non_target(item):

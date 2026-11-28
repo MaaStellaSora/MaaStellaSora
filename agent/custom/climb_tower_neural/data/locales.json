@@ -1,0 +1,11 @@
+{
+    "catalog_name_alias_fields": ["name_ja_jp", "name_zh_cn", "name_en_us", "name_zh_tw"],
+    "cn": {
+        "aliases": ["zh_cn"],
+        "catalog_name_field": "name_zh_cn"
+    },
+    "jp": {
+        "aliases": ["ja_jp"],
+        "catalog_name_field": "name_ja_jp"
+    }
+}

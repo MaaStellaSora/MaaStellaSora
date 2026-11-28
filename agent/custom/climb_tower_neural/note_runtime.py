@@ -8,7 +8,7 @@ from .interactor import Interactor
 from .note_floor import read_floor_observation
 from .note_bag import OPEN_SKILLS, SKILLS_READY, _retain_conflicts, _run, read_full_inventory
 from .note_ledger import NoteLedger
-from .note_ocr import TOWER_ELEMENTS, normalize_image, read_inventory, text_rules
+from .note_ocr import TOWER_ELEMENTS, locate_inventory_bar, normalize_image, read_inventory, text_rules
 from .note_setup_reader import load_rules, read_bag_skill_page, read_setup, read_settlement
 from .critic.rules import BATTLE_FLOORS, LAST_FLOOR, ROUTE
 from .ui_flow import read_until
@@ -22,13 +22,12 @@ class NoteRuntime:
         self.setup = None
         self.floor = None
         self.mode = "field"
-        self.last_floor_observation = None
         self.bag_inventory = None
         self.bag_inventory_revision = None
 
     @property
     def observing(self):
-        return self.collector.enabled and self.collector.run_confirmed
+        return self.collector.enabled and self.runtime.session.run_confirmed
 
     def _record(self, event, **fields):
         if self.collector.enabled:
@@ -42,7 +41,6 @@ class NoteRuntime:
         self.finish("task_restart")
         self.ledger, self.setup, self.floor = None, None, None
         self.mode = "field"
-        self.last_floor_observation = None
         self.bag_inventory = None
         self.bag_inventory_revision = None
 
@@ -127,8 +125,11 @@ class NoteRuntime:
             main_discs=self.setup["main_discs"], setup_complete=self.setup["complete"]))
         self._record("note_setup_observed", **self.setup,
                             probability_eligible=self.setup["complete"])
-        self._emit(self.ledger.begin_battle("battle_1", floor=1,
-            floor_complete=True, floor_source="new_run_start"))
+        # The first result compares starting supply with inventory after both rewards.
+        self._emit(self.ledger.begin_battle("battle_1", floor=1, floor_complete=True,
+            floor_source="new_run_start", opening_included=True, independently_observed=False,
+            analysis_eligible=False, probability_eligible=False,
+            analysis_exclusion_reason="opening_and_first_battle_not_separable"))
         self.runtime.logger.debug("Initial note supply: %(starting_supply)s", {
             "starting_supply": self.setup["starting_supply"],
         })
@@ -191,25 +192,23 @@ class NoteRuntime:
     def _expected_floors(self, page):
         """Use the shared tower route as a prior, never as an OCR replacement."""
         expected = []
-        inferred = getattr(self.collector, "inferred_state", lambda: {})() or {}
-        hint = inferred.get("floor")
-        if hint and 1 <= hint <= LAST_FLOOR and (self.floor is None or hint >= self.floor):
+        tracker = self.runtime.tracker
+        floor = (self.runtime.session.last_confirmed_floor or {}).get("floor")
+        hint = tracker.state.floor if tracker is not None else None
+        if hint and 1 <= hint <= LAST_FLOOR and (floor is None or hint >= floor):
             expected.append(hint)
-        pending = self.ledger.pending if self.ledger else None
-        if page in {"field", "result"} and pending and pending["source_type"] in {"event", "combined_interval"}:
-            expected.extend(pending["metadata"].get("event_floor_candidates", ()))
-        if self.floor is not None:
-            has_result = pending and self.ledger.revision > pending["start_revision"]
-            next_battle = next((floor for kind, floor, _ in ROUTE
-                                if kind == "BATTLE" and floor > self.floor), None)
-            if page == "potential" and self.mode == "field" and has_result and next_battle:
-                expected.append(next_battle)
-            expected.append(self.floor)
+        if page in {"field", "result"} and tracker is not None and tracker.pending_event is not None:
+            expected.extend(tracker.event_location()["floor_candidates"])
+        if floor is not None:
+            next_battle = next((value for kind, value, _ in ROUTE
+                                if kind == "BATTLE" and value > floor), None)
+            expected.append(floor)
             if page == "event":
-                next_event = next((floor for kind, floor, _ in ROUTE
-                                   if kind == "EVENT" and floor > self.floor), None)
+                next_event = next((value for kind, value, _ in ROUTE
+                                   if kind == "EVENT" and value > floor), None)
                 if next_event:
                     expected.append(next_event)
+            # Shop entry/exit updates this UI mode even when recording is off.
             elif self.mode != "shop" and next_battle:
                 expected.append(next_battle)
         return tuple(dict.fromkeys(expected))
@@ -241,10 +240,12 @@ class NoteRuntime:
     def _read_floor(self, context, image, page, provided=None, *, observation=None):
         if observation is None:
             observation = self._floor_observation(context, image, page, provided)
+        current = self.runtime.session.observe_floor(page, observation)
         floor_id = self._record("note_floor_observed", page=page, **observation)
         if floor_id:
+            # emit may return an earlier row for an identical observation.
+            current["floor_observation_id"] = floor_id
             observation = dict(observation, floor_observation_id=floor_id)
-        self.last_floor_observation = observation
         return observation
 
     def _battle(self, floor, observation=None):
@@ -273,18 +274,20 @@ class NoteRuntime:
             self.floor = floor
 
     def capture(self, context, image, layout="result", floor=None, observation=None, *, continue_box=None):
-        """Read inventory; a result-page reread replaces the caller's click box."""
-        if not self.observing or self.ledger is None:
+        """Read the route HUD and requested notes; rereads refresh the click box."""
+        if not self.runtime.session.run_confirmed:
             return None, True, False
+        collect_notes = self.observing and self.ledger is not None
         image = self._image(image)
         supplied = observation is not None
-        observation = observation or read_inventory(context, image, layout)
+        read_page = read_inventory if collect_notes else locate_inventory_bar
+        observation = observation or read_page(context, image, layout)
         floor_observation = (self._floor_observation(context, image, layout, floor)
                              if observation.get("bar_present") else None)
         anchors = {"result": "星塔_点击空白处关闭_agent", "event": "星塔_节点_进入对话选择_agent"}
         needs_floor = layout == "result" and floor is None
         if (observation.get("bar_present") and layout in anchors
-                and ((not supplied and not observation["complete"])
+                and ((collect_notes and not supplied and not observation["complete"])
                      or (needs_floor and not floor_observation["complete"]))):
             if continue_box is not None:
                 continue_box.clear()
@@ -297,21 +300,28 @@ class NoteRuntime:
                 if not anchor or not anchor.hit:
                     return None
                 image = self._image(frame)
-                observation = _retain_conflicts(observation, read_inventory(context, image, layout))
+                current = read_page(context, image, layout)
+                observation = _retain_conflicts(observation, current) if collect_notes else current
                 floor_observation = (self._floor_observation(context, image, layout, floor)
                                      if observation.get("bar_present") else None)
-                return observation if (observation["complete"]
-                    and (not needs_floor or (floor_observation and floor_observation["complete"]))) else None
+                if (observation.get("bar_present") and (not collect_notes or observation["complete"])
+                        and (not needs_floor or (floor_observation and floor_observation["complete"]))):
+                    return True
 
             read_until(context, observe)
         if context.tasker.stopping:
             return None, True, False
         restored = continue_box is None or bool(continue_box)
         if not observation.get("bar_present", False):
-            self._record("note_inventory_skipped", page=layout,
-                reason=observation.get("bar_reason"), floor=None)
+            self.runtime.session.observe_floor(layout, dict(floor=None, complete=False,
+                source="floor_hud", reason=observation.get("bar_reason")))
+            if collect_notes:
+                self._record("note_inventory_skipped", page=layout,
+                    reason=observation.get("bar_reason"), floor=None)
             return None, restored, False
         floor_observation = self._read_floor(context, image, layout, floor, observation=floor_observation)
+        if not collect_notes:
+            return None, restored, False
         floor = floor_observation["floor"]
         pending = self.ledger.pending
         if layout == "event":
@@ -359,9 +369,11 @@ class NoteRuntime:
         return observation, restored, False
 
     def before_potential(self, context, image, source="default"):
-        if source != "default" or not self.observing or self.ledger is None:
+        if source != "default" or not self.runtime.session.run_confirmed:
             return True, False
         floor_observation = self._read_floor(context, self._image(image), "potential")
+        if not self.observing or self.ledger is None:
+            return True, False
         floor = floor_observation["floor"]
         pending = self.ledger.pending
         if pending and pending["source_type"] == "combined_interval":
@@ -435,13 +447,12 @@ class NoteRuntime:
             if same_event:
                 self.ledger.update_event_metadata(event_id, **selection)
             else:
-                floor_observation = self.last_floor_observation or {}
+                floor_observation = self.runtime.session.current_floor_observation or {}
                 candidates = self._event_floor_candidates()
-                preceding = getattr(self.collector, "last_observed_floor_context", None) or {}
+                preceding = self.runtime.session.last_confirmed_floor or {}
                 if (not floor_observation.get("complete") and len(candidates) == 1
                         and preceding.get("floor") in candidates):
-                    floor_observation = dict(preceding, complete=True, source="previous_clear_floor_hud",
-                        floor_observation_id=preceding.get("record_id"))
+                    floor_observation = dict(preceding, source="previous_clear_floor_hud")
                 metadata = dict(
                     floor=floor_observation.get("floor"),
                     floor_complete=bool(floor_observation.get("complete")),

@@ -7,17 +7,21 @@ from .ui_flow import read_until
 
 from .event_mapping import note_descriptor, quiz_correct_option, quiz_event_id
 from .event_reader import EventRecognition
+from .language import normalize_language
 
 
-def _read_event_coins(context, image):
+def _read_event_coins(context, image, *, on_wallet=None):
     # The icon moves with the wallet when the note bar expands.
     node = "星塔_神经网络_定位事件钱包"
     icon = context.run_recognition(node, image)
     if not icon or not icon.hit:
+        if on_wallet is not None:
+            on_wallet(dict(coin=None, coin_complete=False, recognition_status="missing", conflicts=[],
+                           native_reco_id=None))
         return None
     dx, dy, width, height = context.get_node_data(node)["attach"]["amount_roi_offset"]
     x, y, _, _ = icon.best_result.box
-    screen = Interactor(context)
+    screen = Interactor(context, on_wallet=on_wallet)
     screen.image = image
     amount = screen.get_current_coin(roi=[x + dx, y + dy, width, height])
     return amount if amount >= 0 else None
@@ -48,7 +52,7 @@ class EventMenuRead:
 
 def _read_event_menu(recognizer, context, argv, runtime):
     node = context.get_node_data(argv.node_name) or {}
-    lang = node.get("attach", {}).get("lang_type", "cn")
+    lang = normalize_language(node.get("attach", {}).get("lang_type", "cn"))
     latest = EventMenuRead(image=argv.image, missing=["question", "choices", "coin"])
 
     def observe(image):
@@ -58,7 +62,7 @@ def _read_event_menu(recognizer, context, argv, runtime):
         question = recognizer._get_question_text(context, image, lang)
         choices = recognizer._get_choice_texts(context, image, lang)
         with runtime.collector.capture("event_wallet"):
-            coins = _read_event_coins(context, image)
+            coins = _read_event_coins(context, image, on_wallet=runtime.observe_wallet)
         missing = ([] if question else ["question"]) + ([] if choices else ["choices"])
         if coins is None:
             missing.append("coin")

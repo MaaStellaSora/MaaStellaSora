@@ -4,11 +4,16 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import re
+import sys
 import unicodedata
 
 
-ROOT = Path(__file__).resolve().parents[2] / "agent/custom/climb_tower_neural/data"
-NAME_FIELDS = ("name_ja_jp", "name_zh_cn")
+CUSTOM_ROOT = Path(__file__).resolve().parents[2] / "agent/custom"
+sys.path.insert(0, str(CUSTOM_ROOT))
+from climb_tower_neural import language
+
+
+ROOT = CUSTOM_ROOT / "climb_tower_neural/data"
 NAME_PROOF_FIELDS = {"source_language", "exact_name", "item_title_key", "localization_key"}
 
 
@@ -17,7 +22,7 @@ def name_key(value):
 
 
 def unique_potentials(catalog):
-    """Match the maintenance tool's merge, retaining both languages' evidence."""
+    """Match the maintenance tool's merge, retaining each language's evidence."""
     rows = {}
     for aliases in catalog["by_normalized_name"].values():
         for row in aliases:
@@ -44,7 +49,7 @@ def expand(catalog):
             for proof in row.get("name_provenance", ())]
     aliases = {}
     for row in rows:
-        for key in sorted({name_key(row.get(field)) for field in NAME_FIELDS} - {""}):
+        for key in sorted({name_key(row.get(field)) for field in language.catalog_name_fields()} - {""}):
             aliases.setdefault(key, []).append(row)
     result["schema_version"] = result.pop("source_schema_version")
     result["by_normalized_name"] = dict(sorted(aliases.items()))

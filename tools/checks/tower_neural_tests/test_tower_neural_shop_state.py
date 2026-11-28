@@ -14,6 +14,7 @@ from custom.climb_tower_neural.critic.environment import heuristic_action, legal
 from custom.climb_tower_neural.critic.rules import MAX_POTENTIAL_LEVEL, MAX_SHOP_RESTOCKS
 from custom.climb_tower_neural.observation import ObservationTracker
 from custom.climb_tower_neural.potential_adapter import prepare_actions
+from custom.climb_tower_neural.session import RunSession
 
 
 def replay_shop(seed, ordinal):
@@ -33,6 +34,7 @@ def replay_shop(seed, ordinal):
 def tracker_from(state):
     tracker = ObservationTracker.__new__(ObservationTracker)
     tracker.state, tracker.collector, tracker.logger = state, None, Mock()
+    tracker.session = RunSession()
     tracker.coins_uncertain, tracker.route_estimated = False, False
     tracker.pending_event = None
     tracker.route_candidates = ((state.node, state.k, state.A, state.cBel, sim.ONE),)

@@ -99,7 +99,7 @@
             "type": "OCR",
             "param": {
                 "expected": [
-                    "^[0-9]+$"
+                    "^\\W*[0-9]+\\W*$"
                 ],
                 "roi": [
                     795,
@@ -108,11 +108,23 @@
                     35
                 ],
                 "replace": [],
-                "threshold": 0.6
+                "threshold": 0.6,
+                "color_filter": "星塔_神经网络_商店_实价墨色"
             }
         },
         "attach": {
             "strict_number_reading": true
+        }
+    },
+    "星塔_神经网络_商店_实价墨色": {
+        "description": "只保留深蓝或余额不足时的红色实价，排除浅色划线原价、金币图标和条码。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "method": 4,
+                "lower": [[20, 50, 110], [160, 0, 25]],
+                "upper": [[160, 170, 170], [255, 120, 150]]
+            }
         }
     },
     "星塔_神经网络_商店_识别可刷新次数": {

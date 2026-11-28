@@ -12,6 +12,7 @@ from .event_reader import EventRecognition
 
 from .events import _read_event_menu, analyze_model_event
 from .event_mapping import is_quiz_consequence
+from .language import SUPPORTED_LANGUAGES
 from .potential import (
     ModelPotentialHandler, PotentialObservationIncomplete, commit_potential_take, finish_potential_take,
 )
@@ -40,7 +41,7 @@ class Preparation(RuntimeCallback, AscensionPreparation):
         if not self.runtime.settings.get("enabled", True):
             self.runtime.stop_model(context, "model_disabled", phase="preparation")
             return False
-        if self.runtime.language(context) not in ("cn", "jp"):
+        if self.runtime.language(context) not in SUPPORTED_LANGUAGES:
             self.runtime.logger.error("$agent.custom.action.climb_tower_neural.preset_language_unsupported")
             return False
         environment = context.get_node_data("星塔_神经网络_运行环境") or {}
@@ -112,7 +113,7 @@ class Potential(RuntimeCallback, ChoosePotentialRecognition):
             tracker = self.runtime.require_tracker()
             refresh = getattr(self.runtime, "pending_potential_refresh", None)
             data = refresh[0].data if refresh is not None and refresh[1] is tracker and refresh[2] else None
-            screen = PotentialInteractor(context)
+            screen = PotentialInteractor(context, on_wallet=self.runtime.observe_wallet)
             screen.image = argv.image
             if data is None:
                 data = PotentialContext(params=self._get_params(context, argv.node_name))
@@ -135,8 +136,6 @@ class Potential(RuntimeCallback, ChoosePotentialRecognition):
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
     def _choose_on_page(self, context, node_name, handler, data, tracker):
-        if handler.wait_for_item_list_gone() is False:
-            raise PotentialObservationIncomplete("潜能页干扰文字未在等待后消失")
         handler.initialize_potentials()
         handler.read_potentials_info()
         potential = handler.choose_potential()
@@ -155,7 +154,7 @@ class Potential(RuntimeCallback, ChoosePotentialRecognition):
 
     def _load_handler(self, interactor, data):
         self.runtime.require_tracker()
-        data.params = replace(data.params, environment="tower_8", max_refresh_count=100000, reserved_coin=0)
+        data.params = replace(data.params, max_refresh_count=100000, reserved_coin=0)
         handler = ModelPotentialHandler(interactor, data, self.runtime)
         return ObservedPotentialHandler(handler, self.runtime.collector, self.runtime.notes)
 
@@ -175,6 +174,7 @@ class PotentialRefresh(RuntimeCallback, CustomAction):
             return True
         handler.screen.context = self.runtime.collector.context(context)
         succeeded = handler.refresh()
+        tracker.state = replace(tracker.state, coins=handler.data.current_coin)
         self.runtime.pending_potential_refresh = (handler, tracker, True) if succeeded else None
         if not succeeded and not context.tasker.stopping:
             self.runtime.stop_model(context, "potential_refresh_unconfirmed", phase="potential_refresh",
@@ -187,11 +187,12 @@ class PotentialTake(RuntimeCallback, CustomAction):
         context = self.runtime.collector.context(context)
         if self.runtime.pending_take is None:
             return False
-        screen = PotentialInteractor(context)
+        screen = PotentialInteractor(context, on_wallet=self.runtime.observe_wallet)
         with self.runtime.collector.capture("potential_take"):
             result = finish_potential_take(screen, self.runtime.pending_take, self.runtime.logger, runtime=self.runtime)
         if result:
-            commit_potential_take(self.runtime)
+            if commit_potential_take(self.runtime):
+                self.runtime.collector.selection_confirmed("potential_page_transition")
         elif not context.tasker.stopping and self.runtime.collector.enabled:
             selection = self.runtime.collector.pending_selection or {}
             self.runtime.collector.emit("potential_take_unresolved", reason="take_transition_unconfirmed",
@@ -220,7 +221,7 @@ class Shop(RuntimeCallback, ShopAction):
         self.runtime.notes.enter_shop()
         self.runtime.collector.emit("lifecycle_observed", lifecycle_type="shop_entry",
                                    node_name=argv.node_name)
-        with self.runtime.ui_logs.scope():
+        with self.runtime.collector.defer_finish(), self.runtime.ui_logs.scope():
             try:
                 if not self.runtime.ensure_tracker(context, "shop"):
                     return False
@@ -324,6 +325,9 @@ class NoteScene(RuntimeCallback, CustomAction):
 
 
 class NoteEventClick(RuntimeCallback, CustomAction):
+    # Include transient prompts and loading in one budget, without resending the choice.
+    TRANSITION_TIMEOUT = 30.0
+
     def _current_choice(self, context, image, cached):
         if classify(context, image, candidates=BAG_RETURN_PAGES | {"settlement"}) != "event":
             return None
@@ -364,7 +368,7 @@ class NoteEventClick(RuntimeCallback, CustomAction):
         context = self.runtime.collector.context(context)
         tracker = self.runtime.tracker
         cached = tracker.event_page_cache if tracker is not None else None
-        if not cached:
+        if not cached or context.tasker.stopping:
             return False
         restored, inventory_navigation = self.runtime.notes.prepare_event_inventory(context)
         if not restored:
@@ -384,11 +388,15 @@ class NoteEventClick(RuntimeCallback, CustomAction):
             sent = _note_click(context, argv)
         if not sent:
             return False
+
         def observed(image):
             page = classify(context, image, candidates=BAG_RETURN_PAGES | {"settlement"})
             return page if page in (BAG_RETURN_PAGES | {"settlement"}) - {"event"} else None
 
-        if wait_for(context, observed, timeout=5., stable_frames=2) is None:
+        if wait_for(context, observed, timeout=self.TRANSITION_TIMEOUT, stable_frames=2) is None:
+            if not context.tasker.stopping:
+                self.runtime.stop_model(context, "event_transition_unconfirmed", phase="event",
+                    missing=("stable_event_page_transition",), timeout=self.TRANSITION_TIMEOUT)
             return False
         self.runtime.notes.confirm_event_choice()
         self.runtime.collector.event_clicked(dict(evidence, node_name=argv.node_name,

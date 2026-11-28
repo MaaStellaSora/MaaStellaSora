@@ -5,10 +5,13 @@ from datetime import datetime
 from fractions import Fraction
 from pathlib import Path
 
-from .critic.rules import MAX_POTENTIAL_LEVEL
+from .critic.rules import MAX_POTENTIAL_LEVEL, shared_enhancement_bonus
 from .decision_log import forecast_rows, log_forecast
+from .language import catalog_name_field, catalog_name_fields
 from .name_matching import clean_name as _clean, identity_key, is_anonymous_non_target, match_name
 from .pool_identity import IdentityPools, pool_contract
+from .provisional_cards import ProvisionalCardMatcher
+from .session import RunSession
 from .value_model import Action, sim, replace
 
 
@@ -29,20 +32,22 @@ def potential_levels_valid(old, new, source):
 
 
 class ObservationTracker:
-    def __init__(self, root, preset_data, logger, model, collector=None):
+    def __init__(self, root, preset_data, logger, model, collector=None, *, session=None):
         if "pool_order_evidence" not in preset_data:
             pools, identities, evidence = pool_contract(preset_data["party"], preset_data.get("language", "jp"))
             if tuple(map(len, pools)) == (3, 9, 3, 9, 3, 9):
                 preset_data = dict(preset_data, pools=pools, pool_identity_order=identities, pool_order_evidence=evidence)
         self.root, self.logger = Path(root), logger
         self.collector = collector
+        self.session = session if session is not None else RunSession()
         self.model = model
         self.preset = self.model.preset(preset_data)
         self.preset_data = preset_data
-        self.name_field = "name_zh_cn" if preset_data.get("language") == "cn" else "name_ja_jp"
+        self.name_field = catalog_name_field(preset_data.get("language"))
         self.local_roles = {int(member["role"]): member for member in preset_data["party"]
                             if member.get("local_potential_catalogue")}
         self.names, self.local_names, self.catalogue = defaultdict(list), defaultdict(list), {}
+        self.provisional_items = []
         for i, member in enumerate(preset_data["party"], 1):
             role = int(member.get("role", i))
             for item in member["targets"]:
@@ -65,7 +70,10 @@ class ObservationTracker:
         self.reset()
 
     def _index_names(self, item):
-        for field in ("name_ja_jp", "name_zh_cn", "name_en_us", "name_zh_tw"):
+        if item.get("provisional") and len(self.local_roles) == 1:
+            self.provisional_items.append(item)
+            return
+        for field in catalog_name_fields():
             if item.get(field):
                 key = _clean(item[field])
                 if item not in self.names[key]:
@@ -80,6 +88,7 @@ class ObservationTracker:
         self.state = self.model.initial(self.preset)
         self.identity_pools = IdentityPools(self.preset_data)
         self.identity_levels = {}
+        self.provisional_matcher = ProvisionalCardMatcher()
         self.acquired = {}
         self.anonymous_held = Counter()
         self.trekkers = {}
@@ -105,7 +114,7 @@ class ObservationTracker:
     def decision_route_ready(self):
         """Whether the current observations identify one route position."""
         positions = {(node, k, a) for node, k, a, _belief, _probability in self.route_candidates}
-        observed = getattr(self.collector, "last_observed_floor_context", None)
+        observed = self.session.last_confirmed_floor
         anchored = isinstance(observed, dict) and observed.get("floor") == self.state.floor
         return len(positions) == 1 and (not self.route_estimated or anchored)
 
@@ -181,7 +190,7 @@ class ObservationTracker:
 
     def _route_observations(self, phase, coins, observed_floor=None, observed_event=None):
         """Match the page, crossing missed boundaries only when needed."""
-        observed = getattr(self.collector, "last_observed_floor_context", None)
+        observed = self.session.last_confirmed_floor
         floor_minimum = observed.get("floor") if isinstance(observed, dict) else None
         floor_exact = observed_floor.get("floor") if observed_floor else None
         frontier = defaultdict(Fraction)
@@ -249,7 +258,7 @@ class ObservationTracker:
 
     def _route_at_observed_floor(self, phase, observed_floor=None):
         """Recover an over-advanced tracker using the latest real floor HUD."""
-        observed = observed_floor or getattr(self.collector, "last_observed_floor_context", None)
+        observed = observed_floor or self.session.last_confirmed_floor
         if not isinstance(observed, dict) or observed.get("floor") is None:
             return {}, None
         kinds = {"CORE": {"CORE"}, "DRAW": {"DRAW"},
@@ -342,7 +351,8 @@ class ObservationTracker:
                     previous_node=current.node, previous_floor=current.floor, previous_coins=current.coins,
                     recovered_node=node, recovered_floor=floor, route_basis="model_route_inference",
                     skipped_observation_count=skipped, continued=True,
-                    observed_floor_record_id=floor_anchor.get("record_id") if floor_anchor else None)
+                    observed_floor_record_id=(floor_anchor.get("floor_observation_id")
+                        or floor_anchor.get("record_id")) if floor_anchor else None)
 
     def _record_event_wallet_interval(self, coins, candidates):
         """Record the observed total; component amounts remain rule inferences."""
@@ -386,7 +396,8 @@ class ObservationTracker:
         if coins < 0:
             raise PotentialObservationIncomplete("神经网络未读到当前金币")
         normalized = []
-        for potential in data.potentials:
+        observed_items = getattr(data, "resolved_items", ())
+        for index, potential in enumerate(data.potentials):
             if not _clean(potential.name):
                 raise PotentialObservationIncomplete("本帧潜能名称为空")
             old, new = int(potential.old_level), int(potential.new_level)
@@ -394,17 +405,14 @@ class ObservationTracker:
                 if not potential_levels_valid(old, new, source_name):
                     raise PotentialObservationIncomplete(
                         f"潜能等级与来源规则不一致：{potential.name} {old}→{new}")
-            normalized.append(self.identify(
+            normalized.append(observed_items[index] if observed_items else self.identify(
                 potential.name, role=potential.trekker.index + 1, rarity=potential.rarity))
         identities = [(item["role"], item["identity"]) for item in normalized]
         if len(set(identities)) != len(identities):
             raise PotentialObservationIncomplete("同页候选包含重复潜能身份")
-        if not data.core_potential:
-            if source_name != "enhance" and len({item["role"] for item in normalized}) > 1:
-                raise PotentialObservationIncomplete("普通潜能页出现多个角色的候选")
-            if source_name == "enhance" and len({int(p.new_level) - int(p.old_level)
-                    for p in data.potentials if int(p.old_level) < 5}) > 1:
-                raise PotentialObservationIncomplete("强化页候选的共同升级增量冲突")
+        if (not data.core_potential and source_name != "enhance"
+                and len({item["role"] for item in normalized}) > 1):
+            raise PotentialObservationIncomplete("普通潜能页出现多个角色的候选")
         page_key = (source_name, bool(data.core_potential), coins, tuple(
             (item["identity"], int(p.old_level), int(p.new_level))
             for item, p in zip(normalized, data.potentials)))
@@ -419,17 +427,34 @@ class ObservationTracker:
             return
         # Reject a bad frame before consuming its route boundary or event link.
         pools = self.identity_pools.copy()
+        levels = self.identity_levels.copy()
+        transfers = []
+        for item in normalized:
+            key = item["role"], item["identity"]
+            previous = item.get("identity_reassigned_from")
+            if previous is not None and key not in levels:
+                old_key = item["role"], previous
+                if old_key not in self.provisional_matcher.inferred_acquisitions:
+                    raise PotentialObservationIncomplete("待纠正的潜能持有记录已变化")
+                levels[key] = levels.pop(old_key)
+                transfers.append((self.catalogue[previous], item, levels[key]))
         groups = defaultdict(list)
+        inferred_groups = defaultdict(list)
         for potential, item in zip(data.potentials, normalized):
-            held = self.identity_levels.get((item["role"], item["identity"]), 0)
+            held = levels.get((item["role"], item["identity"]), 0)
             if held != int(potential.old_level):
                 raise PotentialObservationIncomplete("候选新旧或等级与该潜能的已确认持有不一致")
             if potential.old_level == 0:
-                groups[2 * (item["role"] - 1) + item["quality"] - 1].append(item["identity"])
+                pi = 2 * (item["role"] - 1) + item["quality"] - 1
+                groups[pi].append(item["identity"])
+                inferred_groups[pi].append(item.get("identity_runtime_status") == "inferred")
         if not pools.available:
             raise PotentialObservationIncomplete("完整潜能身份目录未确认")
         try:
-            pools.observe(groups)
+            for before, after, _ in transfers:
+                pi = 2 * (after["role"] - 1) + after["quality"] - 1
+                pools.reassign_held(pi, after["identity"], before["identity"])
+            pools.observe(groups, inferred=inferred_groups)
         except ValueError as error:
             raise PotentialObservationIncomplete(str(error)) from error
         page_already_open = self.state.phase in ("PAGE", "ENHANCE_PAGE")
@@ -501,8 +526,7 @@ class ObservationTracker:
             q = False
         belief = self.state.eBel
         if phase == "ENHANCE_PAGE":
-            observable = [card for card in cards if card[4] < 5]
-            bonus = observable[0][5] - observable[0][4] == 2 if observable else None
+            bonus = shared_enhancement_bonus((card[4], card[5]) for card in cards)
             belief = sim._enhance_posterior(belief, bonus)
         purchase = getattr(self, "pending_shop_purchase", None)
         if source_name in ("drink", "specified_drink") and purchase is not None:
@@ -522,6 +546,26 @@ class ObservationTracker:
                              eventId=0, eventOptions=(), npc3EventReward=npc3_event_reward)
         self._current_cards = normalized
         self.identity_pools = pools
+        self.identity_levels = levels
+        if transfers:
+            holdings = Counter({row[:4]: row[4] for row in self.state.H})
+            for before, after, level in transfers:
+                old_bucket = before["role"], before["quality"], before["target_level"], level
+                holdings[old_bucket] -= 1
+                holdings[after["role"], after["quality"], after["target_level"], level] += 1
+                if is_anonymous_non_target(before):
+                    self.anonymous_held[old_bucket] -= 1
+                else:
+                    del self.acquired[before["identity"]]
+                self.acquired[after["identity"]] = (after, level)
+                previous_key = before["role"], before["identity"]
+                self.provisional_matcher.inferred_acquisitions.pop(previous_key)
+                self.provisional_matcher.display_names.pop(previous_key, None)
+            self.state = replace(self.state, H=tuple((*key, n) for key, n in sorted(holdings.items()) if n))
+        for item in normalized:
+            key = item["role"], item["identity"]
+            if item.get("identity_runtime_status") != "inferred":
+                self.provisional_matcher.inferred_acquisitions.pop(key, None)
         self._page_key, self.selected_page_index = page_key, None
         self.pending_source = None
         self.source_observation = source_observation
@@ -606,9 +650,8 @@ class ObservationTracker:
         self.selected_page_index = None
 
     def selected(self, potential):
-        item = self.identify(potential.name, role=potential.trekker.index + 1, rarity=potential.rarity)
-        index = next(i for i, row in enumerate(self._current_cards, 1)
-                     if (row["role"], row["identity"]) == (item["role"], item["identity"]))
+        index = potential.index + 1
+        item = self._current_cards[index - 1]
         if self.selected_page_index == index:
             return
         if item["rarity_class"] == "core":
@@ -619,6 +662,12 @@ class ObservationTracker:
             self.identity_pools.remove(2 * (item["role"] - 1) + item["quality"] - 1, item["identity"])
             self.state = replace(self.state, pools=self.identity_pools.projection())
         self.identity_levels[item["role"], item["identity"]] = int(potential.new_level)
+        if item.get("identity_runtime_status") == "inferred":
+            self.provisional_matcher.inferred_held_groups.add((item["role"], item["rarity_class"]))
+            if potential.old_level == 0 and item.get("provisional"):
+                self.provisional_matcher.inferred_acquisitions[item["role"], item["identity"]] = _clean(potential.name)
+        else:
+            self.provisional_matcher.inferred_acquisitions.pop((item["role"], item["identity"]), None)
         self.selected_page_index = index
         bucket = (item["role"], item["quality"], item["target_level"], int(potential.old_level))
         if is_anonymous_non_target(item):

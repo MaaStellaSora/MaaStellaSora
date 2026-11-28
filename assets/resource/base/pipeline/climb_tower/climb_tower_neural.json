@@ -280,7 +280,7 @@
                     385
                 ],
                 "duration": 600,
-                "end_hold": 350
+                "end_hold": 1000
             }
         },
         "post_wait_freezes": {
@@ -310,7 +310,7 @@
                     625
                 ],
                 "duration": 600,
-                "end_hold": 350
+                "end_hold": 1000
             }
         },
         "post_wait_freezes": {
